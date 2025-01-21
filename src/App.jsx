@@ -7,14 +7,14 @@ function App() {
     <>
       <Router>
         <Routes>
-          {/* <Route
+          <Route
             path="/"
             element={
               <DynamicLayout layout="home">
                 <Home />
               </DynamicLayout>
             }
-          /> */}
+          />
         </Routes>
       </Router>
     </>
