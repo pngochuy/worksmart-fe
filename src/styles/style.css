@@ -1002,6 +1002,7 @@ input:checked + .slider:before {
 
 .default-form .form-group input[type="text"],
 .default-form .form-group input[type="password"],
+.default-form .form-group input[type="tel"],
 .default-form .form-group input[type="number"],
 .default-form .form-group input[type="email"],
 .default-form .form-group input[type="url"],
@@ -5964,7 +5965,7 @@ Main Header
 .main-header .logo {
   position: relative;
   z-index: 9;
-  padding: 25px 0;
+  /* padding: 25px 0; */
   margin-right: 100px;
   transition: all 300ms ease;
 }
@@ -8920,12 +8921,13 @@ Login Section
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 120px 0 50px;
+  padding: 90px 0 50px;
   overflow: auto;
 }
 
 .login-section .image-layer {
-  position: absolute;
+  /* position: absolute; */
+  position: fixed;
   left: 0;
   top: 0;
   height: 100%;
@@ -9964,7 +9966,7 @@ Preloader
   margin-top: -25px;
   background-position: center center;
   background-repeat: no-repeat;
-  background-image: url(../images/favicon.png);
+  background-image: url(../assets/logo-no-caption-loading.png);
   content: "";
 }
 
@@ -17698,10 +17700,11 @@ Product Tabs
   right: 0;
 }
 .banner-section-three.at-home18 {
-  background-image: url(../images/index-18/hero-bg.png);
+  background-image: url(../assets/images/index-18/hero-bg.png);
 }
 .banner-section-three.at-home22 {
-  background-image: url(../images/background/home22-hero-bg.png);
+  /* background-image: url(../images/background/home22-hero-bg.png); */
+  background-image: url(../assets/images/background/home22-hero-bg.png);
 }
 .fw-500 {
   font-weight: 500 !important;
@@ -20668,7 +20671,8 @@ Banner Section Three
 
 .banner-section-three .content-column .inner-column {
   position: relative;
-  padding: 270px 0 150px;
+  /* padding: 270px 0 150px; */
+  padding: 270px 0 50px;
 }
 @media (max-width: 991px) {
   .banner-section-three.at-home19 .content-column .inner-column {
@@ -22436,4 +22440,149 @@ Work Section
 
 .overflow-hidden {
   overflow: hidden;
+}
+/* ------------------ */
+.home22-hero-client ul.companies-carousel {
+  display: flex; /* Sử dụng Flexbox */
+  flex-wrap: wrap; /* Cho phép các mục con xuống hàng khi không đủ chỗ */
+  /* justify-content: center;  */
+  gap: 20px; /* Khoảng cách giữa các mục */
+  padding: 0;
+  margin: 0;
+  list-style: none; /* Loại bỏ dấu chấm của danh sách */
+}
+
+.home22-hero-client ul.companies-carousel li {
+  flex: 1 1 calc(25% - 20px); /* Chia mỗi mục chiếm 25% chiều rộng, trừ khoảng cách */
+  max-width: calc(25% - 20px); /* Đảm bảo chiều rộng tối đa là 25% */
+  box-sizing: border-box; /* Tính toán padding và border trong kích thước */
+  text-align: center; /* Canh giữa nội dung */
+}
+
+.home22-hero-client ul.companies-carousel li .image-box {
+  overflow: hidden; /* Ẩn phần tràn ra ngoài */
+  border-radius: 8px; /* Bo góc cho hình ảnh */
+  transition: transform 0.3s ease-in-out; /* Hiệu ứng phóng to */
+}
+
+/* .home22-hero-client ul.companies-carousel li .image-box img {
+  width: 100%; 
+  height: auto;
+} */
+
+.home22-hero-client ul.companies-carousel li:hover .image-box {
+  transform: scale(1.05); /* Phóng to hình ảnh khi hover */
+}
+
+/* Thêm lớp cho phần container chứa cả input và icon */
+.password-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Căn chỉnh icon bên trong input */
+.password-container .eye-icon {
+  position: absolute;
+  right: 15px; /* Cách cạnh phải một chút */
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px; /* Điều chỉnh kích thước icon */
+  color: #696969;
+}
+
+.error-text {
+  color: red;
+  font-weight: bold;
+}
+
+.error-input {
+  border-color: red;
+}
+.list-style {
+  list-style: disc !important; /* Bắt buộc hiển thị dấu chấm */
+}
+
+.custom-password-input .p-password-input {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  line-height: 30px;
+  padding: 15px 20px;
+  font-size: 15px;
+  color: #696969;
+  background: #f0f5f7;
+  border: 1px solid #f0f5f7;
+  box-sizing: border-box;
+  border-radius: 8px;
+  transition: all 300ms ease;
+}
+
+/* Hiệu ứng border khi có lỗi */
+.custom-password-input.error-border .p-password-input {
+  border: 1px solid red;
+}
+
+/* Style cho icon eye */
+.password-container .eye-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #696969;
+}
+
+/* Style cho thanh progress của PrimeReact */
+.p-password-panel .p-password-meter {
+  height: 8px;
+  border-radius: 4px;
+  background-color: #e9ecef;
+}
+
+.p-password-panel .p-password-strength {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.p-password-panel .p-password-strength.weak {
+  background-color: #ff6b6b;
+}
+
+.p-password-panel .p-password-strength.medium {
+  background-color: #fbc02d;
+}
+
+.p-password-panel .p-password-strength.strong {
+  background-color: #4caf50;
+}
+
+/* Nút khi disabled */
+.btn-disabled {
+  background-color: #a6c1e0; /* Màu nền mờ cho nút disabled */
+  cursor: not-allowed; /* Con trỏ thay đổi thành biểu tượng không cho phép */
+  border: 1px solid #a6c1e0; /* Biên mờ */
+}
+
+/* Thêm hiệu ứng cho nút disabled khi hover (nút disabled vẫn không thay đổi khi hover) */
+.btn-disabled:hover {
+  background-color: #a6c1e0;
+  border-color: #a6c1e0;
+}
+
+.select-dropdown {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  height: 100px; /* Giới hạn chiều cao */
+  overflow-y: scroll; /* Thêm thanh cuộn dọc */
+}
+
+.select-dropdown:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
 }
