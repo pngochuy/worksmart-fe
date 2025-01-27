@@ -1,5 +1,4 @@
-// import logo from "../assets/images/logo.svg";
-import logo from "../assets/logo-removebg-preview.png";
+import logo from "../assets/logo.png";
 
 export const Header = () => {
   return (
@@ -13,7 +12,12 @@ export const Header = () => {
             <div className="logo-box">
               <div className="logo">
                 <a href="index.html">
-                  <img src={logo} alt="" title="" width={154} height={30} />
+                  <img
+                    src={logo}
+                    alt=""
+                    style={{ width: "154px", height: "90px" }}
+                    title=""
+                  />
                 </a>
               </div>
             </div>
@@ -32,14 +36,13 @@ export const Header = () => {
                     <li>
                       <a href="blog-list-v1.html">IT Jobs</a>
                     </li>
-                    <li>
-                      <a href="blog-list-v1.html">Top Companies</a>
-                    </li>
                   </ul>
                 </li>
-                <li className="current">
+                <li className="">
                   <span>
-                    <a href="blog-list-v1.html">Company List</a>
+                    <a href="blog-list-v1.html" style={{ color: "#363636" }}>
+                      Company List
+                    </a>
                   </span>
                 </li>
                 <li className="dropdown">
@@ -48,23 +51,11 @@ export const Header = () => {
                     <li>
                       <a href="blog-list-v1.html">Create CV</a>
                     </li>
-                    <li>
-                      <a href="blog-list-v1.html">Create CV</a>
-                    </li>
-                    <li>
-                      <a href="blog-list-v1.html">Create CV</a>
-                    </li>
                   </ul>
                 </li>
                 <li className="dropdown">
                   <span>Profile & CV</span>
                   <ul>
-                    <li>
-                      <a href="blog-list-v1.html">Create CV</a>
-                    </li>
-                    <li>
-                      <a href="blog-list-v1.html">Create CV</a>
-                    </li>
                     <li>
                       <a href="blog-list-v1.html">Create CV</a>
                     </li>
@@ -122,10 +113,7 @@ export const Header = () => {
             </a>
             {/* Login/Register */}
             <div className="btn-box">
-              <a
-                href="login-popup.html"
-                className="theme-btn btn-style-three call-modal"
-              >
+              <a href="/login" className="theme-btn btn-style-three call-modal">
                 Login / Register
               </a>
               <a
@@ -142,7 +130,7 @@ export const Header = () => {
         <div className="mobile-header">
           <div className="logo">
             <a href="index.html">
-              <img src="images/logo.svg" alt="" title="" />
+              <img src={logo} alt="" title="" />
             </a>
           </div>
 
@@ -151,7 +139,7 @@ export const Header = () => {
             <div className="outer-box">
               {/* Login/Register */}
               <div className="login-box">
-                <a href="login-popup.html" className="call-modal">
+                <a href="/login" className="call-modal">
                   <span className="icon-user"></span>
                 </a>
               </div>

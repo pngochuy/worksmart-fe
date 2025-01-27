@@ -2,7 +2,7 @@
 import { HomeLayout } from "./HomeLayout/HomeLayout";
 
 const layoutMap = {
-  home: HomeLayout,
+  home: HomeLayout
 };
 console.log("first header");
 export const DynamicLayout = ({ layout, children }) => {

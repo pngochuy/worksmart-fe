@@ -2,9 +2,22 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 // Import CSS
+import "./styles/animate.css";
 import "./styles/bootstrap.css";
-import "./styles/style.css";
+import "./styles/chosen.css";
+import "./styles/flaticon.css";
+import "./styles/fontawesome.css";
+import "./styles/icons.css";
+import "./styles/jquery-ui.min.css";
+import "./styles/jquery.fancybox.min.css";
+import "./styles/jquery.modal.min.css";
+import "./styles/line-awesome.css";
+import "./styles/mmenu.css";
+import "./styles/owl.css";
 import "./styles/responsive.css";
+import "./styles/select2.min.css";
+import "./styles/style.css";
+import "./styles/index.css";
 
 // Import các thư viện JS cần thiết
 import "./assets/js/jquery.js";
@@ -27,24 +40,6 @@ import "./assets/js/owl.js";
 // import "./assets/js/wow.js";
 import "wowjs";
 import "./assets/js/script.js";
-
-{
-  /* <script src="./src/assets/js/jquery.js"></script>
-  <script src="./src/assets/js/popper.min.js"></script>
-  <script src="./src/assets/js/chosen.min.js"></script>
-  <script src="./src/assets/js/bootstrap.min.js"></script>
-  <script src="./src/assets/js/jquery.fancybox.js"></script>
-  <script src="./src/assets/js/jquery.modal.min.js"></script>
-  <script src="./src/assets/js/mmenu.polyfills.js"></script>
-  <script src="./src/assets/js/mmenu.js"></script>
-  <script src="./src/assets/js/appear.js"></script>
-  <script src="./src/assets/js/anm.min.js"></script>
-  <script src="./src/assets/js/ScrollMagic.min.js"></script>
-  <script src="./src/assets/js/rellax.min.js"></script>
-  <script src="./src/assets/js/owl.js"></script>
-  <script src="./src/assets/js/wow.js"></script>
-  <script src="./src/assets/js/script.js"></script> */
-}
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
