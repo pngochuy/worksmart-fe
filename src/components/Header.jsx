@@ -11,7 +11,7 @@ export const Header = () => {
           <div className="nav-outer">
             <div className="logo-box">
               <div className="logo">
-                <a href="index.html">
+                <a href="/">
                   <img
                     src={logo}
                     alt=""
@@ -28,7 +28,7 @@ export const Header = () => {
                   <span>Jobs</span>
                   <ul>
                     <li>
-                      <a href="blog-list-v1.html">Finding Jobs</a>
+                      <a href="/job-list">Finding Jobs</a>
                     </li>
                     <li>
                       <a href="blog-list-v1.html">Suitable Jobs</a>
