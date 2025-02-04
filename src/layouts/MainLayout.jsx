@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
-import { Footer } from "../../components/Footer";
-import { Header } from "../../components/Header";
-console.log("second header");
-export const HomeLayout = ({ children }) => {
+import { Footer } from "../components/Footer";
+import { Header } from "../components/Header";
+
+export const MainLayout = ({ children }) => {
   return (
     <>
       <div className="page-wrapper">
@@ -13,7 +13,7 @@ export const HomeLayout = ({ children }) => {
         <Header />
         {/* End Header */}
 
-        <main>{children}</main>
+        {children}
 
         {/* Main Footer */}
         <Footer />
