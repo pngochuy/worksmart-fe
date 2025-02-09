@@ -8019,7 +8019,8 @@ Job Detail Section
 
 .job-detail-section .upper-box {
   position: relative;
-  background-image: url(../images/icons/bg-4.png);
+  background-image: url(../assets/images/icons/bg-4.png); 
+  /* ../assets/logo-no-caption-loading.png */
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -9736,7 +9737,7 @@ Page Title
   top: 0;
   height: 100%;
   width: 100%;
-  background-image: url(../images/icons/bg-4.png);
+  background-image: url(../assets/images/icons/bg-4.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -12891,7 +12892,7 @@ Candidate Detail Section
 
 .candidate-detail-section .upper-box {
   position: relative;
-  background-image: url(../images/icons/bg-4.png);
+  background-image: url(../assets/images/icons/bg-4.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
