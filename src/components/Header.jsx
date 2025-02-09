@@ -1,10 +1,31 @@
+import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useEffect, useState } from "react";
 
 export const Header = () => {
+  const location = useLocation();
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
+  useEffect(() => {
+    // Lấy danh sách tất cả các dropdown
+    const dropdowns = document.querySelectorAll(".nav .dropdown");
+
+    dropdowns.forEach((dropdown) => {
+      const links = dropdown.querySelectorAll("a");
+      const isActive = Array.from(links).some(
+        (link) => link.getAttribute("href") === location.pathname
+      );
+
+      if (isActive) {
+        setActiveDropdown(dropdown);
+      }
+    });
+  }, [location.pathname]);
+
   return (
     <>
       {/* Main Header*/}
-      <header className="main-header">
+      <header className="main-header border-bottom-1">
         {/* Main box */}
         <div className="main-box">
           {/*Nav Outer */}
@@ -24,40 +45,58 @@ export const Header = () => {
 
             <nav className="nav main-menu">
               <ul className="navigation" id="navbar">
-                <li className="current dropdown">
+                <li
+                  className={`dropdown ${
+                    activeDropdown?.innerText.includes("Jobs") ? "current" : ""
+                  }`}
+                >
                   <span>Jobs</span>
                   <ul>
                     <li>
-                      <a href="/job-list">Finding Jobs</a>
+                      <a href="/job">Finding Jobs</a>
                     </li>
                     <li>
-                      <a href="blog-list-v1.html">Suitable Jobs</a>
+                      <a href="/suitable-jobs">Suitable Jobs</a>
                     </li>
                     <li>
-                      <a href="blog-list-v1.html">IT Jobs</a>
-                    </li>
-                  </ul>
-                </li>
-                <li className="">
-                  <span>
-                    <a href="blog-list-v1.html" style={{ color: "#363636" }}>
-                      Company List
-                    </a>
-                  </span>
-                </li>
-                <li className="dropdown">
-                  <span>Profile & CV</span>
-                  <ul>
-                    <li>
-                      <a href="blog-list-v1.html">Create CV</a>
+                      <a href="/it-jobs">IT Jobs</a>
                     </li>
                   </ul>
                 </li>
-                <li className="dropdown">
+                <li
+                  className={`dropdown ${
+                    activeDropdown?.innerText.includes("Company")
+                      ? "current"
+                      : ""
+                  }`}
+                >
+                  <span>Company</span>
+                  <ul>
+                    <li>
+                      <a href="/company">Company List</a>
+                    </li>
+                    <li>
+                      <a href="blog-list-v1.html">Top Company</a>
+                    </li>
+                  </ul>
+                </li>
+                <li
+                  className={`dropdown ${
+                    activeDropdown?.innerText.includes("Profile & CV")
+                      ? "current"
+                      : ""
+                  }`}
+                >
                   <span>Profile & CV</span>
                   <ul>
                     <li>
-                      <a href="blog-list-v1.html">Create CV</a>
+                      <a href="/create-cv">Create CV</a>
+                    </li>
+                    <li>
+                      <a href="/upload-cv">Upload CV</a>
+                    </li>
+                    <li>
+                      <a href="/manage-cv">Manage CV</a>
                     </li>
                   </ul>
                 </li>

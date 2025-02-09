@@ -2,9 +2,12 @@ export const index = () => {
   return (
     <>
       {/*Page Title*/}
-      <section className="page-title style-two at-jlv16 before_none bg-white">
+      <section
+        className="page-title style-two at-jlv16 before_none bg-white"
+        style={{ marginTop: "111px" }}
+      >
         <div className="auto-container">
-          <div className="title-outer">
+          {/* <div className="title-outer">
             <h1>Find Jobs</h1>
             <ul className="page-breadcrumb">
               <li>
@@ -12,7 +15,7 @@ export const index = () => {
               </li>
               <li>Jobs</li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Job Search Form */}
           <div className="hero-at-jlv17 mb30">
@@ -33,7 +36,7 @@ export const index = () => {
                   <input
                     type="text"
                     name="field_name"
-                    placeholder="Job title, keywords, or company"
+                    placeholder="Job title"
                   />
                 </div>
 
@@ -62,7 +65,7 @@ export const index = () => {
                 {/* Form Group */}
                 <div className="form-group col-lg-2 col-md-12 col-sm-12 text-right">
                   <button type="submit" className="theme-btn btn-style-one">
-                    Find Jobs
+                    Search
                   </button>
                 </div>
               </div>
@@ -89,11 +92,18 @@ export const index = () => {
 
                   {/* Switchbox Outer */}
                   <div className="switchbox-outer">
-                    <h4>Job type</h4>
+                    <h4>Work Type</h4>
                     <ul className="switchbox at-jlv16">
                       <li className="mb-0">
                         <label className="switch">
-                          <input type="checkbox" defaultChecked />
+                          <input type="radio" defaultChecked />
+                          {/* <span className="slider round"></span> */}
+                          <span className="title">All</span>
+                        </label>
+                      </li>
+                      <li className="mb-0">
+                        <label className="switch">
+                          <input type="checkbox" />
                           <span className="slider round"></span>
                           <span className="title">Freelance</span>
                         </label>
@@ -116,7 +126,7 @@ export const index = () => {
                         <label className="switch">
                           <input type="checkbox" />
                           <span className="slider round"></span>
-                          <span className="title">Part Time</span>
+                          <span className="title">Part-time</span>
                         </label>
                       </li>
                     </ul>
@@ -127,16 +137,20 @@ export const index = () => {
                     <h4>Experience</h4>
                     <ul className="checkboxes square at-jlv16">
                       <li>
-                        <input id="check-l" type="checkbox" name="check" />
-                        <label htmlFor="check-l">No Experience</label>
-                      </li>
-                      <li>
                         <input
-                          id="check-m"
+                          id="check-l"
                           type="checkbox"
                           name="check"
                           defaultChecked
                         />
+                        <label htmlFor="check-l">All</label>
+                      </li>
+                      <li>
+                        <input id="check-l" type="checkbox" name="check" />
+                        <label htmlFor="check-l">No Experience</label>
+                      </li>
+                      <li>
+                        <input id="check-m" type="checkbox" name="check" />
                         <label htmlFor="check-m">0-1 Year</label>
                       </li>
                       <li>
@@ -266,7 +280,7 @@ export const index = () => {
                           </span>
                           <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
                             <h4 className="fz20 mb-2 mb-lg-0">
-                              <a href="/job-list/job-detail">
+                              <a href="/job/job-detail">
                                 Business Analyst (N2 Up)
                               </a>
                             </h4>
