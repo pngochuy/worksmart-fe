@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../../services/accountServices";
 
 // Validation schema using Zod
 const schema = z
@@ -28,8 +30,10 @@ const schema = z
   });
 
 export const CandidateResgiterForm = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // React Hook Form
   const {
@@ -37,18 +41,40 @@ export const CandidateResgiterForm = () => {
     handleSubmit,
     formState: { errors, isValid },
     watch,
+    setError,
   } = useForm({
     mode: "onChange", // Real-time validation
     // mode: "onSubmit",
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data) => {
-    // Chỉ lấy fullname, email và password từ data
-    const { fullname, email, password } = data;
+  const onSubmit = async (data) => {
+    setIsLoading(true); // Bắt đầu loading
 
-    // In ra kết quả
-    console.log("Form Data:", { fullname, email, password });
+    try {
+      // Gửi request đăng ký
+      const response = await registerUser({
+        fullname: data.fullname,
+        email: data.email,
+        password: data.password,
+        role: "1", // Role thì mặc định là '1' (Candidate)
+      });
+
+      console.log("Đăng ký thành công:", response);
+
+      // Chuyển hướng sang trang xác nhận email
+      navigate(
+        `/confirm-email?emailRegistered=${encodeURIComponent(data.email)}`
+      );
+    } catch (error) {
+      console.error("Lỗi đăng ký:", error);
+      setError("email", {
+        // Đặt lỗi cho trường confirmEmailCode
+        type: "manual",
+        message: error.error || "Email is already registered.",
+      });
+    }
+    setIsLoading(false); // Kết thúc loading
   };
 
   const isAgreed = watch("agree");
@@ -157,9 +183,10 @@ export const CandidateResgiterForm = () => {
             className={`theme-btn btn-style-one ${
               isValid ? "" : "btn-disabled"
             }`}
-            disabled={!isValid || !isAgreed}
+            // disabled={!isValid || !isAgreed}
+            disabled={!isValid || !isAgreed || isLoading} // Disable khi đang loading
           >
-            Register
+            {isLoading ? <span className="loading-spinner"></span> : "Register"}
           </button>
         </div>
       </form>

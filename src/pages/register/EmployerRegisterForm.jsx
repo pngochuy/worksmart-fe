@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fetchProvinces } from "../../helpers/getLocationVN";
-import { translateToEnglish } from "../../helpers/translateToEnglish";
+import { vietnamProvinces } from "../../helpers/getLocationVN";
 
 // Validation schema using Zod
 const schema = z
@@ -41,38 +40,12 @@ const schema = z
 
 export const EmployerRegisterForm = () => {
   const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [selectedProvince, setSelectedProvince] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    // Gọi API để lấy dữ liệu các tỉnh
-    const fetchProvincesData = async () => {
-      const data = await fetchProvinces();
-      setProvinces(data); // Lưu dữ liệu các tỉnh vào state
-    };
-
-    fetchProvincesData();
+    setProvinces(vietnamProvinces); // Lưu dữ liệu các tỉnh vào state
   }, []);
-
-  const handleProvinceChange = async (e) => {
-    const provinceName = e.target.value;
-    setSelectedProvince(provinceName);
-
-    // Tìm quận huyện của tỉnh được chọn
-    const province = provinces.find(
-      // (province) => province.code === parseInt(provinceCode)
-      (province) => province.name === provinceName
-    );
-    setDistricts(province ? province.districts : []); // Cập nhật districts dựa trên tỉnh đã chọn
-  };
-
-  // Hàm lọc tên tỉnh để bỏ các từ như "Thành phố", "Tỉnh"
-  const formatProvinceName = (name) => {
-    // Xóa "Thành phố" và "Tỉnh" nếu có
-    return name.replace(/(Thành phố|Tỉnh)\s+/i, "").trim();
-  };
 
   // React Hook Form
   const {
@@ -87,10 +60,6 @@ export const EmployerRegisterForm = () => {
   });
 
   const onSubmit = async (data) => {
-    data.workLocation = formatProvinceName(data.workLocation);
-    data.workLocation = await translateToEnglish(data.workLocation);
-    data.district = formatProvinceName(data.district);
-    data.district = await translateToEnglish(data.district);
     console.log("Form Data:", data);
   };
 
@@ -168,7 +137,7 @@ export const EmployerRegisterForm = () => {
           )}
         </div>
 
-        <h3>Employer information</h3>
+        <h3>Employer Information</h3>
         <div className="form-group">
           <label>
             Full name <span style={{ color: "red" }}>*</span>
@@ -243,7 +212,7 @@ export const EmployerRegisterForm = () => {
                 id="province"
                 onChange={(e) => {
                   field.onChange(e.target.value); // Gọi onChange từ react-hook-form
-                  handleProvinceChange(e); // Đồng thời cập nhật tỉnh và quận huyện
+                  // handleProvinceChange(e); // Đồng thời cập nhật tỉnh và quận huyện
                 }}
                 value={field.value || ""} // Lấy giá trị từ react-hook-form
                 // value ở đây 1 là field.value -> chạy đc form
@@ -255,8 +224,8 @@ export const EmployerRegisterForm = () => {
                 <option value="" disabled>
                   Select province/city
                 </option>
-                {provinces.map((province) => (
-                  <option key={province.code} value={province.translatedName}>
+                {provinces.map((province, index) => (
+                  <option key={index} value={province.name}>
                     {province.name}
                   </option>
                 ))}
@@ -269,7 +238,7 @@ export const EmployerRegisterForm = () => {
           )}
         </div>
 
-        <div className="form-group">
+        {/* <div className="form-group">
           <label htmlFor="district">District</label>
           <Controller
             name="district"
@@ -297,7 +266,7 @@ export const EmployerRegisterForm = () => {
               </select>
             )}
           />
-        </div>
+        </div> */}
 
         <div className="form-group">
           <label>

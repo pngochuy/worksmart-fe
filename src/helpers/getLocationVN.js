@@ -1,10 +1,71 @@
-export const fetchProvinces = async () => {
-  try {
-    const response = await fetch("https://provinces.open-api.vn/api?depth=2");
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("Error fetching provinces:", err);
-    return [];
-  }
+export const fetchProvinces = () => {
+  // Lấy danh sách tên tỉnh/thành phố
+  // const provinceNames = vietnamProvinces.map((province) => province.name);
+  return vietnamProvinces;
 };
+
+export const vietnamProvinces = [
+  { name: "An Giang" },
+  { name: "Ba Ria - Vung Tau" },
+  { name: "Bac Giang" },
+  { name: "Bac Kan" },
+  { name: "Bac Lieu" },
+  { name: "Bac Ninh" },
+  { name: "Ben Tre" },
+  { name: "Binh Dinh" },
+  { name: "Binh Duong" },
+  { name: "Binh Phuoc" },
+  { name: "Binh Thuan" },
+  { name: "Ca Mau" },
+  { name: "Can Tho" },
+  { name: "Cao Bang" },
+  { name: "Da Nang" },
+  { name: "Dak Lak" },
+  { name: "Dak Nong" },
+  { name: "Dien Bien" },
+  { name: "Dong Nai" },
+  { name: "Dong Thap" },
+  { name: "Gia Lai" },
+  { name: "Ha Giang" },
+  { name: "Ha Nam" },
+  { name: "Ha Noi" },
+  { name: "Ha Tinh" },
+  { name: "Hai Duong" },
+  { name: "Hai Phong" },
+  { name: "Hau Giang" },
+  { name: "Ho Chi Minh City" },
+  { name: "Hoa Binh" },
+  { name: "Hung Yen" },
+  { name: "Khanh Hoa" },
+  { name: "Kien Giang" },
+  { name: "Kon Tum" },
+  { name: "Lai Chau" },
+  { name: "Lam Dong" },
+  { name: "Lang Son" },
+  { name: "Lao Cai" },
+  { name: "Long An" },
+  { name: "Nam Dinh" },
+  { name: "Nghe An" },
+  { name: "Ninh Binh" },
+  { name: "Ninh Thuan" },
+  { name: "Phu Tho" },
+  { name: "Phu Yen" },
+  { name: "Quang Binh" },
+  { name: "Quang Nam" },
+  { name: "Quang Ngai" },
+  { name: "Quang Ninh" },
+  { name: "Quang Tri" },
+  { name: "Soc Trang" },
+  { name: "Son La" },
+  { name: "Tay Ninh" },
+  { name: "Thai Binh" },
+  { name: "Thai Nguyen" },
+  { name: "Thanh Hoa" },
+  { name: "Thua Thien Hue" },
+  { name: "Tien Giang" },
+  { name: "Tra Vinh" },
+  { name: "Tuyen Quang" },
+  { name: "Vinh Long" },
+  { name: "Vinh Phuc" },
+  { name: "Yen Bai" },
+];

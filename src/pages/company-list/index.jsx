@@ -116,7 +116,7 @@ export const index = () => {
                         />
                       </span>
                       <h4>
-                        <a href="/company/company-detail">Netflix</a>
+                        <a href="/company-list/company-detail">Netflix</a>
                       </h4>
                       <ul className="job-info">
                         <li>

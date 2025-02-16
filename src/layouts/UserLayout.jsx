@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { FooterUser } from "../components/FooterUser";
-import { HeaderUser } from "../components/HeaderUser";
+import { Header } from "../components/Header";
 
 export const UserLayout = ({ children }) => {
   return (
@@ -13,7 +13,7 @@ export const UserLayout = ({ children }) => {
         <span className="header-span"></span>
 
         {/* Main Header */}
-        <HeaderUser />
+        <Header />
         {/* End Header */}
 
         {children}

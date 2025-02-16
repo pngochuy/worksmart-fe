@@ -53,7 +53,7 @@ export const Header = () => {
                   <span>Jobs</span>
                   <ul>
                     <li>
-                      <a href="/job">Finding Jobs</a>
+                      <a href="/job-list">Job List</a>
                     </li>
                     <li>
                       <a href="/suitable-jobs">Suitable Jobs</a>
@@ -73,7 +73,7 @@ export const Header = () => {
                   <span>Company</span>
                   <ul>
                     <li>
-                      <a href="/company">Company List</a>
+                      <a href="/company-list">Company List</a>
                     </li>
                     <li>
                       <a href="blog-list-v1.html">Top Company</a>
@@ -97,6 +97,20 @@ export const Header = () => {
                     </li>
                     <li>
                       <a href="/manage-cv">Manage CV</a>
+                    </li>
+                  </ul>
+                </li>
+                <li
+                  className={`dropdown ${
+                    activeDropdown?.innerText.includes("Candidates")
+                      ? "current"
+                      : ""
+                  }`}
+                >
+                  <span>Candidates</span>
+                  <ul>
+                    <li>
+                      <a href="/candidate-list">Candidate List</a>
                     </li>
                   </ul>
                 </li>

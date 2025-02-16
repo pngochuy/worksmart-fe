@@ -1,8 +1,10 @@
+import companyLogo from "../../../assets/images/resource/company-logo/5-1.png";
+
 export const index = () => {
   return (
     <>
       {/* Job Detail Section */}
-      <section className="job-detail-section" style={{ marginTop: "111px" }}>
+      <section className="job-detail-section" style={{ marginTop: "120px" }}>
         {/* Upper Box */}
         <div className="upper-box">
           <div className="auto-container">
@@ -11,7 +13,7 @@ export const index = () => {
               <div className="inner-box">
                 <div className="content">
                   <span className="company-logo">
-                    <img src="images/resource/company-logo/5-1.png" alt="" />
+                    <img src={companyLogo} alt="" />
                   </span>
                   <h4>
                     <a href="#">Invision</a>

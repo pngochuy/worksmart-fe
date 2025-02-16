@@ -1,7 +1,22 @@
+import { useEffect } from "react";
 import leftBannerImg from "../../assets/images/background/12.jpg";
 import { LoginForm } from "./LoginForm";
+import { toast } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
 
 export const Index = () => {
+  useEffect(() => {
+    // Kiểm tra giá trị trong sessionStorage
+    if (sessionStorage.getItem("emailConfirmed") === "true") {
+      toast.success("Email is confirmed. You can log in now.", {
+        position: "top-right",
+      });
+
+      // Xoá giá trị khỏi sessionStorage để không hiển thị thông báo nữa
+      sessionStorage.removeItem("emailConfirmed");
+    }
+  }, []);
+
   return (
     <>
       <div className="login-section">
@@ -35,15 +50,7 @@ export const Index = () => {
                   <span>or</span>
                 </div>
                 <div className="btn-box row">
-                  <div className="col-lg-6 col-md-12">
-                    <a
-                      href="#"
-                      className="theme-btn social-btn-two facebook-btn"
-                    >
-                      <i className="fab fa-facebook-f"></i> Log In via Facebook
-                    </a>
-                  </div>
-                  <div className="col-lg-6 col-md-12">
+                  <div className="col-lg-12 col-md-12">
                     <a href="#" className="theme-btn social-btn-two google-btn">
                       <i className="fab fa-google"></i> Log In via Gmail
                     </a>

@@ -2,33 +2,62 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { loginUser } from "../../services/accountServices";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const schema = z.object({
   email: z.string().min(1, "Password cannot be blank").email("Invalid email"),
-  password: z.string().min(1, "Password cannot be blank"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(20, "Password must not exceed 20 characters")
+    .regex(/[a-z]/, "Password must include at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must include at least one uppercase letter")
+    .regex(/\d/, "Password must include at least one numeric character"),
 });
 
 export const LoginForm = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm({
     resolver: zodResolver(schema), // Kết nối schema với react-hook-form
   });
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data);
-    // Xử lý logic gửi form
+  const onSubmit = async (data) => {
+    setIsLoading(true); // Bắt đầu loading
+    try {
+      const response = await loginUser({
+        email: data.email,
+        password: data.password,
+      });
+      toast.success("Login success!");
+      console.log("Login thành công:", response);
+      navigate("/dashboard"); // Điều hướng người dùng tới trang Dashboard sau khi đăng nhập thành công
+    } catch (error) {
+      setError("email", {
+        // Đặt lỗi cho trường confirmEmailCode
+        type: "manual",
+        message: error.error || "Email is not registered!",
+      });
+    }
+    setIsLoading(false); // Kết thúc loading
   };
 
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="form-group">
-          <label>Email</label>
+          <label>
+            Email <span style={{ color: "red" }}>*</span>
+          </label>
           <input
             type="email"
             placeholder="Enter email"
@@ -89,8 +118,9 @@ export const LoginForm = () => {
             className="theme-btn btn-style-one"
             type="submit"
             name="log-in"
+            disabled={isLoading} // Disable khi đang loading
           >
-            Log In
+            {isLoading ? <span className="loading-spinner"></span> : "Login"}
           </button>
         </div>
       </form>
