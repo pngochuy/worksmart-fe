@@ -24,6 +24,7 @@ import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as SubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
 import { index as MessagesPage } from "./pages/dashboard-candidate/messages";
+import { index as NotificationsPage } from "./pages/dashboard-candidate/notifications";
 
 function App() {
   return (
@@ -177,6 +178,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="1">
                     <MessagesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="notifications"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <NotificationsPage />
                   </ProtectedRoute>
                 }
               />

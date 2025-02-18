@@ -67,6 +67,15 @@ export const Sidebar = () => {
             </li>
             <li
               className={
+                checkActive("/candidate/notifications") ? "active" : ""
+              }
+            >
+              <a href="/candidate/notifications">
+                <i className="la la-bell"></i>Notifications
+              </a>
+            </li>
+            <li
+              className={
                 checkActive("/candidate/change-password") ? "active" : ""
               }
             >
