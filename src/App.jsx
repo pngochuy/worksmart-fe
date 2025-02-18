@@ -22,6 +22,7 @@ import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
+import { index as SubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
 
 function App() {
   return (
@@ -157,6 +158,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="1">
                     <SavedJobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="subscription-plans"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <SubscriptionPlansPage />
                   </ProtectedRoute>
                 }
               />
