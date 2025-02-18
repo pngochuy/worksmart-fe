@@ -51,13 +51,6 @@ export const Sidebar = () => {
                 <i className="la la-bookmark-o"></i>Saved Jobs
               </a>
             </li>
-            <li
-              className={checkActive("/candidate/cv-manager") ? "active" : ""}
-            >
-              <a href="/candidate/cv-manager">
-                <i className="la la-file-invoice"></i> CV manager
-              </a>
-            </li>
             <li className={checkActive("/candidate/packages") ? "active" : ""}>
               <a href="/candidate/packages">
                 <i className="la la-box"></i>Packages
