@@ -14,10 +14,10 @@ import "./styles/jquery.modal.min.css";
 import "./styles/line-awesome.css";
 import "./styles/mmenu.css";
 import "./styles/owl.css";
-import "./styles/responsive.css";
 import "./styles/select2.min.css";
 import "./styles/style.css";
 import "./styles/index.css";
+import "./styles/responsive.css";
 
 // Import các thư viện JS cần thiết
 import "./assets/js/jquery.js";
@@ -40,9 +40,12 @@ import "./assets/js/owl.js";
 // import "./assets/js/wow.js";
 import "wowjs";
 import "./assets/js/script.js";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
+  <GoogleOAuthProvider clientId="343167304228-2ner08mmv6jk0qpfposq74blmmrcope5.apps.googleusercontent.com">
+    <StrictMode>
+      <App />
+    </StrictMode>
+  </GoogleOAuthProvider>
 );

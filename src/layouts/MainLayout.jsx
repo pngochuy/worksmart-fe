@@ -7,7 +7,7 @@ export const MainLayout = ({ children }) => {
     <>
       <div className="page-wrapper">
         {/* Preloader */}
-        <div className="preloader"></div>
+        {/* <div className="preloader"></div> */}
 
         {/* Main Header */}
         <Header />
