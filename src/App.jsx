@@ -18,8 +18,10 @@ import { ProtectedRoute } from "./layouts/ProtectedRoute";
 import { index as CandidateDashboardPage } from "./pages/dashboard-candidate";
 import { index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
 import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
+import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-cv";
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
+import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 
 function App() {
   return (
@@ -124,6 +126,15 @@ function App() {
               />
               <Route
                 index
+                path="create-cv"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <CreateCVPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
                 path="applied-jobs"
                 element={
                   <ProtectedRoute requiredRoleId="1">
@@ -137,6 +148,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="1">
                     <JobAlertsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="saved-jobs"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <SavedJobsPage />
                   </ProtectedRoute>
                 }
               />
