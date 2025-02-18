@@ -13,6 +13,13 @@ import { index as CompanyListPage } from "./pages/company-list";
 import { index as CompanyDetailPage } from "./pages/company-list/company-detail";
 import { index as CandidateListPage } from "./pages/candidate-list";
 import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-detail";
+import { UserLayout } from "./layouts/UserLayout";
+import { ProtectedRoute } from "./layouts/ProtectedRoute";
+import { index as CandidateDashboardPage } from "./pages/dashboard-candidate";
+import { index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
+import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
+import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
+import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 
 function App() {
   return (
@@ -40,9 +47,6 @@ function App() {
               element={
                 <MainLayout>
                   <JobListPage />
-                  {/* <ProtectedRoute requiredRole="1">
-                    <JobListPage />
-                  </ProtectedRoute> */}
                 </MainLayout>
               }
             />
@@ -88,6 +92,55 @@ function App() {
                 </MainLayout>
               }
             />
+            {/* Protected Route */}
+            {/* Candidate */}
+            <Route path="/candidate" element={<UserLayout />}>
+              <Route
+                index
+                path="dashboard"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <CandidateDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="my-profile"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <MyProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="my-cv"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <MyCVPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="applied-jobs"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <AppliedJobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="job-alerts"
+                element={
+                  <ProtectedRoute requiredRoleId="1">
+                    <JobAlertsPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
           </Routes>
         </Router>
       </PrimeReactProvider>

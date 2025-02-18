@@ -40,7 +40,8 @@ export const LoginForm = () => {
       });
       toast.success("Login success!");
       console.log("Login thành công:", response);
-      navigate("/dashboard"); // Điều hướng người dùng tới trang Dashboard sau khi đăng nhập thành công
+
+      navigate("/candidate/dashboard");
     } catch (error) {
       setError("email", {
         // Đặt lỗi cho trường confirmEmailCode

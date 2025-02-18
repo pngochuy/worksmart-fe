@@ -1,9 +1,5 @@
 /* 
-Superio | Just another HTML Template
 
-Template Name: Superio
-Author: Creative Layers
-Version: 1.0.0
 
 /************ TABLE OF CONTENTS ***************
 1. Fonts
@@ -8019,7 +8015,7 @@ Job Detail Section
 
 .job-detail-section .upper-box {
   position: relative;
-  background-image: url(../assets/images/icons/bg-4.png); 
+  background-image: url(../assets/images/icons/bg-4.png);
   /* ../assets/logo-no-caption-loading.png */
   background-repeat: no-repeat;
   background-position: center;

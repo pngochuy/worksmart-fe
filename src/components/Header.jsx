@@ -1,6 +1,7 @@
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { useEffect, useState } from "react";
+import { getUserRoleFromToken } from "../helpers/decodeJwt";
 
 export const Header = () => {
   const location = useLocation();
