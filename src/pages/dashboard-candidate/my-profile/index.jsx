@@ -1,3 +1,17 @@
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+// import { getCandidateProfile, updateCandidateProfile } from "../../services/accountServices";
+
+const schema = z.object({
+  fullname: z.string().min(2, "Full name cannot be blank"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  bio: z.string().optional(),
+});
+
 export const index = () => {
   return (
     <>
@@ -52,14 +66,14 @@ export const index = () => {
                         </div>
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Job Title</label>
                           <input
                             type="text"
                             name="name"
                             placeholder="UI Designer"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
                         <div className="form-group col-lg-6 col-md-12">
@@ -82,17 +96,17 @@ export const index = () => {
                         </div>
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Website</label>
                           <input
                             type="text"
                             name="name"
                             placeholder="www.jerome.com"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
+                        {/* <div className="form-group col-lg-3 col-md-12">
                           <label>Current Salary($)</label>
                           <select className="chosen-select">
                             <option>40-70 K</option>
@@ -101,10 +115,10 @@ export const index = () => {
                             <option>70-100 K</option>
                             <option>100-150 K</option>
                           </select>
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
+                        {/* <div className="form-group col-lg-3 col-md-12">
                           <label>Expected Salary($)</label>
                           <select className="chosen-select">
                             <option>120-350 K</option>
@@ -114,20 +128,20 @@ export const index = () => {
                             <option>70-100 K</option>
                             <option>100-150 K</option>
                           </select>
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Experience</label>
                           <input
                             type="text"
                             name="name"
                             placeholder="5-10 Years"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Age</label>
                           <select className="chosen-select">
                             <option>23 - 27 Years</option>
@@ -135,30 +149,30 @@ export const index = () => {
                             <option>25 - 29 Years</option>
                             <option>26 - 30 Years</option>
                           </select>
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Education Levels</label>
                           <input
                             type="text"
                             name="name"
                             placeholder="Certificate"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Languages</label>
                           <input
                             type="text"
                             name="name"
                             placeholder="English, Turkish"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Search Select */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Categories </label>
                           <select
                             data-placeholder="Categories"
@@ -176,7 +190,7 @@ export const index = () => {
                             </option>
                             <option value="Management">Management</option>
                           </select>
-                        </div>
+                        </div> */}
 
                         {/* Input */}
                         <div className="form-group col-lg-6 col-md-12">
@@ -188,10 +202,10 @@ export const index = () => {
                         </div>
 
                         {/* About Company */}
-                        <div className="form-group col-lg-12 col-md-12">
+                        {/* <div className="form-group col-lg-12 col-md-12">
                           <label>Description</label>
                           <textarea placeholder="Spent several years working on sheep on Wall Street. Had moderate success investing in Yugo's on Wall Street. Managed a small team buying and selling Pogo sticks for farmers. Spent several years licensing licorice in West Palm Beach, FL. Developed several new methods for working it banjos in the aftermarket. Spent a weekend importing banjos in West Palm Beach, FL.In this position, the Software Engineer collaborates with Evention's Development team to continuously enhance our current software solutions as well as create new solutions to eliminate the back-office operations and management challenges present"></textarea>
-                        </div>
+                        </div> */}
 
                         {/* Input */}
                         <div className="form-group col-lg-6 col-md-12">
@@ -216,39 +230,39 @@ export const index = () => {
                     <form className="default-form">
                       <div className="row">
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Facebook</label>
                           <input
                             type="text"
                             name="name"
                             placeholder="www.facebook.com/Invision"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Twitter</label>
                           <input type="text" name="name" placeholder="" />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Linkedin</label>
                           <input type="text" name="name" placeholder="" />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Google Plus</label>
                           <input type="text" name="name" placeholder="" />
-                        </div>
+                        </div> */}
 
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <button className="theme-btn btn-style-one">
                             Save
                           </button>
-                        </div>
+                        </div> */}
                       </div>
                     </form>
                   </div>
@@ -266,7 +280,7 @@ export const index = () => {
                     <form className="default-form">
                       <div className="row">
                         {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        {/* <div className="form-group col-lg-6 col-md-12">
                           <label>Country</label>
                           <select className="chosen-select">
                             <option>Australia</option>
@@ -275,7 +289,7 @@ export const index = () => {
                             <option>Japan</option>
                             <option>India</option>
                           </select>
-                        </div>
+                        </div> */}
 
                         {/* Input */}
                         <div className="form-group col-lg-6 col-md-12">
