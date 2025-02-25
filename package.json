@@ -13,13 +13,8 @@
     "@hookform/resolvers": "^3.10.0",
     "@react-oauth/google": "^0.12.1",
     "@tailwindcss/vite": "^4.0.0",
-<<<<<<< HEAD
-    "axios": "^1.7.9",
-    "bootstrap": "^4.4.1",
-=======
     "axios": "^1.7.8",
     "bootstrap": "^4.6.2",
->>>>>>> c301f04487fa906c7c5aeb775abc48cc15bc4735
     "jwt-decode": "^4.0.0",
     "popper.js": "^1.16.1",
     "primereact": "^10.9.2",

@@ -1,9 +1,12 @@
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import { editCandidateProfile } from "../../../services/candidateServices";
+import { getUserIdFromToken } from "../../../helpers/decodeJwt";
 
 // Validation schema using Zod
 const profileSchema = z.object({
@@ -28,6 +31,7 @@ const addressSchema = z.object({
 // React Hook Form
 export const index = () => {
   const navigate = useNavigate();
+  const [UserId, setUserId] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -45,6 +49,7 @@ export const index = () => {
   const { 
     register: registerProfile, 
     handleSubmit: handleSubmitProfile, 
+    setValue: setProfileValue,
     formState: { errors: profileErrors } 
   } = useForm({
     mode: "onChange",
@@ -54,51 +59,81 @@ export const index = () => {
   const { 
     register: registerAddress, 
     handleSubmit: handleSubmitAddress, 
+    setValue: setAddressValue,
     formState: { errors: addressErrors } 
   } = useForm({
     mode: "onChange",
     resolver: zodResolver(addressSchema),
   });
 
-  const onSubmitProfile = async (data) => {
-    console.log("Form Data:", data);
-    setIsProfileLoading(true);
+  useEffect(() => {
+    const id = getUserIdFromToken(); 
+    console.log("Decoded User ID:", id);
+    if (id) {
+      setUserId(id);
+    } else {
+      console.error("Không tìm thấy userId trong token!");
+      navigate("/login"); // Chuyển hướng nếu không có userId
+    }
+  }, []);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
 
-    try {
-      const response = await editCandidateProfile(data);
-      console.log("Profile updated successfully:", response);
-
-      if (response) {
-        alert("Profile updated successfully!");
-        navigate("/candidate/dashboard"); // Điều hướng sau khi cập nhật thành công
-      } else {
-        alert("Failed to update profile");
+        const cleanToken = token.replace(/^"(.*)"$/, '$1');
+        console.log("Bearer token", cleanToken);
+       
+        const response = await axios.get("https://localhost:7141/candidates/profile", {
+          headers: {
+            Authorization: `Bearer ${cleanToken}`
+          }
+        });
+        console.log("Fetched data:", response.data);
+        const data = response.data;
+  
+        if (data) {
+          setProfileData(data),
+          setProfileValue("fullName", data.fullName || "");
+          setProfileValue("phoneNumber", data.phoneNumber || "");
+          setProfileValue("email", data.email || "");
+          setProfileValue("gender", data.gender || "Other");
+          setProfileValue("dateOfBirth", data.dateOfBirth || "");
+          setProfileValue("identityNumber", data.identityNumber || "");
+          setProfileValue("isPrivated", data.isPrivated ? "Yes" : "No");
+  
+          setAddressValue("address", data.address || "");
+        }
+      } catch (error) {
+        console.error("Error fetching candidate profile", error.response);
       }
+    };
+    if (UserId) {
+      fetchProfile();
+    }
+  }, [UserId, setProfileValue, setAddressValue]);
+  
+
+  const onSubmitProfile = async (formData) => {
+    setIsProfileLoading(true);
+    try {
+      await axios.put(`https://localhost:7141/candidates/edit-profile/${UserId}`, formData);
+      alert("Profile updated successfully!");
     } catch (error) {
-      alert("An error occurred while updating profile.");
+      console.error("Error updating profile", error);
     } finally {
       setIsProfileLoading(false);
     }
   };
 
-  const onSubmitAddress = async (data) => {
-    console.log("Address:", data.address);
+  const onSubmitAddress = async (formData) => {
     setIsAddressLoading(true);
-
     try {
-      const response = await editCandidateProfile(data);
-      console.log("API Response:", response);
-
-      if (response && response.status === 200) {
-        alert("Profile updated successfully!");
-        navigate("/candidate/dashboard"); // Điều hướng sau khi cập nhật thành công
-      } else {
-        alert("Failed to update profile");
-      }
+      await axios.put(`https://localhost:7141/candidates/edit-profile/${UserId}`, formData);
+      alert("Address updated successfully!");
     } catch (error) {
-      console.error("API Error:", error);
-      alert("An error occurred while updating profile.");
+      console.error("Error updating address", error);
     } finally {
       setIsAddressLoading(false);
     }
@@ -184,13 +219,12 @@ export const index = () => {
                         {fileError && <div className="text-danger">{fileError}</div>}
                       </div>
                     </div>
-
                     <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="default-form">
                       <div className="row">
                         {/* Full Name */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Full Name</label>
-                          <input type="text" placeholder="Enter full name" {...registerProfile("fullName")} />
+                          <input type="text" placeholder="Enter full name" {...registerProfile("fullName")} /> 
                           {profileErrors.fullName && <span className="text-danger">{profileErrors.fullName.message}</span>}
                         </div>
 

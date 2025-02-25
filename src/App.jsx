@@ -180,7 +180,7 @@ function App() {
                 path="subscription-plans"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    <SubscriptionPlansPage />
+                    {/* <SubscriptionPlansPage /> */}
                   </ProtectedRoute>
                 }
               />
@@ -189,7 +189,7 @@ function App() {
                 path="messages"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    <MessagesPage />
+                    {/* <MessagesPage /> */}
                   </ProtectedRoute>
                 }
               />
@@ -198,7 +198,7 @@ function App() {
                 path="notifications"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    <NotificationsPage />
+                    {/* <NotificationsPage /> */}
                   </ProtectedRoute>
                 }
               />
