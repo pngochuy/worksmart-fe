@@ -32,6 +32,11 @@ import { index as EmployerDashboardPage } from "./pages/dashboard-employer";
 import { index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
 import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import { index as ManageJobsPage } from "./pages/dashboard-employer/manage-jobs";
+import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
+import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
+import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
+import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
+import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 
 function App() {
   return (
@@ -242,6 +247,51 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
                     <ManageJobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="all-candidates"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <AllCandidatesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="subscription-plans"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <EmployerSubscriptionPlansPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="messages"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <EmployerMessagesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="notifications"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <EmployerNotificationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="change-password"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <EmployerChangePasswordPage />
                   </ProtectedRoute>
                 }
               />
