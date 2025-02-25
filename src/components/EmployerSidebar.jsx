@@ -27,8 +27,8 @@ export const EmployerSidebar = () => {
             <i className="la la-paper-plane"></i>Post Job
           </NavLink>
         </li>
-        <li className={checkActive("/employer/manage-job") ? "active" : ""}>
-          <NavLink to="/employer/manage-job">
+        <li className={checkActive("/employer/manage-jobs") ? "active" : ""}>
+          <NavLink to="/employer/manage-jobs">
             <i className="la la-briefcase"></i> Manage Jobs
           </NavLink>
         </li>
@@ -42,9 +42,13 @@ export const EmployerSidebar = () => {
             <i className="la la-bookmark-o"></i>Saved CVs
           </NavLink>
         </li>
-        <li className={checkActive("/employer/packages") ? "active" : ""}>
-          <NavLink to="/employer/packages">
-            <i className="la la-box"></i>Packages
+        <li
+          className={
+            checkActive("/employer/subscription-plans") ? "active" : ""
+          }
+        >
+          <NavLink to="/employer/subscription-plans">
+            <i className="la la-box"></i>Subscription Plans
           </NavLink>
         </li>
         <li className={checkActive("/employer/messages") ? "active" : ""}>
