@@ -1,7 +1,8 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { useEffect, useState } from "react";
 import { getUserRoleFromToken } from "../helpers/decodeJwt";
+import userAvatar from "../assets/images/resource/company-6.png";
 
 export const Header = () => {
   const location = useLocation();
@@ -22,6 +23,11 @@ export const Header = () => {
       }
     });
   }, [location.pathname]);
+
+  const logout = () => {
+    localStorage.removeItem("accessToken");
+    window.location.href = "/login";
+  };
 
   return (
     <>
@@ -160,56 +166,47 @@ export const Header = () => {
           </div>
 
           <div className="outer-box">
-            {/* Add Listing */}
-            <a href="candidate-dashboard-cv-manager.html" className="upload-cv">
-              {" "}
-              Upload your CV
-            </a>
-            {/* Login/Register */}
-            <div className="btn-box">
-              <a href="/login" className="theme-btn btn-style-three call-modal">
-                Login / Register
-              </a>
-              <a
-                href="dashboard-post-job.html"
-                className="theme-btn btn-style-one"
-              >
-                Job Post
-              </a>
-            </div>
-          </div>
-        </div>
+            <button className="menu-btn">
+              <span className="count">1</span>
+              <span className="icon la la-heart-o"></span>
+            </button>
 
-        {/* Mobile Header */}
-        <div className="mobile-header">
-          <div className="logo">
-            <a href="index.html">
-              <img src={logo} alt="" title="" />
-            </a>
-          </div>
+            <button className="menu-btn">
+              <span className="icon la la-bell"></span>
+            </button>
 
-          {/*Nav Box*/}
-          <div className="nav-outer clearfix">
-            <div className="outer-box">
-              {/* Login/Register */}
-              <div className="login-box">
-                <a href="/login" className="call-modal">
-                  <span className="icon-user"></span>
+            {/* Dashboard Option */}
+            <div className="dashboard-option">
+              <a className="dropdown-toggle" role="button">
+                <img src={userAvatar} alt="avatar" className="thumb" />
+                <span className="name">My Account</span>
+              </a>
+              <ul className="dropdown-menu">
+                <li>
+                  <a href="/dashboard">Dashboard</a>
+                </li>
+                <li>
+                  <a onClick={logout}>Logout</a>
+                </li>
+              </ul>
+
+              {/* <a href="/create-cv" className="upload-cv">
+                Upload your CV
+              </a>
+              <div className="btn-box">
+                <a
+                  href="/login"
+                  className="theme-btn btn-style-three call-modal"
+                >
+                  Login / Register
                 </a>
-              </div>
-
-              <a
-                href="#nav-mobile"
-                className="mobile-nav-toggler navbar-trigger"
-              >
-                <span className="flaticon-menu-1"></span>
-              </a>
+                <a href="/create-job" className="theme-btn btn-style-one">
+                  Job Post
+                </a>
+              </div> */}
             </div>
           </div>
         </div>
-
-        {/* Mobile Nav */}
-        <div id="nav-mobile"></div>
       </header>
       {/* End Main Header */}
     </>

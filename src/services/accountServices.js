@@ -40,3 +40,19 @@ export const loginUser = async (userLoginData) => {
     throw error.response.data || error.message; // Xử lý lỗi
   }
 };
+
+export const loginUserByGoogle = async (userLoginData) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/accounts/google-login`,
+      userLoginData
+    );
+    console.log(response.data);
+    if (response.data.token) {
+      localStorage.setItem("accessToken", JSON.stringify(response.data.token));
+    }
+    return response.data;
+  } catch (error) {
+    throw error.response.data || error.message; // Xử lý lỗi
+  }
+};
