@@ -11,10 +11,11 @@ import { index as JobListPage } from "./pages/job-list";
 import { index as JobDetailPage } from "./pages/job-list/job-detail";
 import { index as CompanyListPage } from "./pages/company-list";
 import { index as CompanyDetailPage } from "./pages/company-list/company-detail";
-import { index as CandidateListPage } from "./pages/candidate-list";
+import { Index as CandidateListPage } from "./pages/candidate-list";
 import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-detail";
 import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
+// Candidate Pages
 import { index as CandidateDashboardPage } from "./pages/dashboard-candidate";
 import { index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
 import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
@@ -22,9 +23,20 @@ import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
-import { index as SubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
-import { index as MessagesPage } from "./pages/dashboard-candidate/messages";
-import { index as NotificationsPage } from "./pages/dashboard-candidate/notifications";
+import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
+import { index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
+import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
+import { index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
+// Employer Pages
+import { index as EmployerDashboardPage } from "./pages/dashboard-employer";
+import { index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
+import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
+import { index as ManageJobsPage } from "./pages/dashboard-employer/manage-jobs";
+import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
+import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
+import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
+import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
+import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 
 function App() {
   return (

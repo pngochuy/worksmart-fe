@@ -43,7 +43,7 @@ export const LoginForm = () => {
 
       navigate("/candidate/dashboard");
     } catch (error) {
-      console.error("Login error:", error);
+      console.log("Login thất bại:", error);
       setError("email", {
         // Đặt lỗi cho trường confirmEmailCode
         type: "manual",

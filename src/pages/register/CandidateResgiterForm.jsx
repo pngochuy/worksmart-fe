@@ -41,7 +41,7 @@ export const CandidateResgiterForm = () => {
     handleSubmit,
     formState: { errors, isValid },
     watch,
-    setError,
+    setError, //
   } = useForm({
     mode: "onChange", // Real-time validation
     // mode: "onSubmit",
