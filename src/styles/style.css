@@ -3524,13 +3524,13 @@ Contact Section
   align-items: center;
 }
 
-.dashboard-option .dropdown-toggle::after {
-  margin-left: 12px;
+/* .dashboard-option .dropdown-toggle::after { */
+  /* margin-left: 12px;
   content: "\f107";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
-  border: 0;
-}
+  border: 0; */
+/* } */
 
 .dashboard-option .thumb {
   height: 50px;
@@ -22608,4 +22608,34 @@ Work Section
 .btn-disabled {
   opacity: 0.6;
   pointer-events: none;
+}
+.dropdown-toggle {
+  display: block; /* Đảm bảo rằng link là block để chiếm đầy đủ không gian */
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 200px;
+  top: 100%; /* Đặt menu ngay dưới button */
+  left: 0;
+  margin-top: 0; /* Không có khoảng cách */
+}
+
+.dashboard-option:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu li a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-menu li a:hover {
+  background-color: #f1f1f1;
 }

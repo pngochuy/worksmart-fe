@@ -41,7 +41,7 @@ export const CandidateResgiterForm = () => {
     handleSubmit,
     formState: { errors, isValid },
     watch,
-    setError,
+    setError, //
   } = useForm({
     mode: "onChange", // Real-time validation
     // mode: "onSubmit",
@@ -57,7 +57,7 @@ export const CandidateResgiterForm = () => {
         fullname: data.fullname,
         email: data.email,
         password: data.password,
-        role: "1", // Role thì mặc định là '1' (Candidate)
+        role: "Candidate", // Role thì mặc định là '1' (Candidate)
       });
 
       console.log("Đăng ký thành công:", response);

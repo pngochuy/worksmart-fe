@@ -1,6 +1,8 @@
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { loginUserByGoogle } from "../../services/accountServices";
+import { toast } from "react-toastify";
 
 export const SocialRegister = () => {
   const [user, setUser] = useState([]);
@@ -17,22 +19,25 @@ export const SocialRegister = () => {
   useEffect(() => {
     if (user && user.access_token) {
       axios
-        .get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`, {
-          headers: {
-            Authorization: `Bearer ${user.access_token}`,
-            Accept: "application/json",
-          },
-        })
+        .get(
+          `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${user.access_token}`,
+              Accept: "application/json",
+            },
+          }
+        )
         .then((res) => {
           if (!res.data) {
             console.error("Google Login Response is empty!");
             return;
           }
-        
+
           console.log("User Profile:", res.data);
 
           setProfile(res.data);
-        
+
           // Đợi profile cập nhật xong rồi gọi login
           setTimeout(() => handleBackendLogin(res.data), 100);
         })
@@ -43,28 +48,20 @@ export const SocialRegister = () => {
   }, [user]);
 
   const handleBackendLogin = async (profileData) => {
-    const requestData = {
-      email: profile.email,
-      name: profile.name,
-      avatar: profile.picture || "",
-      role: "Candidate", // Nếu chưa có role, đặt mặc định
-    };
-    console.log("Sending request:", requestData);
-
     try {
-      const response = await axios.post("https://localhost:7141/accounts/google-login", {
+      const response = await loginUserByGoogle({
         email: profileData.email,
         name: profileData.name,
-        picture: profileData.picture,
+        picture: profileData.picture || "",
+        role: "Candidate", // Nếu chưa có role, đặt mặc định
       });
-
-      console.log("Login Response:", response.data);
-      localStorage.setItem("token", response.data.Token);
+      toast.success("Login success!");
+      console.log("Login thành công:", response);
 
       // Luôn điều hướng vào Candidate Dashboard
-      window.location.href = "/candidate/dashboard";
+      // window.location.href = "/candidate/dashboard";
     } catch (error) {
-      console.error("Login Failed:", error.response?.data || error.message);
+      console.error("Login Failed:", error);
       alert("Đăng nhập thất bại, vui lòng thử lại!");
     }
   };

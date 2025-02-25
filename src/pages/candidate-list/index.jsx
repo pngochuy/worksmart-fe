@@ -4,7 +4,7 @@ import MajorDropdown from "./MajorDropdown";
 import EducationDropdown from "./EducationDropdown";
 import WorkTypeDropdown from "./WorkTypeDropdown";
 import Pagination from "./Pagination";
-export const index = () => {
+export const Index = () => {
   const [candidates, setCandidates] = useState([]);
   const [totalPage, setTotalPage] = useState(1);
   const [searchParams, setSearchParams] = useState({
@@ -29,8 +29,8 @@ export const index = () => {
   };
 
   useEffect(() => {
-  getCandidates();
-}, [searchParams.PageSize, searchParams.PageIndex]);
+    getCandidates();
+  }, [searchParams.PageSize, searchParams.PageIndex]);
 
   // Hàm cập nhật searchParams khi nhập liệu
   const handleInputChange = (e) => {
