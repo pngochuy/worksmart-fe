@@ -104,7 +104,7 @@ function App() {
                 index
                 path="dashboard"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <CandidateDashboardPage />
                   </ProtectedRoute>
                 }
@@ -113,7 +113,7 @@ function App() {
                 index
                 path="my-profile"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <MyProfilePage />
                   </ProtectedRoute>
                 }
@@ -122,7 +122,7 @@ function App() {
                 index
                 path="my-cv"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <MyCVPage />
                   </ProtectedRoute>
                 }
@@ -131,7 +131,7 @@ function App() {
                 index
                 path="create-cv"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <CreateCVPage />
                   </ProtectedRoute>
                 }
@@ -140,7 +140,7 @@ function App() {
                 index
                 path="applied-jobs"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <AppliedJobsPage />
                   </ProtectedRoute>
                 }
@@ -149,7 +149,7 @@ function App() {
                 index
                 path="job-alerts"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <JobAlertsPage />
                   </ProtectedRoute>
                 }
@@ -158,7 +158,7 @@ function App() {
                 index
                 path="saved-jobs"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <SavedJobsPage />
                   </ProtectedRoute>
                 }
@@ -167,7 +167,7 @@ function App() {
                 index
                 path="subscription-plans"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <SubscriptionPlansPage />
                   </ProtectedRoute>
                 }
@@ -176,7 +176,7 @@ function App() {
                 index
                 path="messages"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <MessagesPage />
                   </ProtectedRoute>
                 }
@@ -185,7 +185,7 @@ function App() {
                 index
                 path="notifications"
                 element={
-                  <ProtectedRoute requiredRoleId="1">
+                  <ProtectedRoute requiredRoleId="Candidate">
                     <NotificationsPage />
                   </ProtectedRoute>
                 }

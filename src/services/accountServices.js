@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằng URL backend thật
+const BACKEND_API_URL = "https://localhost:7141"; // Thay thế bằng URL backend thật
 
 export const registerUser = async (userRegisterData) => {
   try {
