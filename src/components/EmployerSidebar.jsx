@@ -32,9 +32,9 @@ export const EmployerSidebar = () => {
             <i className="la la-briefcase"></i> Manage Jobs
           </NavLink>
         </li>
-        <li className={checkActive("/employer/applicants") ? "active" : ""}>
-          <NavLink to="/employer/applicants">
-            <i className="la la-file-invoice"></i> All Applicants
+        <li className={checkActive("/employer/all-candidates") ? "active" : ""}>
+          <NavLink to="/employer/all-candidates">
+            <i className="la la-file-invoice"></i> All Candidates
           </NavLink>
         </li>
         <li className={checkActive("/employer/saved-cvs") ? "active" : ""}>
