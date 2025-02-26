@@ -4,28 +4,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import { editCandidateProfile } from "../../../services/candidateServices";
 import { getUserIdFromToken } from "../../../helpers/decodeJwt";
 
 // Validation schema using Zod
 const profileSchema = z.object({
-  fullName: z.string().min(2, "Full Name must be at least 2 characters."),
-  phoneNumber: z.string().min(10, "Phone number is invalid"),
-  email: z.string().email("Invalid email"),
+  fullName: z.string().min(2, "Full Name must be at least 2 characters.").optional().or(z.literal("")),
+  phoneNumber: z.string().min(10, "Phone number is invalid").optional().or(z.literal("")),
   gender: z.enum(["Male", "Female", "Other"], {
     errorMap: () => ({ message: "Invalid gender selection" }),
-  }),
-  dateOfBirth: z.string(),
-  identityNumber: z.string().min(9, "Identity Number must be at least 9 digits."),
-  isPrivated: z.enum(["Yes", "No"], { message: "Please select Yes or No." }),
+  }).optional().or(z.literal("")),
+  identityNumber: z.string().min(9, "Identity Number must be at least 9 digits.").optional().or(z.literal("")),
+  isPrivated: z.enum(["Yes", "No"], { message: "Please select Yes or No." }).optional().or(z.literal("")),
 });
 
 const addressSchema = z.object({
   address: z 
     .string()
     .min(5, "Address must be at least 5 characters")
-    .max(100, "Address must be less than 100 characters"),
+    .max(100, "Address must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
 });
 
 // React Hook Form
@@ -39,7 +37,6 @@ export const index = () => {
   const [profileData, setProfileData] = useState({
     fullName : "",
     phoneNumber : "",
-    email : "",
     gender : "",
     dateOfBirth : "",
     identityNumber : "",
@@ -68,7 +65,6 @@ export const index = () => {
 
   useEffect(() => {
     const id = getUserIdFromToken(); 
-    console.log("Decoded User ID:", id);
     if (id) {
       setUserId(id);
     } else {
@@ -81,9 +77,7 @@ export const index = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-
         const cleanToken = token.replace(/^"(.*)"$/, '$1');
-        console.log("Bearer token", cleanToken);
        
         const response = await axios.get("https://localhost:7141/candidates/profile", {
           headers: {
@@ -99,7 +93,6 @@ export const index = () => {
           setProfileValue("phoneNumber", data.phoneNumber || "");
           setProfileValue("email", data.email || "");
           setProfileValue("gender", data.gender || "Other");
-          setProfileValue("dateOfBirth", data.dateOfBirth || "");
           setProfileValue("identityNumber", data.identityNumber || "");
           setProfileValue("isPrivated", data.isPrivated ? "Yes" : "No");
   
@@ -116,9 +109,26 @@ export const index = () => {
   
 
   const onSubmitProfile = async (formData) => {
-    setIsProfileLoading(true);
+    const token = localStorage.getItem("accessToken");
+    const cleanToken = token.replace(/^"(.*)"$/, '$1');
+    console.log("Bearer Token:", cleanToken);
+
+    const { email, ...filteredData } = formData;
+
+    const updatedData = {
+      ...filteredData,
+      isPrivated: formData.isPrivated === "Yes" ? true : false,
+    };
+    console.log("Dữ liệu trước khi gửi:", JSON.stringify(updatedData, null, 2));
+    
     try {
-      await axios.put(`https://localhost:7141/candidates/edit-profile/${UserId}`, formData);
+      setIsProfileLoading(true);
+      await axios.put("https://localhost:7141/candidates/edit-profile", updatedData,{
+        headers: {
+          Authorization: `Bearer ${cleanToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile", error);
@@ -128,9 +138,19 @@ export const index = () => {
   };
 
   const onSubmitAddress = async (formData) => {
-    setIsAddressLoading(true);
+    const token = localStorage.getItem("accessToken");
+    const cleanToken = token.replace(/^"(.*)"$/, '$1');
+    console.log("Bearer Token:", token);
+    console.log("Profile Data Before Submit:", formData);
+
     try {
-      await axios.put(`https://localhost:7141/candidates/edit-profile/${UserId}`, formData);
+      setIsAddressLoading(true);
+      await axios.put("https://localhost:7141/candidates/edit-profile", formData,{
+        headers: {
+          Authorization: `Bearer ${cleanToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       alert("Address updated successfully!");
     } catch (error) {
       console.error("Error updating address", error);
@@ -238,7 +258,7 @@ export const index = () => {
                         {/* Email */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Email address</label>
-                          <input type="text" placeholder="Enter email" {...registerProfile("email")} />
+                          <input type="text" placeholder="Enter email" {...registerProfile("email")} readOnly />
                           {profileErrors.email && <span className="text-danger">{profileErrors.email.message}</span>}
                         </div>
 
@@ -300,7 +320,7 @@ export const index = () => {
                           <input
                             type="text"
                             name="name"
-                            placeholder="329 Queensberry Street, North Melbourne VIC 3051, Australia."{...registerAddress("address")}
+                            placeholder="Enter your address"{...registerAddress("address")}
                           />
                           {addressErrors.address && <p className="text-danger">{addressErrors.address.message}</p>}
                         </div>
