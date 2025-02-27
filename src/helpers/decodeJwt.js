@@ -39,7 +39,6 @@ export const getUserIdFromToken = () => {
     const token = localStorage.getItem("accessToken");
     if (!token) return null;
     const decoded = jwtDecode(token);
-    console.log("Decoded Token:", decoded);
     return decoded.UserId || decoded.userId || decoded.id;
   } catch (error) {
     console.error("Lỗi khi giải mã token để lấy userId:", error);

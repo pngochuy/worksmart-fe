@@ -2,13 +2,13 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getUserIdFromToken } from "../../../helpers/decodeJwt";
+import { fetchCandidatesProfile, updateCandidateAddress, updateCandidateProfile } from "../../../services/candidateServices";
 
 // Validation schema using Zod
 const profileSchema = z.object({
-  fullName: z.string().min(2, "Full Name must be at least 2 characters.").optional().or(z.literal("")),
+  fullName: z.string().min(2, "Full Name must be at least 2 characters.").optional().or(z.literal("")), // Cho phép khoảng trắng
   phoneNumber: z.string().min(10, "Phone number is invalid").optional().or(z.literal("")),
   gender: z.enum(["Male", "Female", "Other"], {
     errorMap: () => ({ message: "Invalid gender selection" }),
@@ -72,21 +72,12 @@ export const index = () => {
       navigate("/login"); // Chuyển hướng nếu không có userId
     }
   }, []);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const cleanToken = token.replace(/^"(.*)"$/, '$1');
-       
-        const response = await axios.get("https://localhost:7141/candidates/profile", {
-          headers: {
-            Authorization: `Bearer ${cleanToken}`
-          }
-        });
-        console.log("Fetched data:", response.data);
-        const data = response.data;
   
+  //Fetch data profile
+  useEffect(() => {
+    const loadProfile = async() => {
+      try {
+        const data = await fetchCandidatesProfile();
         if (data) {
           setProfileData(data),
           setProfileValue("fullName", data.fullName || "");
@@ -94,42 +85,32 @@ export const index = () => {
           setProfileValue("email", data.email || "");
           setProfileValue("gender", data.gender || "Other");
           setProfileValue("identityNumber", data.identityNumber || "");
-          setProfileValue("isPrivated", data.isPrivated ? "Yes" : "No");
+          setProfileValue("isPrivated", data.isPrivated); 
   
           setAddressValue("address", data.address || "");
         }
       } catch (error) {
         console.error("Error fetching candidate profile", error.response);
+        if (error.message.includes("Unauthorized") || error.message.includes("Token expired")) {
+          navigate("/login");
+        }
       }
     };
     if (UserId) {
-      fetchProfile();
+      loadProfile();
     }
-  }, [UserId, setProfileValue, setAddressValue]);
+  }, [UserId, setProfileValue, setAddressValue, navigate]);
   
 
   const onSubmitProfile = async (formData) => {
-    const token = localStorage.getItem("accessToken");
-    const cleanToken = token.replace(/^"(.*)"$/, '$1');
-    console.log("Bearer Token:", cleanToken);
-
-    const { email, ...filteredData } = formData;
-
-    const updatedData = {
-      ...filteredData,
-      isPrivated: formData.isPrivated === "Yes" ? true : false,
-    };
-    console.log("Dữ liệu trước khi gửi:", JSON.stringify(updatedData, null, 2));
-    
     try {
       setIsProfileLoading(true);
-      await axios.put("https://localhost:7141/candidates/edit-profile", updatedData,{
-        headers: {
-          Authorization: `Bearer ${cleanToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-      alert("Profile updated successfully!");
+      const validData = {
+        ...formData,
+        isPrivated: formData.isPrivated ? formData.isPrivated : "No",
+      };
+      const message = await updateCandidateProfile(validData);
+      alert(message);
     } catch (error) {
       console.error("Error updating profile", error);
     } finally {
@@ -138,20 +119,10 @@ export const index = () => {
   };
 
   const onSubmitAddress = async (formData) => {
-    const token = localStorage.getItem("accessToken");
-    const cleanToken = token.replace(/^"(.*)"$/, '$1');
-    console.log("Bearer Token:", token);
-    console.log("Profile Data Before Submit:", formData);
-
     try {
       setIsAddressLoading(true);
-      await axios.put("https://localhost:7141/candidates/edit-profile", formData,{
-        headers: {
-          Authorization: `Bearer ${cleanToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-      alert("Address updated successfully!");
+      const message = await updateCandidateAddress();
+      alert(message);
     } catch (error) {
       console.error("Error updating address", error);
     } finally {
@@ -161,7 +132,6 @@ export const index = () => {
   
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-
     if (!file) {
       setFileError("Please select an image.");
       return;
@@ -215,6 +185,7 @@ export const index = () => {
                   <div className="widget-content">
                     <div className="uploading-outer">
                       <div className="uploadButton">
+                        {/* Images */}
                         <input
                           className="uploadButton-input"
                           type="file"
@@ -281,7 +252,7 @@ export const index = () => {
                           {profileErrors.identityNumber && <span className="text-danger">{profileErrors.identityNumber.message}</span>}
                         </div>
 
-                        {/* Allow In Search & Listing */}
+                        {/* IsPrivated */}
                         <div className="form-group col-lg-6 col-md-12">
                         <label>Allow In Search & Listing</label>
                             <select {...registerProfile("isPrivated")} className="chosen-select">
@@ -314,7 +285,7 @@ export const index = () => {
                   <div className="widget-content">
                     <form className="default-form" onSubmit={handleSubmitAddress(onSubmitAddress)}>
                       <div className="row">
-                        {/* Input */}
+                        {/* Address */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>Complete Address</label>
                           <input
@@ -325,7 +296,7 @@ export const index = () => {
                           {addressErrors.address && <p className="text-danger">{addressErrors.address.message}</p>}
                         </div>
 
-                        {/* Input */}
+                        {/* Save */}
                         <div className="form-group col-lg-12 col-md-12">
                           <button type="submit" className="theme-btn btn-style-one" disabled={isAddressLoading}>
                             {isAddressLoading ? "Saving..." : "Save"}
