@@ -1,4 +1,128 @@
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress } from "@/services/employerServices";
+import { z } from "zod";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { useNavigate } from "react-router-dom";
+import { getUserIdFromToken } from "../../../helpers/decodeJwt";
+
+const companySchema = z.object({
+  phoneNumber: z.string().min(10, "Phone number is invalid").regex(/^0\d{9,}$/, "Phone number must start with 0 and contain only numbers.").optional().or(z.literal("")),
+  companyName: z.string().min(3, "Company Name must be at least 3 characters.").regex(/^[A-Za-zÀ-Ỹà-ỹ\s]+$/, "Company Name must contain only letters.").optional().or(z.literal("")),
+  companyDescription: z.string().min(10, "Company Description must be at least 10 characters.").optional().or(z.literal("")),
+  createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), {message: "Invalid establishment date."}).optional().or(z.literal("")),
+  isPrivated: z.enum(["Yes", "No"], { message: "Please select Yes or No." }).optional().or(z.literal("")),
+})
+
+const addressSchema = z.object({
+  address: z
+    .string()
+    .min(5, "Address must be at least 5 characters")
+    .max(100, "Address must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+});
+
 export const index = () => {
+  const navigate = useNavigate();
+  const [UserId, setUserId] = useState(null);
+  const [isCompanyLoading, setIsCompanyLoading] = useState(false);
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    companyName : "",
+    companyDescription : "",
+    phoneNumber : "",
+    createdAt : "",
+    isPrivated : "",
+  });
+
+  const { 
+    register: registerCompany, 
+    handleSubmit: handleSubmitCompany, 
+    watch,
+    setValue: setCompanyValue, 
+    formState: { errors: companyErrors } 
+  } = useForm({
+    mode: "onChange",
+    resolver: zodResolver(companySchema),
+  });
+
+  const { 
+    register: registerAddress, 
+    handleSubmit: handleSubmitAddress, 
+    setValue: setAddressValue, 
+    formState: { errors: addressErrors } 
+  } = useForm({
+    mode: "onChange",
+    resolver: zodResolver(addressSchema),
+  });
+
+  useEffect(() => {
+    const id = getUserIdFromToken(); 
+    if (id) {
+      setUserId(id);
+    } else {
+      console.error("Không tìm thấy userId trong token!");
+      navigate("/login");
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadCompanyProfile = async () => {
+      try {
+        const data = await fetchCompanyProfile();
+        if (data) {
+          setProfileData(data);
+          setCompanyValue("email", data.email || "");
+          setCompanyValue("phoneNumber", data.phoneNumber || "");
+          setCompanyValue("companyName", data.companyName || "");
+          setCompanyValue("companyDescription", data.companyDescription || "");
+          setCompanyValue("createdAt", data.createdAt ? data.createdAt.split("T")[0] : ""); // Định dạng YYYY-MM-DD
+          setCompanyValue("isPrivated", data.isPrivated); 
+
+          setAddressValue("address", data.address || "");
+        }
+      } catch (error) {
+        console.error("Error fetching candidate profile", error.response);
+        if (error.message.includes("Unauthorized") || error.message.includes("Token expired")) {
+          navigate("/login");
+        }
+      }
+    };
+
+    loadCompanyProfile();
+  }, [setCompanyValue, setAddressValue, navigate]);
+
+  const onSubmitCompany = async (formData) => {
+    try {
+      setIsCompanyLoading(true);
+      const validData = {
+        ...formData,
+        isPrivated: formData.isPrivated ? formData.isPrivated : "No",
+      };
+      const message = await updateCompanyProfile(validData);
+      alert(message);
+    } catch (error) {
+      console.error("Error updating company profile:", error);
+    } finally {
+      setIsCompanyLoading(false);
+    }
+  };
+
+  const onSubmitAddress = async (formData) => {
+    try {
+      setIsAddressLoading(true);
+      const message = await updateCompanyAddress(formData);
+      alert(message);
+    } catch (error) {
+      console.error("Error updating company address:", error);
+    } finally {
+      setIsAddressLoading(false);
+    }
+  };
+  
   return (
     <>
       <section className="user-dashboard">
@@ -67,160 +191,68 @@ export const index = () => {
                       </div>
                     </div>
 
-                    <form className="default-form">
+                    <form className="default-form" onSubmit={handleSubmitCompany(onSubmitCompany)}>
                       <div className="row">
-                        {/* Input */}
+                        {/* Company Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Company name (optional)</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Invisionn"
-                          />
+                          <label>Company name </label>
+                          <input type="text" placeholder="Enter full name" {...registerCompany("companyName")} />
+                          {companyErrors.companyName && <span className="text-danger">{companyErrors.companyName.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* Email */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Email address</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="creativelayers"
-                          />
+                          <input type="email" {...registerCompany("email")} readOnly />
+                          {companyErrors.email && <span className="text-danger">{companyErrors.email.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* Phone Number */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Phone</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="0 123 456 7890"
+                          <input type="text" {...registerCompany("phoneNumber")} />
+                          {companyErrors.phoneNumber && <span className="text-danger">{companyErrors.phoneNumber.message}</span>}
+                        </div>
+
+                        {/* Since */}
+                        <div className="form-group col-lg-6 col-md-12">
+                          <label>Est. Since</label><br/>
+                          <DatePicker
+                            selected={watch("createdAt") ? new Date(watch("createdAt")) : null}
+                            onChange={(date) => {
+                              if (date) {
+                                setCompanyValue("createdAt", date.toISOString().split("T")[0])}; // Chuyển thành YYYY-MM-DD
+                              }
+                            }
+                            dateFormat="dd/MM/yyyy"
+                            style={{ marginRight: "350px"}}
                           />
+                          {companyErrors.createdAt && <span className="text-danger">{companyErrors.createdAt.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* IsPrivated */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Website</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="www.invision.com"
-                          />
+                        <label>Allow In Search & Listing</label>
+                            <select {...registerCompany("isPrivated")} className="chosen-select">
+                              <option value="">Select</option>
+                              <option value="No">Yes</option>
+                              <option value="Yes">No</option>
+                            </select>
+                            {companyErrors.isPrivated && <span className="text-danger">{companyErrors.isPrivated.message}</span>}
                         </div>
 
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Est. Since</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="06.04.2020"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Team Size</label>
-                          <select className="chosen-select">
-                            <option>50 - 100</option>
-                            <option>100 - 150</option>
-                            <option>200 - 250</option>
-                            <option>300 - 350</option>
-                            <option>500 - 1000</option>
-                          </select>
-                        </div>
-
-                        {/* Search Select */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Multiple Select boxes </label>
-                          <select
-                            data-placeholder="Categories"
-                            className="chosen-select multiple"
-                            multiple
-                            tabIndex="4"
-                          >
-                            <option value="Banking">Banking</option>
-                            <option value="Digital&Creative">
-                              Digital & Creative
-                            </option>
-                            <option value="Retail">Retail</option>
-                            <option value="Human Resources">
-                              Human Resources
-                            </option>
-                            <option value="Management">Management</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Allow In Search & Listing</label>
-                          <select className="chosen-select">
-                            <option>Yes</option>
-                            <option>No</option>
-                          </select>
-                        </div>
-
-                        {/* About Company */}
+                        {/* Company Description */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>About Company</label>
-                          <textarea placeholder="Spent several years working on sheep on Wall Street. Had moderate success investing in Yugo's on Wall Street. Managed a small team buying and selling Pogo sticks for farmers. Spent several years licensing licorice in West Palm Beach, FL. Developed several new methods for working it banjos in the aftermarket. Spent a weekend importing banjos in West Palm Beach, FL.In this position, the Software Engineer collaborates with Evention's Development team to continuously enhance our current software solutions as well as create new solutions to eliminate the back-office operations and management challenges present"></textarea>
+                          <textarea placeholder="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corporis eius, hic architecto eos magni culpa, consequatur necessitatibus ratione tempore assumenda optio corrupti deleniti molestias ad maiores rerum aperiam dolorem! A?" 
+                          {...registerCompany("companyDescription")} />
+                          {companyErrors.companyDescription && <span className="text-danger">{companyErrors.companyDescription.message}</span>}                        
                         </div>
 
-                        {/* Input */}
+                        {/* Save */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <button className="theme-btn btn-style-one">
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ls widget */}
-              <div className="ls-widget">
-                <div className="tabs-box">
-                  <div className="widget-title">
-                    <h4>Social Network</h4>
-                  </div>
-
-                  <div className="widget-content">
-                    <form className="default-form">
-                      <div className="row">
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Facebook</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="www.facebook.com/Invision"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Twitter</label>
-                          <input type="text" name="name" placeholder="" />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Linkedin</label>
-                          <input type="text" name="name" placeholder="" />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Google Plus</label>
-                          <input type="text" name="name" placeholder="" />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <button className="theme-btn btn-style-one">
-                            Save
+                          <button className="theme-btn btn-style-one" type="submit" disabled={isCompanyLoading}>
+                            {isCompanyLoading ? "Saving..." : "Update Profile"}
                           </button>
                         </div>
                       </div>
@@ -237,99 +269,23 @@ export const index = () => {
                   </div>
 
                   <div className="widget-content">
-                    <form className="default-form">
+                  <form className="default-form" onSubmit={handleSubmitAddress(onSubmitAddress)}>
                       <div className="row">
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Country</label>
-                          <select className="chosen-select">
-                            <option>Australia</option>
-                            <option>Pakistan</option>
-                            <option>Chaina</option>
-                            <option>Japan</option>
-                            <option>India</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>City</label>
-                          <select className="chosen-select">
-                            <option>Melbourne</option>
-                            <option>Pakistan</option>
-                            <option>Chaina</option>
-                            <option>Japan</option>
-                            <option>India</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
+                        {/* Address */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>Complete Address</label>
                           <input
                             type="text"
                             name="name"
-                            placeholder="329 Queensberry Street, North Melbourne VIC 3051, Australia."
+                            placeholder="Enter your address"{...registerAddress("address")}
                           />
+                          {addressErrors.address && <p className="text-danger">{addressErrors.address.message}</p>}
                         </div>
 
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Find On Map</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="329 Queensberry Street, North Melbourne VIC 3051, Australia."
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
-                          <label>Latitude</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Melbourne"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
-                          <label>Longitude</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Melbourne"
-                          />
-                        </div>
-
-                        {/* Input */}
+                        {/* Save */}
                         <div className="form-group col-lg-12 col-md-12">
-                          <button className="theme-btn btn-style-three">
-                            Search Location
-                          </button>
-                        </div>
-
-                        <div className="form-group col-lg-12 col-md-12">
-                          <div className="map-outer">
-                            <div
-                              className="map-canvas map-height"
-                              data-zoom="12"
-                              data-lat="-37.817085"
-                              data-lng="144.955631"
-                              data-type="roadmap"
-                              data-hue="#ffc400"
-                              data-title="Envato"
-                              data-icon-path="images/resource/map-marker.png"
-                              data-content="Melbourne VIC 3000, Australia<br><a href='mailto:info@youremail.com'>info@youremail.com</a>"
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-12 col-md-12">
-                          <button className="theme-btn btn-style-one">
-                            Save
+                          <button type="submit" className="theme-btn btn-style-one" disabled={isAddressLoading}>
+                            {isAddressLoading ? "Saving..." : "Save"}
                           </button>
                         </div>
                       </div>
