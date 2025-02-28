@@ -8,12 +8,12 @@ import { fetchCandidatesProfile, updateCandidateAddress, updateCandidateProfile 
 
 // Validation schema using Zod
 const profileSchema = z.object({
-  fullName: z.string().min(2, "Full Name must be at least 2 characters.").optional().or(z.literal("")), // Cho phép khoảng trắng
-  phoneNumber: z.string().min(10, "Phone number is invalid").optional().or(z.literal("")),
+  fullName: z.string().min(2, "Full Name must be at least 2 characters.").regex(/^[A-Za-zÀ-Ỹà-ỹ\s]+$/, "Name must contain only letters.").optional().or(z.literal("")), // Cho phép khoảng trắng
+  phoneNumber: z.string().min(10, "Phone number is invalid").regex(/^0\d{9,}$/, "Phone number must start with 0 and contain only numbers.").optional().or(z.literal("")),
   gender: z.enum(["Male", "Female", "Other"], {
     errorMap: () => ({ message: "Invalid gender selection" }),
   }).optional().or(z.literal("")),
-  identityNumber: z.string().min(9, "Identity Number must be at least 9 digits.").optional().or(z.literal("")),
+  identityNumber: z.string().min(9, "Identity Number must be at least 9 digits.").regex(/^\d+$/, "Identity number must contain only numbers.").optional().or(z.literal("")),
   isPrivated: z.enum(["Yes", "No"], { message: "Please select Yes or No." }).optional().or(z.literal("")),
 });
 
@@ -257,8 +257,8 @@ export const index = () => {
                         <label>Allow In Search & Listing</label>
                             <select {...registerProfile("isPrivated")} className="chosen-select">
                               <option value="">Select</option>
-                              <option value="Yes">Yes</option>
-                              <option value="No">No</option>
+                              <option value="No">Yes</option>
+                              <option value="Yes">No</option>
                             </select>
                             {profileErrors.isPrivated && <span className="text-danger">{profileErrors.isPrivated.message}</span>}
                         </div>
