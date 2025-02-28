@@ -58,6 +58,9 @@ export const CandidateResgiterForm = () => {
         email: data.email,
         password: data.password,
         role: "Candidate", // Role thì mặc định là '1' (Candidate)
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          data.fullname
+        )}&background=random&color=fff`,
       });
 
       console.log("Đăng ký thành công:", response);

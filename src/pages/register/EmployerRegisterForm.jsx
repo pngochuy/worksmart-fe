@@ -3,6 +3,8 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { vietnamProvinces } from "../../helpers/getLocationVN";
+import { registerUser } from "@/services/accountServices";
+import { useNavigate } from "react-router-dom";
 
 // Validation schema using Zod
 const schema = z
@@ -42,6 +44,8 @@ export const EmployerRegisterForm = () => {
   const [provinces, setProvinces] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setProvinces(vietnamProvinces); // Lưu dữ liệu các tỉnh vào state
@@ -54,13 +58,46 @@ export const EmployerRegisterForm = () => {
     formState: { errors, isValid },
     watch,
     control,
+    setError,
   } = useForm({
     mode: "onChange", // Real-time validation
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data) => {
-    console.log("Form Data:", data);
+    setIsLoading(true); // Bắt đầu loading
+
+    try {
+      // Gửi request đăng ký
+      const response = await registerUser({
+        email: data.email,
+        password: data.password,
+        fullname: data.fullname,
+        gender: data.gender,
+        personalPhone: data.personalPhone,
+        companyName: data.companyName,
+        workLocation: data.workLocation,
+        role: "Employer",
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          data.fullname
+        )}&background=random&color=fff`,
+      });
+
+      console.log("Đăng ký thành công:", response);
+
+      // Chuyển hướng sang trang xác nhận email
+      navigate(
+        `/confirm-email?emailRegistered=${encodeURIComponent(data.email)}`
+      );
+    } catch (error) {
+      console.error("Lỗi đăng ký:", error);
+      setError("email", {
+        // Đặt lỗi cho trường confirmEmailCode
+        type: "manual",
+        message: error.error || "Email is already registered.",
+      });
+    }
+    setIsLoading(false); // Kết thúc loading
   };
 
   const isAgreed = watch("agree");
@@ -276,16 +313,15 @@ export const EmployerRegisterForm = () => {
           </label>
           {errors.agree && <p className="error-text">{errors.agree.message}</p>}
         </div>
-
         <div className="form-group">
           <button
             type="submit"
             className={`theme-btn btn-style-one ${
               isValid ? "" : "btn-disabled"
             }`}
-            disabled={!isValid || !isAgreed}
+            disabled={!isValid || !isAgreed || isLoading} // Disable khi đang loading
           >
-            Register
+            {isLoading ? <span className="loading-spinner"></span> : "Register"}
           </button>
         </div>
       </form>

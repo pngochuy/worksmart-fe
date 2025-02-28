@@ -35,6 +35,9 @@ export const loginUser = async (userLoginData) => {
     if (response.data.token) {
       localStorage.setItem("accessToken", JSON.stringify(response.data.token));
     }
+    if (response.data.user) {
+      localStorage.setItem("userLoginData", JSON.stringify(response.data.user));
+    }
     return response.data;
   } catch (error) {
     throw error.response.data || error.message; // Xử lý lỗi
@@ -50,6 +53,9 @@ export const loginUserByGoogle = async (userLoginData) => {
     console.log(response.data);
     if (response.data.token) {
       localStorage.setItem("accessToken", JSON.stringify(response.data.token));
+    }
+    if (response.data.user) {
+      localStorage.setItem("userLoginData", JSON.stringify(response.data.user));
     }
     return response.data;
   } catch (error) {

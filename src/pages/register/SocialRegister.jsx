@@ -3,10 +3,14 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { loginUserByGoogle } from "../../services/accountServices";
 import { toast } from "react-toastify";
+import { getUserRoleFromToken } from "@/helpers/decodeJwt";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export const SocialRegister = () => {
   const [user, setUser] = useState([]);
-  const [profile, setProfile] = useState([]);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // Đọc query parameter từ URL
+  const role = searchParams.get("role") || "candidate-form"; // Mặc định là "candidate" nếu không có role trong URL
 
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => {
@@ -35,8 +39,7 @@ export const SocialRegister = () => {
           }
 
           console.log("User Profile:", res.data);
-
-          setProfile(res.data);
+          // localStorage.setItem("", JSON.stringify(response.data.token));
 
           // Đợi profile cập nhật xong rồi gọi login
           setTimeout(() => handleBackendLogin(res.data), 100);
@@ -52,14 +55,14 @@ export const SocialRegister = () => {
       const response = await loginUserByGoogle({
         email: profileData.email,
         name: profileData.name,
-        picture: profileData.picture || "",
-        role: "Candidate", // Nếu chưa có role, đặt mặc định
+        avatar: profileData.picture,
+        role: role === "candidate-form" ? "Candidate" : "Employer",
       });
       toast.success("Login success!");
       console.log("Login thành công:", response);
 
-      // Luôn điều hướng vào Candidate Dashboard
-      // window.location.href = "/candidate/dashboard";
+      const userRole = getUserRoleFromToken();
+      navigate(`/${userRole.toLowerCase()}/dashboard`);
     } catch (error) {
       console.error("Login Failed:", error);
       alert("Đăng nhập thất bại, vui lòng thử lại!");
