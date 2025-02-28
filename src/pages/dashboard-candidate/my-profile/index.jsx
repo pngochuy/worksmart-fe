@@ -1,4 +1,168 @@
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+import { getUserIdFromToken } from "../../../helpers/decodeJwt";
+import { fetchCandidatesProfile, updateCandidateAddress, updateCandidateProfile } from "../../../services/candidateServices";
+
+// Validation schema using Zod
+const profileSchema = z.object({
+  fullName: z.string().min(2, "Full Name must be at least 2 characters.").optional().or(z.literal("")), // Cho phép khoảng trắng
+  phoneNumber: z.string().min(10, "Phone number is invalid").optional().or(z.literal("")),
+  gender: z.enum(["Male", "Female", "Other"], {
+    errorMap: () => ({ message: "Invalid gender selection" }),
+  }).optional().or(z.literal("")),
+  identityNumber: z.string().min(9, "Identity Number must be at least 9 digits.").optional().or(z.literal("")),
+  isPrivated: z.enum(["Yes", "No"], { message: "Please select Yes or No." }).optional().or(z.literal("")),
+});
+
+const addressSchema = z.object({
+  address: z 
+    .string()
+    .min(5, "Address must be at least 5 characters")
+    .max(100, "Address must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+});
+
+// React Hook Form
 export const index = () => {
+  const navigate = useNavigate();
+  const [UserId, setUserId] = useState(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileError, setFileError] = useState("");
+  const [profileData, setProfileData] = useState({
+    fullName : "",
+    phoneNumber : "",
+    gender : "",
+    dateOfBirth : "",
+    identityNumber : "",
+    isPrivated : "",
+  });
+
+  const { 
+    register: registerProfile, 
+    handleSubmit: handleSubmitProfile, 
+    setValue: setProfileValue,
+    formState: { errors: profileErrors } 
+  } = useForm({
+    mode: "onChange",
+    resolver: zodResolver(profileSchema),
+  });
+  
+  const { 
+    register: registerAddress, 
+    handleSubmit: handleSubmitAddress, 
+    setValue: setAddressValue,
+    formState: { errors: addressErrors } 
+  } = useForm({
+    mode: "onChange",
+    resolver: zodResolver(addressSchema),
+  });
+
+  useEffect(() => {
+    const id = getUserIdFromToken(); 
+    if (id) {
+      setUserId(id);
+    } else {
+      console.error("Không tìm thấy userId trong token!");
+      navigate("/login"); // Chuyển hướng nếu không có userId
+    }
+  }, []);
+  
+  //Fetch data profile
+  useEffect(() => {
+    const loadProfile = async() => {
+      try {
+        const data = await fetchCandidatesProfile();
+        if (data) {
+          setProfileData(data),
+          setProfileValue("fullName", data.fullName || "");
+          setProfileValue("phoneNumber", data.phoneNumber || "");
+          setProfileValue("email", data.email || "");
+          setProfileValue("gender", data.gender || "Other");
+          setProfileValue("identityNumber", data.identityNumber || "");
+          setProfileValue("isPrivated", data.isPrivated); 
+  
+          setAddressValue("address", data.address || "");
+        }
+      } catch (error) {
+        console.error("Error fetching candidate profile", error.response);
+        if (error.message.includes("Unauthorized") || error.message.includes("Token expired")) {
+          navigate("/login");
+        }
+      }
+    };
+    if (UserId) {
+      loadProfile();
+    }
+  }, [UserId, setProfileValue, setAddressValue, navigate]);
+  
+
+  const onSubmitProfile = async (formData) => {
+    try {
+      setIsProfileLoading(true);
+      const validData = {
+        ...formData,
+        isPrivated: formData.isPrivated ? formData.isPrivated : "No",
+      };
+      const message = await updateCandidateProfile(validData);
+      alert(message);
+    } catch (error) {
+      console.error("Error updating profile", error);
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
+  const onSubmitAddress = async (formData) => {
+    try {
+      setIsAddressLoading(true);
+      const message = await updateCandidateAddress(formData);
+      alert(message);
+    } catch (error) {
+      console.error("Error updating address", error);
+    } finally {
+      setIsAddressLoading(false);
+    }
+  };
+  
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      setFileError("Please select an image.");
+      return;
+    }
+
+    //Chỉ cho phép file JPG hoặc PNG
+    const allowedTypes = ["image/jpg", "image/png"];
+    if (!allowedTypes.includes(file.type)){
+      setFileError("Only JPG and PNG files are allowed");
+      return;
+    }
+
+    //Kiểm tra dung lượng file < 1MB
+    if (file.size > 1048576){
+      setFileError("File size must be less than 1 MB");
+      return;
+    }
+
+    // Kiểm tra kích thước ảnh (cần tạo một object URL để kiểm tra)
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      if (img.width < 330 || img.height < 300){
+        setFileError("Minimum dimensions are 330x300 pixels");
+        return;
+      }
+      setSelectedFile(file);
+      setFileError("");
+    };
+  };
+
   return (
     <>
       {/* Dashboard */}
@@ -21,13 +185,13 @@ export const index = () => {
                   <div className="widget-content">
                     <div className="uploading-outer">
                       <div className="uploadButton">
+                        {/* Images */}
                         <input
                           className="uploadButton-input"
                           type="file"
-                          name="attachments[]"
-                          accept="image/*, application/pdf"
+                          accept="image/jpg, image/png"
                           id="upload"
-                          multiple
+                          onChange={handleFileChange}
                         />
                         <label
                           className="uploadButton-button ripple-effect"
@@ -35,218 +199,74 @@ export const index = () => {
                         >
                           Browse Logo
                         </label>
-                        <span className="uploadButton-file-name"></span>
+                        <span className="uploadButton-file-name">
+                          {selectedFile ? selectedFile.name : ""}
+                        </span>
                       </div>
                       <div className="text">
                         Max file size is 1MB, Minimum dimension: 330x300 And
                         Suitable files are .jpg & .png
+                        <br />
+                        {fileError && <div className="text-danger">{fileError}</div>}
                       </div>
                     </div>
-
-                    <form className="default-form">
+                    <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="default-form">
                       <div className="row">
-                        {/* Input */}
+                        {/* Full Name */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Full Name</label>
-                          <input type="text" name="name" placeholder="Jerome" />
+                          <input type="text" placeholder="Enter full name" {...registerProfile("fullName")} /> 
+                          {profileErrors.fullName && <span className="text-danger">{profileErrors.fullName.message}</span>}
                         </div>
 
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Job Title</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="UI Designer"
-                          />
-                        </div>
-
-                        {/* Input */}
+                        {/* Phone */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Phone</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="0 123 456 7890"
-                          />
+                          <input type="text" placeholder="Enter phone number" {...registerProfile("phoneNumber")} />
+                          {profileErrors.phoneNumber && <span className="text-danger">{profileErrors.phoneNumber.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* Email */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Email address</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="creativelayers"
-                          />
+                          <input type="text" placeholder="Enter email" {...registerProfile("email")} readOnly />
+                          {profileErrors.email && <span className="text-danger">{profileErrors.email.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* Gender */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Website</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="www.jerome.com"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
-                          <label>Current Salary($)</label>
-                          <select className="chosen-select">
-                            <option>40-70 K</option>
-                            <option>50-80 K</option>
-                            <option>60-90 K</option>
-                            <option>70-100 K</option>
-                            <option>100-150 K</option>
+                          <label>Gender</label>
+                          <select {...registerProfile("gender")} className="chosen-select">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
                           </select>
+                          {profileErrors.gender && <span className="text-danger">{profileErrors.gender.message}</span>}
                         </div>
 
-                        {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
-                          <label>Expected Salary($)</label>
-                          <select className="chosen-select">
-                            <option>120-350 K</option>
-                            <option>40-70 K</option>
-                            <option>50-80 K</option>
-                            <option>60-90 K</option>
-                            <option>70-100 K</option>
-                            <option>100-150 K</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
+                        {/* Identity Number */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Experience</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="5-10 Years"
-                          />
+                          <label>Identity Number</label>
+                          <input type="text" placeholder="Enter ID number" {...registerProfile("identityNumber")} />
+                          {profileErrors.identityNumber && <span className="text-danger">{profileErrors.identityNumber.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* IsPrivated */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Age</label>
-                          <select className="chosen-select">
-                            <option>23 - 27 Years</option>
-                            <option>24 - 28 Years</option>
-                            <option>25 - 29 Years</option>
-                            <option>26 - 30 Years</option>
-                          </select>
+                        <label>Allow In Search & Listing</label>
+                            <select {...registerProfile("isPrivated")} className="chosen-select">
+                              <option value="">Select</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </select>
+                            {profileErrors.isPrivated && <span className="text-danger">{profileErrors.isPrivated.message}</span>}
                         </div>
 
-                        {/* Input */}
+                        {/* Save */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Education Levels</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Certificate"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Languages</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="English, Turkish"
-                          />
-                        </div>
-
-                        {/* Search Select */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Categories </label>
-                          <select
-                            data-placeholder="Categories"
-                            className="chosen-select multiple"
-                            multiple
-                            tabIndex="4"
-                          >
-                            <option value="Banking">Banking</option>
-                            <option value="Digital&Creative">
-                              Digital & Creative
-                            </option>
-                            <option value="Retail">Retail</option>
-                            <option value="Human Resources">
-                              Human Resources
-                            </option>
-                            <option value="Management">Management</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Allow In Search & Listing</label>
-                          <select className="chosen-select">
-                            <option>Yes</option>
-                            <option>No</option>
-                          </select>
-                        </div>
-
-                        {/* About Company */}
-                        <div className="form-group col-lg-12 col-md-12">
-                          <label>Description</label>
-                          <textarea placeholder="Spent several years working on sheep on Wall Street. Had moderate success investing in Yugo's on Wall Street. Managed a small team buying and selling Pogo sticks for farmers. Spent several years licensing licorice in West Palm Beach, FL. Developed several new methods for working it banjos in the aftermarket. Spent a weekend importing banjos in West Palm Beach, FL.In this position, the Software Engineer collaborates with Evention's Development team to continuously enhance our current software solutions as well as create new solutions to eliminate the back-office operations and management challenges present"></textarea>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <button className="theme-btn btn-style-one">
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ls widget */}
-              <div className="ls-widget">
-                <div className="tabs-box">
-                  <div className="widget-title">
-                    <h4>Social Network</h4>
-                  </div>
-
-                  <div className="widget-content">
-                    <form className="default-form">
-                      <div className="row">
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Facebook</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="www.facebook.com/Invision"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Twitter</label>
-                          <input type="text" name="name" placeholder="" />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Linkedin</label>
-                          <input type="text" name="name" placeholder="" />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Google Plus</label>
-                          <input type="text" name="name" placeholder="" />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <button className="theme-btn btn-style-one">
-                            Save
+                          <button type="submit" className="theme-btn btn-style-one" disabled={isProfileLoading}>
+                            {isProfileLoading ? "Saving..." : "Save"}
                           </button>
                         </div>
                       </div>
@@ -263,99 +283,23 @@ export const index = () => {
                   </div>
 
                   <div className="widget-content">
-                    <form className="default-form">
+                    <form className="default-form" onSubmit={handleSubmitAddress(onSubmitAddress)}>
                       <div className="row">
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Country</label>
-                          <select className="chosen-select">
-                            <option>Australia</option>
-                            <option>Pakistan</option>
-                            <option>Chaina</option>
-                            <option>Japan</option>
-                            <option>India</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>City</label>
-                          <select className="chosen-select">
-                            <option>Melbourne</option>
-                            <option>Pakistan</option>
-                            <option>Chaina</option>
-                            <option>Japan</option>
-                            <option>India</option>
-                          </select>
-                        </div>
-
-                        {/* Input */}
+                        {/* Address */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>Complete Address</label>
                           <input
                             type="text"
                             name="name"
-                            placeholder="329 Queensberry Street, North Melbourne VIC 3051, Australia."
+                            placeholder="Enter your address"{...registerAddress("address")}
                           />
+                          {addressErrors.address && <p className="text-danger">{addressErrors.address.message}</p>}
                         </div>
 
-                        {/* Input */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Find On Map</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="329 Queensberry Street, North Melbourne VIC 3051, Australia."
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
-                          <label>Latitude</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Melbourne"
-                          />
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-3 col-md-12">
-                          <label>Longitude</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Melbourne"
-                          />
-                        </div>
-
-                        {/* Input */}
+                        {/* Save */}
                         <div className="form-group col-lg-12 col-md-12">
-                          <button className="theme-btn btn-style-three">
-                            Search Location
-                          </button>
-                        </div>
-
-                        <div className="form-group col-lg-12 col-md-12">
-                          <div className="map-outer">
-                            <div
-                              className="map-canvas map-height"
-                              data-zoom="12"
-                              data-lat="-37.817085"
-                              data-lng="144.955631"
-                              data-type="roadmap"
-                              data-hue="#ffc400"
-                              data-title="Envato"
-                              data-icon-path="images/resource/map-marker.png"
-                              data-content="Melbourne VIC 3000, Australia<br><a href='mailto:info@youremail.com'>info@youremail.com</a>"
-                            ></div>
-                          </div>
-                        </div>
-
-                        {/* Input */}
-                        <div className="form-group col-lg-12 col-md-12">
-                          <button className="theme-btn btn-style-one">
-                            Save
+                          <button type="submit" className="theme-btn btn-style-one" disabled={isAddressLoading}>
+                            {isAddressLoading ? "Saving..." : "Save"}
                           </button>
                         </div>
                       </div>
@@ -371,3 +315,5 @@ export const index = () => {
     </>
   );
 };
+
+export default index;

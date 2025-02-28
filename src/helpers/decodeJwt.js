@@ -32,3 +32,15 @@ export const getUserLoginData = () => {
   }
   return null;
 };
+
+export const getUserIdFromToken = () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+    const decoded = jwtDecode(token);
+    return decoded.UserId || decoded.userId || decoded.id;
+  } catch (error) {
+    console.error("Lỗi khi giải mã token để lấy userId:", error);
+    return null;
+  }
+};

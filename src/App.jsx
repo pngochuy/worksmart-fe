@@ -214,7 +214,7 @@ function App() {
                 path="subscription-plans"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    <CandidateSubscriptionPlansPage />
+                    < CandidateSubscriptionPlansPage />
                   </ProtectedRoute>
                 }
               />
