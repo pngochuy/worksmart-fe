@@ -1,10 +1,19 @@
-export const index = () => {
+import { getUserLoginData } from "@/helpers/decodeJwt";
+import { useEffect, useState } from "react";
+
+export const Index = () => {
+  const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
+
+  useEffect(() => {
+    const user = getUserLoginData();
+    setUserDataLogin(user);
+  }, []);
   return (
     <>
       <section className="user-dashboard">
         <div className="dashboard-outer">
           <div className="upper-title-box">
-            <h3>Howdy, Invision!</h3>
+            <h3>Howdy, {userDataLogin?.fullName}!</h3>
             <div className="text">Ready to jump back in?</div>
           </div>
           <div className="row">

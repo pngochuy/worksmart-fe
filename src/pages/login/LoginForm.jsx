@@ -5,6 +5,7 @@ import { useState } from "react";
 import { loginUser } from "../../services/accountServices";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { getUserRoleFromToken } from "@/helpers/decodeJwt";
 
 const schema = z.object({
   email: z.string().min(1, "Password cannot be blank").email("Invalid email"),
@@ -41,7 +42,8 @@ export const LoginForm = () => {
       toast.success("Login success!");
       console.log("Login thành công:", response);
 
-      navigate("/candidate/dashboard");
+      const userRole = getUserRoleFromToken();
+      navigate(`/${userRole.toLowerCase()}/dashboard`);
     } catch (error) {
       console.log("Login thất bại:", error);
       setError("email", {

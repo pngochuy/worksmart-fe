@@ -44,7 +44,8 @@ export const Index = () => {
 
               <div className="bottom-box">
                 <div className="text">
-                  Don&apos;t have an account? <a href="/register">Register</a>
+                  Don&apos;t have an account?{" "}
+                  <a href="/register?role=candidate-form">Register</a>
                 </div>
                 <div className="divider">
                   <span>or</span>
