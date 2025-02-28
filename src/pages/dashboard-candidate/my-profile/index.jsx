@@ -121,7 +121,7 @@ export const index = () => {
   const onSubmitAddress = async (formData) => {
     try {
       setIsAddressLoading(true);
-      const message = await updateCandidateAddress();
+      const message = await updateCandidateAddress(formData);
       alert(message);
     } catch (error) {
       console.error("Error updating address", error);

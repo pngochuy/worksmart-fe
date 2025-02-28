@@ -33,6 +33,7 @@ export const fetchCandidatesProfile = async() =>{
       },
     });
     const data = response.data;
+    console.log("Data lấy được:", data);
     return {
       ...data,
       isPrivated: data.isPrivated ? "Yes" : "No", // Đổi qua kiểu boolean ở API
@@ -64,6 +65,7 @@ export const updateCandidateProfile = async (profileData) => {
       ...profileData,
       isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
     };
+    console.log("Profile data gửi đi:", updatedData);
 
     await axios.put(`${BACKEND_API_URL}/candidates/edit-profile`, updatedData, {
       headers: {
@@ -83,6 +85,7 @@ export const updateCandidateAddress = async (addressData) => {
   try {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
+    console.log("Candidate data gửi đi:", addressData);
 
     await axios.put(`${BACKEND_API_URL}/candidates/edit-profile`, addressData, {
       headers: {
@@ -90,6 +93,7 @@ export const updateCandidateAddress = async (addressData) => {
         "Content-Type": "application/json",
       },
     });
+
     return "Address updated successfully!";
   } catch (error) {
     console.error("Error updating address:", error);
