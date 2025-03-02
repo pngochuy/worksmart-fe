@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress } from "@/services/employerServices";
+import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress, uploadImagesProfile, updateImagesProfile } from "@/services/employerServices";
 import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { getUserIdFromToken } from "../../../helpers/decodeJwt";
+import { setDate } from "date-fns";
 
 const companySchema = z.object({
   phoneNumber: z.string().min(10, "Phone number is invalid").regex(/^0\d{9,}$/, "Phone number must start with 0 and contain only numbers.").optional().or(z.literal("")),
@@ -30,12 +31,14 @@ export const index = () => {
   const [UserId, setUserId] = useState(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [avatar, setAvatar] = useState("");
   const [profileData, setProfileData] = useState({
     companyName : "",
     companyDescription : "",
     phoneNumber : "",
     createdAt : "",
     isPrivated : "",
+    avatar : "",
   });
 
   const { 
@@ -58,7 +61,7 @@ export const index = () => {
     mode: "onChange",
     resolver: zodResolver(addressSchema),
   });
-
+  
   useEffect(() => {
     const id = getUserIdFromToken(); 
     if (id) {
@@ -75,6 +78,14 @@ export const index = () => {
         const data = await fetchCompanyProfile();
         if (data) {
           setProfileData(data);
+
+          if (data.avatar) {
+            setAvatar(data.avatar);
+            console.log("Avatar cập nhật:", data.avatar);
+          } else {
+            console.warn("⚠ Avatar không tồn tại trong dữ liệu API");
+          }
+
           setCompanyValue("email", data.email || "");
           setCompanyValue("phoneNumber", data.phoneNumber || "");
           setCompanyValue("companyName", data.companyName || "");
@@ -93,7 +104,7 @@ export const index = () => {
     };
 
     loadCompanyProfile();
-  }, [setCompanyValue, setAddressValue, navigate]);
+  }, [setAvatar, setCompanyValue, setAddressValue, navigate]);
 
   const onSubmitCompany = async (formData) => {
     try {
@@ -123,6 +134,27 @@ export const index = () => {
     }
   };
   
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+      try {
+        const uploadResponse  = await uploadImagesProfile(file);
+        const imageUrl = uploadResponse.imageUrl;
+        console.log("Avatar gửi đi:", imageUrl);
+
+        await updateImagesProfile(imageUrl);
+
+        setAvatar(imageUrl); // Cập nhật UI ngay khi ảnh mới có
+        console.log("Hồ sơ cập nhật thành công!");
+      } catch (error) {
+        console.error("Lỗi upload ảnh:", error);
+      }
+  };
+
+  const handleRemoveAvatar = () =>{
+    setAvatar(null);
+  };
+
   return (
     <>
       <section className="user-dashboard">
@@ -143,53 +175,37 @@ export const index = () => {
                   </div>
 
                   <div className="widget-content">
-                    <div className="uploading-outer">
+                      <div className="uploading-outer">
+                      {avatar ? (
+                      // Nếu có ảnh, chỉ hiển thị ảnh
+                      <img 
+                        src={avatar} 
+                        alt="Avatar" 
+                        className="avatar-preview"
+                        style={{ width: "330px", height: "300px", objectFit: "cover", borderRadius: "10px" }} 
+                      />
+                      
+                    ) : (
+                      // Nếu không có ảnh, hiển thị nút "Browse Logo"
                       <div className="uploadButton">
                         <input
                           className="uploadButton-input"
                           type="file"
-                          name="attachments[]"
-                          accept="image/*, application/pdf"
+                          accept="image/*"
                           id="upload"
-                          multiple
+                          onChange={handleFileChange}
                         />
-                        <label
-                          className="uploadButton-button ripple-effect"
-                          htmlFor="upload"
-                        >
+                        <label className="uploadButton-button ripple-effect" htmlFor="upload">
                           Browse Logo
                         </label>
                         <span className="uploadButton-file-name"></span>
                       </div>
-                      <div className="text">
-                        Max file size is 1MB, Minimum dimension: 330x300 And
-                        Suitable files are .jpg & .png
-                      </div>
+                    )}
+                    
+                    <div className="text">
+                      Max file size is 1MB, Minimum dimension: 330x300 And Suitable files are .jpg & .png
                     </div>
-
-                    <div className="uploading-outer">
-                      <div className="uploadButton">
-                        <input
-                          className="uploadButton-input"
-                          type="file"
-                          name="attachments[]"
-                          accept="image/*, application/pdf"
-                          id="upload_cover"
-                          multiple
-                        />
-                        <label
-                          className="uploadButton-button ripple-effect"
-                          htmlFor="upload"
-                        >
-                          Browse Cover
-                        </label>
-                        <span className="uploadButton-file-name"></span>
                       </div>
-                      <div className="text">
-                        Max file size is 1MB, Minimum dimension: 330x300 And
-                        Suitable files are .jpg & .png
-                      </div>
-                    </div>
 
                     <form className="default-form" onSubmit={handleSubmitCompany(onSubmitCompany)}>
                       <div className="row">
