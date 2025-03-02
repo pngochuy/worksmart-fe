@@ -71,7 +71,7 @@ const getAccessToken = () => { // Lấy token để Authorization
     try {
       const token = getAccessToken();
       if (!token) throw new Error("No access token found");
-      console.log("Candidate data gửi đi:", addressData);
+      console.log("Address data gửi đi:", addressData);
   
       await axios.put(`${BACKEND_API_URL}/employers/edit-profile`, addressData, {
         headers: {
@@ -86,3 +86,46 @@ const getAccessToken = () => { // Lấy token để Authorization
       throw error;
     }
   };
+
+  export const uploadImagesProfile = async (imageFile) => {
+    try {
+      const token = getAccessToken();
+      if (!token) throw new Error("No access token found");
+  
+      const formData = new FormData();
+      formData.append("file", imageFile);
+  
+      console.log("Uploading image:", imageFile.name);
+  
+      const response = await axios.post(`${BACKEND_API_URL}/uploads/upload-image`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+  
+      return response.data; // Trả về URL ảnh đã upload
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+
+  export const updateImagesProfile = async (imageUrl) => {
+    try {
+      const token = getAccessToken();
+      if (!token) throw new Error("No access token found");
+
+      const updatedData = { avatar: imageUrl };
+      console.log("Image data gửi đi:", updatedData);
+
+      await axios.put(`${BACKEND_API_URL}/employers/edit-profile`, updatedData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });   
+      return "Image updated successfully!";
+    } catch (error) {
+      console.error("Error updating image:", error);
+      throw error;
+    }
+  }
+  
