@@ -1,12 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import leftBannerImg from "../../assets/images/background/12.jpg";
 import { CandidateResgiterForm } from "./CandidateResgiterForm";
 import { EmployerRegisterForm } from "./EmployerRegisterForm";
 import { SocialRegister } from "./SocialRegister";
+import { useSearchParams } from "react-router-dom";
 
 export const Index = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isCandidate, setIsCandidate] = useState(true); // true: Candidate, false: Employer
 
+  useEffect(() => {
+    // Đọc từ query parameter (role)
+    const role = searchParams.get("role");
+    if (role === "employer-form") {
+      setIsCandidate(false);
+    } else {
+      setIsCandidate(true);
+    }
+  }, [searchParams]);
+
+  const handleRoleChange = (role) => {
+    // Cập nhật query parameter "role" trong URL
+    setSearchParams({ role });
+  };
   return (
     <>
       <div className="login-section">
@@ -24,7 +40,10 @@ export const Index = () => {
           <div className="login-form default-form" style={{ padding: "0" }}>
             <div className="form-inner">
               <h3 style={{ marginBottom: "0px" }}>
-                Welcome to <a href="/">WorkSmart</a>
+                Welcome to{" "}
+                <a href="/" style={{ color: "#0d6efd" }}>
+                  WorkSmart
+                </a>
               </h3>
               <p>Build a standout profile and get ideal career opportunities</p>
 
@@ -32,7 +51,7 @@ export const Index = () => {
                 <div className="btn-box row">
                   <div className="col-lg-6 col-md-12">
                     <button
-                      onClick={() => setIsCandidate(true)}
+                      onClick={() => handleRoleChange("candidate-form")}
                       className={`theme-btn btn-style-${
                         isCandidate ? "seven" : "four active"
                       }`}
@@ -42,7 +61,7 @@ export const Index = () => {
                   </div>
                   <div className="col-lg-6 col-md-12">
                     <button
-                      onClick={() => setIsCandidate(false)}
+                      onClick={() => handleRoleChange("employer-form")}
                       className={`theme-btn btn-style-${
                         !isCandidate ? "seven" : "four active"
                       }`}
@@ -68,7 +87,9 @@ export const Index = () => {
                 <div className="divider">
                   <span>or</span>
                 </div>
-                <SocialRegister />
+                <SocialRegister
+                  role={isCandidate ? "candidate-form" : "employer-form"}
+                />
               </div>
             </div>
           </div>

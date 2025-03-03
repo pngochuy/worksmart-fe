@@ -6,6 +6,7 @@ import { Index as HomePage } from "./pages/home";
 import { index as NotFoundPage } from "./pages/404-not-found";
 import { Index as LoginPage } from "./pages/login";
 import { Index as RegisterPage } from "./pages/register";
+import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
 import { Index as JobListPage } from "./pages/job-list";
 import { index as JobDetailPage } from "./pages/job-list/job-detail";
@@ -16,8 +17,8 @@ import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-d
 import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
 // Candidate Pages
-import { index as CandidateDashboardPage } from "./pages/dashboard-candidate";
-import { index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
+import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
+import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
 import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
 import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-cv";
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
@@ -28,8 +29,8 @@ import { index as CandidateMessagesPage } from "./pages/dashboard-candidate/mess
 import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
 import { index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
 // Employer Pages
-import { index as EmployerDashboardPage } from "./pages/dashboard-employer";
-import { index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
+import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
+import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
 import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import { index as ManageJobsPage } from "./pages/dashboard-employer/manage-jobs";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
@@ -37,6 +38,13 @@ import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messag
 import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
+import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
+import { CreateCVLayout } from "@/layouts/CreateCVLayout";
+import { Index as EditorCVPage } from "@/pages/dashboard-candidate/my-cv/demoEditorCV";
+//
+// import { index as DemoListCVsPage } from "./pages/demoListCVs";
+// import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
+// import { CreateCVLayout } from "./layouts/CreateCVLayout";
 
 function App() {
   return (
@@ -96,16 +104,28 @@ function App() {
             <Route
               path="/candidate-list"
               element={
-                <MainLayout>
-                  <CandidateListPage />
-                </MainLayout>
+                <ProtectedRoute requiredRoleId="Employer">
+                  <MainLayout>
+                    <CandidateListPage />
+                  </MainLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/candidate-list/:candidateName"
               element={
+                <ProtectedRoute requiredRoleId="Employer">
+                  <MainLayout>
+                    <CandidateDetailPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contact"
+              element={
                 <MainLayout>
-                  <CandidateDetailPage />
+                  <ContactPage />
                 </MainLayout>
               }
             />
@@ -130,6 +150,28 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* <Route
+                index
+                path="demo-list-cvs"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CreateCVLayout>
+                      <DemoListCVsPage />
+                    </CreateCVLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="demo-edit-cv"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CreateCVLayout>
+                      <DemoEditorCVPage />
+                    </CreateCVLayout>
+                  </ProtectedRoute>
+                }
+              /> */}
               <Route
                 index
                 path="my-cv"
@@ -138,13 +180,16 @@ function App() {
                     <MyCVPage />
                   </ProtectedRoute>
                 }
-              />
+              ></Route>
               <Route
                 index
-                path="create-cv"
+                path="my-cv/edit"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
                     <CreateCVPage />
+                    {/* <CreateCVLayout>
+                      <EditorCVPage />
+                    </CreateCVLayout> */}
                   </ProtectedRoute>
                 }
               />
@@ -218,7 +263,7 @@ function App() {
                 index
                 path="dashboard"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <EmployerDashboardPage />
                   </ProtectedRoute>
                 }
@@ -227,7 +272,7 @@ function App() {
                 index
                 path="company-profile"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <CompanyProfilePage />
                   </ProtectedRoute>
                 }
@@ -236,7 +281,7 @@ function App() {
                 index
                 path="post-job"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <PostJobPage />
                   </ProtectedRoute>
                 }
@@ -245,7 +290,7 @@ function App() {
                 index
                 path="manage-jobs"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <ManageJobsPage />
                   </ProtectedRoute>
                 }
@@ -254,8 +299,17 @@ function App() {
                 index
                 path="all-candidates"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <AllCandidatesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="shortlisted-cvs"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <ShortlistedCVsPage />
                   </ProtectedRoute>
                 }
               />
@@ -263,7 +317,7 @@ function App() {
                 index
                 path="subscription-plans"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <EmployerSubscriptionPlansPage />
                   </ProtectedRoute>
                 }
@@ -272,7 +326,7 @@ function App() {
                 index
                 path="messages"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <EmployerMessagesPage />
                   </ProtectedRoute>
                 }
@@ -281,7 +335,7 @@ function App() {
                 index
                 path="notifications"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <EmployerNotificationsPage />
                   </ProtectedRoute>
                 }
@@ -290,7 +344,7 @@ function App() {
                 index
                 path="change-password"
                 element={
-                  <ProtectedRoute requiredRoleId="Candidate">
+                  <ProtectedRoute requiredRoleId="Employer">
                     <EmployerChangePasswordPage />
                   </ProtectedRoute>
                 }

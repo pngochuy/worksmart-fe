@@ -20,16 +20,27 @@ export const getUserRoleName = (roleId) => {
   return roles[roleId] || "Unknown";
 };
 
-export const getUserDetails = () => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
+export const getUserLoginData = () => {
+  const userLoginData = localStorage.getItem("userLoginData");
+  if (userLoginData) {
     try {
-      const decoded = jwtDecode(token);
-      return decoded; // Trả về toàn bộ payload có chứa role và các thông tin khác
+      return JSON.parse(userLoginData); // parse string as JSON
     } catch (error) {
-      console.error("Token decode error:", error);
+      console.error("userLoginData error:", error);
       return null;
     }
   }
   return null;
+};
+
+export const getUserIdFromToken = () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+    const decoded = jwtDecode(token);
+    return decoded.UserId || decoded.userId || decoded.id;
+  } catch (error) {
+    console.error("Lỗi khi giải mã token để lấy userId:", error);
+    return null;
+  }
 };
