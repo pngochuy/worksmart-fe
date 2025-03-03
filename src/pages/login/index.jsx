@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import leftBannerImg from "../../assets/images/background/12.jpg";
 import { LoginForm } from "./LoginForm";
 import { toast } from "react-toastify";
+import { SocialRegister } from "../register/SocialRegister";
 // import "react-toastify/dist/ReactToastify.css";
 
 export const Index = () => {
@@ -33,7 +34,10 @@ export const Index = () => {
           <div className="login-form default-form">
             <div className="form-inner">
               <h3 style={{ marginBottom: "0px" }}>
-                Welcome back to <a href="/">WorkSmart</a>
+                Welcome back to{" "}
+                <a href="/" style={{ color: "#0d6efd" }}>
+                  WorkSmart
+                </a>
               </h3>
               <p style={{ marginBottom: "32px" }}>
                 Build a standout profile and get ideal career opportunities
@@ -50,13 +54,16 @@ export const Index = () => {
                 <div className="divider">
                   <span>or</span>
                 </div>
-                <div className="btn-box row">
+                <SocialRegister
+                // role={isCandidate ? "candidate-form" : "employer-form"}
+                />
+                {/* <div className="btn-box row">
                   <div className="col-lg-12 col-md-12">
                     <a href="#" className="theme-btn social-btn-two google-btn">
                       <i className="fab fa-google"></i> Log In via Gmail
                     </a>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
