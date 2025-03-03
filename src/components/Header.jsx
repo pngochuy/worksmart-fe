@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { useEffect, useState } from "react";
 import { getUserLoginData, getUserRoleFromToken } from "../helpers/decodeJwt";
+import { UserCircle } from "lucide-react";
 
 export const Header = () => {
   const location = useLocation();
@@ -34,6 +35,7 @@ export const Header = () => {
 
   const logout = () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("userLoginData");
     window.location.href = "/login";
   };
 
@@ -171,11 +173,12 @@ export const Header = () => {
                       src={
                         userDataLogin?.avatar
                           ? userDataLogin.avatar
-                          : "https://ui-avatars.com/api/?name=John+Doe"
+                          : "https://www.topcv.vn/images/avatar-default.jpg"
                       }
                       alt="avatar"
                       className="thumb"
                     />
+
                     <span className="name">{userDataLogin?.fullName}</span>
                   </a>
                   <ul className="dropdown-menu">

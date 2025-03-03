@@ -1,3 +1,6 @@
+import { CreateCVLayout } from "@/layouts/CreateCVLayout";
+import { index as DemoListCVsPage } from "./demoListCVs";
+
 export const index = () => {
   return (
     <>
@@ -12,11 +15,11 @@ export const index = () => {
             <div className="col-lg-12">
               {/* CV Manager Widget */}
               <div className="cv-manager-widget ls-widget">
-                <div className="widget-title">
-                  <h4>My CV</h4>
-                </div>
                 <div className="widget-content">
-                  <div className="uploading-resume">
+                  <CreateCVLayout>
+                    <DemoListCVsPage />
+                  </CreateCVLayout>
+                  {/* <div className="uploading-resume">
                     <div className="uploadButton">
                       <input
                         className="uploadButton-input"
@@ -76,7 +79,7 @@ export const index = () => {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

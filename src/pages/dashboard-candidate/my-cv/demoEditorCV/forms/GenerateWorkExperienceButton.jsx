@@ -17,22 +17,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import usePremiumModal from "@/hooks/usePremiumModal";
-import { canUseAITools } from "@/lib/permissions";
-import { generateWorkExperienceSchema } from "@/lib/validation";
+import { toast } from "react-toastify";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { WandSparklesIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSubscriptionLevel } from "../../SubscriptionLevelProvider";
-import { generateWorkExperience } from "./actions";
+import { generateWorkExperience } from "./action";
+import { generateWorkExperienceSchema } from "@/lib/validations";
 
 export const GenerateWorkExperienceButton = ({ onWorkExperienceGenerated }) => {
-  const subscriptionLevel = useSubscriptionLevel();
-
-  const premiumModal = usePremiumModal();
-
   const [showInputDialog, setShowInputDialog] = useState(false);
 
   return (
@@ -41,15 +34,10 @@ export const GenerateWorkExperienceButton = ({ onWorkExperienceGenerated }) => {
         variant="outline"
         type="button"
         onClick={() => {
-          if (!canUseAITools(subscriptionLevel)) {
-            premiumModal.setOpen(true);
-            return;
-          }
           setShowInputDialog(true);
         }}
       >
-        <WandSparklesIcon className="size-4" />
-        Smart fill (AI)
+        <WandSparklesIcon className="size-4 mr-2" /> Smart fill (AI)
       </Button>
       <InputDialog
         open={showInputDialog}
@@ -64,8 +52,6 @@ export const GenerateWorkExperienceButton = ({ onWorkExperienceGenerated }) => {
 };
 
 function InputDialog({ open, onOpenChange, onWorkExperienceGenerated }) {
-  const { toast } = useToast();
-
   const form = useForm({
     resolver: zodResolver(generateWorkExperienceSchema),
     defaultValues: {
@@ -79,10 +65,7 @@ function InputDialog({ open, onOpenChange, onWorkExperienceGenerated }) {
       onWorkExperienceGenerated(response);
     } catch (error) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        description: "Something went wrong. Please try again.",
-      });
+      toast.error("Something went wrong. Please try again.");
     }
   }
 
@@ -107,7 +90,7 @@ function InputDialog({ open, onOpenChange, onWorkExperienceGenerated }) {
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder={`E.g. "from nov 2019 to dec 2020 I worked at google as a software engineer, my tasks were: ..."`}
+                      placeholder={`E.g. "from nov 2020 to dec 2025 I worked at FPT Software as a software engineer, my tasks were: ..."`}
                       autoFocus
                     />
                   </FormControl>
