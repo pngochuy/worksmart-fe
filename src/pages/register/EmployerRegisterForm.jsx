@@ -32,7 +32,7 @@ const schema = z
       .min(8, "Confirm password must be at least 8 characters"),
     agree: z.boolean().refine((value) => value, {
       message: "You must agree to the terms",
-    }),
+    }), 
   })
   // sau khi check hết validate ở trên rồi mới check đk này
   .refine((data) => data.password === data.confirmPassword, {

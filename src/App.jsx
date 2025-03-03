@@ -32,13 +32,15 @@ import { index as CandidateChangePasswordPage } from "./pages/dashboard-candidat
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
 import { index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
 import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
-import { index as ManageJobsPage } from "./pages/dashboard-employer/manage-jobs";
+import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
+import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
 import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
 import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
+//Job Create 
 //
 import { index as DemoListCVsPage } from "./pages/demoListCVs";
 import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
@@ -275,6 +277,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              
+              <Route path="/employer" element={<UserLayout />}>
+                <Route path="job-list" element={<JobListPage />} />
+              </Route>
+
+              <Route
+  path="/employer/manage-jobs/edit/:jobId"
+  element={<EditJobPage />}
+/>
               <Route
                 index
                 path="manage-jobs"
