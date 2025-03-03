@@ -18,7 +18,7 @@ import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
 // Candidate Pages
 import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
-import { index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
+import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
 import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
 import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-cv";
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
@@ -30,7 +30,7 @@ import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate
 import { index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
 // Employer Pages
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
-import { index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
+import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
 import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
 import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
@@ -40,11 +40,12 @@ import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/n
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
-//Job Create 
+import { CreateCVLayout } from "@/layouts/CreateCVLayout";
+import { Index as EditorCVPage } from "@/pages/dashboard-candidate/my-cv/demoEditorCV";
 //
-import { index as DemoListCVsPage } from "./pages/demoListCVs";
-import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
-import { CreateCVLayout } from "./layouts/CreateCVLayout";
+// import { index as DemoListCVsPage } from "./pages/demoListCVs";
+// import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
+// import { CreateCVLayout } from "./layouts/CreateCVLayout";
 
 function App() {
   return (
@@ -53,22 +54,6 @@ function App() {
         <ToastContainer />
         <Router>
           <Routes>
-            <Route
-              path="/demo-list-cvs"
-              element={
-                <CreateCVLayout>
-                  <DemoListCVsPage />
-                </CreateCVLayout>
-              }
-            />
-            <Route
-              path="/demo-edit-cv"
-              element={
-                <CreateCVLayout>
-                  <DemoEditorCVPage />
-                </CreateCVLayout>
-              }
-            />
             <Route path="*" element={<NotFoundPage />} /> {/* Route 404 */}
             <Route
               path="/"
@@ -166,6 +151,28 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* <Route
+                index
+                path="demo-list-cvs"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CreateCVLayout>
+                      <DemoListCVsPage />
+                    </CreateCVLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="demo-edit-cv"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CreateCVLayout>
+                      <DemoEditorCVPage />
+                    </CreateCVLayout>
+                  </ProtectedRoute>
+                }
+              /> */}
               <Route
                 index
                 path="my-cv"
@@ -174,13 +181,16 @@ function App() {
                     <MyCVPage />
                   </ProtectedRoute>
                 }
-              />
+              ></Route>
               <Route
                 index
-                path="create-cv"
+                path="my-cv/edit"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
                     <CreateCVPage />
+                    {/* <CreateCVLayout>
+                      <EditorCVPage />
+                    </CreateCVLayout> */}
                   </ProtectedRoute>
                 }
               />
@@ -216,7 +226,7 @@ function App() {
                 path="subscription-plans"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    < CandidateSubscriptionPlansPage />
+                    <CandidateSubscriptionPlansPage />
                   </ProtectedRoute>
                 }
               />

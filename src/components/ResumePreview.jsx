@@ -5,6 +5,7 @@ import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 // import { BorderStyles } from "@/app/(main)/editor/BorderStyleButton";
 import useDimensions from "@/helpers/useDimensions";
+import { BorderStyles } from "@/pages/dashboard-candidate/my-cv/demoEditorCV/BorderStyleButton";
 // import { ResumeValues } from "@/lib/validation";
 
 export const ResumePreview = ({ resumeData, contentRef, className }) => {
@@ -70,13 +71,12 @@ function PersonalInfoHeader({ resumeData }) {
           alt="Author photo"
           className="aspect-square object-cover"
           style={{
-            borderRadius: "0px",
-            // borderRadius:
-            //   borderStyle === BorderStyles.SQUARE
-            //     ? "0px"
-            //     : borderStyle === BorderStyles.CIRCLE
-            //     ? "9999px"
-            //     : "10%",
+            borderRadius:
+              borderStyle === BorderStyles.SQUARE
+                ? "0px"
+                : borderStyle === BorderStyles.CIRCLE
+                ? "9999px"
+                : "10%",
           }}
         />
       )}
@@ -122,6 +122,7 @@ function SummarySection({ resumeData }) {
         className="border-2"
         style={{
           borderColor: colorHex,
+          backgroundColor: colorHex,
         }}
       />
       <div className="break-inside-avoid space-y-3">
@@ -154,6 +155,7 @@ function WorkExperienceSection({ resumeData }) {
         className="border-2"
         style={{
           borderColor: colorHex,
+          backgroundColor: colorHex,
         }}
       />
       <div className="space-y-3">
@@ -205,6 +207,7 @@ function EducationSection({ resumeData }) {
         className="border-2"
         style={{
           borderColor: colorHex,
+          backgroundColor: colorHex,
         }}
       />
       <div className="space-y-3">
@@ -255,6 +258,7 @@ function SkillsSection({ resumeData }) {
         className="border-2"
         style={{
           borderColor: colorHex,
+          backgroundColor: colorHex,
         }}
       />
       <div className="break-inside-avoid space-y-3">
@@ -273,12 +277,12 @@ function SkillsSection({ resumeData }) {
               className="rounded-md bg-black text-white hover:bg-black"
               style={{
                 backgroundColor: colorHex,
-                borderRadius: "0px",
-                //   borderStyle === BorderStyles.SQUARE
-                //     ? "0px"
-                //     : borderStyle === BorderStyles.CIRCLE
-                //     ? "9999px"
-                //     : "8px",
+                borderRadius:
+                  borderStyle === BorderStyles.SQUARE
+                    ? "0px"
+                    : borderStyle === BorderStyles.CIRCLE
+                    ? "9999px"
+                    : "8px",
               }}
             >
               {skill}

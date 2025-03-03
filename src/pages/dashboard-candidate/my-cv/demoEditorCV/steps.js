@@ -8,6 +8,7 @@ import { WorkExperienceForm } from "./forms/WorkExperienceForm";
 export const steps = [
   { title: "General info", component: GeneralInfoForm, key: "general-info" },
   { title: "Personal info", component: PersonalInfoForm, key: "personal-info" },
+
   {
     title: "Work experience",
     component: WorkExperienceForm,

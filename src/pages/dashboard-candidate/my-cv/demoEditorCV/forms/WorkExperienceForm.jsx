@@ -33,8 +33,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GripHorizontal } from "lucide-react";
-import { useEffect } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useFieldArray, useForm, useFormContext } from "react-hook-form";
+import { GenerateWorkExperienceButton } from "./GenerateWorkExperienceButton";
 // import { GenerateWorkExperienceButton } from "./GenerateWorkExperienceButton";
 
 export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
@@ -144,6 +145,58 @@ function WorkExperienceItem({ id, form, index, remove }) {
     isDragging,
   } = useSortable({ id });
 
+  const { setValue, watch } = useFormContext(); // useContext to access the form data
+  const [startDate, setStartDate] = useState(""); // local state to store start date value
+  const [endDate, setEndDate] = useState(""); // local state to store end date value
+
+  useEffect(() => {
+    // Sync local state with form field values
+    const workExpValues = watch(`workExperiences.${index}`);
+    setStartDate(workExpValues?.startDate || "");
+    setEndDate(workExpValues?.endDate || "");
+  }, [watch, index]);
+
+  const handleStartDateChange = (e) => {
+    const newStartDate = e.target.value;
+
+    const currentDate = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
+
+    if (newStartDate > currentDate) {
+      // If start date is greater than today, do not allow change
+      return;
+    }
+
+    setStartDate(newStartDate);
+    // Update form value for startDate
+    setValue(`workExperiences.${index}.startDate`, newStartDate);
+
+    // If endDate is before startDate, reset endDate
+    if (newStartDate && endDate && new Date(newStartDate) > new Date(endDate)) {
+      setEndDate(""); // Reset endDate to prevent invalid date
+      setValue(`workExperiences.${index}.endDate`, "");
+    }
+  };
+
+  const handleEndDateChange = (e) => {
+    const newEndDate = e.target.value;
+    const currentDate = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
+
+    if (newEndDate > currentDate) {
+      // If end date is greater than today, do not allow change
+      return;
+    }
+    setEndDate(newEndDate);
+    // Update form value for endDate
+    setValue(`workExperiences.${index}.endDate`, newEndDate);
+
+    // Ensure that End date is not earlier than Start date
+    if (startDate && newEndDate && new Date(newEndDate) < new Date(startDate)) {
+      setEndDate(startDate); // If invalid, set endDate to startDate
+      setValue(`workExperiences.${index}.endDate`, startDate);
+      //   alert("End date cannot be before Start date");
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -165,12 +218,12 @@ function WorkExperienceItem({ id, form, index, remove }) {
         />
       </div>
       <div className="flex justify-center">
-        {/* <GenerateWorkExperienceButton
+        {/* Smart fill (AI) button  */}
+        <GenerateWorkExperienceButton
           onWorkExperienceGenerated={(exp) =>
             form.setValue(`workExperiences.${index}`, exp)
           }
-        /> */}
-        _GenerateWorkExperienceButton_
+        />
       </div>
       <FormField
         control={form.control}
@@ -209,7 +262,9 @@ function WorkExperienceItem({ id, form, index, remove }) {
                 <Input
                   {...field}
                   type="date"
-                  value={field.value?.slice(0, 10)}
+                  //   value={field.value?.slice(0, 10)}
+                  value={startDate} // Bind to local state
+                  onChange={handleStartDateChange}
                 />
               </FormControl>
               <FormMessage />
@@ -226,7 +281,9 @@ function WorkExperienceItem({ id, form, index, remove }) {
                 <Input
                   {...field}
                   type="date"
-                  value={field.value?.slice(0, 10)}
+                  //   value={field.value?.slice(0, 10)}
+                  value={endDate} // Bind to local state
+                  onChange={handleEndDateChange}
                 />
               </FormControl>
               <FormMessage />

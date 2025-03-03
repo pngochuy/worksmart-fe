@@ -10,7 +10,7 @@ export const SocialRegister = () => {
   const [user, setUser] = useState([]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams(); // Đọc query parameter từ URL
-  const role = searchParams.get("role") || "candidate-form"; // Mặc định là "candidate" nếu không có role trong URL
+  const role = searchParams.get("role") || "candidate-form"; // Mặc định là "candidate-form" nếu không có role trong URL
 
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => {
@@ -71,14 +71,14 @@ export const SocialRegister = () => {
 
   return (
     <>
-      <div className="form-group" style={{ textAlign: "left" }}>
+      {/* <div className="form-group" style={{ textAlign: "left" }}>
         <label>
           <input type="checkbox" name="agree" required /> By logging in with my
           social media account, I agree to the{" "}
           <a href="/terms">Terms of Service </a>and{" "}
           <a href="/privacy">Privacy Policy</a>
         </label>
-      </div>
+      </div> */}
       <div className="btn-box row">
         {/* <div className="col-lg-6 col-md-12">
           <a href="#" className="theme-btn social-btn-two facebook-btn">
