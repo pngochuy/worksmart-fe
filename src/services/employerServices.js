@@ -87,27 +87,6 @@ const getAccessToken = () => { // Lấy token để Authorization
     }
   };
 
-  export const uploadImagesProfile = async (imageFile) => {
-    try {
-      const token = getAccessToken();
-      if (!token) throw new Error("No access token found");
-  
-      const formData = new FormData();
-      formData.append("file", imageFile);
-  
-      console.log("Uploading image:", imageFile.name);
-  
-      const response = await axios.post(`${BACKEND_API_URL}/uploads/upload-image`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-  
-      return response.data; // Trả về URL ảnh đã upload
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
-  };
-
   export const updateImagesProfile = async (imageUrl) => {
     try {
       const token = getAccessToken();
@@ -129,3 +108,35 @@ const getAccessToken = () => { // Lấy token để Authorization
     }
   }
   
+  export const uploadImagesProfile = async (imageFile) => {
+    try {
+      const token = getAccessToken();
+      if (!token) throw new Error("No access token found");
+  
+      const formData = new FormData();
+      formData.append("file", imageFile);
+  
+      console.log("Uploading image:", imageFile.name);
+  
+      const response = await axios.post(`${BACKEND_API_URL}/uploads/upload-image`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+  
+      return response.data; // Trả về URL ảnh đã upload
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
+  
+  export const deleteImagesProfile = async (imageUrl) => {
+    try {
+      const response = await axios.delete(`${BACKEND_API_URL}/uploads/delete-image`, {
+        data: imageUrl, // Gửi URL ảnh trong body
+        headers: { "Content-Type": "application/json" }
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error deleting image:", error);
+    }
+  };
