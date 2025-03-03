@@ -1,0 +1,25 @@
+{
+  "majors": [
+    { "name": "Major", "value": "" },
+    { "name": "Computer Science", "value": "computer_science" },
+    { "name": "Software Engineering", "value": "software_engineering" },
+    { "name": "Information Technology", "value": "information_technology" },
+    { "name": "Cybersecurity", "value": "cybersecurity" },
+    { "name": "Data Science", "value": "data_science" },
+    { "name": "Artificial Intelligence", "value": "artificial_intelligence" },
+    { "name": "Game Development", "value": "game_development" },
+    { "name": "Network Engineering", "value": "network_engineering" },
+    { "name": "Web Development", "value": "web_development" },
+    { "name": "Mobile Development", "value": "mobile_development" },
+    { "name": "Cloud Computing", "value": "cloud_computing" },
+    { "name": "Computer Engineering", "value": "computer_engineering" },
+    { "name": "UI/UX Design", "value": "ui_ux_design" },
+    { "name": "Graphic Design", "value": "graphic_design" },
+    { "name": "Animation", "value": "animation" },
+    { "name": "Game Design", "value": "game_design" },
+    { "name": "Multimedia Arts", "value": "multimedia_arts" },
+    { "name": "Industrial Design", "value": "industrial_design" },
+    { "name": "Product Design", "value": "product_design" },
+    { "name": "Motion Graphics", "value": "motion_graphics" }
+  ]
+}

@@ -7,7 +7,7 @@ import { index as NotFoundPage } from "./pages/404-not-found";
 import { Index as LoginPage } from "./pages/login";
 import { Index as RegisterPage } from "./pages/register";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
-import { index as JobListPage } from "./pages/job-list";
+import { Index as JobListPage } from "./pages/job-list";
 import { index as JobDetailPage } from "./pages/job-list/job-detail";
 import { index as CompanyListPage } from "./pages/company-list";
 import { index as CompanyDetailPage } from "./pages/company-list/company-detail";

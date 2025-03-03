@@ -1,0 +1,32 @@
+.salary-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.salary-filter label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.salary-filter input {
+  width: 15%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.salary-filter input:focus {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 5px rgba(255, 77, 79, 0.5);
+  outline: none;
+}
+
+.salary-filter p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: red;
+}
