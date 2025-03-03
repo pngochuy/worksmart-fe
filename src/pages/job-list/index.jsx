@@ -1,22 +1,60 @@
-export const index = () => {
+import { useState, useEffect } from "react";
+import { fetchJobs } from "../../services/jobServices";
+import Pagination from "./Pagination";
+import WorkTypeFilter from "./WorkTypeFilter";
+import JobPositionDropdown from "./JobPositionDropdown";
+import SalaryRangeDropdown from "./SalaryRangeDropdown";
+export const Index = () => {
+  const [jobs, setJobs] = useState([]);
+  const [totalPage, setTotalPage] = useState(1);
+  const [totalJob, setTotalJob] = useState(1);
+  const [searchParams, setSearchParams] = useState({
+    PageIndex: 1,
+    PageSize: 3,
+    Title: "",
+    JobPosition: "",
+    WorkTypes: [],
+    Location: "",
+    MinSalary: null,
+    MaxSalary: null,
+    Tags: [],
+    LastUpdatedAt: null,
+  });
+
+  const getJobs = async () => {
+    console.log("searchParams", searchParams);
+    const data = await fetchJobs(searchParams);
+    console.log("data", data);
+    setJobs(data.jobs);
+    setTotalPage(data.totalPage);
+    setTotalJob(data.totalJob);
+  };
+
+  // Hàm cập nhật searchParams khi nhập liệu
+  const handleInputChange = (e) => {
+    setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
+  };
+
+  const handlePageSizeChange = (e) => {
+    const newSize = parseInt(e.target.value);
+    setSearchParams((prev) => ({
+      ...prev,
+      PageSize: newSize,
+      PageIndex: 1, // Reset về trang 1 khi thay đổi PageSize
+    }));
+  };
+
+  useEffect(() => {
+    getJobs();
+  }, [searchParams.PageSize, searchParams.PageIndex]);
   return (
     <>
       {/*Page Title*/}
       <section
-        className="page-title style-two at-jlv16 before_none bg-white"
+        className="page-title at-jlv16 before_none bg-white"
         style={{ marginTop: "111px" }}
       >
         <div className="auto-container">
-          {/* <div className="title-outer">
-            <h1>Find Jobs</h1>
-            <ul className="page-breadcrumb">
-              <li>
-                <a href="index.html">Home</a>
-              </li>
-              <li>Jobs</li>
-            </ul>
-          </div> */}
-
           {/* Job Search Form */}
           <div className="hero-at-jlv17 mb30">
             <h1 className="">
@@ -28,43 +66,39 @@ export const index = () => {
             </p>
           </div>
           <div className="job-search-form">
-            <form method="post" action="job-list-v10.html">
+            <form onSubmit={(e) => e.preventDefault()}>
               <div className="row">
                 {/* Form Group */}
-                <div className="form-group col-lg-4 col-md-12 col-sm-12">
+                <div className="form-group col-lg-5 col-md-12 col-sm-12">
                   <span className="icon flaticon-search-1"></span>
                   <input
                     type="text"
-                    name="field_name"
+                    name="Title"
                     placeholder="Job title"
+                    value={searchParams.Title}
+                    onChange={handleInputChange}
                   />
                 </div>
 
                 {/* Form Group */}
-                <div className="form-group col-lg-3 col-md-12 col-sm-12 location">
+                <div className="form-group col-lg-5 col-md-12 col-sm-12 location">
                   <span className="icon flaticon-map-locator"></span>
-                  <input type="text" name="field_name" placeholder="City" />
-                </div>
-
-                {/* Form Group */}
-                <div className="form-group col-lg-3 col-md-12 col-sm-12 location">
-                  <span className="icon flaticon-briefcase"></span>
-                  <select className="chosen-select">
-                    <option value="">All Categories</option>
-                    <option value="44">Accounting / Finance</option>
-                    <option value="106">Automotive Jobs</option>
-                    <option value="46">Customer</option>
-                    <option value="48">Design</option>
-                    <option value="47">Development</option>
-                    <option value="45">Health and Care</option>
-                    <option value="105">Marketing</option>
-                    <option value="107">Project Management</option>
-                  </select>
+                  <input
+                    type="text"
+                    name="Location"
+                    placeholder="City"
+                    value={searchParams.Location}
+                    onChange={handleInputChange}
+                  />
                 </div>
 
                 {/* Form Group */}
                 <div className="form-group col-lg-2 col-md-12 col-sm-12 text-right">
-                  <button type="submit" className="theme-btn btn-style-one">
+                  <button
+                    type="submit"
+                    className="theme-btn btn-style-one"
+                    onClick={getJobs}
+                  >
                     Search
                   </button>
                 </div>
@@ -75,8 +109,34 @@ export const index = () => {
         </div>
       </section>
       {/*End Page Title*/}
-
       {/* Listing Section */}
+      <section>
+        <div className="auto-container">
+          <div className="row">
+            <div className="ls-switcher">
+              <div className="showing-result" style={{ marginBottom: "0px" }}>
+                <div className="top-filters">
+                  <div className="form-group">
+                    <SalaryRangeDropdown setSearchParams={setSearchParams} />
+                  </div>
+                  <div className="form-group">
+                    {/* Form Group */}
+                    <JobPositionDropdown
+                      searchParams={searchParams}
+                      setSearchParams={setSearchParams}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="filters-backdrop"
+            style={{ marginBottom: "50px" }}
+          ></div>
+        </div>
+      </section>
+
       <section className="ls-section at-jlv16">
         <div className="auto-container">
           <div className="filters-backdrop"></div>
@@ -91,135 +151,10 @@ export const index = () => {
                   </button>
 
                   {/* Switchbox Outer */}
-                  <div className="switchbox-outer">
-                    <h4>Work Type</h4>
-                    <ul className="switchbox at-jlv16">
-                      <li className="mb-0">
-                        <label className="switch">
-                          <input type="radio" defaultChecked />
-                          {/* <span className="slider round"></span> */}
-                          <span className="title">All</span>
-                        </label>
-                      </li>
-                      <li className="mb-0">
-                        <label className="switch">
-                          <input type="checkbox" />
-                          <span className="slider round"></span>
-                          <span className="title">Freelance</span>
-                        </label>
-                      </li>
-                      <li className="mb-0">
-                        <label className="switch">
-                          <input type="checkbox" />
-                          <span className="slider round"></span>
-                          <span className="title">Full Time</span>
-                        </label>
-                      </li>
-                      <li className="mb-0">
-                        <label className="switch">
-                          <input type="checkbox" />
-                          <span className="slider round"></span>
-                          <span className="title">Internship</span>
-                        </label>
-                      </li>
-                      <li className="mb-0">
-                        <label className="switch">
-                          <input type="checkbox" />
-                          <span className="slider round"></span>
-                          <span className="title">Part-time</span>
-                        </label>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Checkboxes Ouer */}
-                  <div className="checkbox-outer">
-                    <h4>Experience</h4>
-                    <ul className="checkboxes square at-jlv16">
-                      <li>
-                        <input
-                          id="check-l"
-                          type="checkbox"
-                          name="check"
-                          defaultChecked
-                        />
-                        <label htmlFor="check-l">All</label>
-                      </li>
-                      <li>
-                        <input id="check-l" type="checkbox" name="check" />
-                        <label htmlFor="check-l">No Experience</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="check" />
-                        <label htmlFor="check-m">0-1 Year</label>
-                      </li>
-                      <li>
-                        <input id="check-n" type="checkbox" name="check" />
-                        <label htmlFor="check-n">2 Years</label>
-                      </li>
-                      <li>
-                        <input id="check-o" type="checkbox" name="check" />
-                        <label htmlFor="check-o">3 Years</label>
-                      </li>
-                      <li>
-                        <input id="check-p" type="checkbox" name="check" />
-                        <label htmlFor="check-p">4 - 5 Years</label>
-                      </li>
-                      <li>
-                        <input id="check-p" type="checkbox" name="check" />
-                        <label htmlFor="check-p">Over 5 Years</label>
-                      </li>
-                      {/* <li>
-                        <button className="view-more">
-                          <span className="icon flaticon-plus"></span> View More
-                        </button>
-                      </li> */}
-                    </ul>
-                  </div>
-
-                  {/* Filter Block */}
-                  <div className="filter-block">
-                    <h4>Salary</h4>
-                    <ul className="checkboxes square at-jlv16">
-                      <li>
-                        <input
-                          id="check-l"
-                          type="checkbox"
-                          name="salary"
-                          defaultChecked
-                        />
-                        <label htmlFor="check-l">All</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">0 - 10.000.000</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">10.000.000 - 20.000.000</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">20.000.000 - 30.000.000</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">30.000.000 - 40.000.000</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">40.000.000 - 50.000.000</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">Over 50.000.000</label>
-                      </li>
-                      <li>
-                        <input id="check-m" type="checkbox" name="salary" />
-                        <label htmlFor="check-m">Based on Deal</label>
-                      </li>
-                    </ul>
-                  </div>
+                  <WorkTypeFilter
+                    searchParams={searchParams}
+                    setSearchParams={setSearchParams}
+                  />
                 </div>
                 {/* End Call To Action */}
               </div>
@@ -238,201 +173,104 @@ export const index = () => {
                 <div className="ls-switcher at-jlv17">
                   <div className="showing-result">
                     <div className="text">
-                      Showing <strong>41-60</strong> of <strong>944</strong>{" "}
+                      Showing{" "}
+                      <strong>
+                        {(searchParams.PageIndex - 1) * searchParams.PageSize +
+                          1}{" "}
+                        -{" "}
+                        {Math.min(
+                          searchParams.PageIndex * searchParams.PageSize,
+                          totalJob
+                        )}
+                      </strong>{" "}
+                      of
+                      <strong>
+                        {" "}
+                        {Math.min(
+                          totalPage * searchParams.PageSize,
+                          totalJob
+                        )}{" "}
+                      </strong>
                       jobs
                     </div>
                   </div>
                   <div className="sort-by">
                     <select className="chosen-select">
-                      <option>New Jobs</option>
-                      <option>Freelance</option>
-                      <option>Full Time</option>
-                      <option>Internship</option>
-                      <option>Part Time</option>
-                      <option>Temporary</option>
+                      <option>Most Recent</option>
+                      <option>Least recent </option>
                     </select>
 
-                    <select className="chosen-select">
-                      <option>Show 10</option>
-                      <option>Show 20</option>
-                      <option>Show 30</option>
-                      <option>Show 40</option>
-                      <option>Show 50</option>
-                      <option>Show 60</option>
+                    <select
+                      className="chosen-select"
+                      value={searchParams.PageSize}
+                      onChange={handlePageSizeChange}
+                    >
+                      <option value="3">Show 3</option>
+                      <option value="6">Show 6</option>
+                      <option value="9">Show 9</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="row">
                   {/* Job Block */}
-                  <div className="job-block at-jlv16 col-lg-12 col-sm-6">
-                    <div className="inner-box">
-                      <div className="tags d-flex align-items-center">
-                        <a className="flaticon-bookmark" href=""></a>
-                      </div>
-                      <div className="content ps-0">
-                        <div className="d-lg-flex align-items-center">
-                          <span className="company-logo position-relative">
-                            <img
-                              src="images/resource/company-logo/3-1.png"
-                              alt=""
-                            />
-                          </span>
-                          <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
-                            <h4 className="fz20 mb-2 mb-lg-0">
-                              <a href="/job/job-detail">
-                                Business Analyst (N2 Up)
-                              </a>
-                            </h4>
-                            <p className="mb-0">
-                              by <span className="fw500 text">HuyPN</span> in
-                              Design & Creative
-                            </p>
+                  {jobs && jobs.length > 0 ? (
+                    jobs.map((job, index) => (
+                      <div
+                        key={index}
+                        className="job-block at-jlv16 col-lg-12 col-sm-6"
+                      >
+                        <div className="inner-box">
+                          <div className="tags d-flex align-items-center">
+                            <a className="flaticon-bookmark" href=""></a>
                           </div>
-                        </div>
-                        <ul className="job-other-info at-jsv6 at-jsv17 mt20 ms-0">
-                          <li className="time">Full Time</li>
-                          <li className="time2">London, UK</li>
-                          <li className="time2">450 - $900/month</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
+                          <div className="content ps-0">
+                            <div className="d-lg-flex align-items-center">
+                              <span className="company-logo position-relative">
+                                <img
+                                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/1200px-Microsoft_logo.svg.png"
+                                  alt=""
+                                  style={{
+                                    width: "60px",
+                                    height: "60px",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              </span>
 
-                  {/* Job Block */}
-                  <div className="job-block at-jlv16 active col-lg-12 col-sm-6">
-                    <div className="inner-box">
-                      <div className="tags d-flex align-items-center">
-                        <a className="flaticon-bookmark" href=""></a>
-                      </div>
-                      <div className="content ps-0">
-                        <div className="d-lg-flex align-items-center">
-                          <span className="company-logo position-relative">
-                            <img
-                              src="images/resource/company-logo/3-2.png"
-                              alt=""
-                            />
-                          </span>
-                          <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
-                            <h4 className="fz20 mb-2 mb-lg-0">
-                              <a href="#">Business Analyst (N2 Up)</a>
-                            </h4>
-                            <p className="mb-0">
-                              by <span className="fw500 text">HuyPN</span> in
-                              Design & Creative
-                            </p>
+                              <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
+                                <h4 className="fz20 mb-2 mb-lg-0">
+                                  <a href="/job/job-detail">{job.title}</a>
+                                </h4>
+                                <p className="mb-0">
+                                  by{" "}
+                                  <span className="fw500 text">
+                                    {job.userID}
+                                  </span>{" "}
+                                  in Design & Creative
+                                </p>
+                              </div>
+                            </div>
+                            <ul className="job-other-info at-jsv6 at-jsv17 mt20 ms-0">
+                              <li className="time">{job.workType}</li>
+                              <li className="timee">{job.location}</li>
+                              <li className="timeee ">${job.salary}/month</li>
+                            </ul>
                           </div>
                         </div>
-                        <ul className="job-other-info at-jsv6 at-jsv17 mt20 ms-0">
-                          <li className="time">Full Time</li>
-                          <li className="time2">London, UK</li>
-                          <li className="time2">450 - $900/month</li>
-                        </ul>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Job Block */}
-                  <div className="job-block at-jlv16 active col-lg-12 col-sm-6">
-                    <div className="inner-box">
-                      <div className="tags d-flex align-items-center">
-                        <a className="flaticon-bookmark" href=""></a>
-                      </div>
-                      <div className="content ps-0">
-                        <div className="d-lg-flex align-items-center">
-                          <span className="company-logo position-relative">
-                            <img
-                              src="images/resource/company-logo/3-4.png"
-                              alt=""
-                            />
-                          </span>
-                          <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
-                            <h4 className="fz20 mb-2 mb-lg-0">
-                              <a href="#">Business Analyst (N2 Up)</a>
-                            </h4>
-                            <p className="mb-0">
-                              by <span className="fw500 text">HuyPN</span> in
-                              Design & Creative
-                            </p>
-                          </div>
-                        </div>
-                        <ul className="job-other-info at-jsv6 at-jsv17 mt20 ms-0">
-                          <li className="time">Full Time</li>
-                          <li className="time2">London, UK</li>
-                          <li className="time2">450 - $900/month</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Job Block */}
-                  <div className="job-block at-jlv16 col-lg-12 col-sm-6">
-                    <div className="inner-box">
-                      <div className="tags d-flex align-items-center">
-                        <a className="flaticon-bookmark" href=""></a>
-                      </div>
-                      <div className="content ps-0">
-                        <div className="d-lg-flex align-items-center">
-                          <span className="company-logo position-relative">
-                            <img
-                              src="images/resource/company-logo/3-3.png"
-                              alt=""
-                            />
-                          </span>
-                          <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
-                            <h4 className="fz20 mb-2 mb-lg-0">
-                              <a href="#">Business Analyst (N2 Up)</a>
-                            </h4>
-                            <p className="mb-0">
-                              by <span className="fw500 text">HuyPN</span> in
-                              Design & Creative
-                            </p>
-                          </div>
-                        </div>
-                        <ul className="job-other-info at-jsv6 at-jsv17 mt20 ms-0">
-                          <li className="time">Full Time</li>
-                          <li className="time2">London, UK</li>
-                          <li className="time2">450 - $900/month</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
+                    ))
+                  ) : (
+                    <h4 className="fz20 mb-2 mb-lg-0">No Jobs</h4>
+                  )}
                 </div>
 
                 {/* Pagination */}
-                {/* <div className="ls-show-more">
-                  <p>Showing 36 of 497 Jobs</p>
-                  <div className="bar">
-                    <span className="bar-inner" style={{ width: "40%" }}></span>
-                  </div>
-                  <button className="show-more">Show More</button>
-                </div> */}
-                {/* Pagination */}
-                <nav className="ls-pagination">
-                  <ul>
-                    <li className="prev">
-                      <a href="#">
-                        <i className="fa fa-arrow-left"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">1</a>
-                    </li>
-                    <li>
-                      <a href="#" className="current-page">
-                        2
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">3</a>
-                    </li>
-                    <li className="next">
-                      <a href="#">
-                        <i className="fa fa-arrow-right"></i>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
+                <Pagination
+                  currentPage={searchParams.PageIndex}
+                  totalPage={totalPage}
+                  setSearchParams={setSearchParams}
+                />
               </div>
             </div>
           </div>
