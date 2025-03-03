@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { getUserIdFromToken } from "../../../helpers/decodeJwt";
-import { fetchCandidatesProfile, updateCandidateAddress, updateCandidateProfile } from "../../../services/candidateServices";
+import { fetchCandidatesProfile, updateCandidateAddress, updateCandidateProfile, updateImagesProfile, uploadImagesProfile, deleteImagesProfile } from "../../../services/candidateServices";
+import { toast } from "react-toastify";
 
 // Validation schema using Zod
 const profileSchema = z.object({
@@ -32,8 +33,8 @@ export const index = () => {
   const [UserId, setUserId] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [profileData, setProfileData] = useState({
     fullName : "",
     phoneNumber : "",
@@ -41,6 +42,7 @@ export const index = () => {
     dateOfBirth : "",
     identityNumber : "",
     isPrivated : "",
+    avatar : "",
   });
 
   const { 
@@ -79,7 +81,14 @@ export const index = () => {
       try {
         const data = await fetchCandidatesProfile();
         if (data) {
-          setProfileData(data),
+          setProfileData(data);
+
+          if (data.avatar) {
+            setAvatar(data.avatar);
+          } else {
+            console.warn("⚠ Avatar không tồn tại trong dữ liệu API");
+          }
+
           setProfileValue("fullName", data.fullName || "");
           setProfileValue("phoneNumber", data.phoneNumber || "");
           setProfileValue("email", data.email || "");
@@ -91,15 +100,14 @@ export const index = () => {
         }
       } catch (error) {
         console.error("Error fetching candidate profile", error.response);
+        toast.error("Error fetching candidate profile")
         if (error.message.includes("Unauthorized") || error.message.includes("Token expired")) {
           navigate("/login");
         }
       }
     };
-    if (UserId) {
-      loadProfile();
-    }
-  }, [UserId, setProfileValue, setAddressValue, navigate]);
+    loadProfile();
+  }, [setProfileValue, setAddressValue, setAvatar, navigate]);
   
 
   const onSubmitProfile = async (formData) => {
@@ -110,9 +118,10 @@ export const index = () => {
         isPrivated: formData.isPrivated ? formData.isPrivated : "No",
       };
       const message = await updateCandidateProfile(validData);
-      alert(message);
+      toast.success(message);
     } catch (error) {
       console.error("Error updating profile", error);
+      toast.error("Error updating profile")
     } finally {
       setIsProfileLoading(false);
     }
@@ -122,45 +131,80 @@ export const index = () => {
     try {
       setIsAddressLoading(true);
       const message = await updateCandidateAddress(formData);
-      alert(message);
+      toast.success(message);
     } catch (error) {
-      console.error("Error updating address", error);
+      console.error("Error updating profile", error);
+      toast.error("Error updating address");
     } finally {
       setIsAddressLoading(false);
     }
   };
   
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) {
       setFileError("Please select an image.");
       return;
     }
-
-    //Chỉ cho phép file JPG hoặc PNG
-    const allowedTypes = ["image/jpg", "image/png"];
-    if (!allowedTypes.includes(file.type)){
-      setFileError("Only JPG and PNG files are allowed");
+  
+    // Chỉ cho phép file JPG hoặc PNG
+    const allowedTypes = ["image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      setFileError("Only JPG and PNG files are allowed.");
       return;
     }
-
-    //Kiểm tra dung lượng file < 1MB
-    if (file.size > 1048576){
-      setFileError("File size must be less than 1 MB");
+  
+    // Kiểm tra dung lượng file < 1MB
+    if (file.size > 1048576) {
+      setFileError("File size must be less than 1 MB.");
       return;
     }
-
+  
     // Kiểm tra kích thước ảnh (cần tạo một object URL để kiểm tra)
     const img = new Image();
     img.src = URL.createObjectURL(file);
-    img.onload = () => {
-      if (img.width < 330 || img.height < 300){
-        setFileError("Minimum dimensions are 330x300 pixels");
+  
+    img.onload = async () => {
+      if (img.width < 330 || img.height < 300) {
+        setFileError("Minimum dimensions are 330x300 pixels.");
         return;
       }
-      setSelectedFile(file);
-      setFileError("");
+  
+      // Nếu qua hết validate, tiếp tục upload ảnh
+      try {
+        const uploadResponse = await uploadImagesProfile(file);
+        const imageUrl = uploadResponse.imageUrl;
+        console.log("Avatar gửi đi:", imageUrl);
+  
+        await updateImagesProfile(imageUrl);
+  
+        setAvatar(imageUrl); // Cập nhật UI ngay khi ảnh mới có
+        setFileError(""); // Xóa lỗi nếu có
+        console.log("Profile updated successfully!");
+        toast.success("Profile updated successfully!")
+      } catch (error) {
+        console.error("Error while uploading photo:", error);
+        toast.error("Error while uploading photo!");
+        setFileError("Upload failed. Please try again.");
+      }
     };
+  };
+  
+  const handleRemoveImage = async () => {
+    if (!avatar) return;
+    try {
+      await deleteImagesProfile(avatar);
+      await updateImagesProfile("");
+  
+      // Cập nhật state để giao diện hiển thị form upload lại
+      setAvatar("");
+      console.log("Image deleted successfully!");
+      toast.success("Image deleted successfully!")
+    } catch (error) {
+      console.error("Error while deleting photo:", error);
+      toast.error("Error while deleting photo:");
+      setFileError("Delete failed. Please try again.");
+    }
   };
 
   return (
@@ -183,33 +227,46 @@ export const index = () => {
                   </div>
 
                   <div className="widget-content">
-                    <div className="uploading-outer">
+                  <div className="uploading-outer">
+                      {avatar ? (
+                      <div className="image-container">
+                        <img 
+                          src={avatar} 
+                          alt="Avatar" 
+                          className="avatar-preview"
+                          style={{ width: "330px", height: "300px", objectFit: "cover", borderRadius: "10px" }} 
+                        />
+                        <div className="form-group col-lg-4 col-md-8">
+                          <button className="theme-btn btn-style-one" onClick={handleRemoveImage}
+                          style={{ marginTop: "10px"}} >
+                            Remove                          
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
                       <div className="uploadButton">
-                        {/* Images */}
                         <input
                           className="uploadButton-input"
                           type="file"
-                          accept="image/jpg, image/png"
+                          accept="image/*"
                           id="upload"
                           onChange={handleFileChange}
                         />
-                        <label
-                          className="uploadButton-button ripple-effect"
-                          htmlFor="upload"
-                        >
+                        <label className="uploadButton-button ripple-effect" htmlFor="upload">
                           Browse Logo
                         </label>
-                        <span className="uploadButton-file-name">
-                          {selectedFile ? selectedFile.name : ""}
-                        </span>
+                        <span className="uploadButton-file-name"></span>
                       </div>
                       <div className="text">
-                        Max file size is 1MB, Minimum dimension: 330x300 And
-                        Suitable files are .jpg & .png
+                        Max file size is 1MB, Minimum dimension: 330x300 And Suitable files are .jpg & .png
                         <br />
                         {fileError && <div className="text-danger">{fileError}</div>}
                       </div>
+                      </>
+                    )}
                     </div>
+
                     <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="default-form">
                       <div className="row">
                         {/* Full Name */}
@@ -248,7 +305,7 @@ export const index = () => {
                         {/* Identity Number */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Identity Number</label>
-                          <input type="text" placeholder="Enter ID number" {...registerProfile("identityNumber")} />
+                          <input type="text" placeholder="Enter identity number" {...registerProfile("identityNumber")} />
                           {profileErrors.identityNumber && <span className="text-danger">{profileErrors.identityNumber.message}</span>}
                         </div>
 

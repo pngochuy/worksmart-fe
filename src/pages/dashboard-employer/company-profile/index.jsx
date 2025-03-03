@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress, uploadImagesProfile, updateImagesProfile } from "@/services/employerServices";
+import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress,updateImagesProfile, uploadImagesProfile, deleteImagesProfile } from "@/services/employerServices";
 import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { getUserIdFromToken } from "../../../helpers/decodeJwt";
-import { setDate } from "date-fns";
+import { toast } from "react-toastify";
 
 const companySchema = z.object({
   phoneNumber: z.string().min(10, "Phone number is invalid").regex(/^0\d{9,}$/, "Phone number must start with 0 and contain only numbers.").optional().or(z.literal("")),
@@ -31,6 +31,7 @@ export const index = () => {
   const [UserId, setUserId] = useState(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [fileError, setFileError] = useState("");
   const [avatar, setAvatar] = useState("");
   const [profileData, setProfileData] = useState({
     companyName : "",
@@ -67,7 +68,8 @@ export const index = () => {
     if (id) {
       setUserId(id);
     } else {
-      console.error("Không tìm thấy userId trong token!");
+      console.error("UserId not found in token!");
+      toast.error("UserId not found in token!");
       navigate("/login");
     }
   }, []);
@@ -97,12 +99,12 @@ export const index = () => {
         }
       } catch (error) {
         console.error("Error fetching candidate profile", error.response);
+        toast.error("Error fetching candidate profile");
         if (error.message.includes("Unauthorized") || error.message.includes("Token expired")) {
           navigate("/login");
         }
       }
     };
-
     loadCompanyProfile();
   }, [setAvatar, setCompanyValue, setAddressValue, navigate]);
 
@@ -114,9 +116,10 @@ export const index = () => {
         isPrivated: formData.isPrivated ? formData.isPrivated : "No",
       };
       const message = await updateCompanyProfile(validData);
-      alert(message);
+      toast.success(message);
     } catch (error) {
       console.error("Error updating company profile:", error);
+      toast.error("Error updating company profile");
     } finally {
       setIsCompanyLoading(false);
     }
@@ -126,9 +129,10 @@ export const index = () => {
     try {
       setIsAddressLoading(true);
       const message = await updateCompanyAddress(formData);
-      alert(message);
+      toast.success(message);
     } catch (error) {
       console.error("Error updating company address:", error);
+      toast.error("Error updating company profile");
     } finally {
       setIsAddressLoading(false);
     }
@@ -136,23 +140,69 @@ export const index = () => {
   
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+      setFileError("Please select an image.");
+      return;
+    }
+  
+    // Chỉ cho phép file JPG hoặc PNG
+    const allowedTypes = ["image/jpeg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      setFileError("Only JPG and PNG files are allowed.");
+      return;
+    }
+  
+    // Kiểm tra dung lượng file < 1MB
+    if (file.size > 1048576) {
+      setFileError("File size must be less than 1 MB.");
+      return;
+    }
+  
+    // Kiểm tra kích thước ảnh (cần tạo một object URL để kiểm tra)
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+  
+    img.onload = async () => {
+      if (img.width < 330 || img.height < 300) {
+        setFileError("Minimum dimensions are 330x300 pixels.");
+        return;
+      }
+  
+      // Nếu qua hết validate, tiếp tục upload ảnh
       try {
-        const uploadResponse  = await uploadImagesProfile(file);
+        const uploadResponse = await uploadImagesProfile(file);
         const imageUrl = uploadResponse.imageUrl;
         console.log("Avatar gửi đi:", imageUrl);
-
+  
         await updateImagesProfile(imageUrl);
-
+  
         setAvatar(imageUrl); // Cập nhật UI ngay khi ảnh mới có
-        console.log("Hồ sơ cập nhật thành công!");
+        setFileError(""); // Xóa lỗi nếu có
+        console.log("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
       } catch (error) {
-        console.error("Lỗi upload ảnh:", error);
+        console.error("Upload failed:", error);
+        toast.error("Error while uploading photo!");
+        setFileError("Upload failed. Please try again.");
       }
+    };
   };
 
-  const handleRemoveAvatar = () =>{
-    setAvatar(null);
+  const handleRemoveImage = async () => {
+    if (!avatar) return;
+    try {
+      await deleteImagesProfile(avatar);
+      await updateImagesProfile("");
+  
+      // Cập nhật state để giao diện hiển thị form upload lại
+      setAvatar("");
+      console.log("Image deleted successfully!");
+      toast.success("Image deleted successfully!")
+    } catch (error) {
+      console.error("Error while deleting photo:", error);
+      toast.error("Error while deleting photo:");
+      setFileError("Delete failed. Please try again.");
+    }
   };
 
   return (
@@ -177,16 +227,22 @@ export const index = () => {
                   <div className="widget-content">
                       <div className="uploading-outer">
                       {avatar ? (
-                      // Nếu có ảnh, chỉ hiển thị ảnh
-                      <img 
-                        src={avatar} 
-                        alt="Avatar" 
-                        className="avatar-preview"
-                        style={{ width: "330px", height: "300px", objectFit: "cover", borderRadius: "10px" }} 
-                      />
-                      
+                        <div className="image-container">
+                          <img 
+                            src={avatar} 
+                            alt="Avatar" 
+                            className="avatar-preview"
+                            style={{ width: "330px", height: "300px", objectFit: "cover", borderRadius: "10px" }} 
+                          />
+                          <div className="form-group col-lg-4 col-md-8">
+                            <button className="theme-btn btn-style-one" onClick={handleRemoveImage}
+                            style={{ marginTop: "10px"}} >
+                              Remove                          
+                            </button>
+                          </div>
+                        </div>
                     ) : (
-                      // Nếu không có ảnh, hiển thị nút "Browse Logo"
+                      <>
                       <div className="uploadButton">
                         <input
                           className="uploadButton-input"
@@ -200,12 +256,14 @@ export const index = () => {
                         </label>
                         <span className="uploadButton-file-name"></span>
                       </div>
-                    )}
-                    
-                    <div className="text">
+                      <div className="text">
                       Max file size is 1MB, Minimum dimension: 330x300 And Suitable files are .jpg & .png
-                    </div>
+                      <br />
+                      {fileError && <div className="text-danger">{fileError}</div>}
                       </div>
+                      </>
+                    )}
+                    </div>
 
                     <form className="default-form" onSubmit={handleSubmitCompany(onSubmitCompany)}>
                       <div className="row">
