@@ -40,8 +40,7 @@ import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/n
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
-import { CreateCVLayout } from "@/layouts/CreateCVLayout";
-import { Index as EditorCVPage } from "@/pages/dashboard-candidate/my-cv/demoEditorCV";
+//Job Create 
 //
 // import { index as DemoListCVsPage } from "./pages/demoListCVs";
 // import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
