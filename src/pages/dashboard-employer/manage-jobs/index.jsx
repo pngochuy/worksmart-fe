@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getAllJobs, deleteJob } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -71,7 +72,10 @@ export default function ManageJobsPage() {
                           <th>Location</th>
                           <th>Salary</th>
                           <th>Status</th>
+                          <th>WorkType</th>
+                          <th>Priority</th>
                           <th>Created At</th>
+                          <th>Expired At</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -79,18 +83,35 @@ export default function ManageJobsPage() {
                       <tbody>
                         {jobs.length > 0 ? (
                           jobs.map((job) => (
-                            <tr key={job.jobID}>
+                            <tr key={job.jobID}
+                              className="clickable-row"
+                              onClick={() => navigate(`/employer/manage-jobs/edit/${job.jobID}`)}
+                              style={{ cursor: "pointer" }}
+                            >
                               <td>{job.title}</td>
                               <td>{job.location}</td>
                               <td>${job.salary ? job.salary.toLocaleString() : "Negotiable"}</td>
-                              <td>
+
+                              {/* <td>
                                 {job.status === 1 ? (
                                   <span className="badge badge-success">Active</span>
                                 ) : (
                                   <span className="badge badge-warning">Inactive</span>
                                 )}
+                              </td> */}
+                              <td style={{ color: job.status === 1 ? "green" : "orange", fontWeight: "bold" }}>
+                                {job.status === 1 ? "Active" : "Inactive"}
+                              </td>
+                              <td>{job.workType}</td>
+                              <td>
+                                {job.priority ? (
+                                  <span style={{ color: "green", fontWeight: "bold" }}>High</span>
+                                ) : (
+                                  <span style={{ color: "orange", fontWeight: "bold" }}>Low</span>
+                                )}
                               </td>
                               <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                              <td>{new Date(job.deadline).toLocaleDateString()}</td>
                               <td>
                                 <button className="edit-btn" onClick={() => handleEdit(job.jobID)}>✏️ Edit</button>
                                 <button className="delete-btn" onClick={() => handleDelete(job.jobID)}>🗑️ Delete</button>

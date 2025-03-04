@@ -48,6 +48,7 @@ export const deleteJob = async (id) => {
 };
 export const updateJob = async (id, jobData) => {
   try {
+    console.log(jobData);
     const response = await axios.put(`${BACKEND_API_URL}/api/Job/update/${id}`, jobData);
     return response.data;
   } catch (error) {

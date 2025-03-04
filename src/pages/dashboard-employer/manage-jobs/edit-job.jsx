@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getJobById, updateJob } from "../../../services/jobServices";
+import { Editor } from "@tinymce/tinymce-react";
 import { toast } from "react-toastify";
-
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY
 const EditJobPage = () => {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
@@ -53,7 +54,16 @@ const EditJobPage = () => {
       [name]: type === "checkbox" ? checked : value,
     });
   };
-
+  const handleEditorChange = (content) => {
+    console.log("Nội dung mới:", content);
+    setJobData((prevState) => ({
+      ...prevState,
+      description: content,
+    }));
+  };
+  
+  
+  
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,7 +119,32 @@ const EditJobPage = () => {
                           required
                         />
                       </div>
+                      {/* TinyMCE Editor */}
+                      {/* <div className="form-group col-lg-12 col-md-12">
+                        <label>Job Description</label>
+                        <Editor
+                          apiKey="gveukndcw0kvmghz4hmxe0892ffehr63r3wje3e3r2jb1j77"
+                          initialValue={jobData.description || ""}
+                          init={{
+                            height: 300,
+                            menubar: false,
+                            
+                            plugins: [
+                              "advlist", "autolink", "lists", "link", "charmap", "print", "preview",
+                              "anchor", "searchreplace", "visualblocks", "code", "fullscreen",
+                              "insertdatetime", "media", "table", "paste", "help", "wordcount"
+                            ],
+                            toolbar:
+                              "undo redo | formatselect | bold italic backcolor | \
+                              alignleft aligncenter alignright alignjustify | \
+                              bullist numlist outdent indent | removeformat | help",
+                          }}
+                          
+                            onEditorChange={handleEditorChange}
+                          
+                        />
 
+                      </div> */}
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Education</label>
                         <input
