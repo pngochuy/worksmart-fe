@@ -1002,6 +1002,7 @@ input:checked + .slider:before {
 .default-form .form-group input[type="number"],
 .default-form .form-group input[type="email"],
 .default-form .form-group input[type="url"],
+.default-form .form-group input[type="date"],
 .default-form .form-group textarea,
 .default-form .form-group select {
   position: relative;
@@ -1020,6 +1021,7 @@ input:checked + .slider:before {
 }
 
 .default-form .form-group input[type="text"]:focus,
+.default-form .form-group input[type="date"]:focus,
 .default-form .form-group input[type="email"]:focus,
 .default-form .form-group input[type="url"]:focus,
 .default-form .form-group select:focus,

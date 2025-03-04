@@ -61,104 +61,112 @@ const EditJobPage = () => {
     <section className="user-dashboard">
       <div className="dashboard-outer">
         <h3>Edit Job</h3>
-        <form onSubmit={handleSubmit}  className="default-form">
-        <div className="row">
-          <div className="form-group col-lg-12 col-md-12">
-            <label>Job Title</label>
-            <input
-              type="text"
-              name="title"
-              value={jobData.title}
-              onChange={handleChange}
-              placeholder="Title"
-              required
-            />
-          </div>
-
-
-          <div className="form-group col-lg-12 col-md-12">
-            <label>Job Description</label>
-            <textarea
-              name="description"
-              value={jobData.description}
-              onChange={handleChange}
-              placeholder="Description"
-              required
-            />
-          </div>
-
-          <div className="form-group col-lg-6 col-md-12">
-            <label>Education</label>
-            <input
-              type="text"
-              name="education"
-              value={jobData.education}
-              onChange={handleChange}
-              placeholder="Education level"
-            />
-          </div>
-
-          <div className="form-group col-lg-6 col-md-12">
-            <label>Experience (years)</label>
-            <input
-              type="number"
-              name="exp"
-              value={jobData.exp}
-              onChange={handleChange}
-              min="0"
-              placeholder="Experience required"
-            />
-          </div>
-
-          <div className="form-group col-lg-6 col-md-12">
-            <label>Work Type</label>
-            <select name="workType" value={jobData.workType} onChange={handleChange}>
-              <option value="">Select</option>
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Freelance">Freelance</option>
-            </select>
-          </div>
-
-          <div className="form-group col-lg-6 col-md-12">
-            <label>Location</label>
-            <input
-              type="text"
-              name="location"
-              value={jobData.location}
-              onChange={handleChange}
-              placeholder="Location"
-            />
-          </div>
-
-          <div className="form-group col-lg-6 col-md-12">
-            <label>Salary ($)</label>
-            <input
-              type="number"
-              name="salary"
-              value={jobData.salary}
-              onChange={handleChange}
-              min="0"
-              placeholder="Salary"
-            />
-          </div>
-
-          <div className="form-group col-lg-6 col-md-12">
-            <label>Deadline</label>
-            <input type="date" name="deadline" value={jobData.deadline} onChange={handleChange} />
-          </div>
-
-          <div className="form-group form-group col-lg-12 col-md-12">
-            <label>
+        <form onSubmit={handleSubmit} className="default-form">
+          <div className="row">
+            <div className="form-group col-lg-12 col-md-12">
+              <label>Job Title</label>
               <input
-                type="checkbox"
-                name="priority"
-                checked={jobData.priority}
+                type="text"
+                name="title"
+                value={jobData.title}
+                onChange={handleChange}
+                placeholder="Title"
+                required
+              />
+            </div>
+
+            <div className="form-group col-lg-12 col-md-12">
+              <label>Job Description</label>
+              <textarea
+                name="description"
+                value={jobData.description}
+                onChange={handleChange}
+                placeholder="Description"
+                required
+              />
+            </div>
+
+            <div className="form-group col-lg-6 col-md-12">
+              <label>Education</label>
+              <input
+                type="text"
+                name="education"
+                value={jobData.education}
+                onChange={handleChange}
+                placeholder="Education level"
+              />
+            </div>
+
+            <div className="form-group col-lg-6 col-md-12">
+              <label>Experience (years)</label>
+              <input
+                type="number"
+                name="exp"
+                value={jobData.exp}
+                onChange={handleChange}
+                min="0"
+                placeholder="Experience required"
+              />
+            </div>
+
+            <div className="form-group col-lg-6 col-md-12">
+              <label>Work Type</label>
+              <select
+                name="workType"
+                value={jobData.workType}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Freelance">Freelance</option>
+              </select>
+            </div>
+
+            <div className="form-group col-lg-6 col-md-12">
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                value={jobData.location}
+                onChange={handleChange}
+                placeholder="Location"
+              />
+            </div>
+
+            <div className="form-group col-lg-6 col-md-12">
+              <label>Salary ($)</label>
+              <input
+                type="number"
+                name="salary"
+                value={jobData.salary}
+                onChange={handleChange}
+                min="0"
+                placeholder="Salary"
+              />
+            </div>
+
+            <div className="form-group col-lg-6 col-md-12">
+              <label>Deadline</label>
+              <input
+                type="date"
+                name="deadline"
+                value={jobData.deadline}
                 onChange={handleChange}
               />
-              &nbsp; High Priority Job
-            </label>
-          </div>
+            </div>
+
+            <div className="form-group form-group col-lg-12 col-md-12">
+              <label>
+                <input
+                  type="checkbox"
+                  name="priority"
+                  checked={jobData.priority}
+                  onChange={handleChange}
+                />
+                &nbsp; High Priority Job
+              </label>
+            </div>
           </div>
           <div className="form-group text-right">
             <button type="submit" className="theme-btn btn-style-one">

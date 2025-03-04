@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { createJob, getAllJobs, deleteJob } from "../../../services/jobServices";
+import {
+  createJob,
+  getAllJobs,
+  deleteJob,
+} from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
