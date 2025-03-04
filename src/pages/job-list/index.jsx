@@ -4,6 +4,7 @@ import Pagination from "./Pagination";
 import WorkTypeFilter from "./WorkTypeFilter";
 import JobPositionDropdown from "./JobPositionDropdown";
 import SalaryRangeDropdown from "./SalaryRangeDropdown";
+import TagDropdown from "./TagDropdown";
 export const Index = () => {
   const [jobs, setJobs] = useState([]);
   const [totalPage, setTotalPage] = useState(1);
@@ -18,7 +19,7 @@ export const Index = () => {
     MinSalary: null,
     MaxSalary: null,
     Tags: [],
-    LastUpdatedAt: null,
+    MostRecent: null,
   });
 
   const getJobs = async () => {
@@ -35,6 +36,15 @@ export const Index = () => {
     setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
   };
 
+  const handleOrderChange = (e) => {
+    const newOrder = e.target.value;
+    setSearchParams((prev) => ({
+      ...prev,
+      MostRecent: newOrder,
+      PageIndex: 1, // Reset về trang 1 khi thay đổi PageSize
+    }));
+  };
+
   const handlePageSizeChange = (e) => {
     const newSize = parseInt(e.target.value);
     setSearchParams((prev) => ({
@@ -46,7 +56,7 @@ export const Index = () => {
 
   useEffect(() => {
     getJobs();
-  }, [searchParams.PageSize, searchParams.PageIndex]);
+  }, [searchParams.PageSize, searchParams.PageIndex, searchParams.MostRecent]);
   return (
     <>
       {/*Page Title*/}
@@ -126,6 +136,10 @@ export const Index = () => {
                       setSearchParams={setSearchParams}
                     />
                   </div>
+                  <div className="form-group">
+                    {/* Form Group */}
+                    <TagDropdown setSearchParams={setSearchParams} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -195,9 +209,12 @@ export const Index = () => {
                     </div>
                   </div>
                   <div className="sort-by">
-                    <select className="chosen-select">
-                      <option>Most Recent</option>
-                      <option>Least recent </option>
+                    <select
+                      className="chosen-select"
+                      onChange={handleOrderChange}
+                    >
+                      <option value="true">Most Recent</option>
+                      <option value="false">Least recent </option>
                     </select>
 
                     <select
