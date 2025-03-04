@@ -168,6 +168,7 @@ export const JobForm = () => {
                           name="deadline"
                           value={jobData.deadline}
                           onChange={handleChange}
+                          min={new Date().toISOString().split("T")[0]} // Giới hạn chỉ có thể chọn ngày hôm nay hoặc ngày trong tương lai
                         />
                       </div>
 
