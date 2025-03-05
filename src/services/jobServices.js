@@ -1,5 +1,4 @@
 import axios from "axios";
-import apiURLConfig from "../components/apiURLConfig"; 
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL
 export const getAllJobs = async () => {
@@ -16,6 +15,7 @@ export const getAllJobs = async () => {
 
 export const createJob = async (jobData) => {
   try {
+    
     const response = await axios.post(`${BACKEND_API_URL}/api/Job/create`, jobData);
     console.log(response.data);
     return response.data;
