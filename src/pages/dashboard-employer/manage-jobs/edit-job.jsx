@@ -12,7 +12,7 @@ const EditJobPage = () => {
     description: "",
     level: "",
     education: "",
-    numberOfRecruitment: 1,
+    numberOfRecruitment: "",
     workType: "",
     location: "",
     salary: "",
@@ -155,7 +155,16 @@ const EditJobPage = () => {
                           placeholder="Education level"
                         />
                       </div>
-
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Number Of Recruitment</label>
+                        <input
+                          type="number"
+                          name="numberOfRecruitment"
+                          value={jobData.numberOfRecruitment}
+                          onChange={handleChange}
+                          placeholder="Required number of recruitment"
+                        />
+                      </div>
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Experience (years)</label>
                         <input
