@@ -37,7 +37,9 @@ export const loginUser = async (userLoginData) => {
       `${BACKEND_API_URL}/accounts/login`,
       userLoginData
     );
+    console.log(response.data)
     if (response.data.token) {
+      
       localStorage.setItem("accessToken", JSON.stringify(response.data.token));
     }
     if (response.data.user) {

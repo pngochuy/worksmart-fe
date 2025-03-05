@@ -1002,6 +1002,7 @@ input:checked + .slider:before {
 .default-form .form-group input[type="number"],
 .default-form .form-group input[type="email"],
 .default-form .form-group input[type="url"],
+.default-form .form-group input[type="date"],
 .default-form .form-group textarea,
 .default-form .form-group select {
   position: relative;
@@ -1020,6 +1021,7 @@ input:checked + .slider:before {
 }
 
 .default-form .form-group input[type="text"]:focus,
+.default-form .form-group input[type="date"]:focus,
 .default-form .form-group input[type="email"]:focus,
 .default-form .form-group input[type="url"]:focus,
 .default-form .form-group select:focus,
@@ -3525,7 +3527,7 @@ Contact Section
 }
 
 /* .dashboard-option .dropdown-toggle::after { */
-  /* margin-left: 12px;
+/* margin-left: 12px;
   content: "\f107";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
@@ -7305,6 +7307,14 @@ Job Section
 .job-other-info li.time {
   background: rgba(25, 103, 210, 0.15);
   color: #1967d2;
+}
+.job-other-info li.timee {
+  background-color: #ffceb1;
+  color: #e36114;
+}
+.job-other-info li.timeee {
+  background-color: #c4ffc5;
+  color: #0fc20e;
 }
 
 .job-other-info li.green,

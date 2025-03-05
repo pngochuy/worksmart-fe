@@ -3,7 +3,8 @@ import { toast } from "react-toastify";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằng URL backend thật
 
-const getAccessToken = () => { // Lấy token để Authorization
+const getAccessToken = () => {
+  // Lấy token để Authorization
   const token = localStorage.getItem("accessToken");
   return token ? token.replace(/^"(.*)"$/, "$1") : null;
 };
@@ -19,12 +20,12 @@ export const fetchCandidates = async (searchParams) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching candidates:", error);
-    toast.error("Error fetching candidates!")
+    toast.error("Error fetching candidates!");
     return [];
   }
 };
 
-export const fetchCandidatesProfile = async() =>{
+export const fetchCandidatesProfile = async () => {
   try {
     const token = getAccessToken();
     if (!token) throw new Error("No Access Token Found!");
@@ -68,12 +69,24 @@ export const updateCandidateProfile = async (profileData) => {
     };
     console.log("Profile data gửi đi:", updatedData);
 
-    await axios.put(`${BACKEND_API_URL}/candidates/edit-profile`, updatedData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const res = await axios.put(
+      `${BACKEND_API_URL}/candidates/edit-profile`,
+      updatedData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log("response: ", res);
+    if (localStorage.getItem("userLoginData")) {
+      const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
+      userLoginData.fullName = updatedData?.fullName;
+      userLoginData.avatar = updatedData?.avatar; // error
+      localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
+    }
+
     return "Profile updated successfully!";
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -97,10 +110,10 @@ export const updateCandidateAddress = async (addressData) => {
     });
 
     return "Address updated successfully!";
-  } catch (error) {
+  } catch (error) {qư
     console.error("Error updating address:", error);
     toast.error("Error updating address!");
-    throw error;
+    throw error;e
   }
 };
 
@@ -117,47 +130,65 @@ export const updateImagesProfile = async (imageUrl) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    });   
+    });
+    if (localStorage.getItem("userLoginData")) {
+      const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
+      userLoginData.avatar = updatedData?.avatar; // error
+      localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
+    }
     return "Image updated successfully!";
   } catch (error) {
     console.error("Error updating image:", error);
     toast.error("Error updating image!");
     throw error;
   }
-}
+};
 
 export const uploadImagesProfile = async (imageFile) => {
   try {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
 
+    if (!imageFile) return;
+
     const formData = new FormData();
     formData.append("file", imageFile);
 
     console.log("Uploading image:", imageFile.name);
 
-    const response = await axios.post(`${BACKEND_API_URL}/uploads/upload-image`, formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+    const response = await axios.post(
+      `${BACKEND_API_URL}/uploads/upload-image`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
 
     return response.data; // Trả về URL ảnh đã upload
   } catch (error) {
     console.error("Error uploading image:", error);
-    toast.error("Error uploading image!");
+    // toast.error("Error uploading image!");
     throw error;
   }
 };
 
 export const deleteImagesProfile = async (imageUrl) => {
   try {
-    const response = await axios.delete(`${BACKEND_API_URL}/uploads/delete-image`, {
-      data: imageUrl, // Gửi URL ảnh trong body
-      headers: { "Content-Type": "application/json" }
-    });
+    const response = await axios.delete(
+      `${BACKEND_API_URL}/uploads/delete-image`,
+      {
+        data: imageUrl, // Gửi URL ảnh trong body
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    if (localStorage.getItem("userLoginData")) {
+      const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
+      userLoginData.avatar = "";
+      localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
+    }
     console.log(response.data);
   } catch (error) {
     console.error("Error deleting image:", error);
     toast.error("Error deleting image!");
   }
 };
-

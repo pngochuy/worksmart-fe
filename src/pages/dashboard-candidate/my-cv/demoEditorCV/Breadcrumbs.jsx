@@ -7,7 +7,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import React from "react";
-import { steps } from "./step";
+import { steps } from "./steps";
 
 // eslint-disable-next-line react/prop-types
 export default function Breadcrumbs({ currentStep, setCurrentStep }) {

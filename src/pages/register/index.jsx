@@ -40,7 +40,10 @@ export const Index = () => {
           <div className="login-form default-form" style={{ padding: "0" }}>
             <div className="form-inner">
               <h3 style={{ marginBottom: "0px" }}>
-                Welcome to <a href="/">WorkSmart</a>
+                Welcome to{" "}
+                <a href="/" style={{ color: "#0d6efd" }}>
+                  WorkSmart
+                </a>
               </h3>
               <p>Build a standout profile and get ideal career opportunities</p>
 
