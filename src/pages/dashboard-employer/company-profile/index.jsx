@@ -299,7 +299,7 @@ export const index = () => {
                               }
                             }
                             dateFormat="dd/MM/yyyy"
-                            style={{ marginRight: "350px"}}
+                            style={{ width: "200px",  marginRight: "350px"}}
                           />
                           {companyErrors.createdAt && <span className="text-danger">{companyErrors.createdAt.message}</span>}
                         </div>

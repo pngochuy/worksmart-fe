@@ -6,7 +6,7 @@ const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằ
 const getAccessToken = () => { // Lấy token để Authorization
     const token = localStorage.getItem("accessToken");
     return token ? token.replace(/^"(.*)"$/, "$1") : null;
-  };
+};
 
   export const fetchCompanyProfile = async() =>{
     try {
@@ -28,12 +28,12 @@ const getAccessToken = () => { // Lấy token để Authorization
       console.error("Error fetching candidate profile:", error);
       // Xử lý lỗi
       if (error.response && error.response.status === 401) {
-        alert("⚠ Your session has expired. Please log in again.");
+        toast.warn("⚠ Your session has expired. Please log in again.");
         localStorage.removeItem("accessToken");
         window.location.href = "/login";
       }
       if (error.message.includes("ERR_CONNECTION_REFUSED") || error.code === "ERR_NETWORK") {
-        alert("🚫 Unable to connect to server. Please try again later.");
+        toast.warn("🚫 Unable to connect to server. Please try again later.");
         throw new Error("Cann't connect to server.");
       }
   

@@ -2,6 +2,11 @@ import axios from "axios";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằng URL backend thật
 
+const getAccessToken = () => { // Lấy token để Authorization
+  const token = localStorage.getItem("accessToken");
+  return token ? token.replace(/^"(.*)"$/, "$1") : null;
+};
+
 export const registerUser = async (userRegisterData) => {
   try {
     const response = await axios.post(
@@ -60,5 +65,23 @@ export const loginUserByGoogle = async (userLoginData) => {
     return response.data;
   } catch (error) {
     throw error.response.data || error.message; // Xử lý lỗi
+  }
+};
+
+export const changePassword = async (data) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const response = await axios.patch(`${BACKEND_API_URL}/accounts/changePassword`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("Submitting data:", data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message; // Xử lý lỗi
   }
 };
