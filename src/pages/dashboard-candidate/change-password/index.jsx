@@ -8,35 +8,34 @@ import { changePassword } from "@/services/accountServices";
 const changePasswordSchema = z.object({
   oldPassword: z.string().min(6, "Old password must be at least 6 characters"),
   newPassword: z.string().min(6, "New password must be at least 6 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
 });
 
 export const index = () => {
+  const [apiError, setApiError] = useState("");
+
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(changePasswordSchema),
   });
 
-  const onSubmit = async (data, event) => {
-    event.preventDefault();
+  const onSubmit = async (data) => {
     try {
-      toast.info("Processing...");
-
       await changePassword({
         OldPassword: data.oldPassword,
         NewPassword: data.newPassword,
       });
-      console.log("Data receive", data)
       toast.success("Password changed successfully!");
-    } catch (err) {
-      console.log("Error:", err);
-      toast.error("Failed to change password");
+      setApiError("");
+    } catch (error) {
+      console.error("Full Error Response:", error);
+      setError("oldPassword", {
+        type: "manual",
+        message: error.error || "Error while change password!",
+      });
     }
   };
 
@@ -62,21 +61,14 @@ export const index = () => {
                   <div className="form-group col-lg-7 col-md-12">
                     <label>Old Password </label>
                     <input type="password" {...register("oldPassword")}/>
-                    {errors.oldPassword && <p className="error">{errors.oldPassword.message}</p>}
+                    {errors.oldPassword && <p className="text-danger">{errors.oldPassword.message}</p>}
                   </div>
 
                   {/* Input */}
                   <div className="form-group col-lg-7 col-md-12">
                     <label>New Password</label>
                     <input type="password" {...register("newPassword")}/>
-                    {errors.newPassword && <p className="error">{errors.newPassword.message}</p>}
-                  </div>
-
-                  {/* Input */}
-                  <div className="form-group col-lg-7 col-md-12">
-                    <label>Confirm Password</label>
-                    <input type="password" {...register("confirmPassword")}/>
-                    {errors.confirmPassword && <p className="error">{errors.confirmPassword.message}</p>}
+                    {errors.newPassword && <p className="text-danger">{errors.newPassword.message}</p>}
                   </div>
 
                   {/* Input */}

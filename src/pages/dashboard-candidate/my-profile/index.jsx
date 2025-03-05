@@ -222,7 +222,7 @@ export const Index = () => {
   const handleRemoveImage = async () => {
     if (!avatar) return;
     try {
-      await deleteImagesProfile(avatar);
+      // await deleteImagesProfile(avatar);
       await updateImagesProfile("");
 
       // Cập nhật state để giao diện hiển thị form upload lại
