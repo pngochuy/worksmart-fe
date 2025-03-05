@@ -1,0 +1,25 @@
+{
+  "jobs": [
+    { "name": "All Job Position", "value": "" },
+    { "name": "Software Engineer", "value": "software_engineer" },
+    { "name": "Frontend Developer", "value": "frontend_developer" },
+    { "name": "Backend Developer", "value": "backend_developer" },
+    { "name": "Full Stack Developer", "value": "full_stack_developer" },
+    { "name": "Mobile Developer", "value": "mobile_developer" },
+    { "name": "Game Developer", "value": "game_developer" },
+    { "name": "DevOps Engineer", "value": "devops_engineer" },
+    { "name": "Data Scientist", "value": "data_scientist" },
+    { "name": "Machine Learning Engineer", "value": "ml_engineer" },
+    { "name": "Cybersecurity Specialist", "value": "cybersecurity_specialist" },
+    { "name": "UI/UX Designer", "value": "ui_ux_designer" },
+    { "name": "Graphic Designer", "value": "graphic_designer" },
+    { "name": "3D Artist", "value": "3d_artist" },
+    { "name": "Motion Designer", "value": "motion_designer" },
+    { "name": "Video Editor", "value": "video_editor" },
+    { "name": "Animator", "value": "animator" },
+    { "name": "Illustrator", "value": "illustrator" },
+    { "name": "Product Designer", "value": "product_designer" },
+    { "name": "Web Designer", "value": "web_designer" },
+    { "name": "Game Designer", "value": "game_designer" }
+  ]
+}

@@ -1,22 +1,45 @@
 import axios from "axios";
+import qs from "qs";
+import apiURLConfig from "../components/apiURLConfig";
+const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
-const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL
+export const fetchJobs = async (searchParams) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/GetListSearch`,
+      {
+        params: searchParams,
+        paramsSerializer: (params) =>
+          qs.stringify(params, {
+            skipNulls: true,
+            skipEmptyStrings: true,
+            arrayFormat: "repeat",
+          }),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return [];
+  }
+};
 export const getAllJobs = async () => {
   try {
-    const response = await axios.get(`${BACKEND_API_URL}/api/Job/getAllJob`); 
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/getAllJob`);
     console.log(response);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
     throw error;
   }
-};  
-
+};
 
 export const createJob = async (jobData) => {
   try {
-    
-    const response = await axios.post(`${BACKEND_API_URL}/api/Job/create`, jobData);
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Job/create`,
+      jobData
+    );
     console.log(response.data);
     return response.data;
   } catch (error) {
@@ -28,7 +51,7 @@ export const createJob = async (jobData) => {
 export const getJobById = async (id) => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/Job/${id}`);
-    
+
     console.log(response);
     return response.data;
   } catch (error) {
@@ -38,8 +61,9 @@ export const getJobById = async (id) => {
 };
 export const deleteJob = async (id) => {
   try {
-    
-    const response = await axios.delete(`${BACKEND_API_URL}/api/Job/delete/${id}`);
+    const response = await axios.delete(
+      `${BACKEND_API_URL}/api/Job/delete/${id}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error deleting job:", error);
@@ -48,15 +72,16 @@ export const deleteJob = async (id) => {
 };
 export const updateJob = async (id, jobData) => {
   try {
-    console.log(jobData);
-    const response = await axios.put(`${BACKEND_API_URL}/api/Job/update/${id}`, jobData);
+    const response = await axios.put(
+      `${BACKEND_API_URL}/api/Job/update/${id}`,
+      jobData
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating job:", error);
     throw error;
   }
 };
-
 
 export const hideJob = async (id) => {
   try {

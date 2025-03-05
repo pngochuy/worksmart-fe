@@ -3,6 +3,7 @@ import { fetchCandidates } from "../../services/candidateServices";
 import MajorDropdown from "./MajorDropdown";
 import EducationDropdown from "./EducationDropdown";
 import WorkTypeDropdown from "./WorkTypeDropdown";
+import JobPositionDropdown from "./JobPositionDropdown";
 import Pagination from "./Pagination";
 export const Index = () => {
   const [candidates, setCandidates] = useState([]);
@@ -21,9 +22,9 @@ export const Index = () => {
   });
 
   const getCandidates = async () => {
-    console.log("hoho", searchParams);
+    console.log("searchParams", searchParams);
     const data = await fetchCandidates(searchParams);
-    console.log("hehe", data);
+    console.log("data", data);
     setCandidates(data.candidates);
     setTotalPage(data.totalPage);
   };
@@ -63,7 +64,7 @@ export const Index = () => {
           <div className="job-search-form">
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="row">
-                <div className="form-group col-lg-7">
+                <div className="form-group col-lg-10">
                   <span className="icon flaticon-search-1"></span>
                   <input
                     type="text"
@@ -73,26 +74,7 @@ export const Index = () => {
                     onChange={handleInputChange}
                   />
                 </div>
-                <div className="form-group col-lg-2">
-                  <input
-                    type="text"
-                    name="JobPosition"
-                    placeholder="Job Position"
-                    value={searchParams.JobPosition}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="form-group col-lg-1">
-                  <input
-                    type="number"
-                    name="Exp"
-                    placeholder="Years"
-                    min="0"
-                    value={searchParams.Exp}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => e.preventDefault()} // Chặn nhập từ bàn phím
-                  />
-                </div>
+
                 <div className="form-group col-lg-2 text-right">
                   <button
                     type="button"
@@ -130,6 +112,11 @@ export const Index = () => {
                       </div>
                       <div className="form-group">
                         <EducationDropdown setSearchParams={setSearchParams} />
+                      </div>
+                      <div className="form-group ">
+                        <JobPositionDropdown
+                          setSearchParams={setSearchParams}
+                        />
                       </div>
                     </div>
                   </div>
