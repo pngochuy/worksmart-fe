@@ -43,15 +43,15 @@ export const fetchCandidatesProfile = async () => {
     };
   } catch (error) {
     console.error("Error fetching candidate profile:", error);
-    // // Xử lý lỗi
-    // if (error.response && error.response.status === 401) {
-    //   toast.warn("⚠ Your session has expired. Please log in again.");
-    //   localStorage.removeItem("accessToken");
-    //   window.location.href = "/login";
-    // }
-    // if (error.message.includes("ERR_CONNECTION_REFUSED") || error.code === "ERR_NETWORK") {
-    //   toast.warn("🚫 Unable to connect to server. Please try again later.");
-    // }
+    // Xử lý lỗi
+    if (error.response && error.response.status === 401) {
+      toast.warn("⚠ Your session has expired. Please log in again.");
+      localStorage.removeItem("accessToken");
+      window.location.href = "/login";
+    }
+    if (error.message.includes("ERR_CONNECTION_REFUSED") || error.code === "ERR_NETWORK") {
+      toast.warn("🚫 Unable to connect to server. Please try again later.");
+    }
 
     throw error;
   }
@@ -110,10 +110,10 @@ export const updateCandidateAddress = async (addressData) => {
     });
 
     return "Address updated successfully!";
-  } catch (error) {
+  } catch (error) {qư
     console.error("Error updating address:", error);
     toast.error("Error updating address!");
-    throw error;
+    throw error;e
   }
 };
 
