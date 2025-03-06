@@ -11,7 +11,7 @@ const schema = z.object({
   email: z.string().min(1, "Password cannot be blank").email("Invalid email"),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
+    .min(2, "Password must be at least 2 characters")
     .max(20, "Password must not exceed 20 characters")
     .regex(/[a-z]/, "Password must include at least one lowercase letter")
     .regex(/[A-Z]/, "Password must include at least one uppercase letter")

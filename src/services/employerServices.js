@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằng URL backend thật
 
@@ -26,19 +27,19 @@ export const fetchCompanyProfile = async () => {
     };
   } catch (error) {
     console.error("Error fetching candidate profile:", error);
-    // // Xử lý lỗi
-    // if (error.response && error.response.status === 401) {
-    //   alert("⚠ Your session has expired. Please log in again.");
-    //   localStorage.removeItem("accessToken");
-    //   window.location.href = "/login";
-    // }
-    // if (
-    //   error.message.includes("ERR_CONNECTION_REFUSED") ||
-    //   error.code === "ERR_NETWORK"
-    // ) {
-    //   alert("🚫 Unable to connect to server. Please try again later.");
-    //   throw new Error("Cann't connect to server.");
-    // }
+    // Xử lý lỗi
+    if (error.response && error.response.status === 401) {
+      toast.warn("⚠ Your session has expired. Please log in again.");
+      localStorage.removeItem("accessToken");
+      window.location.href = "/login";
+    }
+    if (
+      error.message.includes("ERR_CONNECTION_REFUSED") ||
+      error.code === "ERR_NETWORK"
+    ) {
+      toast.warn("🚫 Unable to connect to server. Please try again later.");
+      throw new Error("Cann't connect to server.");
+    }
 
     throw error;
   }
