@@ -84,6 +84,29 @@ export const changePassword = async (data) => {
     console.log("Submitting data:", data);
     return response.data;
   } catch (error) {
-    throw error.response?.data || error.message; // Xử lý lỗi
+    console.error("Change Password Error:", error.response?.data || error.message);
+    throw error.response?.data?.message || "Failed to change password!";
+  }
+};
+
+export const forgotPassword = async (email) => {
+  try {
+    const response = await axios.post(`${BACKEND_API_URL}/accounts/forgotPassword`, { email });
+    console.log("Submitting email:", email);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Something went wrong!";
+  }
+};
+
+export const resetPassword = async (resetData) => {
+  try {
+    const response = await axios.post(`${BACKEND_API_URL}/accounts/resetPassword`, resetData,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    console.log("Submitting reset data:", { resetData });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Something went wrong!";
   }
 };

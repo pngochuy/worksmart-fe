@@ -12,6 +12,7 @@ const changePasswordSchema = z.object({
 
 export const index = () => {
   const [apiError, setApiError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -23,6 +24,7 @@ export const index = () => {
   });
 
   const onSubmit = async (data) => {
+    setLoading(true)
     try {
       await changePassword({
         OldPassword: data.oldPassword,
@@ -36,6 +38,8 @@ export const index = () => {
         type: "manual",
         message: error.error || "Error while change password!",
       });
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -73,7 +77,9 @@ export const index = () => {
 
                   {/* Input */}
                   <div className="form-group col-lg-6 col-md-12">
-                    <button className="theme-btn btn-style-one">Update</button>
+                    <button className="theme-btn btn-style-one" disabled={loading}>
+                      {loading ? <span className="loading-spinner"></span> : "Update"}
+                    </button>
                   </div>
                 </div>
               </form>

@@ -56,6 +56,7 @@ const addressSchema = z.object({
 export const Index = () => {
   const navigate = useNavigate();
   // const [UserId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [fileError, setFileError] = useState("");
@@ -138,8 +139,8 @@ export const Index = () => {
   }, [setProfileValue, setAddressValue, setAvatar, navigate]);
 
   const onSubmitProfile = async (formData) => {
+    setIsProfileLoading(true);
     try {
-      setIsProfileLoading(true);
       const validData = {
         ...formData,
         isPrivated: formData.isPrivated ? formData.isPrivated : "No",
@@ -157,8 +158,8 @@ export const Index = () => {
   };
 
   const onSubmitAddress = async (formData) => {
+    setIsAddressLoading(true);
     try {
-      setIsAddressLoading(true);
       const message = await updateCandidateAddress(formData);
       toast.success(message);
     } catch (error) {
@@ -220,6 +221,7 @@ export const Index = () => {
   };
 
   const handleRemoveImage = async () => {
+    setLoading(true);
     if (!avatar) return;
     try {
       // await deleteImagesProfile(avatar);
@@ -233,6 +235,8 @@ export const Index = () => {
       console.error("Error while deleting photo:", error);
       // toast.error("Error while deleting photo:");
       setFileError("Delete failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -276,6 +280,7 @@ export const Index = () => {
                             <button
                               className="theme-btn btn-style-one"
                               onClick={handleRemoveImage}
+                              disabled={loading}
                               style={{
                                 marginTop: "10px",
                                 backgroundColor: "red",
@@ -283,7 +288,7 @@ export const Index = () => {
                                 height: "40px",
                               }}
                             >
-                              Remove
+                              {loading ? <span className="loading-spinner"></span> : "Remove"}
                             </button>
                           </div>
                         </div>
@@ -427,7 +432,7 @@ export const Index = () => {
                             className="theme-btn btn-style-one"
                             disabled={isProfileLoading}
                           >
-                            {isProfileLoading ? "Saving..." : "Save"}
+                              {isProfileLoading ? <span className="loading-spinner"></span> : "Update"}
                           </button>
                         </div>
                       </div>
@@ -472,8 +477,8 @@ export const Index = () => {
                             className="theme-btn btn-style-one"
                             disabled={isAddressLoading}
                           >
-                            {isAddressLoading ? "Saving..." : "Save"}
-                          </button>
+                              {isAddressLoading ? <span className="loading-spinner"></span> : "Update"}
+                            </button>
                         </div>
                       </div>
                     </form>
