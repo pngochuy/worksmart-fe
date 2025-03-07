@@ -49,7 +49,38 @@ export const createJob = async (jobData) => {
     throw error;
   }
 };
+export const fetchCandidatesForJob = async (jobId) => {
+  try {
+    
+    const response = await axios.get(`${BACKEND_API_URL}/api/Application/Job/${jobId}/applications`);
+    return response.data; // Giả sử API trả về danh sách các ứng viên
+    console.log(candidate.user)
 
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    throw error;
+  }
+};
+export const acceptCandidate = async (applicationId, jobId) => {
+  try {
+    const response = await axios.put(`${BACKEND_API_URL}/api/Application/${applicationId}/accept`, { jobId });
+    return response.data; // Return approval status or data
+  } catch (error) {
+    console.error("Error approving candidate:", error);
+    throw error; // Handle the error appropriately
+  }
+};
+
+// Function to reject a candidate
+export const rejectCandidate = async (applicationId, jobId) => {
+  try {
+    const response = await axios.put(`${BACKEND_API_URL}/api/Application/${applicationId}/reject`, { jobId });
+    return response.data; // Return rejection status or data
+  } catch (error) {
+    console.error("Error rejecting candidate:", error);
+    throw error; // Handle the error appropriately
+  }
+};
 // Hàm lấy công việc theo ID
 export const getJobById = async (id) => {
   try {

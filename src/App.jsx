@@ -42,6 +42,8 @@ import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candi
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
 //Job Create 
 //
+import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
+
 // import { index as DemoListCVsPage } from "./pages/demoListCVs";
 // import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
 // import { CreateCVLayout } from "./layouts/CreateCVLayout";
@@ -286,15 +288,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+
               <Route path="/employer" element={<UserLayout />}>
                 <Route path="job-list" element={<JobListPage />} />
               </Route>
 
               <Route
-  path="/employer/manage-jobs/edit/:jobId"
-  element={<EditJobPage />}
-/>
+                path="/employer/manage-jobs/edit/:jobId"
+                element={<EditJobPage />}
+              />
+              <Route path="/employer/manage-jobs/candidates/:jobId" element={<CandidatesPage />} />  {/* ThanhAdd page candidares*/}
               <Route
                 index
                 path="manage-jobs"
