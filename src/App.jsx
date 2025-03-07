@@ -42,11 +42,9 @@ import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/n
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
-//Job Create 
-//
-// import { index as DemoListCVsPage } from "./pages/demoListCVs";
-// import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
-// import { CreateCVLayout } from "./layouts/CreateCVLayout";
+// Admin Pages
+import { AdminLayout } from "./layouts/AdminLayout";
+import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
 
 function App() {
   return (
@@ -290,15 +288,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
+
               <Route path="/employer" element={<UserLayout />}>
                 <Route path="job-list" element={<JobListPage />} />
               </Route>
 
               <Route
-  path="/employer/manage-jobs/edit/:jobId"
-  element={<EditJobPage />}
-/>
+                path="/employer/manage-jobs/edit/:jobId"
+                element={<EditJobPage />}
+              />
               <Route
                 index
                 path="manage-jobs"
@@ -359,6 +357,18 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
                     <EmployerChangePasswordPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+            {/* Admin */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route
+                index
+                path="dashboard"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <AdminDashboardPage />
                   </ProtectedRoute>
                 }
               />

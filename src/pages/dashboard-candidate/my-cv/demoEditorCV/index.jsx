@@ -2,18 +2,41 @@ import { useSearchParams } from "react-router-dom";
 import { steps } from "./steps";
 import Breadcrumbs from "./Breadcrumbs";
 import { Footer } from "./Footer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ResumePreviewSection } from "./ResumePreviewSection";
-import { cn } from "@/lib/utils";
+import { cn, mapToResumeValues } from "@/lib/utils";
 import useUnloadWarning from "@/helpers/useUnloadWarning";
 import useAutoSaveResume from "./useAutoSaveResume";
+import { getCVById } from "@/services/cvServices";
 
 export const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [resumeData, setResumeData] = useState();
+  const [resumeData, setResumeData] = useState({});
   // resumeToEdit ? mapToResumeValues(resumeToEdit) : {} // => khi tới trang này phải fetch CV từ DB phải truyền qua được
   const [showSmResumePreview, setShowSmResumePreview] = useState(false);
   const { isSaving, hasUnsavedChanges } = useAutoSaveResume(resumeData);
+
+  // Get the cvId from the URL
+  const cvId = searchParams.get("cvId");
+
+  // Fetch the CV when the cvId changes
+  useEffect(() => {
+    if (cvId) {
+      const fetchCV = async () => {
+        try {
+          const fetchedCV = await getCVById(cvId);
+          console.log("fetchedCV: ", fetchedCV);
+          if (fetchedCV) {
+            setResumeData(mapToResumeValues(fetchedCV)); // Map and set resume data
+          }
+          // console.log("resumeData: ", resumeData);
+        } catch (error) {
+          console.error("Error fetching CV:", error);
+        }
+      };
+      fetchCV();
+    }
+  }, [cvId]); // Run when cvId changes
 
   useUnloadWarning(hasUnsavedChanges);
 
@@ -63,18 +86,18 @@ export const Index = () => {
               className={cn(showSmResumePreview && "flex")}
             />
             {/* <div className="hidden w-1/2 md:flex">
-              <pre
-                className="overflow-x-auto"
-                style={{
-                  whiteSpace: "pre-wrap",
-                  wordWrap: "break-word",
-                  overflow: "auto",
-                  width: "100%",
-                }}
-              >
-                {JSON.stringify(resumeData, null, 2)}
-              </pre>
-            </div> */}
+                <pre
+                  className="overflow-x-auto"
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    wordWrap: "break-word",
+                    overflow: "auto",
+                    width: "100%",
+                  }}
+                >
+                  {JSON.stringify(resumeData, null, 2)}
+                </pre>
+              </div> */}
           </div>
         </main>
         <Footer

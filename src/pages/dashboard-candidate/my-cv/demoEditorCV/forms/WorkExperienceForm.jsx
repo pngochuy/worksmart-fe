@@ -36,6 +36,7 @@ import { GripHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { GenerateWorkExperienceButton } from "./GenerateWorkExperienceButton";
+import { toast } from "react-toastify";
 // import { GenerateWorkExperienceButton } from "./GenerateWorkExperienceButton";
 
 export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
@@ -45,6 +46,12 @@ export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
       workExperiences: resumeData?.workExperiences || [],
     },
   });
+  // useEffect(() => {
+  //   // When resumeData changes, reset the form with the new values
+  //   form.reset({
+  //     workExperiences: resumeData?.workExperiences || [],
+  //   });
+  // }, [resumeData, form]);
 
   useEffect(() => {
     const { unsubscribe } = form.watch(async (values) => {
@@ -119,7 +126,7 @@ export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
               onClick={() =>
                 append({
                   position: "",
-                  company: "",
+                  companyName: "",
                   startDate: "",
                   endDate: "",
                   description: "",
@@ -185,16 +192,23 @@ function WorkExperienceItem({ id, form, index, remove }) {
       // If end date is greater than today, do not allow change
       return;
     }
+
+    // Ensure endDate is not earlier than startDate
+    if (startDate && new Date(newEndDate) < new Date(startDate)) {
+      toast.error("End date cannot be before Start date");
+      return;
+    }
+
     setEndDate(newEndDate);
     // Update form value for endDate
     setValue(`workExperiences.${index}.endDate`, newEndDate);
 
     // Ensure that End date is not earlier than Start date
-    if (startDate && newEndDate && new Date(newEndDate) < new Date(startDate)) {
-      setEndDate(startDate); // If invalid, set endDate to startDate
-      setValue(`workExperiences.${index}.endDate`, startDate);
-      //   alert("End date cannot be before Start date");
-    }
+    // if (startDate && newEndDate && new Date(newEndDate) < new Date(startDate)) {
+    //   setEndDate(startDate); // If invalid, set endDate to startDate
+    //   setValue(`workExperiences.${index}.endDate`, startDate);
+    //   //   alert("End date cannot be before Start date");
+    // }
   };
 
   return (
@@ -230,7 +244,7 @@ function WorkExperienceItem({ id, form, index, remove }) {
         name={`workExperiences.${index}.position`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Job title</FormLabel>
+            <FormLabel>Job Title</FormLabel>
             <FormControl>
               <Input {...field} autoFocus />
             </FormControl>
@@ -240,10 +254,10 @@ function WorkExperienceItem({ id, form, index, remove }) {
       />
       <FormField
         control={form.control}
-        name={`workExperiences.${index}.company`}
+        name={`workExperiences.${index}.companyName`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Company</FormLabel>
+            <FormLabel>Company Name</FormLabel>
             <FormControl>
               <Input {...field} />
             </FormControl>
@@ -257,7 +271,7 @@ function WorkExperienceItem({ id, form, index, remove }) {
           name={`workExperiences.${index}.startDate`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Start date</FormLabel>
+              <FormLabel>Start Date</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -276,7 +290,7 @@ function WorkExperienceItem({ id, form, index, remove }) {
           name={`workExperiences.${index}.endDate`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>End date</FormLabel>
+              <FormLabel>End Date</FormLabel>
               <FormControl>
                 <Input
                   {...field}

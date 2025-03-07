@@ -22,6 +22,7 @@ import { formatDate } from "date-fns";
 import { MoreVertical, Printer, Star, Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { useReactToPrint } from "react-to-print";
+import { NavLink } from "react-router-dom";
 // import { deleteResume } from "./actions";
 
 export const ResumeItem = ({ resume }) => {
@@ -64,8 +65,8 @@ export const ResumeItem = ({ resume }) => {
       style={{ backgroundColor: isFeatured ? "#fff3b0" : "#f7f7f7" }} // Cập nhật màu nền nếu là CV featured
     >
       <div className="space-y-3">
-        <a
-          href={`/demo-edit-cv?resumeId=${resume?.id}`}
+        <NavLink
+          to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
           className="inline-block w-full text-center"
         >
           <p className="line-clamp-1 font-semibold">
@@ -75,13 +76,14 @@ export const ResumeItem = ({ resume }) => {
             <p className="line-clamp-2 text-sm">{resume?.description}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            {/* {wasUpdated ? "Updated" : "Created"} on{" "} */}
-            {/* {formatDate(resume?.updatedAt, "MMM d, yyyy h:mm a")} */}
-            MMM d, yyyy h:mm a
+            <span className="font-semibold">
+              {wasUpdated ? "Updated" : "Created"}
+            </span>{" "}
+            on {formatDate(resume?.updatedAt, "MMM d, yyyy h:mm a")}
           </p>
-        </a>
-        <a
-          href={`/demo-edit-cv?resumeId=${resume?.id}`}
+        </NavLink>
+        <NavLink
+          to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
           className="relative inline-block w-full"
         >
           <ResumePreview
@@ -91,10 +93,10 @@ export const ResumeItem = ({ resume }) => {
             className="overflow-hidden shadow-sm transition-shadow group-hover:shadow-lg"
           />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
-        </a>
+        </NavLink>
       </div>
       <MoreMenu
-        resumeId={resume?.id}
+        resumeId={resume?.cvid}
         onPrintClick={reactToPrintFn}
         onSetAsFeatured={handleSetAsFeatured}
         isFeatured={isFeatured} // Truyền trạng thái là Featured vào Menu

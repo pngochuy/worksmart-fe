@@ -17,9 +17,9 @@ export async function generateSummary(input) {
     ${workExperiences
       ?.map(
         (exp) => `
-        Position: ${exp.position || "N/A"} at ${exp.company || "N/A"} from ${
-          exp.startDate || "N/A"
-        } to ${exp.endDate || "Present"}
+        Position: ${exp.position || "N/A"} at ${
+          exp.companyName || "N/A"
+        } from ${exp.startDate || "N/A"} to ${exp.endDate || "Present"}
 
         Description:
         ${exp.description || "N/A"}
@@ -111,7 +111,7 @@ export async function generateWorkExperience(input) {
 
   return {
     position: aiResponse.match(/Job title: (.*)/)?.[1] || "",
-    company: aiResponse.match(/Company: (.*)/)?.[1] || "",
+    companyName: aiResponse.match(/Company: (.*)/)?.[1] || "",
     description: (aiResponse.match(/Description:([\s\S]*)/)?.[1] || "").trim(),
     startDate: aiResponse.match(/Start date: (\d{4}-\d{2}-\d{2})/)?.[1],
     endDate: aiResponse.match(/End date: (\d{4}-\d{2}-\d{2})/)?.[1],

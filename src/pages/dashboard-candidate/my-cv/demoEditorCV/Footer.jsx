@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FileUserIcon, PenLineIcon } from "lucide-react";
 import { steps } from "./steps";
+import { NavLink } from "react-router-dom";
 
 export const Footer = ({
   currentStep,
@@ -57,7 +58,7 @@ export const Footer = ({
             className="bg-gray-800 hover:bg-gray-700 text-white"
             asChild
           >
-            <a href="/demo/list-cvs">Close</a>
+            <NavLink to="/candidate/my-cv">Close</NavLink>
           </Button>
           <p
             className={cn(

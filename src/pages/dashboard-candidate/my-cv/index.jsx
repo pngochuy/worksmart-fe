@@ -1,5 +1,5 @@
 import { CreateCVLayout } from "@/layouts/CreateCVLayout";
-import { index as DemoListCVsPage } from "./demoListCVs";
+import { Index as DemoListCVsPage } from "./demoListCVs";
 
 export const index = () => {
   return (
