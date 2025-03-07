@@ -2,7 +2,15 @@ import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { useEffect, useState } from "react";
 import { getUserLoginData, getUserRoleFromToken } from "../helpers/decodeJwt";
-import { UserCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Header = () => {
   const location = useLocation();
@@ -158,6 +166,7 @@ export const Header = () => {
                 <a
                   href={`/${userRole.toLowerCase()}/notifications`}
                   className="menu-btn"
+                  style={{ marginRight: "30px" }}
                 >
                   <span className="count" style={{ textAlign: "center" }}>
                     1
@@ -165,24 +174,33 @@ export const Header = () => {
 
                   <span className="icon la la-bell"></span>
                 </a>
+                <DropdownMenu className="ml-8">
+                  <DropdownMenuTrigger>
+                    <Avatar>
+                      <AvatarImage
+                        src={
+                          userDataLogin?.avatar
+                            ? userDataLogin.avatar
+                            : "https://www.topcv.vn/images/avatar-default.jpg"
+                        }
+                      />
+                      <AvatarFallback>avatar_user</AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <h2 className="text-sm font-semibold leading-none">
+                          My account
+                        </h2>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {userDataLogin?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
 
-                {/* Dashboard Option */}
-                <div className="dashboard-option">
-                  <a className="dropdown-toggle" role="button">
-                    <img
-                      src={
-                        userDataLogin?.avatar
-                          ? userDataLogin.avatar
-                          : "https://www.topcv.vn/images/avatar-default.jpg"
-                      }
-                      alt="avatar"
-                      className="thumb"
-                    />
-
-                    <span className="name">{userDataLogin?.fullName}</span>
-                  </a>
-                  <ul className="dropdown-menu">
-                    <li>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
                       <a
                         href={
                           userRole
@@ -192,12 +210,12 @@ export const Header = () => {
                       >
                         Dashboard
                       </a>
-                    </li>
-                    <li>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
                       <a onClick={logout}>Logout</a>
-                    </li>
-                  </ul>
-                </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>

@@ -33,6 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { GripHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
+import { toast } from "react-toastify";
 
 export const EducationForm = ({ resumeData, setResumeData }) => {
   const form = useForm({
@@ -152,6 +153,14 @@ function EducationItem({ id, form, index, remove }) {
 
   const handleStartDateChange = (e) => {
     const newStartDate = e.target.value;
+
+    const currentDate = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
+
+    if (newStartDate > currentDate) {
+      // If start date is greater than today, do not allow change
+      return;
+    }
+
     setStartDate(newStartDate);
     // Update form value for startDate
     setValue(`educations.${index}.startDate`, newStartDate);
@@ -165,16 +174,29 @@ function EducationItem({ id, form, index, remove }) {
 
   const handleEndDateChange = (e) => {
     const newEndDate = e.target.value;
+    const currentDate = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
+
+    if (newEndDate > currentDate) {
+      // If end date is greater than today, do not allow change
+      return;
+    }
+
+    // Ensure endDate is not earlier than startDate
+    if (startDate && new Date(newEndDate) < new Date(startDate)) {
+      toast.error("End date cannot be before Start date");
+      return;
+    }
+
     setEndDate(newEndDate);
     // Update form value for endDate
     setValue(`educations.${index}.endDate`, newEndDate);
 
     // Ensure that End date is not earlier than Start date
-    if (startDate && newEndDate && new Date(newEndDate) < new Date(startDate)) {
-      setEndDate(startDate); // If invalid, set endDate to startDate
-      setValue(`educations.${index}.endDate`, startDate);
-      //   alert("End date cannot be before Start date");
-    }
+    // if (startDate && newEndDate && new Date(newEndDate) < new Date(startDate)) {
+    //   setEndDate(startDate); // If invalid, set endDate to startDate
+    //   setValue(`educations.${index}.endDate`, startDate);
+    //   //   alert("End date cannot be before Start date");
+    // }
   };
 
   return (
@@ -229,7 +251,7 @@ function EducationItem({ id, form, index, remove }) {
           name={`educations.${index}.startDate`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Start date</FormLabel>
+              <FormLabel>Start Date</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -248,7 +270,7 @@ function EducationItem({ id, form, index, remove }) {
           name={`educations.${index}.endDate`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>End date</FormLabel>
+              <FormLabel>End Date</FormLabel>
               <FormControl>
                 <Input
                   {...field}

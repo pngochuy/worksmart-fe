@@ -458,7 +458,7 @@ export const Index = () => {
                       <div className="row">
                         {/* Address */}
                         <div className="form-group col-lg-12 col-md-12">
-                          <label>Complete Address</label>
+                          <label>Address</label>
                           <input
                             type="text"
                             name="name"

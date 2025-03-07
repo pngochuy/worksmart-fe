@@ -6,6 +6,8 @@ import { Index as HomePage } from "./pages/home";
 import { index as NotFoundPage } from "./pages/404-not-found";
 import { Index as LoginPage } from "./pages/login";
 import { Index as RegisterPage } from "./pages/register";
+import { Index as ForgotPasswordPage} from "./pages/forgot-password"
+import { Index as ResetPasswordPage} from "./pages/forgot-password"
 import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
 import { Index as JobListPage } from "./pages/job-list";
@@ -47,6 +49,9 @@ import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPag
 // import { index as DemoListCVsPage } from "./pages/demoListCVs";
 // import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
 // import { CreateCVLayout } from "./layouts/CreateCVLayout";
+// Admin Pages
+import { AdminLayout } from "./layouts/AdminLayout";
+import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
 
 function App() {
   return (
@@ -68,6 +73,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             {/* Job */}
             <Route
               path="/job-list"
@@ -358,6 +365,18 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
                     <EmployerChangePasswordPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+            {/* Admin */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route
+                index
+                path="dashboard"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <AdminDashboardPage />
                   </ProtectedRoute>
                 }
               />
