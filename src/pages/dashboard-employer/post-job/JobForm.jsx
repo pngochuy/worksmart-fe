@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { createJob } from "../../../services/jobServices";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { fetchTags } from "../../../services/tagServices";
+import { useNavigate } from "react-router-dom";
 
 export const JobForm = () => {
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
   const [jobData, setJobData] = useState({
     userID: userID,
-    jobTagID: 1,
+    jobTagID: "", 
     title: "",
     description: "",
     level: "",
     education: "",
-    numberOfRecruitment: 1,
+    numberOfRecruitment: "",
     workType: "",
     location: "",
     salary: "",
@@ -21,35 +22,50 @@ export const JobForm = () => {
     priority: false,
     deadline: "",
   });
-
+  const [tags, setTags] = useState([]); // Mảng chứa danh sách tags từ API
   const navigate = useNavigate();
 
-  // Update userID in state when component loads
+  // Lấy danh sách tags từ API
   useEffect(() => {
-    setJobData((prevState) => ({
-      ...prevState,
-      userID: userID,
-    }));
-  }, [userID]);
+    const getTags = async () => {
+      try {
+        const data = await fetchTags();  // Gọi API để lấy tags
+        setTags(data);  // Cập nhật state tags với dữ liệu từ API
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+        toast.error("Failed to load tags.");
+      }
+    };
+    getTags();
+  }, []);
 
+  // Cập nhật thông tin trong form
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setJobData({
-      ...jobData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    if (type === "checkbox") {
+      setJobData({
+        ...jobData,
+        [name]: checked,
+      });
+    } else if (name === "jobTagID") {
+      // Cập nhật jobTagID khi người dùng chọn tag
+      setJobData({
+        ...jobData,
+        jobTagID: value,  // Lưu tagID duy nhất
+      });
+    } else {
+      setJobData({
+        ...jobData,
+        [name]: value,
+      });
+    }
   };
 
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // if (!jobData.userID) {
-      //   console.log(jobData.userID)
-      //   toast.error("You are not logged in. Please log in before posting a job!");
-      //   return;
-      // }
-      console.log(jobData);
-      await createJob(jobData);
+      await createJob(jobData);  // Gửi thông tin công việc cùng với jobTagID đã chọn
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
     } catch (error) {
@@ -68,8 +84,6 @@ export const JobForm = () => {
 
         <div className="row">
           <div className="col-lg-12">
-            {/*  */}
-            {/* Ls widget */}
             <div className="ls-widget">
               <div className="tabs-box">
                 <div className="widget-title">
@@ -111,7 +125,16 @@ export const JobForm = () => {
                           placeholder="Required education level"
                         />
                       </div>
-
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Number Of Recruitment</label>
+                        <input
+                          type="number"
+                          name="numberOfRecruitment"
+                          value={jobData.numberOfRecruitment}
+                          onChange={handleChange}
+                          placeholder="Required number of recruitment"
+                        />
+                      </div>
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Experience (years)</label>
                         <input
@@ -135,6 +158,28 @@ export const JobForm = () => {
                           <option value="Full-time">Full-time</option>
                           <option value="Part-time">Part-time</option>
                           <option value="Freelance">Freelance</option>
+                        </select>
+                      </div>
+
+                      {/* Thêm phần chọn tags */}
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Select Tags</label>
+                        <select
+                          name="jobTagID"  // Đảm bảo sử dụng jobTagID để lưu tag duy nhất
+                          value={jobData.jobTagID}
+                          onChange={handleChange}
+                          className="form-control"
+                        >
+                          <option value="">Select a tag</option>
+                          {tags.length > 0 ? (
+                            tags.map((tag) => (
+                              <option key={tag.tagID} value={tag.tagID}>
+                                {tag.tagName}
+                              </option>
+                            ))
+                          ) : (
+                            <option>No tags available</option>
+                          )}
                         </select>
                       </div>
 
@@ -203,3 +248,5 @@ export const JobForm = () => {
     </section>
   );
 };
+
+export default JobForm;

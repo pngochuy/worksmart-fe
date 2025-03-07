@@ -42,6 +42,13 @@ import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/n
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
+//Job Create 
+//
+import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
+
+// import { index as DemoListCVsPage } from "./pages/demoListCVs";
+// import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
+// import { CreateCVLayout } from "./layouts/CreateCVLayout";
 // Admin Pages
 import { AdminLayout } from "./layouts/AdminLayout";
 import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
@@ -297,6 +304,7 @@ function App() {
                 path="/employer/manage-jobs/edit/:jobId"
                 element={<EditJobPage />}
               />
+              <Route path="/employer/manage-jobs/candidates/:jobId" element={<CandidatesPage />} />  {/* ThanhAdd page candidares*/}
               <Route
                 index
                 path="manage-jobs"

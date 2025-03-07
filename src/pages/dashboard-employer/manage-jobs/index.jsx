@@ -1,26 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { getAllJobs, deleteJob } from "../../../services/jobServices";
+import { deleteJob, fetchJobs, fetchCandidatesForJob } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Pagination from "./Pagination";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
+  const [totalPage, setTotalPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useState({
+    PageIndex: 1,
+    PageSize: 3,
+    title: "",
+  });
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    getJobs();
+  }, [searchParams.PageSize, searchParams.PageIndex, searchParams.title]);
 
-  const fetchJobs = async () => {
+  const getJobs = async () => {
     try {
-      const data = await getAllJobs();
-      setJobs(data);
+      console.log("searchParams", searchParams);
+      const data = await fetchJobs(searchParams);  // Fetch jobs from the API
+      setJobs(data.jobs);  // Update jobs list
+      setTotalPage(data.totalPage);  // Update total pages for pagination
     } catch (error) {
       console.error("Failed to fetch jobs:", error);
-      toast.error("Failed to fetch jobs.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -30,21 +36,20 @@ export default function ManageJobsPage() {
     try {
       await deleteJob(jobId);
       toast.success("Job deleted successfully!");
-      fetchJobs(); // Cập nhật lại danh sách công việc
+      getJobs();
     } catch (error) {
       console.error("Failed to delete job:", error);
       toast.error("Failed to delete job.");
     }
   };
 
-  // Chỉnh sửa công việc
   const handleEdit = (jobId) => {
     navigate(`/employer/manage-jobs/edit/${jobId}`);
   };
 
-  if (loading) {
-    return <p>Loading jobs...</p>;
-  }
+  const handleViewCandidates = (jobId) => {
+    navigate(`/employer/manage-jobs/candidates/${jobId}`); 
+  };
 
   return (
     <section className="user-dashboard">
@@ -61,6 +66,14 @@ export default function ManageJobsPage() {
                 <div className="widget-title">
                   <h4>Job Listings</h4>
                 </div>
+                <div className="search-box col-lg-12 col-md-12">
+                  <input
+                    type="text"
+                    placeholder="Search by job title"
+                    value={searchParams.title}
+                    onChange={(e) => setSearchParams({ ...searchParams, title: e.target.value })}
+                  />
+                </div>
 
                 <div className="widget-content">
                   <div className="table-outer">
@@ -71,8 +84,13 @@ export default function ManageJobsPage() {
                           <th>Location</th>
                           <th>Salary</th>
                           <th>Status</th>
+                          <th>WorkType</th>
+                          <th>Priority</th>
                           <th>Created At</th>
+                          <th>Expired At</th>
+                          <th>Number Of Recruitment</th>
                           <th>Actions</th>
+                          <th>Candidates</th>  {/* Cột Candidates */}
                         </tr>
                       </thead>
 
@@ -83,27 +101,36 @@ export default function ManageJobsPage() {
                               <td>{job.title}</td>
                               <td>{job.location}</td>
                               <td>${job.salary ? job.salary.toLocaleString() : "Negotiable"}</td>
-                              <td>
-                                {job.status === 1 ? (
-                                  <span className="badge badge-success">Active</span>
-                                ) : (
-                                  <span className="badge badge-warning">Inactive</span>
-                                )}
-                              </td>
+                              <td>{job.status === 1 ? "Active" : "Inactive"}</td>
+                              <td>{job.workType}</td>
+                              <td>{job.priority ? "High" : "Low"}</td>
                               <td>{new Date(job.createdAt).toLocaleDateString()}</td>
+                              <td>{new Date(job.deadline).toLocaleDateString()}</td>
+                              <td>{job.numberOfRecruitment}</td>
                               <td>
-                                <button className="edit-btn" onClick={() => handleEdit(job.jobID)}>✏️ Edit</button>
-                                <button className="delete-btn" onClick={() => handleDelete(job.jobID)}>🗑️ Delete</button>
+                                <button onClick={() => handleEdit(job.jobID)}>✏️ Edit</button>
+                                <button onClick={() => handleDelete(job.jobID)}>🗑️ Delete</button>
+                                <button onClick={() => handleViewCandidates(job.jobID)}>View Candidates</button> {/* View Candidates button */}
+                              </td>
+                              <td>
+                                <button onClick={() => handleViewCandidates(job.jobID)}>View Candidates</button>
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="6">No jobs found</td>
+                            <td colSpan="11">No jobs found</td>
                           </tr>
                         )}
                       </tbody>
                     </table>
+
+                    {/* Pagination */}
+                    <Pagination
+                      currentPage={searchParams.PageIndex}
+                      totalPage={totalPage}
+                      setSearchParams={setSearchParams}
+                    />
                   </div>
                 </div>
               </div>
