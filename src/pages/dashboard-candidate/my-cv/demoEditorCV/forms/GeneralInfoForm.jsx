@@ -18,16 +18,27 @@ export const GeneralInfoForm = ({ resumeData, setResumeData }) => {
   const form = useForm({
     resolver: zodResolver(generalInfoSchema),
     defaultValues: {
-      title: "",
-      description: "",
+      title: resumeData.title,
+      description: resumeData.description,
     },
   });
+
+  useEffect(() => {
+    // Update form values when resumeData changes
+    if (resumeData) {
+      form.reset({
+        title: resumeData.title || "",
+        description: resumeData.description || "",
+      });
+    }
+  }, [form, resumeData]); // Reset form values whenever resumeData changes
 
   useEffect(() => {
     const { unsubscribe } = form.watch(async (values) => {
       const isValid = await form.trigger();
       if (!isValid) return;
       setResumeData({ ...resumeData, ...values });
+      console.log("resumeData: ", resumeData);
     });
     return unsubscribe;
   }, [form, resumeData, setResumeData]);

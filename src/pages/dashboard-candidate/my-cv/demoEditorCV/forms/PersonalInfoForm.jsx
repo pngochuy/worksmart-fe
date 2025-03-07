@@ -21,12 +21,24 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
       firstName: resumeData?.firstName || "",
       lastName: resumeData?.lastName || "",
       jobTitle: resumeData?.jobTitle || "",
-      city: resumeData?.city || "",
-      country: resumeData?.country || "",
+      address: resumeData?.address || "",
       phone: resumeData?.phone || "",
       email: resumeData?.email || "",
     },
   });
+
+  useEffect(() => {
+    // When resumeData changes, reset the form with the new values
+    form.reset({
+      // photo: resumeData?.photo || null,
+      firstName: resumeData?.firstName || "",
+      lastName: resumeData?.lastName || "",
+      jobTitle: resumeData?.jobTitle || "",
+      address: resumeData?.address || "",
+      phone: resumeData?.phone || "",
+      email: resumeData?.email || "",
+    });
+  }, [resumeData, form]);
 
   useEffect(() => {
     const { unsubscribe } = form.watch(async (values) => {
@@ -126,34 +138,19 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
               </FormItem>
             )}
           />
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="phone"

@@ -1,6 +1,15 @@
 import { z } from "zod";
 
 export const optionalString = z.string().trim().optional().or(z.literal(""));
+const phoneNumberSchema = z
+  .string()
+  .trim()
+  .optional()
+  .refine((value) => {
+    // If value is empty or undefined, it's valid due to optional()
+    if (!value) return true;
+    return /^(0[3|5|7|8|9])([0-9]{8})$/.test(value);
+  }, "Invalid Vietnamese phone number format");
 
 export const generalInfoSchema = z.object({
   title: optionalString,
@@ -10,23 +19,29 @@ export const generalInfoSchema = z.object({
 export const personalInfoSchema = z.object({
   photo: z
     .custom(
-      (file) =>
-        file === undefined ||
-        (file instanceof File && file.type.startsWith("image/")),
+      (file) => {
+        // Nếu là URL (chuỗi) thì không cần kiểm tra kích thước, chỉ cần cho qua
+        if (!file || typeof file === "string") return true;
+
+        // Nếu là tệp thì phải là ảnh
+        return file instanceof File && file.type.startsWith("image/");
+      },
       {
-        message: "Must be an image file",
+        message: "Must be an image file or a valid image URL",
       }
     )
-    .refine(
-      (file) => !file || file.size <= 1024 * 1024 * 4,
-      "File must be less than 4MB"
-    ),
+    .refine((file) => {
+      // Nếu là tệp thì kiểm tra kích thước
+      if (file instanceof File) {
+        return file.size <= 1024 * 1024 * 4; // 4MB size limit
+      }
+      return true; // Nếu là URL thì bỏ qua
+    }, "File must be less than 4MB"),
   firstName: optionalString,
   lastName: optionalString,
   jobTitle: optionalString,
-  city: optionalString,
-  country: optionalString,
-  phone: optionalString,
+  address: optionalString,
+  phone: phoneNumberSchema,
   email: optionalString,
 });
 
@@ -35,7 +50,7 @@ export const workExperienceSchema = z.object({
     .array(
       z.object({
         position: optionalString,
-        company: optionalString,
+        companyName: optionalString,
         startDate: optionalString,
         endDate: optionalString,
         description: optionalString,

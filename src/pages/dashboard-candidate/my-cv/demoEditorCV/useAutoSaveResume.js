@@ -12,7 +12,9 @@ export default function useAutoSaveResume(resumeData) {
 
   const debouncedResumeData = useDebounce(resumeData, 1500);
 
-  const [resumeId, setResumeId] = useState(resumeData?.id);
+  const [resumeId, setResumeId] = useState(resumeData?.cvid);
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userID = user?.userID || undefined;
 
   const [lastSavedData, setLastSavedData] = useState(
     structuredClone(resumeData)
@@ -40,7 +42,8 @@ export default function useAutoSaveResume(resumeData) {
             JSON.stringify(newData?.photo, fileReplacer) && {
             photo: undefined,
           }),
-          id: resumeId,
+          cvid: resumeId,
+          userId: userID,
         });
 
         setResumeId(updatedResume.id);
