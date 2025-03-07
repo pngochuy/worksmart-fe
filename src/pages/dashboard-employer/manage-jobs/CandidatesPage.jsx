@@ -14,7 +14,7 @@ export default function CandidatesPage() {
 
   const getCandidates = async (jobId) => {
     try {
-      setLoading(true);  // Set loading true khi bắt đầu lấy dữ liệu
+      setLoading(true);  
       const data = await fetchCandidatesForJob(jobId);
       setCandidates(data);
       console.log("Candidates data:", data);
