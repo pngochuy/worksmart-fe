@@ -22661,6 +22661,23 @@ Work Section
   padding: 0.5rem 1rem; /* Thêm padding cho tooltip */
 }
 
-.react-datepicker-wrapper{
+.react-datepicker-wrapper {
   width: 100%;
+}
+
+@media print {
+  #resumePreviewContent {
+    zoom: 1 !important;
+    padding: 0;
+  }
+
+}
+
+/* #resumePreviewContent {
+  font-family: Inter;
+} */
+
+@page {
+  size: A4;
+  margin: 0.6cm;
 }
