@@ -3,13 +3,15 @@ import { createJob } from "../../../services/jobServices";
 import { toast } from "react-toastify";
 import { fetchTags } from "../../../services/tagServices";
 import { useNavigate } from "react-router-dom";
+import { vietnamProvinces } from "../../../helpers/getLocationVN";
+import TagDropdown from "./TagDropdown";
 
 export const JobForm = () => {
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
   const [jobData, setJobData] = useState({
     userID: userID,
-    jobTagID: "", 
+    jobTagID: [], 
     title: "",
     description: "",
     level: "",
@@ -23,6 +25,7 @@ export const JobForm = () => {
     deadline: "",
   });
   const [tags, setTags] = useState([]); // Mảng chứa danh sách tags từ API
+  const [locations, setLocation] = useState([]);
   const navigate = useNavigate();
 
   // Lấy danh sách tags từ API
@@ -37,6 +40,7 @@ export const JobForm = () => {
       }
     };
     getTags();
+    setLocation(vietnamProvinces);
   }, []);
 
   // Cập nhật thông tin trong form
@@ -65,7 +69,8 @@ export const JobForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createJob(jobData);  // Gửi thông tin công việc cùng với jobTagID đã chọn
+        await createJob(jobData);
+      console.log(jobData)  // Gửi thông tin công việc cùng với jobTagID đã chọn
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
     } catch (error) {
@@ -163,8 +168,8 @@ export const JobForm = () => {
 
                       {/* Thêm phần chọn tags */}
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Select Tags</label>
-                        <select
+                        <label>Tags</label>
+                        {/* <select
                           name="jobTagID"  // Đảm bảo sử dụng jobTagID để lưu tag duy nhất
                           value={jobData.jobTagID}
                           onChange={handleChange}
@@ -180,18 +185,29 @@ export const JobForm = () => {
                           ) : (
                             <option>No tags available</option>
                           )}
-                        </select>
+                        </select> */}
+                        <TagDropdown setSearchParams={setJobData} />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Location</label>
-                        <input
-                          type="text"
+                        <select
                           name="location"
                           value={jobData.location}
                           onChange={handleChange}
-                          placeholder="Enter job location"
-                        />
+                          className="form-control"
+                        >
+                          <option value="">Select a Location</option>
+                          {locations.length > 0 ? (
+                            locations.map((location) => (
+                              <option key={location.name} value={location.name}>
+                                {location.name}
+                              </option>
+                            ))
+                          ) : (
+                            <option>No Location available</option>
+                          )}
+                        </select>
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">

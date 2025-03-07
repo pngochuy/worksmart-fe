@@ -85,16 +85,16 @@ export default function CandidatesPage() {
                         candidates.map((candidate) => (
                           <tr key={candidate.applicationID}>
                             <td>
-                              {candidate.user ? (
+                              {candidate.fullName ? (
                                 <span>
-                                  {candidate.user.fullName}
+                                  {candidate.fullName}
                                 </span>
                               ) : (
                                 <span>Unknown</span>
                               )}
                             </td>
-                            <td>{candidate.user ? candidate.user.email : "Unknown"}</td>
-                            <td>{candidate.user ? candidate.user.phone : "Unknown"}</td>
+                            <td>{candidate.email ? candidate.email : "Unknown"}</td>
+                            <td>{candidate.phoneNumber ? candidate.phoneNumber : "Unknown"}</td>
                             <td>{candidate.status}</td>
                             <td>
                               <button 
