@@ -3,12 +3,14 @@ import { PlusSquare } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { ResumeItem } from "./ResumeItem";
 import { useEffect, useState } from "react";
-import { createCV, getCVsByUserId } from "@/services/cvServices";
+import { createCV, getCVsByUserId, setFeatureCV } from "@/services/cvServices";
+import { toast } from "react-toastify";
 
 export const Index = () => {
-  // get all CVs based on userId, orderBy: desc và totalCount
   const [resumes, setResumes] = useState([]); // State to store resumes
   const [totalCount, setTotalCount] = useState(0); // State to store total count
+  const [featuredCVs, setFeaturedCVs] = useState({}); // Trạng thái featured cho từng CV (dùng object để lưu trạng thái theo cvid)
+
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || undefined;
   const navigate = useNavigate(); // Initialize useNavigate hook
@@ -21,6 +23,13 @@ export const Index = () => {
         if (data) {
           setResumes(data); // Assuming the data has a `resumes` array
           setTotalCount(data.length); // Assuming the data has a `totalCount`
+
+          // Lưu trạng thái featured cho từng CV
+          const featuredStatus = data.reduce((acc, resume) => {
+            acc[resume.cvid] = resume.isFeatured || false;
+            return acc;
+          }, {});
+          setFeaturedCVs(featuredStatus);
         }
 
         console.log("CVs fetched:", data);
@@ -47,6 +56,44 @@ export const Index = () => {
     }
   };
 
+  // Hàm cập nhật danh sách CV sau khi xóa
+  const handleDeleteCV = (deletedCVId) => {
+    setResumes((prevResumes) =>
+      prevResumes.filter((resume) => resume.cvid !== deletedCVId)
+    );
+    setTotalCount((prevCount) => prevCount - 1);
+  };
+
+  // Hàm xử lý khi "Set as Featured" (cập nhật trạng thái featured)
+  const handleSetAsFeatured = async (cvId) => {
+    try {
+      const newState = !featuredCVs[cvId]; // Lật lại trạng thái featured của CV
+      // Gọi API để cập nhật trạng thái featured của CV
+      await setFeatureCV(cvId, userID);
+
+      // Cập nhật trạng thái `featured` cho tất cả CVs
+      setFeaturedCVs((prevState) => {
+        // Tạo một object mới với trạng thái updated
+        const updatedFeaturedCVs = Object.keys(prevState).reduce((acc, key) => {
+          // Nếu key là cvId thì set true, còn lại false
+          acc[key] = key === cvId ? true : false;
+          return acc;
+        }, {});
+
+        return updatedFeaturedCVs;
+      });
+      toast.success(
+        newState
+          ? "Resume set as featured successfully."
+          : "Resume removed from featured"
+      );
+      window.location.reload();
+    } catch (error) {
+      console.log("error: ", error);
+      toast.error("Failed to set resume as featured.");
+    }
+  };
+
   return (
     <>
       <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
@@ -68,7 +115,13 @@ export const Index = () => {
         <div className="flex w-full grid-cols-2 flex-col gap-3 sm:grid md:grid-cols-3 lg:grid-cols-4">
           {/* <ResumeItem /> */}
           {resumes.map((resume) => (
-            <ResumeItem key={resume?.cvid} resume={resume} />
+            <ResumeItem
+              key={resume?.cvid}
+              resume={resume}
+              onDelete={handleDeleteCV} // Truyền hàm xóa CV vào
+              isFeatured={featuredCVs[resume.cvid]} // Truyền trạng thái featured vào
+              onSetAsFeatured={handleSetAsFeatured} // Truyền hàm set featured vào
+            />
           ))}
         </div>
       </main>

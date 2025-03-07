@@ -58,3 +58,31 @@ export const editCV = async (cvId, updatedData) => {
     return null;
   }
 };
+// Function to edit SetFeature CV (PUT request)
+export const setFeatureCV = async (cvId, userId) => {
+  try {
+    // Sending PUT request to update the CV
+    const response = await axios.put(
+      `${BACKEND_API_URL}/setfeature?cvId=${cvId}&userId=${userId}`
+    );
+    // Return the response data (assuming it returns the updated CV)
+    return response.data;
+  } catch (error) {
+    console.error("Error set feature CV:", error);
+    return null;
+  }
+};
+
+// Function to delete a CV by its ID
+export const deleteCV = async (cvId) => {
+  try {
+    // Gửi DELETE request để xóa CV
+    const response = await axios.delete(`${BACKEND_API_URL}/api/CV/${cvId}`);
+
+    // Return the response data (you can modify this based on the response you expect from the API)
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting CV:", error);
+    throw new Error("Failed to delete CV");
+  }
+};

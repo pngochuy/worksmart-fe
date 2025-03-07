@@ -1,4 +1,4 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
 
 const Pagination = ({ currentPage, totalPage, setSearchParams }) => {
     console.log(currentPage, totalPage)

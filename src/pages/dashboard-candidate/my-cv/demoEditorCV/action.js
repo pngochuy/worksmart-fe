@@ -19,10 +19,7 @@ export default async function saveResume(values) {
     // If the photo is already a URL, no need to upload
     const fetchedCV = await getCVById(id);
     resumeValues.photo = fetchedCV.link; // Set default value if photo is empty
-    console.log("fetchedCV.link: ", fetchedCV.link);
-    console.log("resumeValues.photo: ", resumeValues.photo);
   }
-  console.log("resumeValues: ", resumeValues);
   // Mapping resumeValues to the required format for the API
   const mappedResumeValues = {
     cvid: id, // Map the CV id

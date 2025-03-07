@@ -11,7 +11,7 @@ import { BorderStyles } from "@/pages/dashboard-candidate/my-cv/demoEditorCV/Bor
 export const ResumePreview = ({ resumeData, contentRef, className }) => {
   const containerRef = useRef(null);
   const { width } = useDimensions(containerRef);
-
+  console.log("resumeData: ", resumeData);
   return (
     <div
       className={cn(

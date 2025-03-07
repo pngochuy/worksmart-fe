@@ -10,7 +10,7 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(6, "New password must be at least 6 characters"),
 });
 
-export const index = () => {
+export const Index = () => {
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -64,21 +64,36 @@ export const index = () => {
                   {/* Input */}
                   <div className="form-group col-lg-7 col-md-12">
                     <label>Old Password </label>
-                    <input type="password" {...register("oldPassword")}/>
-                    {errors.oldPassword && <p className="text-danger">{errors.oldPassword.message}</p>}
+                    <input type="password" {...register("oldPassword")} />
+                    {errors.oldPassword && (
+                      <p className="text-danger">
+                        {errors.oldPassword.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Input */}
                   <div className="form-group col-lg-7 col-md-12">
                     <label>New Password</label>
-                    <input type="password" {...register("newPassword")}/>
-                    {errors.newPassword && <p className="text-danger">{errors.newPassword.message}</p>}
+                    <input type="password" {...register("newPassword")} />
+                    {errors.newPassword && (
+                      <p className="text-danger">
+                        {errors.newPassword.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Input */}
                   <div className="form-group col-lg-6 col-md-12">
-                    <button className="theme-btn btn-style-one" disabled={loading}>
-                      {loading ? <span className="loading-spinner"></span> : "Update"}
+                    <button
+                      className="theme-btn btn-style-one"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="loading-spinner"></span>
+                      ) : (
+                        "Update"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -91,4 +106,4 @@ export const index = () => {
   );
 };
 
-export default index;
+export default Index;
