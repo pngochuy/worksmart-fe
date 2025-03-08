@@ -1,0 +1,82 @@
+/* Improved search input styles */
+.widget-title {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .search-box-container {
+    width: 300px;
+  }
+  
+  .search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-input {
+    padding: 8px 12px;
+    padding-right: 35px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+  
+  .search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 1px 4px rgba(59, 130, 246, 0.2);
+    outline: none;
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    color: #888;
+    pointer-events: none;
+  }
+  
+  /* Button styles */
+  .edit-btn, .delete-btn, .view-candidates-btn {
+    margin: 0 3px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .edit-btn {
+    background-color: #f0f9ff;
+    color: #0369a1;
+  }
+  
+  .delete-btn {
+    background-color: #fef2f2;
+    color: #dc2626;
+  }
+  
+  .view-candidates-btn {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    white-space: nowrap;
+  }
+  
+  .edit-btn:hover, .delete-btn:hover, .view-candidates-btn:hover {
+    opacity: 0.9;
+  }
+  /* Styles for clickable cells */
+.clickable-cell {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .clickable-cell:hover {
+    background-color: #f5f8ff;
+  }
+  
+  /* Optional: Add a subtle visual indicator that spans the entire row */
+  tr:hover .clickable-cell {
+    background-color: #f0f7ff;
+  }
