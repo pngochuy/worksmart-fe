@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { deleteJob, fetchJobs, fetchCandidatesForJob } from "../../../services/jobServices";
+import {
+  deleteJob,
+  fetchJobs,
+  fetchCandidatesForJob,
+} from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
@@ -24,22 +28,22 @@ export default function ManageJobsPage() {
   // Định dạng ngày tháng theo format DD/MM/YYYY HH:MM
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const getJobs = async () => {
     try {
       console.log("searchParams", searchParams);
-      const data = await fetchJobs(searchParams);  // Fetch jobs from the API
-      setJobs(data.jobs);  // Update jobs list
-      setTotalPage(data.totalPage);  // Update total pages for pagination
-      
+      const data = await fetchJobs(searchParams); // Fetch jobs from the API
+      setJobs(data.jobs); // Update jobs list
+      setTotalPage(data.totalPage); // Update total pages for pagination
+
       // Fetch candidate counts for each job
       const counts = {};
       for (const job of data.jobs) {
@@ -47,7 +51,10 @@ export default function ManageJobsPage() {
           const candidates = await fetchCandidatesForJob(job.jobID);
           counts[job.jobID] = candidates.length;
         } catch (error) {
-          console.error(`Failed to fetch candidates for job ${job.jobID}:`, error);
+          console.error(
+            `Failed to fetch candidates for job ${job.jobID}:`,
+            error
+          );
           counts[job.jobID] = 0;
         }
       }
@@ -109,7 +116,12 @@ export default function ManageJobsPage() {
                         className="form-control search-input"
                         placeholder="Search by job title"
                         value={searchParams.title}
-                        onChange={(e) => setSearchParams({ ...searchParams, title: e.target.value })}
+                        onChange={(e) =>
+                          setSearchParams({
+                            ...searchParams,
+                            title: e.target.value,
+                          })
+                        }
                       />
                       <span className="search-icon">🔍</span>
                     </div>
@@ -144,23 +156,86 @@ export default function ManageJobsPage() {
                           jobs.map((job) => (
                             <tr key={job.jobID}>
                               {/* These cells will trigger edit when clicked */}
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{job.title}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{job.location}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">${job.salary ? job.salary.toLocaleString() : "Negotiable"}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{job.status === 1 ? "Active" : "Inactive"}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{job.workType}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{job.priority ? "High" : "Low"}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{formatDateTime(job.createdAt)}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{formatDateTime(job.deadline)}</td>
-                              <td onClick={() => handleEdit(job.jobID)} className="clickable-cell">{job.numberOfRecruitment}</td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {job.title}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {job.location}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                $
+                                {job.salary
+                                  ? job.salary.toLocaleString()
+                                  : "Negotiable"}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {job.status === 1 ? "Active" : "Inactive"}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {job.workType}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {job.priority ? "High" : "Low"}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {formatDateTime(job.createdAt)}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {formatDateTime(job.deadline)}
+                              </td>
+                              <td
+                                onClick={() => handleEdit(job.jobID)}
+                                className="clickable-cell"
+                              >
+                                {job.numberOfRecruitment}
+                              </td>
 
                               {/* These cells will NOT trigger edit when clicked */}
                               <td>
-                                <button className="edit-btn" onClick={() => handleEdit(job.jobID)}>✏️ Edit</button>
-                                <button className="delete-btn" onClick={() => handleDelete(job.jobID)}>🗑️ Delete</button>
+                                <button
+                                  className="edit-btn"
+                                  onClick={() => handleEdit(job.jobID)}
+                                >
+                                  ✏️ Edit
+                                </button>
+                                <button
+                                  className="delete-btn"
+                                  onClick={() => handleDelete(job.jobID)}
+                                >
+                                  🗑️ Delete
+                                </button>
                               </td>
                               <td>
-                                <button className="view-candidates-btn" onClick={() => handleViewCandidates(job.jobID)}>
+                                <button
+                                  className="view-candidates-btn"
+                                  onClick={() =>
+                                    handleViewCandidates(job.jobID)
+                                  }
+                                >
                                   {getCandidateButtonText(job.jobID)}
                                 </button>
                               </td>
