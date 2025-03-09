@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  fetchCompanyProfile,
-  updateCompanyProfile,
-  updateCompanyAddress,
-  updateImagesProfile,
-  uploadImagesProfile,
-  deleteImagesProfile,
-} from "@/services/employerServices";
+import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress, updateImagesProfile, uploadImagesProfile, deleteImagesProfile,} from "@/services/employerServices";
 import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";

@@ -42,6 +42,9 @@ import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/n
 import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
+import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
+import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
+import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
 //Job Create 
 //
 // import { index as DemoListCVsPage } from "./pages/demoListCVs";
@@ -362,6 +365,31 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="verification"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <VerificationForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="verify-tax"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <VerifyTax />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="business-license"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <BusinessLicense />
+                  </ProtectedRoute>
+                }
+              />
+
             </Route>
           </Routes>
         </Router>

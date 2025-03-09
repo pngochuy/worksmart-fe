@@ -167,3 +167,47 @@ export const deleteImagesProfile = async (imageUrl) => {
     console.error("Error deleting image:", error);
   }
 };
+
+export const verifyTax = async (taxData) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found!");
+
+    console.log("Tax Data gửi đi:", taxData);
+
+    const response = await axios.post(`${BACKEND_API_URL}/employers/verify-tax`, taxData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying tax:", error);
+    throw error;
+  }
+};
+
+export const uploadBusinessLicense = async (imageUrl) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/employers/upload-business-license`,
+      { businessLicenseImageUrl: imageUrl },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data; // Trả về thông báo thành công từ API
+  } catch (error) {
+    console.error("Error uploading business license:", error);
+    throw error;
+  }
+};
