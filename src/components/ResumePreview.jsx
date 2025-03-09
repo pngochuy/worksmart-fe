@@ -11,7 +11,7 @@ import { BorderStyles } from "@/pages/dashboard-candidate/my-cv/demoEditorCV/Bor
 export const ResumePreview = ({ resumeData, contentRef, className }) => {
   const containerRef = useRef(null);
   const { width } = useDimensions(containerRef);
-
+  console.log("resumeData: ", resumeData);
   return (
     <div
       className={cn(
@@ -44,8 +44,7 @@ function PersonalInfoHeader({ resumeData }) {
     firstName,
     lastName,
     jobTitle,
-    city,
-    country,
+    address,
     phone,
     email,
     colorHex,
@@ -55,7 +54,10 @@ function PersonalInfoHeader({ resumeData }) {
   const [photoSrc, setPhotoSrc] = useState(photo instanceof File ? "" : photo);
 
   useEffect(() => {
-    const objectUrl = photo instanceof File ? URL.createObjectURL(photo) : "";
+    // const objectUrl = photo instanceof File ? URL.createObjectURL(photo) : "";
+    const objectUrl =
+      photo instanceof File ? URL.createObjectURL(photo) : photo;
+    console.log("objectUrl: ", objectUrl);
     if (objectUrl) setPhotoSrc(objectUrl);
     if (photo === null) setPhotoSrc("");
     return () => URL.revokeObjectURL(objectUrl);
@@ -100,10 +102,8 @@ function PersonalInfoHeader({ resumeData }) {
           </p>
         </div>
         <p className="text-xs text-gray-500">
-          {city}
-          {city && country ? ", " : ""}
-          {country}
-          {(city || country) && (phone || email) ? " • " : ""}
+          {address}
+          {address && (phone || email) ? " • " : ""}
           {[phone, email].filter(Boolean).join(" • ")}
         </p>
       </div>
@@ -126,14 +126,14 @@ function SummarySection({ resumeData }) {
         }}
       />
       <div className="break-inside-avoid space-y-3">
-        <p
+        <h2
           className="text-lg font-semibold"
           style={{
             color: colorHex,
           }}
         >
           Professional profile
-        </p>
+        </h2>
         <div className="whitespace-pre-line text-sm">{summary}</div>
       </div>
     </>
@@ -159,14 +159,14 @@ function WorkExperienceSection({ resumeData }) {
         }}
       />
       <div className="space-y-3">
-        <p
+        <h2
           className="text-lg font-semibold"
           style={{
             color: colorHex,
           }}
         >
           Work experience
-        </p>
+        </h2>
         {workExperiencesNotEmpty.map((exp, index) => (
           <div key={index} className="break-inside-avoid space-y-1">
             <div
@@ -175,7 +175,7 @@ function WorkExperienceSection({ resumeData }) {
                 color: colorHex,
               }}
             >
-              <span>{exp.position}</span>
+              <span className="text-base font-semibold">{exp.position}</span>
               {exp.startDate && (
                 <span>
                   {formatDate(exp.startDate, "MM/yyyy")} -{" "}
@@ -183,7 +183,7 @@ function WorkExperienceSection({ resumeData }) {
                 </span>
               )}
             </div>
-            <p className="text-xs font-semibold">{exp.company}</p>
+            <p className="text-xs font-semibold">{exp.companyName}</p>
             <div className="whitespace-pre-line text-xs">{exp.description}</div>
           </div>
         ))}
@@ -211,14 +211,14 @@ function EducationSection({ resumeData }) {
         }}
       />
       <div className="space-y-3">
-        <p
+        <h2
           className="text-lg font-semibold"
           style={{
             color: colorHex,
           }}
         >
           Education
-        </p>
+        </h2>
         {educationsNotEmpty.map((edu, index) => (
           <div key={index} className="break-inside-avoid space-y-1">
             <div
@@ -227,7 +227,7 @@ function EducationSection({ resumeData }) {
                 color: colorHex,
               }}
             >
-              <span>{edu.degree}</span>
+              <span className="text-base font-semibold">{edu.degree}</span>
               {edu.startDate && (
                 <span>
                   {edu.startDate &&
@@ -262,14 +262,14 @@ function SkillsSection({ resumeData }) {
         }}
       />
       <div className="break-inside-avoid space-y-3">
-        <p
+        <h2
           className="text-lg font-semibold"
           style={{
             color: colorHex,
           }}
         >
           Skills
-        </p>
+        </h2>
         <div className="flex break-inside-avoid flex-wrap gap-2">
           {skills.map((skill, index) => (
             <Badge

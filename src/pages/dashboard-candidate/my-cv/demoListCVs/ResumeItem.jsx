@@ -22,37 +22,25 @@ import { formatDate } from "date-fns";
 import { MoreVertical, Printer, Star, Trash2 } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { useReactToPrint } from "react-to-print";
+import { NavLink } from "react-router-dom";
+import { deleteCV } from "@/services/cvServices";
 // import { deleteResume } from "./actions";
 
-export const ResumeItem = ({ resume }) => {
+export const ResumeItem = ({
+  resume,
+  onDelete,
+  isFeatured,
+  onSetAsFeatured,
+}) => {
   const contentRef = useRef(null);
-  const [isFeatured, setIsFeatured] = useState(false); // Trạng thái lưu trữ CV có phải là "featured" hay không
 
   const reactToPrintFn = useReactToPrint({
     contentRef,
-    documentTitle: resume?.title || "Resume",
+    documentTitle: resume?.title || "CV",
   });
 
-  const wasUpdated = resume?.updatedAt !== resume?.createdAt;
-
-  // Hàm xử lý khi "Set as Featured"
-  async function handleSetAsFeatured(resumeId) {
-    try {
-      console.log("resumeId: ", resumeId);
-      // Đảo ngược trạng thái featured
-      setIsFeatured((prevState) => !prevState);
-      // Gửi yêu cầu API để cập nhật CV này là "featured"
-      // await axios.post("/api/feature-resume", { resumeId });
-      toast.success(
-        isFeatured
-          ? "Resume removed from featured"
-          : "Resume set as featured successfully."
-      );
-    } catch (error) {
-      console.log("error: ", error);
-      toast.error("Failed to set resume as featured.");
-    }
-  }
+  const wasUpdated =
+    resume?.updatedAt !== resume?.createdAt && resume?.title != undefined;
 
   return (
     <div
@@ -64,24 +52,27 @@ export const ResumeItem = ({ resume }) => {
       style={{ backgroundColor: isFeatured ? "#fff3b0" : "#f7f7f7" }} // Cập nhật màu nền nếu là CV featured
     >
       <div className="space-y-3">
-        <a
-          href={`/demo-edit-cv?resumeId=${resume?.id}`}
+        <NavLink
+          to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
           className="inline-block w-full text-center"
         >
           <p className="line-clamp-1 font-semibold">
             {resume?.title || "No title"}
           </p>
-          {resume?.description && (
-            <p className="line-clamp-2 text-sm">{resume?.description}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {/* {wasUpdated ? "Updated" : "Created"} on{" "} */}
-            {/* {formatDate(resume?.updatedAt, "MMM d, yyyy h:mm a")} */}
-            MMM d, yyyy h:mm a
+          {/* {resume?.description && ( */}
+          <p className="line-clamp-2 text-sm">
+            {resume?.description || "No description"}
           </p>
-        </a>
-        <a
-          href={`/demo-edit-cv?resumeId=${resume?.id}`}
+          {/* )} */}
+          <p className="text-xs text-muted-foreground">
+            <span className="font-semibold">
+              {wasUpdated ? "Updated" : "Created"}
+            </span>{" "}
+            on {formatDate(resume?.updatedAt, "MMM d, yyyy h:mm a")}
+          </p>
+        </NavLink>
+        <NavLink
+          to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
           className="relative inline-block w-full"
         >
           <ResumePreview
@@ -91,19 +82,26 @@ export const ResumeItem = ({ resume }) => {
             className="overflow-hidden shadow-sm transition-shadow group-hover:shadow-lg"
           />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
-        </a>
+        </NavLink>
       </div>
       <MoreMenu
-        resumeId={resume?.id}
+        cvId={resume?.cvid}
         onPrintClick={reactToPrintFn}
-        onSetAsFeatured={handleSetAsFeatured}
+        onSetAsFeatured={onSetAsFeatured}
         isFeatured={isFeatured} // Truyền trạng thái là Featured vào Menu
+        onDelete={onDelete}
       />
     </div>
   );
 };
 
-function MoreMenu({ resumeId, onPrintClick, onSetAsFeatured, isFeatured }) {
+function MoreMenu({
+  cvId,
+  onPrintClick,
+  onSetAsFeatured,
+  isFeatured,
+  onDelete,
+}) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   return (
@@ -122,7 +120,7 @@ function MoreMenu({ resumeId, onPrintClick, onSetAsFeatured, isFeatured }) {
           <DropdownMenuItem
             className="flex items-center gap-2"
             onClick={() => {
-              onSetAsFeatured(resumeId); // Trigger the feature action
+              onSetAsFeatured(cvId); // Trigger the feature action
             }}
           >
             <Star className="size-4" />
@@ -146,22 +144,27 @@ function MoreMenu({ resumeId, onPrintClick, onSetAsFeatured, isFeatured }) {
         </DropdownMenuContent>
       </DropdownMenu>
       <DeleteConfirmationDialog
-        resumeId={resumeId}
+        cvId={cvId}
         open={showDeleteConfirmation}
         onOpenChange={setShowDeleteConfirmation}
+        onDelete={onDelete}
       />
     </>
   );
 }
 
-function DeleteConfirmationDialog({ resumeId, open, onOpenChange }) {
+function DeleteConfirmationDialog({ cvId, open, onOpenChange, onDelete }) {
   const [isPending, startTransition] = useTransition();
 
   async function handleDelete() {
     startTransition(async () => {
       try {
-        // await deleteResume(resumeId);
+        console.log("cvId: ", cvId);
+        // Gửi yêu cầu API để xóa CV
+        await deleteCV(cvId);
+        onDelete(cvId); // Gọi hàm xóa CV ở ngoài
         onOpenChange(false);
+        toast.success("CV deleted successfully");
       } catch (error) {
         console.error(error);
         toast("Something went wrong. Please try again.");
@@ -173,10 +176,9 @@ function DeleteConfirmationDialog({ resumeId, open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete resume?</DialogTitle>
+          <DialogTitle>Delete CV?</DialogTitle>
           <DialogDescription>
-            This will permanently delete this resume. This action cannot be
-            undone.
+            This will permanently delete this CV. This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

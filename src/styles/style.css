@@ -3508,11 +3508,18 @@ Contact Section
   box-shadow: 0px 6px 15px rgba(64, 79, 104, 0.05);
   border-radius: 8px;
   padding: 30px 30px 17px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease; /* Thêm transition */
+}
+.dashboard-option .dropdown-menu.show {
+  opacity: 1;
+  visibility: visible; /* Khi hiển thị, đổi opacity và visibility */
 }
 
 .dashboard-option .dropdown-menu:before {
   position: absolute;
-  right: 30px;
+  right: 20px;
   top: -8px;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
@@ -4306,7 +4313,7 @@ User Sidebar
 
 .user-sidebar .sidebar-inner {
   position: relative;
-  padding: 60px 60px;
+  padding: 60px 30px;
 }
 
 .user-sidebar .sidebar-header {
@@ -22650,8 +22657,12 @@ Work Section
 .dropdown-menu li a:hover {
   background-color: #f1f1f1;
 }
+.custom-tooltip .p-tooltip-text {
+  font-size: 0.8rem; /* Thay đổi kích thước chữ */
+  padding: 0.5rem 1rem; /* Thêm padding cho tooltip */
+}
 
-.react-datepicker-wrapper{
+.react-datepicker-wrapper {
   width: 100%;
 }
 
@@ -22716,4 +22727,21 @@ Work Section
   font-size: 12px;
   color: #666;
   margin-top: 5px;
+}
+
+@media print {
+  #resumePreviewContent {
+    zoom: 1 !important;
+    padding: 0;
+  }
+
+}
+
+/* #resumePreviewContent {
+  font-family: Inter;
+} */
+
+@page {
+  size: A4;
+  margin: 0.6cm;
 }

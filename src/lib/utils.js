@@ -20,33 +20,35 @@ export function fileReplacer(key, value) {
 // mapToResumeValues chuyển đổi data từ ResumeServerData thành ResumeValues
 export function mapToResumeValues(data) {
   return {
-    id: data?.id || "demo_id",
+    id: data?.cvid || "demo_id",
     title: data?.title || undefined,
     description: data?.description || undefined,
-    photo: data?.photoUrl || undefined,
-    firstName: data?.firstName || "Hello in <mapToResumeValues>",
+    photo: data?.link || undefined,
+    firstName: data?.firstName || undefined,
     lastName: data?.lastName || undefined,
-    jobTitle: data?.jobTitle || undefined,
-    city: data?.city || undefined,
-    country: data?.country || undefined,
+    jobTitle: data?.jobPosition || undefined,
+    address: data?.address || undefined,
     phone: data?.phone || undefined,
     email: data?.email || undefined,
-    workExperiences: data?.workExperiences.map((exp) => ({
-      position: exp?.position || undefined,
-      company: exp?.company || undefined,
-      startDate: exp?.startDate?.toISOString().split("T")[0],
-      endDate: exp?.endDate?.toISOString().split("T")[0],
+    // workExperiences -> experiences
+    workExperiences: data?.experiences.map((exp) => ({
+      position: exp?.jobPosition || undefined,
+      companyName: exp?.companyName,
+      startDate: exp?.startedAt?.split("T")[0] || undefined,
+      endDate: exp?.endedAt?.split("T")[0] || undefined,
+      // startDate: exp?.startedAt?.toISOString().split("T")[0],
+      // endDate: exp?.endDate?.toISOString().split("T")[0],
       description: exp?.description || undefined,
     })),
     educations: data?.educations.map((edu) => ({
       degree: edu?.degree || undefined,
-      school: edu?.school || undefined,
-      startDate: edu?.startDate?.toISOString().split("T")[0],
-      endDate: edu?.endDate?.toISOString().split("T")[0],
+      school: edu?.schoolName || undefined,
+      startDate: edu?.startedAt?.split("T")[0] || undefined,
+      endDate: edu?.endedAt?.split("T")[0] || undefined,
     })),
-    skills: data?.skills,
-    borderStyle: data?.borderStyle,
-    colorHex: data?.colorHex,
+    skills: data?.skills.map((skill) => skill?.skillName), // Only extract the skillName
+    borderStyle: data?.borderstyle || undefined,
+    colorHex: data?.colorhex || undefined,
     summary: data?.summary || undefined,
   };
 }

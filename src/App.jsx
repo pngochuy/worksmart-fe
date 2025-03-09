@@ -6,8 +6,8 @@ import { Index as HomePage } from "./pages/home";
 import { index as NotFoundPage } from "./pages/404-not-found";
 import { Index as LoginPage } from "./pages/login";
 import { Index as RegisterPage } from "./pages/register";
-import { Index as ForgotPasswordPage} from "./pages/forgot-password"
-import { Index as ResetPasswordPage} from "./pages/forgot-password"
+import { Index as ForgotPasswordPage } from "./pages/forgot-password";
+import { Index as ResetPasswordPage } from "./pages/forgot-password";
 import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
 import { Index as JobListPage } from "./pages/job-list";
@@ -29,7 +29,7 @@ import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
 import { index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
 import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
-import { index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
+import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
 // Employer Pages
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
 import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
@@ -39,17 +39,22 @@ import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
 import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
 import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
-import { index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
+import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
 import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
 import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
 import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
-//Job Create 
+//Job Create
 //
+import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
+
 // import { index as DemoListCVsPage } from "./pages/demoListCVs";
 // import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
 // import { CreateCVLayout } from "./layouts/CreateCVLayout";
+// Admin Pages
+import { AdminLayout } from "./layouts/AdminLayout";
+import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
 
 function App() {
   return (
@@ -293,15 +298,18 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
               <Route path="/employer" element={<UserLayout />}>
                 <Route path="job-list" element={<JobListPage />} />
               </Route>
-
               <Route
-  path="/employer/manage-jobs/edit/:jobId"
-  element={<EditJobPage />}
-/>
+                path="/employer/manage-jobs/edit/:jobId"
+                element={<EditJobPage />}
+              />
+              <Route
+                path="/employer/manage-jobs/candidates/:jobId"
+                element={<CandidatesPage />}
+              />{" "}
+              {/* ThanhAdd page candidares*/}
               <Route
                 index
                 path="manage-jobs"
@@ -390,6 +398,27 @@ function App() {
                 }
               />
 
+            </Route>
+            {/* Admin */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route
+                index
+                path="dashboard"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="users-management"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <AdminDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
           </Routes>
         </Router>

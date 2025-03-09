@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getJobById, updateJob } from "../../../services/jobServices";
+import { Editor } from "@tinymce/tinymce-react";
 import { toast } from "react-toastify";
+import TagDropdown from "../post-job/TagDropdown";
+import { vietnamProvinces } from "../../../helpers/getLocationVN";
 
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY
 const EditJobPage = () => {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [locations, setLocations] = useState([]);
   const [jobData, setJobData] = useState({
+    jobTagID: [],
     title: "",
     description: "",
     level: "",
     education: "",
-    numberOfRecruitment: 1,
+    numberOfRecruitment: "",
     workType: "",
     location: "",
     salary: "",
@@ -20,25 +27,32 @@ const EditJobPage = () => {
     deadline: "",
   });
 
+  // Khởi tạo danh sách locations
+  useEffect(() => {
+    setLocations(vietnamProvinces);
+  }, []);
+
   // Fetch job data by ID
   useEffect(() => {
     const fetchJob = async () => {
       try {
+        setIsLoading(true);
         const data = await getJobById(jobId);
         // Ensure the deadline is in correct format for the input type="date"
         const formattedDeadline = data.deadline
           ? new Date(data.deadline).toLocaleDateString("en-CA") // "en-CA" cho định dạng YYYY-MM-DD
           : "";
 
-        setJobData((prevState) => ({
-          ...prevState,
+        setJobData({
           ...data, // Spread other job data
           deadline: formattedDeadline, // Set formatted deadline
-        }));
-        console.log("Job data:", data.deadline);
+        });
+        console.log("Job data:", data);
       } catch (error) {
         console.error("Error fetching job:", error);
         toast.error("Failed to fetch job details.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -48,10 +62,18 @@ const EditJobPage = () => {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setJobData({
-      ...jobData,
+    setJobData(prevData => ({
+      ...prevData,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
+  };
+
+  // Xử lý thay đổi nội dung editor một cách riêng biệt
+  const handleEditorChange = (content) => {
+    setJobData(prevData => ({
+      ...prevData,
+      description: content,
+    }));
   };
 
   // Handle form submit
@@ -67,6 +89,13 @@ const EditJobPage = () => {
     }
   };
 
+  if (isLoading) {
+    return <div className="text-center p-5">Loading job data...</div>;
+  }
+
+  // Kiểm tra xem location đã chọn có trong danh sách không
+  const isLocationValid = jobData.location && locations.some(loc => loc.name === jobData.location);
+
   return (
     <section className="user-dashboard">
       <div className="dashboard-outer">
@@ -77,8 +106,6 @@ const EditJobPage = () => {
 
         <div className="row">
           <div className="col-lg-12">
-            {/*  */}
-            {/* Ls widget */}
             <div className="ls-widget">
               <div className="tabs-box">
                 <div className="widget-title">
@@ -99,14 +126,26 @@ const EditJobPage = () => {
                         />
                       </div>
 
+                      {/* TinyMCE Editor for Job Description */}
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Description</label>
-                        <textarea
-                          name="description"
+                        <Editor
+                          apiKey={API_TYNI_KEY}
                           value={jobData.description}
-                          onChange={handleChange}
-                          placeholder="Description"
-                          required
+                          init={{
+                            height: 300,
+                            menubar: false,
+                            plugins: [
+                              "advlist", "autolink", "lists", "link", "charmap", "print", "preview",
+                              "anchor", "searchreplace", "visualblocks", "code", "fullscreen",
+                              "insertdatetime", "media", "table", "paste", "help", "wordcount"
+                            ],
+                            toolbar:
+                              "undo redo | formatselect | bold italic backcolor | \
+                              alignleft aligncenter alignright alignjustify | \
+                              bullist numlist outdent indent | removeformat | help",
+                          }}
+                          onEditorChange={handleEditorChange}
                         />
                       </div>
 
@@ -120,7 +159,16 @@ const EditJobPage = () => {
                           placeholder="Education level"
                         />
                       </div>
-
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Number Of Recruitment</label>
+                        <input
+                          type="number"
+                          name="numberOfRecruitment"
+                          value={jobData.numberOfRecruitment}
+                          onChange={handleChange}
+                          placeholder="Required number of recruitment"
+                        />
+                      </div>
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Experience (years)</label>
                         <input
@@ -146,16 +194,35 @@ const EditJobPage = () => {
                           <option value="Freelance">Freelance</option>
                         </select>
                       </div>
-
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Tags</label>
+                        <TagDropdown
+                          setSearchParams={setJobData}
+                          initialTags={jobData.jobTagID}
+                        />
+                      </div>
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Location</label>
-                        <input
-                          type="text"
+                        <select
                           name="location"
-                          value={jobData.location}
+                          value={jobData.location || ""}
                           onChange={handleChange}
-                          placeholder="Location"
-                        />
+                          className="form-control"
+                        >
+                          <option value="">Select a Location</option>
+                          {locations.length > 0 ? (
+                            locations.map((location) => (
+                              <option key={location.name} value={location.name}>
+                                {location.name}
+                              </option>
+                            ))
+                          ) : (
+                            <option>No Location available</option>
+                          )}
+                          {jobData.location && !isLocationValid && (
+                            <option value={jobData.location}>{jobData.location} (Current)</option>
+                          )}
+                        </select>
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
@@ -175,7 +242,7 @@ const EditJobPage = () => {
                         <input
                           type="date"
                           name="deadline"
-                          value={jobData.deadline.split("T")[0]} // Lấy phần ngày, bỏ giờ ra
+                          value={jobData.deadline ? jobData.deadline.split("T")[0] : ""} // Đảm bảo không gây lỗi nếu deadline là null
                           onChange={handleChange}
                           min={new Date().toISOString().split("T")[0]} // Giới hạn chỉ có thể chọn ngày hôm nay hoặc ngày trong tương lai
                         />
