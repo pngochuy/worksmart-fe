@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import NotificationDropdown from "./NotificationDropdown";
 
 export const Header = () => {
   const location = useLocation();
@@ -163,7 +164,7 @@ export const Header = () => {
                   </a>
                 )}
 
-                <a
+                {/* <a
                   href={`/${userRole.toLowerCase()}/notifications`}
                   className="menu-btn"
                   style={{ marginRight: "30px" }}
@@ -173,7 +174,8 @@ export const Header = () => {
                   </span>
 
                   <span className="icon la la-bell"></span>
-                </a>
+                </a> */}
+                <NotificationDropdown userId={userDataLogin?.userID} />
                 <DropdownMenu className="ml-8">
                   <DropdownMenuTrigger>
                     <Avatar>
