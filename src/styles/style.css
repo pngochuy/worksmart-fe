@@ -22837,15 +22837,13 @@ Work Section
 .arrow-button {
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 25px;
   cursor: pointer;
   color: green;
-  border-radius: 50%; /* Làm tròn nút */
 }
 
 .arrow-button:hover {
   background-color: darkgreen;
-  transform: scale(1);
 }
 
 .verify-later {
