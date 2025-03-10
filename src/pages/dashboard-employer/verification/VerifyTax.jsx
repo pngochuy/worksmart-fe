@@ -20,14 +20,25 @@ const taxSchema = z.object({
         .or(z.literal("")),
     address: z.string().optional().or(z.literal("")),
 });
-
+const companySizeOptions = [
+    "1 - 10 employees",
+    "11 - 50 employees",
+    "51 - 200 employees",
+    "201 - 500 employees",
+    "501 - 1000 employees",
+    "Trên 1000 employees"
+]
 export const VerifyTax = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
+    const [isPending, setIsPending] = useState(false);
+    const [verificationMessage, setVerificationMessage] = useState("");
 
     const {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors },
     } = useForm({
         mode: "onChange",
@@ -46,10 +57,18 @@ export const VerifyTax = () => {
                     setValue("companyDescription", data.companyDescription || "");
                     setValue("phoneNumber", data.phoneNumber || "");
                     setValue("address", data.address || "");
+
+                    if (data.taxVerificationStatus === "Approved") {
+                        setIsVerified(true);
+                        setVerificationMessage("✅ Your tax verification has been approved.");
+                    }
+                    if (data.taxVerificationStatus === "Pending") {
+                        setIsPending(true);
+                        setVerificationMessage("⏳ Your tax verification is pending. Please wait for approval.");
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching tax verification info", error);
-                toast.error("Error loading tax verification data");
             }
         };
         loadTaxInfo();
@@ -62,8 +81,18 @@ export const VerifyTax = () => {
             await verifyTax(formData);
             toast.success("Tax verification submitted successfully!");
         } catch (error) {
-            console.error("Error submitting tax verification", error);
-            toast.error(` ${error.message}`);
+            const errorMessage = error.response?.data?.message || "Error submitting tax verification, please try again.";
+            toast.error(errorMessage);
+
+            if (error.response?.status === 400) {
+                if (errorMessage.includes("Tax verification already completed")) {
+                    toast.error("You have already completed tax verification.");
+                } else if (errorMessage.includes("Authentication request has been sent")) {
+                    toast.error("Your tax verification is already in progress.");
+                } else if (errorMessage.includes("Tax code already verified")) {
+                    toast.error("Your tax code has already been verified.");
+                }
+            }
         } finally {
             setIsLoading(false);
         }
@@ -87,8 +116,12 @@ export const VerifyTax = () => {
                                     <div className="widget-title">
                                         <h4>My Profile</h4>
                                     </div>
-
                                     <div className="widget-content">
+                                        <div className="form-group col-lg-12 col-md-12">
+                                            <p className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"}`}>
+                                                {verificationMessage}
+                                            </p>
+                                        </div>
                                         <form className="default-form" onSubmit={handleSubmit(onSubmit)}>
                                             <div className="row">
                                                 {/* Tax ID */}
@@ -108,7 +141,15 @@ export const VerifyTax = () => {
                                                 {/* Company Size */}
                                                 <div className="form-group col-lg-6 col-md-12">
                                                     <label>Company Size</label>
-                                                    <input type="text" {...register("companySize")} />
+                                                    <select {...register("companySize")} onChange={(e) => setValue("companySize", e.target.value)}>
+                                                        <option value="">Chọn...</option>
+                                                        {companySizeOptions.map((size, index) => (
+                                                            <option key={index} value={size}>
+                                                                {size}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {errors.companySize && <p>{errors.companySize.message}</p>}
                                                 </div>
 
                                                 {/* Company Name */}
@@ -140,8 +181,8 @@ export const VerifyTax = () => {
 
                                                 {/* Submit Button */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <button className="theme-btn btn-style-one" type="submit" disabled={isLoading}>
-                                                        {isLoading ? "Submitting..." : "Verify Tax"}
+                                                    <button className="theme-btn btn-style-one" type="submit" disabled={isLoading || isVerified || isPending}>
+                                                        {isVerified ? "Already Verified" : isPending ? "Verification Pending" : isLoading ? "Submitting..." : "Verify Tax"}
                                                     </button>
                                                 </div>
                                             </div>

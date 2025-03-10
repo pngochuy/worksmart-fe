@@ -1,12 +1,38 @@
-import { uploadBusinessLicense, uploadImagesProfile } from "@/services/employerServices";
-import { useState } from "react";
+import { uploadBusinessLicense, uploadImagesProfile, fetchCompanyProfile } from "@/services/employerServices";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
 export const BusinessLicense = () => {
     const [businessLicense, setBusinessLicense] = useState("");
     const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
     const [businessLicenseError, setBusinessLicenseError] = useState("");
+    const [verificationMessage, setVerificationMessage] = useState("");
+    const [isVerified, setIsVerified] = useState(false);
+    const [isPending, setIsPending] = useState(false);
     const [isUploaded, setIsUploaded] = useState(false);
+
+    useEffect(() => {
+        const loadBusinessLicenseInfo = async () => {
+            try {
+                const data = await fetchCompanyProfile();
+                if (data) {
+                    setBusinessLicense(data.businessLicenseImageUrl || "");
+
+                    if (data.licenseVerificationStatus === "Approved") {
+                        setIsVerified(true);
+                        setVerificationMessage("✅ Your business license has been approved.");
+                    }
+                    if (data.licenseVerificationStatus === "Pending") {
+                        setIsPending(true);
+                        setVerificationMessage("⏳ Your business license verification is pending. Please wait for approval.");
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching business license info", error);
+            }
+        };
+        loadBusinessLicenseInfo();
+    }, []);
 
     const handleBusinessLicenseChange = async (event) => {
         const file = event.target.files[0];
@@ -32,7 +58,7 @@ export const BusinessLicense = () => {
 
     const handleSubmitBusinessLicense = async () => {
         if (!businessLicense) {
-            alert("Please upload a business license before submitting!");
+            toast.warn("Please upload a business license before submitting!");
             return;
         }
 
@@ -65,9 +91,15 @@ export const BusinessLicense = () => {
                                 <div className="tabs-box">
                                     <div className="widget-title">
                                         <h4>Business License</h4>
+                                        <div className="form-group col-lg-12 col-md-12">
+                                            <p className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"}`}>
+                                                {verificationMessage}
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <div className="business-license-container">
+                                        
                                         <div className="uploading-outer">
                                             {businessLicense ? (
                                                 <div className="row image-container" style={{ marginTop: "55px" }}>
@@ -98,9 +130,9 @@ export const BusinessLicense = () => {
                                                                 width: "80px",
                                                                 height: "40px",
                                                             }}
-                                                            disabled={isUploaded}
+                                                            disabled={isUploaded || isPending || isVerified}
                                                         >
-                                                            Upload
+                                                            {isVerified ? "Verified" : isPending ? "Pending" : isUploaded ? "Uploading..." : "Upload"}
                                                         </button>
                                                         <br />
                                                         <button
@@ -171,7 +203,7 @@ export const BusinessLicense = () => {
                                         </div>
                                     </div>
                                     <p className="warning-text" style={{ color: "orange" }}>
-                                    ⚠ Published documents must be complete on all sides and have no signs of editing/covering/cutting of information.                                    </p>
+                                        ⚠ Published documents must be complete on all sides and have no signs of editing/covering/cutting of information.                                    </p>
                                 </div>
                             </div>
                         </div>
