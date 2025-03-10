@@ -18,10 +18,12 @@ export const BusinessLicense = () => {
                 console.log("Business License Image URL:", response.imageUrl);
             } catch (error) {
                 console.error("Error uploading business license image:", error);
+
+                const errorMessage = error.response?.data?.message || "Error uploading license, please try again.";
+                toast.error(errorMessage);
             }
         }
     };
-
 
     const handleRemoveBusinessLicense = () => {
         setBusinessLicense(null);
@@ -41,21 +43,8 @@ export const BusinessLicense = () => {
             toast.success("Business License submitted successfully!");
         } catch (error) {
             console.error("Error submitting business license:", error);
-
-            const errorMessage = error?.response?.data?.message || "Upload business license failed. Please try again.";
-            if (errorMessage.includes("VerifyTax")) {
-                setBusinessLicenseError("businessLicense", {
-                    type: "manual",
-                    message: "Bạn phải VerifyTax trước khi xác minh giấy phép kinh doanh!"
-                });
-                toast.error("Bạn phải VerifyTax trước khi xác minh giấy phép kinh doanh!");
-            } else {
-                setBusinessLicenseError("businessLicense", {
-                    type: "manual",
-                    message: errorMessage
-                });
-                toast.error(errorMessage);
-            }
+            const errorMessage = error.response?.data?.message || "Error submitting license, please try again.";
+            toast.error(errorMessage);
         }
     };
 

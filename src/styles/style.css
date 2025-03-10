@@ -22729,6 +22729,135 @@ Work Section
   margin-top: 5px;
 }
 
+.verification-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap; /* Nếu màn hình nhỏ, ảnh sẽ tự động xuống dòng */
+}
+
+.employer-verify-widget {
+  background: #f8fbff; /* Màu nền xanh trời nhạt */
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 5px solid #007bff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  margin: 0;
+  height: 565px;
+  flex: 1;
+}
+
+.employer-verify-widget-title h2 {
+  font-size: 24px;
+  color: #004a99;
+  margin-bottom: 10px;
+}
+
+.employer-verify-widget-title p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.employer-verify-widget-title ul {
+  list-style: none;
+  padding: 0;
+}
+
+.employer-verify-widget-title ul li {
+  margin-bottom: 10px;
+}
+
+.employer-verify-widget-title ul li button {
+  width: 100%;
+  max-width: 280px;
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.employer-verify-widget-title ul li button:hover {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.verification-banner {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.verification-banner img {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.completion-status {
+  color: green;
+  font-weight: bold;
+}
+
+.verification-list {
+  margin-top: 15px;
+}
+
+.verification-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.verification-item:hover {
+  background: #e9f5ee;
+  transform: translateY(-2px);
+}
+
+.radio-circle {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.arrow-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: green;
+  border-radius: 50%; /* Làm tròn nút */
+}
+
+.arrow-button:hover {
+  background-color: darkgreen;
+  transform: scale(1);
+}
+
+.verify-later {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.verify-later a {
+  color: #777;
+  text-decoration: none;
+}
+
 @media print {
   #resumePreviewContent {
     zoom: 1 !important;
