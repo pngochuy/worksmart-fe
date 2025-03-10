@@ -85,7 +85,7 @@ export const VerificationForm = () => {
                                                     <span className="radio-circle"></span>
                                                     <span>Update Business Registration Certificate</span>
                                                     <button className="arrow-button" onClick={handleUploadLicense}>
-                                                        <i class="fa-regular fa-circle-right" style={{fontSize: "33px"}}></i>
+                                                        <i class="fa-regular fa-circle-right" style={{fontSize: "33px"}}    ></i>
                                                     </button>
                                                 </div>
                                             </div>
