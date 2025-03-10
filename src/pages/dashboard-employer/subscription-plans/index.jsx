@@ -13,7 +13,7 @@ export const index = () => {
 
     if (verificationLevel < 3) {
       if (!toast.isActive("verification-warning")) {
-        toast.warn("⚠️ You need to verify the company before posting!", {
+        toast.warn("You need to verify the company before posting!", {
           toastId: "verification-warning",
         });
       }

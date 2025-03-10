@@ -60,11 +60,11 @@ export const VerifyTax = () => {
 
                     if (data.taxVerificationStatus === "Approved") {
                         setIsVerified(true);
-                        setVerificationMessage("✅ Your tax verification has been approved.");
+                        setVerificationMessage("Your tax verification has been approved.");
                     }
                     if (data.taxVerificationStatus === "Pending") {
                         setIsPending(true);
-                        setVerificationMessage("⏳ Your tax verification is pending. Please wait for approval.");
+                        setVerificationMessage("Your tax verification is pending. Please wait for approval.");
                     }
                 }
             } catch (error) {

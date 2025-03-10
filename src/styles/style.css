@@ -22840,6 +22840,9 @@ Work Section
   font-size: 25px;
   cursor: pointer;
   color: green;
+  border-radius: 50%;
+  width: 33px;
+  height: 33px;
 }
 
 .arrow-button:hover {

@@ -20,11 +20,11 @@ export const BusinessLicense = () => {
 
                     if (data.licenseVerificationStatus === "Approved") {
                         setIsVerified(true);
-                        setVerificationMessage("✅ Your business license has been approved.");
+                        setVerificationMessage("Your business license has been approved.");
                     }
                     if (data.licenseVerificationStatus === "Pending") {
                         setIsPending(true);
-                        setVerificationMessage("⏳ Your business license verification is pending. Please wait for approval.");
+                        setVerificationMessage("Your business license verification is pending. Please wait for approval.");
                     }
                 }
             } catch (error) {
@@ -180,7 +180,7 @@ export const BusinessLicense = () => {
                                         </div>
                                         {isUploaded && (
                                             <p className="success-text" style={{ color: "green", marginTop: "10px" }}>
-                                                ✅ You have successfully uploaded the photo, please wait a few minutes for the system to approve it for you.
+                                                You have successfully uploaded the photo, please wait a few minutes for the system to approve it for you.
                                             </p>
                                         )}
                                         <div></div>

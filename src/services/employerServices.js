@@ -29,7 +29,7 @@ export const fetchCompanyProfile = async () => {
     console.error("Error fetching candidate profile:", error);
     // Xử lý lỗi
     if (error.response && error.response.status === 401) {
-      toast.warn("⚠ Your session has expired. Please log in again.");
+      toast.warn("Your session has expired. Please log in again.");
       localStorage.removeItem("accessToken");
       window.location.href = "/login";
     }
@@ -37,7 +37,7 @@ export const fetchCompanyProfile = async () => {
       error.message.includes("ERR_CONNECTION_REFUSED") ||
       error.code === "ERR_NETWORK"
     ) {
-      toast.warn("🚫 Unable to connect to server. Please try again later.");
+      toast.warn(" Unable to connect to server. Please try again later.");
       throw new Error("Cann't connect to server.");
     }
 
