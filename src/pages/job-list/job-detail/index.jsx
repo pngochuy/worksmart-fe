@@ -1,4 +1,33 @@
-export const index = () => {
+import LoadingButton from "@/components/LoadingButton";
+import { applyToJob } from "@/services/jobServices";
+import { MoveUpRight } from "lucide-react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
+export const Index = () => {
+  const [loading, setLoading] = useState(false);
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userID = user?.userID || null;
+  const { jobId } = useParams(); // Lấy jobId từ URL
+
+  const handleClick = async () => {
+    setLoading(true); // Đặt trạng thái loading thành true
+
+    try {
+      // Gọi hàm từ service để gửi yêu cầu đến API
+      await applyToJob(userID, jobId);
+
+      // Thông báo thành công
+      toast.success("Application submitted successfully.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false); // Đặt trạng thái loading thành false sau khi hoàn thành
+    }
+  };
+
   return (
     <>
       {/* Job Detail Section */}
@@ -335,10 +364,19 @@ export const index = () => {
                     <h4 className="fz20 fw500 mb10">Application ends</h4>
                     <p className="text mb15">May 18, 2026</p>
                     <div className="btn-box mb-0">
-                      <a href="#" className="theme-btn btn-style-one">
+                      {/* <a href="#" className="theme-btn btn-style-one">
                         Apply For Job{" "}
                         <i className="fal fa-long-arrow-right ms-3"></i>
-                      </a>
+                      </a> */}
+                      <LoadingButton
+                        className="theme-btn btn-style-one"
+                        type="button"
+                        onClick={handleClick}
+                        loading={loading}
+                      >
+                        <MoveUpRight className="size-4 " />
+                        Apply For Job
+                      </LoadingButton>
                     </div>
                   </div>
                   <div className="sidebar-widget company-widget at-jsv6">

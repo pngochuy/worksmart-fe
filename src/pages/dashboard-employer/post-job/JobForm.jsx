@@ -5,13 +5,15 @@ import { fetchTags } from "../../../services/tagServices";
 import { useNavigate } from "react-router-dom";
 import { vietnamProvinces } from "../../../helpers/getLocationVN";
 import TagDropdown from "./TagDropdown";
+import { Editor } from "@tinymce/tinymce-react";
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 export const JobForm = () => {
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
   const [jobData, setJobData] = useState({
     userID: userID,
-    jobTagID: [], 
+    jobTagID: [],
     title: "",
     description: "",
     level: "",
@@ -32,8 +34,8 @@ export const JobForm = () => {
   useEffect(() => {
     const getTags = async () => {
       try {
-        const data = await fetchTags();  // Gọi API để lấy tags
-        setTags(data);  // Cập nhật state tags với dữ liệu từ API
+        const data = await fetchTags(); // Gọi API để lấy tags
+        setTags(data); // Cập nhật state tags với dữ liệu từ API
       } catch (error) {
         console.error("Error fetching tags:", error);
         toast.error("Failed to load tags.");
@@ -42,6 +44,14 @@ export const JobForm = () => {
     getTags();
     setLocation(vietnamProvinces);
   }, []);
+
+  // Xử lý thay đổi nội dung editor một cách riêng biệt
+  const handleEditorChange = (content) => {
+    setJobData((prevData) => ({
+      ...prevData,
+      description: content,
+    }));
+  };
 
   // Cập nhật thông tin trong form
   const handleChange = (e) => {
@@ -55,7 +65,7 @@ export const JobForm = () => {
       // Cập nhật jobTagID khi người dùng chọn tag
       setJobData({
         ...jobData,
-        jobTagID: value,  // Lưu tagID duy nhất
+        jobTagID: value, // Lưu tagID duy nhất
       });
     } else {
       setJobData({
@@ -69,8 +79,8 @@ export const JobForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        await createJob(jobData);
-      console.log(jobData)  // Gửi thông tin công việc cùng với jobTagID đã chọn
+      await createJob(jobData);
+      console.log(jobData); // Gửi thông tin công việc cùng với jobTagID đã chọn
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
     } catch (error) {
@@ -109,7 +119,7 @@ export const JobForm = () => {
                         />
                       </div>
 
-                      <div className="form-group col-lg-12 col-md-12">
+                      {/* <div className="form-group col-lg-12 col-md-12">
                         <label>Job Description</label>
                         <textarea
                           name="description"
@@ -117,6 +127,44 @@ export const JobForm = () => {
                           onChange={handleChange}
                           placeholder="Enter job description"
                           required
+                        />
+                      </div> */}
+
+                      {/* TinyMCE Editor for Job Description */}
+                      <div className="form-group col-lg-12 col-md-12">
+                        <label>Job Description</label>
+                        <Editor
+                          apiKey={API_TYNI_KEY}
+                          value={jobData.description}
+                          init={{
+                            height: 300,
+                            menubar: false,
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "charmap",
+                              "print",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "paste",
+                              "help",
+                              "wordcount",
+                            ],
+                            toolbar:
+                              "undo redo | formatselect | bold italic backcolor | \
+                                                    alignleft aligncenter alignright alignjustify | \
+                                                    bullist numlist outdent indent | removeformat | help",
+                          }}
+                          onEditorChange={handleEditorChange}
                         />
                       </div>
 

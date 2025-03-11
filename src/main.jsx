@@ -3,10 +3,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 // Import CSS
 // import "./styles/animate.css";
-import "./styles/bootstrap.css";
+import "./assets/styles/bootstrap.css";
 // import "./styles/chosen.css";
 // import "./styles/flaticon.css";
-import "./styles/fontawesome.css";
+import "./assets/styles/fontawesome.css";
 // import "./styles/icons.css";
 // import "./styles/jquery-ui.min.css";
 // import "./styles/jquery.fancybox.min.css";
@@ -15,9 +15,9 @@ import "./styles/fontawesome.css";
 // import "./styles/mmenu.css";
 // import "./styles/owl.css";
 // import "./styles/select2.min.css";
-import "./styles/style.css";
-import "./styles/index.css";
-import "./styles/responsive.css";
+import "./assets/styles/style.css";
+import "./assets/styles/index.css";
+import "./assets/styles/responsive.css";
 
 // Import các thư viện JS cần thiết
 import "./assets/js/jquery.js";

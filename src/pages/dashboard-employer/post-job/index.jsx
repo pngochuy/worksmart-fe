@@ -5,17 +5,17 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 export const Index = () => {
-  const [verificationLevel, setVerificationLevel] = useState(1);
-  const navigate = useNavigate();
+  // const [verificationLevel, setVerificationLevel] = useState(1);
+  // const navigate = useNavigate();
 
-  useEffect(() => {
-      const level = getVerificationLevel();
-      setVerificationLevel(level);
+  // useEffect(() => {
+  //     const level = getVerificationLevel();
+  //     setVerificationLevel(level);
   
-      if (verificationLevel < 3) {
-          navigate("/employer/verification");
-      }
-    }, []);
+  //     if (verificationLevel < 3) {
+  //         navigate("/employer/verification");
+  //     }
+  //   }, []);
   
   return <JobForm />;
   // return (

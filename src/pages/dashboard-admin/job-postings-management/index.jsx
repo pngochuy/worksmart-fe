@@ -7,7 +7,15 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreHorizontal,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,40 +37,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getUserLoginData } from "@/helpers/decodeJwt";
-
-const data = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-];
+import { getAllJobs } from "@/services/adminServices";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const columns = [
   {
@@ -88,43 +70,79 @@ export const columns = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
+    accessorKey: "jobID",
+    header: "Job ID",
+    cell: ({ row }) => <div>{row.getValue("jobID")}</div>,
   },
   {
-    accessorKey: "email",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Email
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    accessorKey: "title",
+    header: "Title",
+    cell: ({ row }) => <div>{row.getValue("title")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorKey: "education",
+    header: "Education",
+    cell: ({ row }) => <div>{row.getValue("education")}</div>,
+  },
+  {
+    accessorKey: "workType",
+    header: "Work Type",
+    cell: ({ row }) => <div>{row.getValue("workType")}</div>,
+  },
+  {
+    accessorKey: "location",
+    header: "Location",
+    cell: ({ row }) => <div>{row.getValue("location")}</div>,
+  },
+  {
+    accessorKey: "salary",
+    header: "Salary (VND)",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
+      const salary = parseFloat(row.getValue("salary"));
+      const formatted = new Intl.NumberFormat("vi-VN", {
+        style: "decimal",
+        currency: "VND",
+      }).format(salary);
 
-      return <div className="text-right font-medium">{formatted}</div>;
+      return <div className="text-left font-medium">{formatted}</div>; // Ensure text is aligned left
     },
   },
   {
+    accessorKey: "exp",
+    header: "Experience (Years)",
+    cell: ({ row }) => <div> {row.getValue("exp")}</div>,
+  },
+  {
+    accessorKey: "priority",
+    header: "Priority",
+    cell: ({ row }) => <div>{row.getValue("priority") ? "Yes" : "No"}</div>,
+  },
+  {
+    accessorKey: "deadline",
+    header: "Deadline",
+    cell: ({ row }) => (
+      <div>{new Date(row.getValue("deadline")).toLocaleDateString()}</div>
+    ),
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Created At",
+    cell: ({ row }) => (
+      <div>{new Date(row.getValue("createdAt")).toLocaleDateString()}</div>
+    ),
+  },
+  {
+    accessorKey: "updatedAt",
+    header: "Updated At",
+    cell: ({ row }) => (
+      <div>{new Date(row.getValue("updatedAt")).toLocaleDateString()}</div>
+    ),
+  },
+  {
     id: "actions",
-    enableHiding: false,
+    enableHiding: false, // ko xuất hiện trong button Columns
     cell: ({ row }) => {
-      const payment = row.original;
+      const job = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -136,13 +154,13 @@ export const columns = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(job.jobID)}
             >
-              Copy payment ID
+              Copy Job ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem>View Job Details</DropdownMenuItem>
+            <DropdownMenuItem>View Company</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -153,11 +171,41 @@ export const columns = [
 export const Index = () => {
   const [sorting, setSorting] = React.useState([]);
   const [columnFilters, setColumnFilters] = React.useState([]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
+  //   const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [columnVisibility, setColumnVisibility] = React.useState({
+    jobID: false,
+    title: true,
+    education: false,
+    workType: true,
+    location: true,
+    salary: true,
+    exp: false,
+    priority: false,
+    deadline: true,
+    createdAt: true,
+    updatedAt: false,
+    actions: true,
+  });
   const [rowSelection, setRowSelection] = React.useState({});
+  const [jobData, setJobData] = React.useState([]); // State to store the API data
+
+  // Fetch job data from API
+  React.useEffect(() => {
+    const fetchJobData = async () => {
+      try {
+        const response = await getAllJobs();
+
+        setJobData(response);
+      } catch (err) {
+        console.error("Error fetching job data:", err);
+      }
+    };
+
+    fetchJobData();
+  }, []);
 
   const table = useReactTable({
-    data,
+    data: jobData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -173,13 +221,14 @@ export const Index = () => {
       columnVisibility,
       rowSelection,
     },
+    // Thiết lập số dòng mặc định mỗi trang
+    initialState: {
+      pagination: {
+        pageSize: 5,
+      },
+    },
   });
-  const [userDataLogin, setUserDataLogin] = React.useState(null); // State lưu người dùng đăng nhập
-
-  React.useEffect(() => {
-    const user = getUserLoginData();
-    setUserDataLogin(user);
-  }, []);
+  console.log("table", table.getRowModel());
   return (
     <>
       <section className="user-dashboard">
@@ -190,17 +239,17 @@ export const Index = () => {
               <div className="ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
-                    <h2 className="text-3xl">Users Management</h2>
+                    <h2 className="text-3xl">Job Postings Management</h2>
                     <div className="w-full">
                       <div className="flex items-center py-4">
                         <Input
-                          placeholder="Filter emails..."
+                          placeholder="Filter titles..."
                           value={
-                            table.getColumn("email")?.getFilterValue() || ""
+                            table.getColumn("title")?.getFilterValue() || ""
                           }
                           onChange={(event) =>
                             table
-                              .getColumn("email")
+                              .getColumn("title")
                               ?.setFilterValue(event.target.value)
                           }
                           className="max-w-sm"
@@ -214,7 +263,7 @@ export const Index = () => {
                           <DropdownMenuContent align="end">
                             {table
                               .getAllColumns()
-                              .filter((column) => column.getCanHide())
+                              .filter((column) => column.getCanHide()) // lấy hết columns
                               .map((column) => (
                                 <DropdownMenuCheckboxItem
                                   key={column.id}
@@ -284,23 +333,83 @@ export const Index = () => {
                           {table.getFilteredRowModel().rows.length} row(s)
                           selected.
                         </div>
-                        <div className="space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
+                        <div className="flex items-center space-x-2">
+                          <p className="text-sm font-medium">Rows per page</p>
+                          <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={(value) => {
+                              table.setPageSize(Number(value));
+                            }}
                           >
-                            Previous
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                          >
-                            Next
-                          </Button>
+                            <SelectTrigger className="h-8 w-[70px]">
+                              <SelectValue
+                                placeholder={
+                                  table.getState().pagination.pageSize
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                              {[5, 10, 20, 30, 40].map((pageSize) => (
+                                <SelectItem
+                                  key={pageSize}
+                                  value={`${pageSize}`}
+                                >
+                                  {pageSize}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                            Page {table.getState().pagination.pageIndex + 1} of{" "}
+                            {table.getPageCount()}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              className="hidden h-8 w-8 p-0 lg:flex"
+                              onClick={() => table.setPageIndex(0)}
+                              disabled={!table.getCanPreviousPage()}
+                            >
+                              <span className="sr-only">Go to first page</span>
+                              <ChevronsLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                              onClick={() => table.previousPage()}
+                              disabled={!table.getCanPreviousPage()}
+                            >
+                              <span className="sr-only">
+                                Go to previous page
+                              </span>
+                              <ChevronLeftIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                console.log("Previous page");
+                                table.nextPage();
+                              }}
+                              disabled={!table.getCanNextPage()}
+                            >
+                              <span className="sr-only">Go to next page</span>
+                              <ChevronRightIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="hidden h-8 w-8 p-0 lg:flex"
+                              onClick={() =>
+                                table.setPageIndex(table.getPageCount() - 1)
+                              }
+                              disabled={!table.getCanNextPage()}
+                            >
+                              <span className="sr-only">Go to last page</span>
+                              <ChevronsRight className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>

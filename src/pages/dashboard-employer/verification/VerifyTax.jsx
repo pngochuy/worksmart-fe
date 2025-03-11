@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import { fetchCompanyProfile, verifyTax } from "@/services/employerServices";
+import { Editor } from "@tinymce/tinymce-react";
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 const taxSchema = z.object({
     taxId: z.string().min(6, "Tax ID must be at least 6 characters.").optional().or(z.literal("")),
@@ -162,7 +164,39 @@ export const VerifyTax = () => {
                                                 {/* Company Description */}
                                                 <div className="form-group col-lg-12 col-md-12">
                                                     <label>Company Description</label>
-                                                    <textarea {...register("companyDescription")} />
+                                                    {/* <textarea {...register("companyDescription")} /> */}
+                                                    <Editor
+                                                        apiKey={API_TYNI_KEY}
+                                                        {...register("companyDescription")}
+                                                        init={{
+                                                            height: 300,
+                                                            menubar: false,
+                                                            plugins: [
+                                                                "advlist",
+                                                                "autolink",
+                                                                "lists",
+                                                                "link",
+                                                                "charmap",
+                                                                "print",
+                                                                "preview",
+                                                                "anchor",
+                                                                "searchreplace",
+                                                                "visualblocks",
+                                                                "code",
+                                                                "fullscreen",
+                                                                "insertdatetime",
+                                                                "media",
+                                                                "table",
+                                                                "paste",
+                                                                "help",
+                                                                "wordcount",
+                                                            ],
+                                                            toolbar:
+                                                                "undo redo | formatselect | bold italic backcolor | \
+                                                                                                        alignleft aligncenter alignright alignjustify | \
+                                                                                                        bullist numlist outdent indent | removeformat | help",
+                                                        }}
+                                                    />
                                                     {errors.companyDescription && <span className="text-danger">{errors.companyDescription.message}</span>}
                                                 </div>
 
