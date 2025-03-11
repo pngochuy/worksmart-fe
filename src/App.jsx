@@ -33,7 +33,7 @@ import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidat
 // Employer Pages
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
 import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
-import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
+import { Index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
 import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";

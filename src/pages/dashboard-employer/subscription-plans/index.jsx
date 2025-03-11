@@ -1,29 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { getVerificationLevel } from "@/helpers/decodeJwt";
-
 export const index = () => {
-  const navigate = useNavigate();
-  const [verificationLevel, setVerificationLevel] = useState(1);
-
-  useEffect(() => {
-    const level = getVerificationLevel();
-    setVerificationLevel(level);
-
-    if (verificationLevel < 3) {
-      if (!toast.isActive("verification-warning")) {
-        toast.warn("You need to verify the company before posting!", {
-          toastId: "verification-warning",
-        });
-      }
-      const timeout = setTimeout(() => {
-        navigate("/employer/verification");
-      }, 2000);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [verificationLevel, navigate]);
 
   return (
     <>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { deleteJob, fetchJobs, fetchCandidatesForJob } from "../../../services/jobServices";
+import { getVerificationLevel } from "@/helpers/decodeJwt";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
@@ -16,7 +17,17 @@ export default function ManageJobsPage() {
     PageSize: 3,
     title: "",
   });
+  const [verificationLevel, setVerificationLevel] = useState(1);
 
+  useEffect(() => {
+      const level = getVerificationLevel();
+      setVerificationLevel(level);
+  
+      if (verificationLevel < 3) {
+          navigate("/employer/verification");
+      }
+    }, []);
+  
   useEffect(() => {
     getJobs();
   }, [searchParams.PageSize, searchParams.PageIndex, searchParams.title]);
