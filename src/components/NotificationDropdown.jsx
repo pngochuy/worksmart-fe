@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
-import "../styles/notification.css";
+import "../assets/styles/notification.css";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 const FRONTEND_URL = import.meta.env.VITE_FRONTEND_API_URL;

@@ -257,7 +257,9 @@ export const Index = () => {
 
                               <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
                                 <h4 className="fz20 mb-2 mb-lg-0">
-                                  <a href="/job/job-detail">{job.title}</a>
+                                  <a href={`/job-list/${job.jobID}`}>
+                                    {job.title}
+                                  </a>
                                 </h4>
                                 <p className="mb-0">
                                   by{" "}

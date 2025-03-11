@@ -11,7 +11,7 @@ import { Index as ResetPasswordPage } from "./pages/forgot-password";
 import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
 import { Index as JobListPage } from "./pages/job-list";
-import { index as JobDetailPage } from "./pages/job-list/job-detail";
+import { Index as JobDetailPage } from "./pages/job-list/job-detail";
 import { index as CompanyListPage } from "./pages/company-list";
 import { index as CompanyDetailPage } from "./pages/company-list/company-detail";
 import { Index as CandidateListPage } from "./pages/candidate-list";
@@ -52,6 +52,8 @@ import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPag
 // Admin Pages
 import { AdminLayout } from "./layouts/AdminLayout";
 import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
+import { Index as UsersManagementPage } from "./pages/dashboard-admin/users-management";
+import { Index as JobPostingsManagementPage } from "./pages/dashboard-admin/job-postings-management";
 
 function App() {
   return (
@@ -85,7 +87,7 @@ function App() {
               }
             />
             <Route
-              path="/job-list/:jobName"
+              path="/job-list/:jobId"
               element={
                 <MainLayout>
                   <JobDetailPage />
@@ -303,7 +305,7 @@ function App() {
                 element={<EditJobPage />}
               />
               <Route
-                path="/employer/manage-jobs/candidates/:jobId"
+                path="/employer/manage-jobs/applied-candidates/:jobId"
                 element={<CandidatesPage />}
               />{" "}
               {/* ThanhAdd page candidares*/}
@@ -387,7 +389,16 @@ function App() {
                 path="users-management"
                 element={
                   <ProtectedRoute requiredRoleId="Admin">
-                    <AdminDashboardPage />
+                    <UsersManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="job-postings-management"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <JobPostingsManagementPage />
                   </ProtectedRoute>
                 }
               />

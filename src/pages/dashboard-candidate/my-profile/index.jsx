@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 
 // Validation schema using Zod
 const profileSchema = z.object({
+  avatar: z.string().optional().or(z.literal("")), // Cho phép khoảng trắng
   fullName: z
     .string()
     .min(2, "Full Name must be at least 2 characters.")
@@ -143,9 +144,9 @@ export const Index = () => {
     try {
       const validData = {
         ...formData,
+        avatar,
         isPrivated: formData.isPrivated ? formData.isPrivated : "No",
       };
-      console.log("Data gửi đi:", validData);
       const message = await updateCandidateProfile(validData);
       toast.success(message);
       window.location.reload();
@@ -211,7 +212,7 @@ export const Index = () => {
         setAvatar(imageUrl); // Cập nhật UI ngay khi ảnh mới có
         setFileError(""); // Xóa lỗi nếu có
         toast.success("Profile updated successfully!");
-        window.location.reload();
+        // window.location.reload();
       } catch (error) {
         console.error("Error while uploading photo:", error);
         // toast.error("Error while uploading photo!");
@@ -230,7 +231,7 @@ export const Index = () => {
       // Cập nhật state để giao diện hiển thị form upload lại
       setAvatar("");
       toast.success("Image deleted successfully!");
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Error while deleting photo:", error);
       // toast.error("Error while deleting photo:");
@@ -266,6 +267,7 @@ export const Index = () => {
                           <div className="form-group col-lg-6 col-md-8">
                             <img
                               src={avatar}
+                              {...registerProfile("avatar")}
                               alt="Avatar"
                               className="avatar-preview"
                               style={{
@@ -288,7 +290,11 @@ export const Index = () => {
                                 height: "40px",
                               }}
                             >
-                              {loading ? <span className="loading-spinner"></span> : "Remove"}
+                              {loading ? (
+                                <span className="loading-spinner"></span>
+                              ) : (
+                                "Remove"
+                              )}
                             </button>
                           </div>
                         </div>
@@ -432,7 +438,11 @@ export const Index = () => {
                             className="theme-btn btn-style-one"
                             disabled={isProfileLoading}
                           >
-                              {isProfileLoading ? <span className="loading-spinner"></span> : "Update"}
+                            {isProfileLoading ? (
+                              <span className="loading-spinner"></span>
+                            ) : (
+                              "Update"
+                            )}
                           </button>
                         </div>
                       </div>
@@ -477,8 +487,12 @@ export const Index = () => {
                             className="theme-btn btn-style-one"
                             disabled={isAddressLoading}
                           >
-                              {isAddressLoading ? <span className="loading-spinner"></span> : "Update"}
-                            </button>
+                            {isAddressLoading ? (
+                              <span className="loading-spinner"></span>
+                            ) : (
+                              "Update"
+                            )}
+                          </button>
                         </div>
                       </div>
                     </form>

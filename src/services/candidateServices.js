@@ -44,14 +44,17 @@ export const fetchCandidatesProfile = async () => {
   } catch (error) {
     console.error("Error fetching candidate profile:", error);
     // Xử lý lỗi
-    if (error.response && error.response.status === 401) {
-      toast.warn("⚠ Your session has expired. Please log in again.");
-      localStorage.removeItem("accessToken");
-      window.location.href = "/login";
-    }
-    if (error.message.includes("ERR_CONNECTION_REFUSED") || error.code === "ERR_NETWORK") {
-      toast.warn("🚫 Unable to connect to server. Please try again later.");
-    }
+    // if (error.response && error.response.status === 401) {
+    //   toast.warn("⚠ Your session has expired. Please log in again.");
+    //   localStorage.removeItem("accessToken");
+    //   window.location.href = "/login";
+    // }
+    // if (
+    //   error.message.includes("ERR_CONNECTION_REFUSED") ||
+    //   error.code === "ERR_NETWORK"
+    // ) {
+    //   toast.warn("🚫 Unable to connect to server. Please try again later.");
+    // }
 
     throw error;
   }
@@ -87,7 +90,7 @@ export const updateCandidateProfile = async (profileData) => {
       localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
     }
 
-    return "Profile updated successfully!";
+    return "Profile updated successfully!"; // or upload successfully
   } catch (error) {
     console.error("Error updating profile:", error);
     toast.error("Error updating profile!");
@@ -110,10 +113,10 @@ export const updateCandidateAddress = async (addressData) => {
     });
 
     return "Address updated successfully!";
-  } catch (error) {qư
+  } catch (error) {
     console.error("Error updating address:", error);
     toast.error("Error updating address!");
-    throw error;e
+    throw error;
   }
 };
 

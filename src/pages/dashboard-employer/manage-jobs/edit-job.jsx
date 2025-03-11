@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import TagDropdown from "../post-job/TagDropdown";
 import { vietnamProvinces } from "../../../helpers/getLocationVN";
 
-const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 const EditJobPage = () => {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ const EditJobPage = () => {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setJobData(prevData => ({
+    setJobData((prevData) => ({
       ...prevData,
       [name]: type === "checkbox" ? checked : value,
     }));
@@ -70,7 +70,7 @@ const EditJobPage = () => {
 
   // Xử lý thay đổi nội dung editor một cách riêng biệt
   const handleEditorChange = (content) => {
-    setJobData(prevData => ({
+    setJobData((prevData) => ({
       ...prevData,
       description: content,
     }));
@@ -94,7 +94,8 @@ const EditJobPage = () => {
   }
 
   // Kiểm tra xem location đã chọn có trong danh sách không
-  const isLocationValid = jobData.location && locations.some(loc => loc.name === jobData.location);
+  const isLocationValid =
+    jobData.location && locations.some((loc) => loc.name === jobData.location);
 
   return (
     <section className="user-dashboard">
@@ -136,9 +137,24 @@ const EditJobPage = () => {
                             height: 300,
                             menubar: false,
                             plugins: [
-                              "advlist", "autolink", "lists", "link", "charmap", "print", "preview",
-                              "anchor", "searchreplace", "visualblocks", "code", "fullscreen",
-                              "insertdatetime", "media", "table", "paste", "help", "wordcount"
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "charmap",
+                              "print",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "paste",
+                              "help",
+                              "wordcount",
                             ],
                             toolbar:
                               "undo redo | formatselect | bold italic backcolor | \
@@ -220,7 +236,9 @@ const EditJobPage = () => {
                             <option>No Location available</option>
                           )}
                           {jobData.location && !isLocationValid && (
-                            <option value={jobData.location}>{jobData.location} (Current)</option>
+                            <option value={jobData.location}>
+                              {jobData.location} (Current)
+                            </option>
                           )}
                         </select>
                       </div>
@@ -242,7 +260,11 @@ const EditJobPage = () => {
                         <input
                           type="date"
                           name="deadline"
-                          value={jobData.deadline ? jobData.deadline.split("T")[0] : ""} // Đảm bảo không gây lỗi nếu deadline là null
+                          value={
+                            jobData.deadline
+                              ? jobData.deadline.split("T")[0]
+                              : ""
+                          } // Đảm bảo không gây lỗi nếu deadline là null
                           onChange={handleChange}
                           min={new Date().toISOString().split("T")[0]} // Giới hạn chỉ có thể chọn ngày hôm nay hoặc ngày trong tương lai
                         />

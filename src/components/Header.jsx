@@ -149,7 +149,7 @@ export const Header = () => {
               <>
                 {userRole === "Employer" && (
                   <a
-                    href="/employer/create-job"
+                    href="/employer/post-job"
                     className="theme-btn btn-style-one"
                   >
                     Post a Job

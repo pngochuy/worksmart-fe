@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   deleteJob,
   fetchJobs,
@@ -7,7 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
-import "../../../styles/SearchJob/ManageJobsPage.css";
+import "../../../assets/styles/SearchJob/ManageJobsPage.css";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -84,7 +84,7 @@ export default function ManageJobsPage() {
   };
 
   const handleViewCandidates = (jobId) => {
-    navigate(`/employer/manage-jobs/candidates/${jobId}`);
+    navigate(`/employer/manage-jobs/applied-candidates/${jobId}`);
   };
 
   // Function to get the appropriate button text based on candidate count
