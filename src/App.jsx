@@ -45,6 +45,7 @@ import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlis
 import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
 import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
 import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
+import UploadFileTest from "./pages/dashboard-employer/upload-file/UploadFileTest";
 //Job Create
 //
 import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
@@ -399,7 +400,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
+              <Route
+                index
+                path="/employer/upload-file-test"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <UploadFileTest />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
             {/* Admin */}
             <Route path="/admin" element={<AdminLayout />}>
@@ -430,6 +439,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              UploadFileTest
             </Route>
           </Routes>
         </Router>

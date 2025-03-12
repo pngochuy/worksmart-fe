@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import { fetchCompanyProfile, verifyTax } from "@/services/employerServices";
@@ -32,9 +33,11 @@ const companySizeOptions = [
 ]
 export const VerifyTax = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [isActive, setIsActive] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
     const [isPending, setIsPending] = useState(false);
     const [verificationMessage, setVerificationMessage] = useState("");
+    const navigate = useNavigate();
 
     const {
         register,
@@ -60,6 +63,7 @@ export const VerifyTax = () => {
                     setValue("phoneNumber", data.phoneNumber || "");
                     setValue("address", data.address || "");
 
+                    setIsActive(true);
                     if (data.taxVerificationStatus === "Approved") {
                         setIsVerified(true);
                         setVerificationMessage("Your tax verification has been approved.");
@@ -76,12 +80,17 @@ export const VerifyTax = () => {
         loadTaxInfo();
     }, [setValue]);
 
+    const handleEditorChange = (content) => {
+        setValue("companyDescription", content)
+      };
+
     const onSubmit = async (formData) => {
         try {
             setIsLoading(true);
             console.log("Submitting tax verification data:", formData);
             await verifyTax(formData);
             toast.success("Tax verification submitted successfully!");
+            navigate("/employer/verification");
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Error submitting tax verification, please try again.";
             toast.error(errorMessage);
@@ -120,9 +129,11 @@ export const VerifyTax = () => {
                                     </div>
                                     <div className="widget-content">
                                         <div className="form-group col-lg-12 col-md-12">
-                                            <p className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"}`}>
-                                                {verificationMessage}
-                                            </p>
+                                            {isActive && (
+                                                <p className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"}`}>
+                                                    {verificationMessage}
+                                                </p>
+                                            )}
                                         </div>
                                         <form className="default-form" onSubmit={handleSubmit(onSubmit)}>
                                             <div className="row">
@@ -196,6 +207,7 @@ export const VerifyTax = () => {
                                                                                                         alignleft aligncenter alignright alignjustify | \
                                                                                                         bullist numlist outdent indent | removeformat | help",
                                                         }}
+                                                        onEditorChange={handleEditorChange}
                                                     />
                                                     {errors.companyDescription && <span className="text-danger">{errors.companyDescription.message}</span>}
                                                 </div>

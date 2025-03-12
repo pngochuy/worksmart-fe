@@ -24,9 +24,7 @@ const companySchema = z.object({
   companyName: z
     .string()
     .min(3, "Company Name must be at least 3 characters.")
-    .regex(/^[A-Za-zÀ-Ỹà-ỹ\s]+$/, "Company Name must contain only letters.")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^[A-Za-zÀ-Ỹà-ỹ\s]+$/, "Company Name must contain only letters."),
   companyDescription: z
     .string()
     .min(10, "Company Description must be at least 10 characters.")
@@ -131,7 +129,7 @@ export const Index = () => {
     };
     loadCompanyProfile();
   }, [setAvatar, setCompanyValue, setAddressValue, navigate]);
-  
+
   const handleEditorChange = (content) => {
     setCompanyValue("companyDescription", content)
   };
@@ -422,30 +420,9 @@ export const Index = () => {
                             init={{
                               height: 300,
                               menubar: false,
-                              plugins: [
-                                "advlist",
-                                "autolink",
-                                "lists",
-                                "link",
-                                "charmap",
-                                "print",
-                                "preview",
-                                "anchor",
-                                "searchreplace",
-                                "visualblocks",
-                                "code",
-                                "fullscreen",
-                                "insertdatetime",
-                                "media",
-                                "table",
-                                "paste",
-                                "help",
-                                "wordcount",
-                              ],
+                              plugins: "advlist autolink lists link charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
                               toolbar:
-                                "undo redo | formatselect | bold italic backcolor | \
-                                                                                                                                  alignleft aligncenter alignright alignjustify | \
-                                                                                                                                  bullist numlist outdent indent | removeformat | help",
+                                "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
                             }}
                             onEditorChange={handleEditorChange}
                           />

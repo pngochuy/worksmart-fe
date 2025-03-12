@@ -10,6 +10,7 @@ export const BusinessLicense = () => {
     const [isVerified, setIsVerified] = useState(false);
     const [isPending, setIsPending] = useState(false);
     const [isUploaded, setIsUploaded] = useState(false);
+    const [isActive, setIsActive] = useState(false);
 
     useEffect(() => {
         const loadBusinessLicenseInfo = async () => {
@@ -18,6 +19,7 @@ export const BusinessLicense = () => {
                 if (data) {
                     setBusinessLicense(data.businessLicenseImageUrl || "");
 
+                    setIsActive(true);
                     if (data.licenseVerificationStatus === "Approved") {
                         setIsVerified(true);
                         setVerificationMessage("Your business license has been approved.");
@@ -92,14 +94,16 @@ export const BusinessLicense = () => {
                                     <div className="widget-title">
                                         <h4>Business License</h4>
                                         <div className="form-group col-lg-12 col-md-12">
-                                            <p className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"}`}>
-                                                {verificationMessage}
-                                            </p>
+                                            {isActive && (
+                                                <div className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"} d-flex align-items-center`} role="alert">
+                                                    <span>{verificationMessage}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     <div className="business-license-container">
-                                        
+
                                         <div className="uploading-outer">
                                             {businessLicense ? (
                                                 <div className="row image-container" style={{ marginTop: "55px" }}>

@@ -123,6 +123,28 @@ export const updateImagesProfile = async (imageUrl) => {
   }
 };
 
+export const uploadFile = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    console.log("Uploading file:", file.name);
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/uploads/upload-file`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return response.data; // Trả về URL file đã upload
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
 export const uploadImagesProfile = async (imageFile) => {
   try {
     const token = getAccessToken();
