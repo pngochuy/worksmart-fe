@@ -62,7 +62,7 @@ export const Header = () => {
                   <img
                     src={logo}
                     alt=""
-                    style={{ width: "154px", height: "90px" }}
+                    style={{ width: "100px", height: "55px" }}
                     title=""
                   />
                 </a>
@@ -151,6 +151,7 @@ export const Header = () => {
                   <a
                     href="/employer/post-job"
                     className="theme-btn btn-style-one"
+                    style={{ padding: "10px 25px" }}
                   >
                     Post a Job
                   </a>

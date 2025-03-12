@@ -25,7 +25,7 @@ export const Sidebar = () => {
     <>
       <div
         className="user-sidebar"
-        style={{ paddingTop: `${isAdmin ? "0px" : "80px"}` }}
+        style={{ paddingTop: `${isAdmin ? "0px" : "10px"}` }}
       >
         <div
           className="sidebar-inner"
