@@ -22730,11 +22730,50 @@ Work Section
 }
 
 .verification-container {
+  padding: 30px;
+  background-color: #f9fafc;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap; /* Nếu màn hình nhỏ, ảnh sẽ tự động xuống dòng */
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.account-status .status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-badge.verified {
+  background-color: #e6f7e9;
+  color: #28a745;
+  border: 1px solid #c3e6cb;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.verification-intro {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f0f8ff;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+}
+
+.feature-lock-notice {
+  margin-top: 10px;
+  color: #856404;
+  font-size: 14px;
 }
 
 .employer-verify-widget {
@@ -22745,7 +22784,7 @@ Work Section
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   min-width: 300px;
   margin: 0;
-  height: 565px;
+  height: 600px;
   flex: 1;
 }
 
@@ -22808,22 +22847,124 @@ Work Section
 }
 
 .verification-list {
-  margin-top: 15px;
+  margin-bottom: 30px;
 }
 
 .verification-item {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.verification-item.completed {
+  border-color: #c3e6cb;
+  background-color: #f9fff9;
+}
+
+.verification-item.active {
+  border-color: #b8daff;
+  box-shadow: 0 3px 10px rgba(0, 123, 255, 0.1);
+}
+
+.verification-item.disabled {
+  opacity: 0.7;
+  background-color: #f7f7f7;
+}
+
+.verification-item-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 30px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.verification-item-status {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.status-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.status-icon.completed i {
+  color: #28a745;
+  font-size: 24px;
+}
+
+.status-icon.pending i {
+  color: #6c757d;
+  font-size: 20px;
+}
+
+.step-number {
+  font-size: 12px;
+  background-color: #f8f9fa;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: #6c757d;
+}
+
+.verification-item h5 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.verification-item-content {
+  padding-left: 34px;
+  margin-bottom: 15px;
+}
+
+.verification-item-content p {
+  color: #6c757d;
   margin-bottom: 10px;
 }
 
-.verification-item:hover {
-  background: #e9f5ee;
-  transform: translateY(-2px);
+.estimated-time {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.verification-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.verification-action-btn.start {
+  background-color: #007bff;
+  color: white;
+}
+
+.verification-action-btn.edit {
+  background-color: #e7f5ff;
+  color: #007bff;
+  border: 1px solid #b8daff;
+}
+
+.verification-action-btn.disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.verification-action-btn i {
+  margin-left: 10px;
 }
 
 .radio-circle {
@@ -22849,14 +22990,176 @@ Work Section
   background-color: darkgreen;
 }
 
-.verify-later {
-  text-align: center;
-  margin-top: 20px;
+.arrow-button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
 }
 
-.verify-later a {
-  color: #777;
-  text-decoration: none;
+.verification-benefits-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  height: 100%;
+}
+
+.benefits-header {
+  background-color: #f8f9fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.benefits-header h4 {
+  margin: 0;
+  font-size: 18px;
+  color: #343a40;
+}
+
+.benefits-content {
+  padding: 20px;
+}
+
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.benefits-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.benefits-list li i {
+  color: #28a745;
+  margin-right: 10px;
+  margin-top: 3px;
+}
+
+.account-status-summary {
+  border-top: 1px solid #e9ecef;
+  padding: 20px;
+}
+
+.account-status-summary h5 {
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.status-indicators {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.status-item:last-child {
+  margin-bottom: 0;
+}
+
+.status-label {
+  font-weight: 500;
+}
+
+.status-value.enabled {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-value.disabled {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.verification-image {
+  padding: 0 20px 20px;
+}
+
+.verification-image img {
+  border-radius: 6px;
+  width: 100%;
+}
+
+.verify-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+}
+
+.verify-later {
+  font-size: 14px;
+}
+
+.verify-later .notice {
+  color: #6c757d;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+.verification-progress {
+  margin-bottom: 30px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.progress-bar-container {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #007bff;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  width: 100%;
+  top: -10px;
+}
+
+.step-indicator {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.step-indicator.completed {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
 }
 
 @media print {

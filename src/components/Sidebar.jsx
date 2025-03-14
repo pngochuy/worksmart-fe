@@ -2,9 +2,10 @@ import { useLocation } from "react-router-dom";
 import { CandidateSidebar } from "./CandidateSidebar";
 import { EmployerSidebar } from "./EmployerSidebar";
 import { useEffect, useState } from "react";
-import { getUserLoginData, getVerificationLevel } from "@/helpers/decodeJwt";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 import { Tooltip } from "primereact/tooltip";
 import { AdminSidebar } from "./AdminSiderbar";
+import { fetchCompanyProfile } from "@/services/employerServices";
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -17,13 +18,24 @@ export const Sidebar = () => {
 
   const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
 
-  useEffect(() => {
-    const user = getUserLoginData();
-    setUserDataLogin(user);
-
-    const level = getVerificationLevel();
-    setVerificationLevel(level);
-  }, []);
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const user = getUserLoginData();
+                setUserDataLogin(user);
+                
+                const companyData = await fetchCompanyProfile();
+                
+                setVerificationLevel(companyData.verificationLevel);
+                console.log("Company Data:", companyData);
+                console.log("Verification Level:", companyData.verificationLevel);
+            } catch (error) {
+                console.error("Error loading verification data:", error);
+                toast.error("Failed to load verification information");
+            }
+        };
+        loadData();
+    }, []);
 
   return (
     <>

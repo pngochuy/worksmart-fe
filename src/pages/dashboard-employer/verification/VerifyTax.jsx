@@ -10,18 +10,16 @@ import { Editor } from "@tinymce/tinymce-react";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 const taxSchema = z.object({
-    taxId: z.string().min(6, "Tax ID must be at least 6 characters.").optional().or(z.literal("")),
-    industry: z.string().min(3, "Industry must be at least 3 characters.").optional().or(z.literal("")),
-    companySize: z.string().optional().or(z.literal("")),
-    companyName: z.string().min(3, "Company Name must be at least 3 characters.").optional().or(z.literal("")),
-    companyDescription: z.string().min(10, "Company Description must be at least 10 characters.").optional().or(z.literal("")),
+    taxId: z.string().min(6, "Tax ID must be at least 6 characters."),
+    industry: z.string().min(3, "Industry must be at least 3 characters."),
+    companySize: z.string(),
+    companyName: z.string().min(3, "Company Name must be at least 3 characters."),
+    companyDescription: z.string().min(10, "Company Description must be at least 10 characters."),
     phoneNumber: z
         .string()
         .min(10, "Phone number is invalid")
-        .regex(/^0\d{9,}$/, "Phone number must start with 0 and contain only numbers.")
-        .optional()
-        .or(z.literal("")),
-    address: z.string().optional().or(z.literal("")),
+        .regex(/^0\d{9,}$/, "Phone number must start with 0 and contain only numbers."),
+    address: z.string(),
 });
 const companySizeOptions = [
     "1 - 10 employees",
@@ -64,6 +62,8 @@ export const VerifyTax = () => {
                     setValue("address", data.address || "");
 
                     setIsActive(true);
+                    setIsVerified(false);
+                    setIsPending(false);
                     if (data.taxVerificationStatus === "Approved") {
                         setIsVerified(true);
                         setVerificationMessage("Your tax verification has been approved.");
@@ -94,16 +94,6 @@ export const VerifyTax = () => {
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Error submitting tax verification, please try again.";
             toast.error(errorMessage);
-
-            if (error.response?.status === 400) {
-                if (errorMessage.includes("Tax verification already completed")) {
-                    toast.error("You have already completed tax verification.");
-                } else if (errorMessage.includes("Authentication request has been sent")) {
-                    toast.error("Your tax verification is already in progress.");
-                } else if (errorMessage.includes("Tax code already verified")) {
-                    toast.error("Your tax code has already been verified.");
-                }
-            }
         } finally {
             setIsLoading(false);
         }
@@ -139,21 +129,21 @@ export const VerifyTax = () => {
                                             <div className="row">
                                                 {/* Tax ID */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Tax ID</label>
+                                                    <label>Tax ID <span style={{color: "red"}}>*</span></label>
                                                     <input type="text" {...register("taxId")} />
                                                     {errors.taxId && <span className="text-danger">{errors.taxId.message}</span>}
                                                 </div>
 
                                                 {/* Industry */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Industry</label>
+                                                    <label>Industry <span style={{color: "red"}}>*</span></label>
                                                     <input type="text" {...register("industry")} />
                                                     {errors.industry && <span className="text-danger">{errors.industry.message}</span>}
                                                 </div>
 
                                                 {/* Company Size */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Company Size</label>
+                                                    <label>Company Size <span style={{color: "red"}}>*</span></label>
                                                     <select {...register("companySize")} onChange={(e) => setValue("companySize", e.target.value)}>
                                                         <option value="">Chọn...</option>
                                                         {companySizeOptions.map((size, index) => (
@@ -167,14 +157,14 @@ export const VerifyTax = () => {
 
                                                 {/* Company Name */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Company Name</label>
+                                                    <label>Company Name <span style={{color: "red"}}>*</span></label>
                                                     <input type="text" {...register("companyName")} />
                                                     {errors.companyName && <span className="text-danger">{errors.companyName.message}</span>}
                                                 </div>
 
                                                 {/* Company Description */}
                                                 <div className="form-group col-lg-12 col-md-12">
-                                                    <label>Company Description</label>
+                                                    <label>Company Description <span style={{color: "red"}}>*</span></label>
                                                     {/* <textarea {...register("companyDescription")} /> */}
                                                     <Editor
                                                         apiKey={API_TYNI_KEY}
@@ -214,14 +204,14 @@ export const VerifyTax = () => {
 
                                                 {/* Phone Number */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Phone Number</label>
+                                                    <label>Phone Number <span style={{color: "red"}}>*</span></label>
                                                     <input type="text" {...register("phoneNumber")} />
                                                     {errors.phoneNumber && <span className="text-danger">{errors.phoneNumber.message}</span>}
                                                 </div>
 
                                                 {/* Address */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Address</label>
+                                                    <label>Address <span style={{color: "red"}}>*</span></label>
                                                     <input type="text" {...register("address")} />
                                                 </div>
 

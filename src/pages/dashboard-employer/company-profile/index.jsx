@@ -322,7 +322,7 @@ export const Index = () => {
                       <div className="row">
                         {/* Company Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Company name </label>
+                          <label>Company name <span style={{color: "red"}}>*</span></label>
                           <input
                             type="text"
                             placeholder="Enter full name"
