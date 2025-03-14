@@ -27,20 +27,6 @@ export const fetchCompanyProfile = async () => {
     };
   } catch (error) {
     console.error("Error fetching candidate profile:", error);
-    // Xử lý lỗi
-    // if (error.response && error.response.status === 401) {
-    //   toast.warn("⚠ Your session has expired. Please log in again.");
-    //   localStorage.removeItem("accessToken");
-    //   window.location.href = "/login";
-    // }
-    // if (
-    //   error.message.includes("ERR_CONNECTION_REFUSED") ||
-    //   error.code === "ERR_NETWORK"
-    // ) {
-    //   toast.warn("🚫 Unable to connect to server. Please try again later.");
-    //   throw new Error("Cann't connect to server.");
-    // }
-
     throw error;
   }
 };
@@ -123,6 +109,28 @@ export const updateImagesProfile = async (imageUrl) => {
   }
 };
 
+export const uploadFile = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    console.log("Uploading file:", file.name);
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/uploads/upload-file`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return response.data; // Trả về URL file đã upload
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
 export const uploadImagesProfile = async (imageFile) => {
   try {
     const token = getAccessToken();
@@ -165,5 +173,49 @@ export const deleteImagesProfile = async (imageUrl) => {
     console.log(response.data);
   } catch (error) {
     console.error("Error deleting image:", error);
+  }
+};
+
+export const verifyTax = async (taxData) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found!");
+
+    console.log("Tax Data gửi đi:", taxData);
+
+    const response = await axios.post(`${BACKEND_API_URL}/employers/verify-tax`, taxData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying tax:", error);
+    throw error;
+  }
+};
+
+export const uploadBusinessLicense = async (imageUrl) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/employers/upload-business-license`,
+      { businessLicenseImageUrl: imageUrl },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data; // Trả về thông báo thành công từ API
+  } catch (error) {
+    console.error("Error uploading business license:", error);
+    throw error;
   }
 };

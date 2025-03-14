@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getUserLoginData } from "@/helpers/decodeJwt";
 import { Tooltip } from "primereact/tooltip";
 import { AdminSidebar } from "./AdminSiderbar";
+import { fetchCompanyProfile } from "@/services/employerServices";
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -13,13 +14,28 @@ export const Sidebar = () => {
   const isCandidate = location.pathname.startsWith("/candidate");
   const isEmployer = location.pathname.startsWith("/employer");
   const isAdmin = location.pathname.startsWith("/admin");
+  const [verificationLevel, setVerificationLevel] = useState("");
 
   const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
 
-  useEffect(() => {
-    const user = getUserLoginData();
-    setUserDataLogin(user);
-  }, []);
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const user = getUserLoginData();
+                setUserDataLogin(user);
+                
+                const companyData = await fetchCompanyProfile();
+                
+                setVerificationLevel(companyData.verificationLevel);
+                console.log("Company Data:", companyData);
+                console.log("Verification Level:", companyData.verificationLevel);
+            } catch (error) {
+                console.error("Error loading verification data:", error);
+                toast.error("Failed to load verification information");
+            }
+        };
+        loadData();
+    }, []);
 
   return (
     <>
@@ -71,15 +87,15 @@ export const Sidebar = () => {
           {/* Account Verification */}
           {userDataLogin?.role === "Employer" && (
             <>
-              <div className="px-3 py-2 text-sm text-gray-400">
+              <div className="px-3 py-2 text-gray-400" style={{ fontSize: "0.85rem" }}>
                 <Tooltip
                   target=".fa-circle-question"
                   className="custom-tooltip"
-                  // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+                // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
                 />
                 <span>Account Verification: </span>
                 <span className="text-green-500">
-                  Level 1/3{" "}
+                  Level {verificationLevel}/3{" "}
                   <i
                     className="fa-solid fa-circle-question text-gray-400"
                     data-pr-tooltip="Verify your account to unlock more features"

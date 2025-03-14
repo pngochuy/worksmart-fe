@@ -44,3 +44,18 @@ export const getUserIdFromToken = () => {
     return null;
   }
 };
+
+export const getVerificationLevel = () => {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    try {
+      const decodedToken = jwtDecode(token);
+      console.log("Decoded JWT:", decodedToken);
+      return Number(decodedToken.VerificationLevel);
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+      return null;
+    }
+  }
+  return null;
+};

@@ -33,7 +33,7 @@ import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidat
 // Employer Pages
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
 import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
-import { index as PostJobPage } from "./pages/dashboard-employer/post-job";
+import { Index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
 import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
@@ -42,6 +42,10 @@ import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/n
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
+import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
+import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
+import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
+import UploadFileTest from "./pages/dashboard-employer/upload-file/UploadFileTest";
 //Job Create
 //
 import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
@@ -372,6 +376,39 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="verification"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <VerificationForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="verify-tax"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <VerifyTax />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="business-license"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <BusinessLicense />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="/employer/upload-file-test"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <UploadFileTest />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
             {/* Admin */}
             <Route path="/admin" element={<AdminLayout />}>
@@ -402,6 +439,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              UploadFileTest
             </Route>
           </Routes>
         </Router>

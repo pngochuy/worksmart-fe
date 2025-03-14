@@ -1,20 +1,15 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  fetchCompanyProfile,
-  updateCompanyProfile,
-  updateCompanyAddress,
-  updateImagesProfile,
-  uploadImagesProfile,
-  deleteImagesProfile,
-} from "@/services/employerServices";
+import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress, updateImagesProfile, uploadImagesProfile, deleteImagesProfile, } from "@/services/employerServices";
 import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 // import { getUserIdFromToken } from "../../../helpers/decodeJwt";
 import { toast } from "react-toastify";
+import { Editor } from "@tinymce/tinymce-react";
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 const companySchema = z.object({
   phoneNumber: z
@@ -29,9 +24,7 @@ const companySchema = z.object({
   companyName: z
     .string()
     .min(3, "Company Name must be at least 3 characters.")
-    .regex(/^[A-Za-zÀ-Ỹà-ỹ\s]+$/, "Company Name must contain only letters.")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^[A-Za-zÀ-Ỹà-ỹ\s]+$/, "Company Name must contain only letters."),
   companyDescription: z
     .string()
     .min(10, "Company Description must be at least 10 characters.")
@@ -136,6 +129,10 @@ export const Index = () => {
     };
     loadCompanyProfile();
   }, [setAvatar, setCompanyValue, setAddressValue, navigate]);
+
+  const handleEditorChange = (content) => {
+    setCompanyValue("companyDescription", content)
+  };
 
   const onSubmitCompany = async (formData) => {
     try {
@@ -325,7 +322,7 @@ export const Index = () => {
                       <div className="row">
                         {/* Company Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Company name </label>
+                          <label>Company name <span style={{color: "red"}}>*</span></label>
                           <input
                             type="text"
                             placeholder="Enter full name"
@@ -416,9 +413,18 @@ export const Index = () => {
                         {/* Company Description */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>About Company</label>
-                          <textarea
-                            placeholder="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corporis eius, hic architecto eos magni culpa, consequatur necessitatibus ratione tempore assumenda optio corrupti deleniti molestias ad maiores rerum aperiam dolorem! A?"
+                          <Editor
+                            apiKey={API_TYNI_KEY}
                             {...registerCompany("companyDescription")}
+                            value={watch("companyDescription")}
+                            init={{
+                              height: 300,
+                              menubar: false,
+                              plugins: "advlist autolink lists link charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
+                              toolbar:
+                                "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
+                            }}
+                            onEditorChange={handleEditorChange}
                           />
                           {companyErrors.companyDescription && (
                             <span className="text-danger">
