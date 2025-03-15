@@ -244,7 +244,7 @@ const EditJobPage = () => {
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Salary ($)</label>
+                        <label>Salary (VND)</label>
                         <input
                           type="number"
                           name="salary"

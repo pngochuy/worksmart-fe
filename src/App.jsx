@@ -46,13 +46,8 @@ import VerificationForm from "./pages/dashboard-employer/verification/Verificati
 import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
 import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
 import UploadFileTest from "./pages/dashboard-employer/upload-file/UploadFileTest";
-//Job Create
-//
 import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
 
-// import { index as DemoListCVsPage } from "./pages/demoListCVs";
-// import { Index as DemoEditorCVPage } from "./pages/demoEditorCV";
-// import { CreateCVLayout } from "./layouts/CreateCVLayout";
 // Admin Pages
 import { AdminLayout } from "./layouts/AdminLayout";
 import { Index as AdminDashboardPage } from "./pages/dashboard-admin";

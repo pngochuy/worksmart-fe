@@ -75,7 +75,7 @@ export const SocialRegister = () => {
       navigate(`/${userRole.toLowerCase()}/dashboard`);
     } catch (error) {
       console.error("Login Failed:", error);
-      alert("Đăng nhập thất bại, vui lòng thử lại!");
+      toast.error("Login Failed! Please try again.");
     }
   };
 

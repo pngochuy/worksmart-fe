@@ -5,13 +5,21 @@ import WorkTypeFilter from "./WorkTypeFilter";
 import JobPositionDropdown from "./JobPositionDropdown";
 import SalaryRangeDropdown from "./SalaryRangeDropdown";
 import TagDropdown from "./TagDropdown";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 export const Index = () => {
   const [jobs, setJobs] = useState([]);
   const [totalPage, setTotalPage] = useState(1);
   const [totalJob, setTotalJob] = useState(1);
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
-    PageSize: 3,
+    PageSize: 9, // Changed default to 9 to support 3x3 grid
     Title: "",
     JobPosition: "",
     WorkTypes: [],
@@ -36,17 +44,16 @@ export const Index = () => {
     setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
   };
 
-  const handleOrderChange = (e) => {
-    const newOrder = e.target.value;
+  const handleOrderChange = (value) => {
     setSearchParams((prev) => ({
       ...prev,
-      MostRecent: newOrder,
+      MostRecent: value,
       PageIndex: 1, // Reset về trang 1 khi thay đổi PageSize
     }));
   };
 
-  const handlePageSizeChange = (e) => {
-    const newSize = parseInt(e.target.value);
+  const handlePageSizeChange = (value) => {
+    const newSize = parseInt(value);
     setSearchParams((prev) => ({
       ...prev,
       PageSize: newSize,
@@ -57,6 +64,21 @@ export const Index = () => {
   useEffect(() => {
     getJobs();
   }, [searchParams.PageSize, searchParams.PageIndex, searchParams.MostRecent]);
+
+  // Function to chunk jobs array into rows of 3
+  const chunkJobs = (jobs, chunkSize = 3) => {
+    if (!jobs || jobs.length === 0) return [];
+
+    const result = [];
+    for (let i = 0; i < jobs.length; i += chunkSize) {
+      result.push(jobs.slice(i, i + chunkSize));
+    }
+    return result;
+  };
+
+  // Create chunks of jobs for the 3x3 grid layout
+  const jobRows = chunkJobs(jobs);
+
   return (
     <>
       {/*Page Title*/}
@@ -209,80 +231,111 @@ export const Index = () => {
                     </div>
                   </div>
                   <div className="sort-by">
-                    <select
-                      className="chosen-select"
-                      onChange={handleOrderChange}
+                    {/* Replace regular select with shadcn Select component */}
+                    <Select
+                      onValueChange={handleOrderChange}
+                      defaultValue="true"
                     >
-                      <option value="true">Most Recent</option>
-                      <option value="false">Least recent </option>
-                    </select>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Sort By" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Most Recent</SelectItem>
+                        <SelectItem value="false">Least Recent</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                    <select
-                      className="chosen-select"
-                      value={searchParams.PageSize}
-                      onChange={handlePageSizeChange}
-                    >
-                      <option value="3">Show 3</option>
-                      <option value="6">Show 6</option>
-                      <option value="9">Show 9</option>
-                    </select>
+                    <div className="ml-4">
+                      <Select
+                        onValueChange={handlePageSizeChange}
+                        defaultValue={searchParams.PageSize.toString()}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Show" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">Show 3</SelectItem>
+                          <SelectItem value="6">Show 6</SelectItem>
+                          <SelectItem value="9">Show 9</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
-                <div className="row">
-                  {/* Job Block */}
-                  {jobs && jobs.length > 0 ? (
-                    jobs.map((job, index) => (
-                      <div
-                        key={index}
-                        className="job-block at-jlv16 col-lg-12 col-sm-6"
-                      >
-                        <div className="inner-box">
-                          <div className="tags d-flex align-items-center">
-                            <a className="flaticon-bookmark" href=""></a>
-                          </div>
-                          <div className="content ps-0">
-                            <div className="d-lg-flex align-items-center">
-                              <span className="company-logo position-relative">
-                                <img
-                                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/1200px-Microsoft_logo.svg.png"
-                                  alt=""
-                                  style={{
-                                    width: "60px",
-                                    height: "60px",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              </span>
+                {/* New job grid layout - 3 rows x 3 jobs per row */}
+                {jobs && jobs.length > 0 ? (
+                  <div className="job-grid">
+                    {jobRows.map((row, rowIndex) => (
+                      <div key={rowIndex} className="row mb-4">
+                        {row.map((job, jobIndex) => (
+                          <div
+                            key={jobIndex}
+                            className="col-lg-4 col-md-6 col-sm-12 mb-4"
+                          >
+                            <div
+                              className="job-card  h-full shadow-sm rounded-lg overflow-hidden border"
+                              style={{ backgroundColor: "#fff" }}
+                            >
+                              <div className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="company-logo">
+                                    <img
+                                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/1200px-Microsoft_logo.svg.png"
+                                      alt=""
+                                      className="w-12 h-12 object-cover rounded"
+                                    />
+                                  </div>
+                                  <a
+                                    className="text-gray-400 hover:text-blue-500"
+                                    href=""
+                                  >
+                                    <i className="flaticon-bookmark"></i>
+                                  </a>
+                                </div>
 
-                              <div className="ms-0 ms-lg-3 mt-3 mt-lg-0">
-                                <h4 className="fz20 mb-2 mb-lg-0">
-                                  <a href={`/job-list/${job.jobID}`}>
+                                <h4 className="text-lg font-medium mb-2">
+                                  <a
+                                    href={`/job-list/${job.jobID}`}
+                                    className="hover:text-blue-600"
+                                  >
                                     {job.title}
                                   </a>
                                 </h4>
-                                <p className="mb-0">
+
+                                <p className="text-sm text-gray-600 mb-3">
                                   by{" "}
-                                  <span className="fw500 text">
+                                  <span className="font-medium">
                                     {job.userID}
                                   </span>{" "}
                                   in Design & Creative
                                 </p>
+
+                                <div className="job-tags flex flex-wrap gap-2 mt-3">
+                                  <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-md">
+                                    {job.workType}
+                                  </span>
+                                  <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-md">
+                                    {job.location}
+                                  </span>
+                                  <span className="bg-purple-100 text-purple-800 text-xs px-3 py-1 rounded-md">
+                                    {job.salary.toLocaleString()}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <ul className="job-other-info at-jsv6 at-jsv17 mt20 ms-0">
-                              <li className="time">{job.workType}</li>
-                              <li className="timee">{job.location}</li>
-                              <li className="timeee ">${job.salary}/month</li>
-                            </ul>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))
-                  ) : (
-                    <h4 className="fz20 mb-2 mb-lg-0">No Jobs</h4>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-10 text-center">
+                    <h4 className="text-xl font-medium text-gray-600">
+                      No Jobs Found
+                    </h4>
+                  </div>
+                )}
 
                 {/* Pagination */}
                 <Pagination

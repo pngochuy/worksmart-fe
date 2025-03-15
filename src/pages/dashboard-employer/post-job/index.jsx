@@ -1,6 +1,6 @@
 import { JobForm } from "./jobform";
 import { getVerificationLevel } from "@/helpers/decodeJwt";
-import { useEffect, useState  } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -11,12 +11,12 @@ export const Index = () => {
   // useEffect(() => {
   //     const level = getVerificationLevel();
   //     setVerificationLevel(level);
-  
+
   //     if (verificationLevel < 3) {
   //         navigate("/employer/verification");
   //     }
   //   }, []);
-  
+
   return <JobForm />;
   // return (
   //   <>

@@ -26,6 +26,11 @@ export const JobForm = () => {
     priority: false,
     deadline: "",
   });
+  // Thêm state riêng cho min-max salary
+  const [salaryRange, setSalaryRange] = useState({
+    minSalary: "",
+    maxSalary: "",
+  });
   const [tags, setTags] = useState([]); // Mảng chứa danh sách tags từ API
   const [locations, setLocation] = useState([]);
   const navigate = useNavigate();
@@ -75,12 +80,87 @@ export const JobForm = () => {
     }
   };
 
+  // Xử lý thay đổi giá trị lương min-max
+  const handleSalaryChange = (e) => {
+    const { name, value } = e.target;
+
+    // Kiểm tra giá trị hợp lệ (chỉ chấp nhận số dương)
+    let validatedValue = value;
+
+    // Loại bỏ các ký tự không phải số hoặc số 0 ở đầu
+    if (value) {
+      // Xử lý giá trị nhập vào
+      const numericValue = value.replace(/[^1-9]/g, "");
+
+      // Chuyển thành số để loại bỏ số 0 ở đầu
+      const parsedValue = parseInt(numericValue, 10);
+
+      // Đảm bảo giá trị là số dương
+      validatedValue =
+        !isNaN(parsedValue) && parsedValue >= 0 ? parsedValue.toString() : "";
+    }
+
+    setSalaryRange({
+      ...salaryRange,
+      [name]: validatedValue,
+    });
+
+    // Cập nhật jobData.salary với giá trị mới đã được xác thực
+    const updatedMinSalary =
+      name === "minSalary" ? validatedValue : salaryRange.minSalary;
+    const updatedMaxSalary =
+      name === "maxSalary" ? validatedValue : salaryRange.maxSalary;
+
+    // Chỉ cập nhật salary trong jobData khi cả hai giá trị đã được nhập và hợp lệ
+    if (updatedMinSalary && updatedMaxSalary) {
+      setJobData({
+        ...jobData,
+        salary: `${updatedMinSalary} - ${updatedMaxSalary}`,
+      });
+    }
+  };
+
   // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Kiểm tra tính hợp lệ của dữ liệu lương
+    const minSalary = parseInt(salaryRange.minSalary, 10);
+    const maxSalary = parseInt(salaryRange.maxSalary, 10);
+
+    // Kiểm tra xem giá trị lương có hợp lệ không
+    if (isNaN(minSalary) || isNaN(maxSalary)) {
+      toast.error("Please enter valid salary values");
+      return;
+    }
+
+    if (minSalary < 0 || maxSalary < 0) {
+      toast.error("Salary cannot be negative");
+      return;
+    }
+
+    if (minSalary > maxSalary) {
+      toast.error("Minimum salary cannot be greater than maximum salary");
+      return;
+    }
+
+    // Kiểm tra và cập nhật salary trước khi submit nếu chưa được cập nhật
+    if (salaryRange.minSalary && salaryRange.maxSalary) {
+      setJobData({
+        ...jobData,
+        salary: `${minSalary} - ${maxSalary}`,
+      });
+    }
+
     try {
-      await createJob(jobData);
-      console.log(jobData); // Gửi thông tin công việc cùng với jobTagID đã chọn
+      // Tạo bản sao của jobData với salary đã cập nhật để đảm bảo dữ liệu mới nhất được gửi đi
+      const updatedJobData = {
+        ...jobData,
+        salary: `${minSalary} - ${maxSalary}`,
+      };
+
+      await createJob(updatedJobData);
+      console.log(updatedJobData); // Gửi thông tin công việc cùng với jobTagID đã chọn
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
     } catch (error) {
@@ -118,17 +198,6 @@ export const JobForm = () => {
                           required
                         />
                       </div>
-
-                      {/* <div className="form-group col-lg-12 col-md-12">
-                        <label>Job Description</label>
-                        <textarea
-                          name="description"
-                          value={jobData.description}
-                          onChange={handleChange}
-                          placeholder="Enter job description"
-                          required
-                        />
-                      </div> */}
 
                       {/* TinyMCE Editor for Job Description */}
                       <div className="form-group col-lg-12 col-md-12">
@@ -210,30 +279,15 @@ export const JobForm = () => {
                           <option value="">Select</option>
                           <option value="Full-time">Full-time</option>
                           <option value="Part-time">Part-time</option>
-                          <option value="Freelance">Freelance</option>
+                          <option value="Contract">Contract</option>
+                          <option value="Internship">Internship</option>
+                          <option value="Remote">Remote</option>
                         </select>
                       </div>
 
                       {/* Thêm phần chọn tags */}
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Tags</label>
-                        {/* <select
-                          name="jobTagID"  // Đảm bảo sử dụng jobTagID để lưu tag duy nhất
-                          value={jobData.jobTagID}
-                          onChange={handleChange}
-                          className="form-control"
-                        >
-                          <option value="">Select a tag</option>
-                          {tags.length > 0 ? (
-                            tags.map((tag) => (
-                              <option key={tag.tagID} value={tag.tagID}>
-                                {tag.tagName}
-                              </option>
-                            ))
-                          ) : (
-                            <option>No tags available</option>
-                          )}
-                        </select> */}
                         <TagDropdown setSearchParams={setJobData} />
                       </div>
 
@@ -258,16 +312,41 @@ export const JobForm = () => {
                         </select>
                       </div>
 
+                      {/* Phần Salary được thay đổi thành 2 ô input */}
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Salary ($)</label>
-                        <input
-                          type="number"
-                          name="salary"
-                          value={jobData.salary}
-                          onChange={handleChange}
-                          min="0"
-                          placeholder="Enter salary"
-                        />
+                        <label>Salary Range (VND)</label>
+                        <div className="d-flex">
+                          <input
+                            type="text"
+                            name="minSalary"
+                            value={salaryRange.minSalary}
+                            onChange={handleSalaryChange}
+                            placeholder="Min salary"
+                            className="mr-2"
+                            style={{ flex: 1, marginRight: "10px" }}
+                            pattern="[1-9]*"
+                          />
+                          <input
+                            type="text"
+                            name="maxSalary"
+                            value={salaryRange.maxSalary}
+                            onChange={handleSalaryChange}
+                            placeholder="Max salary"
+                            style={{ flex: 1 }}
+                            pattern="[1-9]*"
+                          />
+                        </div>
+                        {parseInt(salaryRange.minSalary) >
+                          parseInt(salaryRange.maxSalary) &&
+                        salaryRange.minSalary &&
+                        salaryRange.maxSalary ? (
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.8rem" }}
+                          >
+                            Minimum salary cannot be greater than maximum salary
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
