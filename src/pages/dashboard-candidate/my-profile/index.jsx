@@ -33,11 +33,6 @@ const profileSchema = z.object({
     })
     .optional()
     .or(z.literal("")),
-  identityNumber: z
-    .string()
-    .min(9, "Identity Number must be at least 9 digits.")
-    .optional()
-    .or(z.literal("")),
   isPrivated: z
     .enum(["Yes", "No"], { message: "Please select Yes or No." })
     .optional()
@@ -110,7 +105,6 @@ export const Index = () => {
           setProfileValue("phoneNumber", data.phoneNumber || "");
           setProfileValue("email", data.email || "");
           setProfileValue("gender", data.gender || "Other");
-          setProfileValue("identityNumber", data.identityNumber || "");
           setProfileValue("isPrivated", data.isPrivated);
 
           setAddressValue("address", data.address || "");
@@ -387,23 +381,8 @@ export const Index = () => {
                           )}
                         </div>
 
-                        {/* Identity Number */}
-                        <div className="form-group col-lg-6 col-md-12">
-                          <label>Identity Number</label>
-                          <input
-                            type="text"
-                            placeholder="Enter identity number"
-                            {...registerProfile("identityNumber")}
-                          />
-                          {profileErrors.identityNumber && (
-                            <span className="text-danger">
-                              {profileErrors.identityNumber.message}
-                            </span>
-                          )}
-                        </div>
-
                         {/* IsPrivated */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        <div className="form-group col-lg-12 col-md-12">
                           <label>Allow In Search & Listing</label>
                           <select
                             {...registerProfile("isPrivated")}

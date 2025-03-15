@@ -16,7 +16,6 @@ export const Sidebar = () => {
   const isEmployer = location.pathname.startsWith("/employer");
   const isAdmin = location.pathname.startsWith("/admin");
   const [verificationLevel, setVerificationLevel] = useState("");
-
   const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
 
   useEffect(() => {
@@ -28,11 +27,9 @@ export const Sidebar = () => {
         const companyData = await fetchCompanyProfile();
 
         setVerificationLevel(companyData.verificationLevel);
-        console.log("Company Data:", companyData);
         console.log("Verification Level:", companyData.verificationLevel);
       } catch (error) {
         console.error("Error loading verification data:", error);
-        toast.error("Failed to load verification information");
       }
     };
     loadData();

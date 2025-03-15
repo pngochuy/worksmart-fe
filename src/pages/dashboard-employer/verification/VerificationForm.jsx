@@ -114,9 +114,9 @@ export const VerificationForm = () => {
                                                         {verificationLevel} of 3 Steps Complete
                                                     </span>
                                                 </div>
-                                                <div className="progress-bar-container">
-                                                    <div className="progress-bar">
-                                                        <div className="progress-fill" style={{ width: `${(verificationLevel / 3) * 100}%` }}></div>
+                                                <div className="progress-container">
+                                                    <div className="progress-bar-container">
+                                                        <div className={`progress-bar level-${verificationLevel}`}></div>
                                                     </div>
                                                     <div className="progress-steps">
                                                         <div className={`step-indicator ${verificationLevel >= 1 ? "completed" : ""}`}>1</div>
@@ -145,7 +145,7 @@ export const VerificationForm = () => {
                                                         </div>
                                                     </div>
                                                     <button className={`verification-action-btn ${verificationLevel >= 2 ? "edit" : "start"}`} onClick={handleVerifyTax}>
-                                                        {verificationLevel >= 2 ? "Edit Tax Information" : "Verify Tax ID"}
+                                                        Verify Tax ID
                                                         <i className="fa-solid fa-arrow-right ml-2"></i>
                                                     </button>
                                                 </div>
@@ -172,7 +172,7 @@ export const VerificationForm = () => {
                                                         onClick={handleUploadLicense}
                                                         disabled={verificationLevel < 2}
                                                     >
-                                                        {verificationLevel >= 3 ? "View Document" : "Upload Document"}
+                                                        Upload Document
                                                         <i className="fa-solid fa-arrow-right ml-2"></i>
                                                     </button>
                                                 </div>
@@ -218,10 +218,10 @@ export const VerificationForm = () => {
                                                 <i className="fas fa-check-circle"></i>
                                                 <span>Improved visibility in search results</span>
                                             </li>
-                                            <li>
+                                            {/* <li>
                                                 <i className="fas fa-check-circle"></i>
                                                 <span>Access to premium analytics and reporting tools</span>
-                                            </li>
+                                            </li> */}
                                         </ul>
                                     </div>
                                     <div className="account-status-summary">
@@ -239,12 +239,12 @@ export const VerificationForm = () => {
                                                     {verificationLevel === 3 ? "Enabled" : "Disabled"}
                                                 </span>
                                             </div>
-                                            {/* <div className="status-item">
-                                                <span className="status-label">Profile Visibility:</span>
-                                                <span className={`status-value ${verificationLevel >= 1 ? "enabled" : "disabled"}`}>
-                                                    {verificationLevel >= 1 ? "Public" : "Limited"}
+                                            <div className="status-item">
+                                                <span className="status-label">List Candidate:</span>
+                                                <span className={`status-value ${verificationLevel == 3 ? "enabled" : "disabled"}`}>
+                                                    {verificationLevel == 3 ? "Enabled" : "Disabled"}
                                                 </span>
-                                            </div> */}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

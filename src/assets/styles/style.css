@@ -23182,6 +23182,83 @@ Work Section
   width: 100%;
 }
 
+/* Progress Bar Styles */
+.progress-container {
+  position: relative;
+  margin: 20px 0;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  position: relative;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #0072FF;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+/* Specific level-based widths */
+.progress-bar.level-1 {
+  width: 1%; /* Stops at step 1 */
+}
+
+.progress-bar.level-2 {
+  width: 50%; /* Stops at step 2 */
+}
+
+.progress-bar.level-3 {
+  width: 100%; /* Full bar */
+}
+
+/* Step indicators styling */
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 10px;
+}
+
+.step-indicator {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #6c757d;
+  position: relative;
+  z-index: 2;
+  margin-top: -23px; /* Position above the progress bar */
+}
+
+.step-indicator.completed {
+  background-color: #0072FF;
+  border-color: #0072FF;
+  color: white;
+}
+
+/* Ensure the step indicators are positioned correctly */
+.progress-steps .step-indicator:first-child {
+  margin-left: -15px; /* Align with start of progress bar */
+}
+
+.progress-steps .step-indicator:last-child {
+  margin-right: -15px; /* Align with end of progress bar */
+}
+
 @media print {
   #resumePreviewContent {
     zoom: 1 !important;
