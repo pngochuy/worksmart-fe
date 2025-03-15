@@ -225,7 +225,7 @@ export const JobForm = () => {
                                                     alignleft aligncenter alignright alignjustify | \
                                                     bullist numlist outdent indent | removeformat | help",
                           }}
-                          // onEditorChange={handleEditorChange}
+                          onEditorChange={handleEditorChange}
                         />
                       </div>
 
