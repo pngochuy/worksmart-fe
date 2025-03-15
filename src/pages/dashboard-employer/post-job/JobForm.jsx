@@ -35,6 +35,7 @@ export const JobForm = () => {
     maxSalary: "",
   });
   const [tags, setTags] = useState([]);
+  const [locations, setLocation] = useState([]);
   const navigate = useNavigate();
 
   // Lấy danh sách tags từ API
@@ -49,8 +50,18 @@ export const JobForm = () => {
       }
     };
     getTags();
+    setLocation(vietnamProvinces);
   }, []);
 
+  // Xử lý thay đổi nội dung editor một cách riêng biệt
+  const handleEditorChange = (content) => {
+    setJobData((prevData) => ({
+      ...prevData,
+      description: content,
+    }));
+  };
+
+  // Cập nhật thông tin trong form
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === "checkbox") {
@@ -59,9 +70,10 @@ export const JobForm = () => {
         [name]: checked,
       });
     } else if (name === "jobTagID") {
+      // Cập nhật jobTagID khi người dùng chọn tag
       setJobData({
         ...jobData,
-        jobTagID: value,
+        jobTagID: value, // Lưu tagID duy nhất
       });
     } else {
       setJobData({
