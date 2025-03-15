@@ -8,6 +8,9 @@ import {
 } from "../../../services/jobServices";
 import { toast } from "react-toastify";
 import ConfirmDialog from "./ConfirmDialog";
+import {
+  getCVById
+} from "../../../services/cvServices";
 
 export default function EmployerCandidateDetailPage() {
   const { jobId, candidateId } = useParams();
@@ -15,6 +18,7 @@ export default function EmployerCandidateDetailPage() {
   const [loading, setLoading] = useState(true);
   const [candidate, setCandidate] = useState(null);
   const [jobTitle, setJobTitle] = useState("");
+  const [cv, setCV] = useState(null);
 
   useEffect(() => {
     getJobDetails();
@@ -24,7 +28,7 @@ export default function EmployerCandidateDetailPage() {
   const getJobDetails = async () => {
     try {
       const jobDetails = await fetchJobDetails(jobId);
-      setJobTitle(jobDetails.title || `Job #${jobId}`);
+      setJobTitle(jobDetails.job.title);
     } catch (error) {
       console.error("Error fetching job details:", error);
       setJobTitle(`Job #${jobId}`);
@@ -37,6 +41,16 @@ export default function EmployerCandidateDetailPage() {
       const data = await fetchCandidateDetail(candidateId, jobId);
       setCandidate(data);
       console.log("Candidate detail:", data);
+      
+      if (data && data.cvid) {
+        try {
+          const cvData = await getCVById(data.cvid);
+          console.log("CV data:", cvData);
+          setCV(cvData);
+        } catch (cvError) {
+          console.error("Error fetching CV details:", cvError);
+        }
+      }
     } catch (error) {
       console.error("Error fetching candidate detail:", error);
       toast.error("Could not load candidate details. Please try again.");
@@ -47,10 +61,9 @@ export default function EmployerCandidateDetailPage() {
 
   const handleReject = async (rejectionReason) => {
     try {
-      
       await rejectCandidate(candidateId, jobId, rejectionReason);
       toast.success("Candidate rejected successfully!");
-      getCandidateDetail(); // Refresh data to show updated status
+      getCandidateDetail();
     } catch (error) {
       toast.error("Failed to reject candidate.");
       console.error("Error rejecting candidate:", error);
@@ -68,14 +81,14 @@ export default function EmployerCandidateDetailPage() {
     }
   };
 
-
   const handleBackToCandidates = () => {
     navigate(`/employer/manage-jobs/candidates/${jobId}`);
   };
 
   const handleViewFullCV = () => {
-    // If CV is a URL, open it in a new tab
-    if (candidate.cvUrl) {
+    if (cv && cv.link) {
+      window.open(cv.link, '_blank');
+    } else if (candidate.cvUrl) {
       window.open(candidate.cvUrl, '_blank');
     }
   };
@@ -187,36 +200,8 @@ export default function EmployerCandidateDetailPage() {
                     </div>
                   </div>
 
-                  {/* Rest of the component remains the same */}
                   <div className="candidate-detail-grid">
                     {/* Personal Information */}
-                    <div className="detail-section">
-                      <h3 className="section-title">
-                        <i className="fas fa-user-circle"></i> Personal Information
-                      </h3>
-                      <div className="detail-grid">
-                        {candidate.address && (
-                          <div className="detail-item">
-                            <span className="detail-label">Address</span>
-                            <span className="detail-value">{candidate.address}</span>
-                          </div>
-                        )}
-                        {candidate.dob && (
-                          <div className="detail-item">
-                            <span className="detail-label">Date of Birth</span>
-                            <span className="detail-value">{new Date(candidate.dob).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                        {candidate.gender !== undefined && (
-                          <div className="detail-item">
-                            <span className="detail-label">Gender</span>
-                            <span className="detail-value">{candidate.gender}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Professional Information */}
                     <div className="detail-section">
                       <h3 className="section-title">
                         <i className="fas fa-briefcase"></i> Professional Information
@@ -228,12 +213,14 @@ export default function EmployerCandidateDetailPage() {
                             <span className="detail-value">{candidate.education}</span>
                           </div>
                         )}
+                        
                         {candidate.experience && (
                           <div className="detail-item">
                             <span className="detail-label">Experience</span>
                             <span className="detail-value">{candidate.experience} years</span>
                           </div>
                         )}
+                        
                         {candidate.skills && (
                           <div className="detail-item">
                             <span className="detail-label">Skills</span>
@@ -244,26 +231,122 @@ export default function EmployerCandidateDetailPage() {
                             </div>
                           </div>
                         )}
+                        
+                        {cv && cv.jobPosition && (
+                          <div className="detail-item">
+                            <span className="detail-label">Current Position</span>
+                            <span className="detail-value">{cv.jobPosition}</span>
+                          </div>
+                        )}
+                        
+                        {cv && cv.skills && cv.skills.length > 0 && (
+                          <div className="detail-item">
+                            <span className="detail-label">CV Skills</span>
+                            <div className="skills-container">
+                              {cv.skills.map((skill, index) => (
+                                <span key={index} className="skill-tag">{skill.skillName}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {cv && cv.summary && (
+                          <div className="detail-item">
+                            <span className="detail-label">Professional Summary</span>
+                            <span className="detail-value">{cv.summary}</span>
+                          </div>
+                        )}
                       </div>
+                      
+                      {/* Education section */}
+                      {cv && cv.educations && cv.educations.length > 0 && (
+                        <div className="sub-section">
+                          <h4 className="sub-section-title">Education</h4>
+                          <div className="timeline-container">
+                            {cv.educations.map((edu, index) => (
+                              <div key={index} className="timeline-item">
+                                <div className="timeline-marker"></div>
+                                <div className="timeline-content">
+                                  <h5>{edu.schoolName || "Educational Institution"}</h5>
+                                  <h6>{edu.major || ""}</h6>
+                                  {(edu.startedAt || edu.endedAt) && (
+                                    <p className="timeline-period">
+                                      {edu.startedAt && new Date(edu.startedAt).getFullYear()} 
+                                      {edu.endedAt && ` - ${new Date(edu.endedAt).getFullYear()}`}
+                                    </p>
+                                  )}
+                                  {edu.description && <p>{edu.description}</p>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Experience section */}
+                      {cv && cv.experiences && cv.experiences.length > 0 && (
+                        <div className="sub-section">
+                          <h4 className="sub-section-title">Work Experience</h4>
+                          <div className="timeline-container">
+                            {cv.experiences.map((exp, index) => (
+                              <div key={index} className="timeline-item">
+                                <div className="timeline-marker"></div>
+                                <div className="timeline-content">
+                                  <h5>{exp.companyName || "Company"}</h5>
+                                  <h6>{exp.jobPosition || "Position"}</h6>
+                                  {(exp.startedAt || exp.endedAt) && (
+                                    <p className="timeline-period">
+                                      {exp.startedAt && new Date(exp.startedAt).getFullYear()}
+                                      {exp.endedAt && ` - ${new Date(exp.endedAt).getFullYear()}`}
+                                    </p>
+                                  )}
+                                  {exp.description && <p>{exp.description}</p>}
+                                  {exp.address && <p><i className="fas fa-map-marker-alt"></i> {exp.address}</p>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Certifications section */}
+                      {cv && cv.certifications && cv.certifications.length > 0 && (
+                        <div className="sub-section">
+                          <h4 className="sub-section-title">Certifications</h4>
+                          <div className="timeline-container">
+                            {cv.certifications.map((cert, index) => (
+                              <div key={index} className="timeline-item">
+                                <div className="timeline-marker"></div>
+                                <div className="timeline-content">
+                                  <h5>{cert.certificateName || "Certification"}</h5>
+                                  {cert.issuer && <h6>{cert.issuer}</h6>}
+                                  {cert.dateReceived && (
+                                    <p className="timeline-period">
+                                      Issued: {new Date(cert.dateReceived).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                  {cert.description && <p>{cert.description}</p>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Application Details */}
                     <div className="detail-section">
                       <h3 className="section-title">
                         <i className="fas fa-file-alt"></i> Date Applied
                       </h3>
                       <div className="detail-grid">
-                        {candidate.appliedDate && (
+                        {candidate.createdAt && (
                           <div className="detail-item">
-                            <span className="detail-label">Applied Date</span>
-                            <span className="detail-value">{new Date(candidate.appliedDate).toLocaleDateString()}</span>
+                            <span className="detail-value">{new Date(candidate.createdAt).toLocaleDateString()}</span>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* CV Section */}
                   <div className="cv-section">
                     <h3 className="section-title">
                       <i className="fas fa-file-pdf"></i> Curriculum Vitae (CV)
@@ -273,22 +356,22 @@ export default function EmployerCandidateDetailPage() {
                         <button
                           className="view-cv-btn"
                           onClick={handleViewFullCV}
-                          disabled={!candidate.cvUrl}>
+                          disabled={!(cv?.link || candidate.cvUrl)}>
                           <i className="fas fa-eye"></i> View Full CV
                         </button>
-                        {candidate.cvUrl && (
+                        {(cv?.link || candidate.cvUrl) && (
                           <a
-                            href={candidate.cvUrl}
+                            href={cv?.link || candidate.cvUrl}
                             download
                             className="download-cv-btn">
                             <i className="fas fa-download"></i> Download CV
                           </a>
                         )}
                       </div>
-                      {candidate.cvPreview ? (
+                      {(cv?.link || candidate.cvPreview) ? (
                         <div className="cv-preview-container">
                           <iframe
-                            src={candidate.cvUrl}
+                            src={cv?.link || candidate.cvUrl}
                             title="CV Preview"
                             className="cv-preview-frame"
                             frameBorder="0"
@@ -671,6 +754,74 @@ export default function EmployerCandidateDetailPage() {
             grid-template-columns: 1fr;
           }
         }
+          .sub-section {
+  padding: 0 20px 20px;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.sub-section-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 20px 0;
+  color: #495057;
+}
+
+.timeline-container {
+  margin-left: 20px;
+  position: relative;
+}
+
+.timeline-container:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 2px;
+  background-color: #e9ecef;
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 30px;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #3498db;
+  border: 2px solid white;
+}
+
+.timeline-content h5 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 5px;
+  color: #212529;
+}
+
+.timeline-content h6 {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 5px;
+  color: #3498db;
+}
+
+.timeline-period {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 10px;
+}
       `}</style>
     </section>
   );
