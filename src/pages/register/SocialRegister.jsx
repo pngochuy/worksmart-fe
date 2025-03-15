@@ -51,11 +51,21 @@ export const SocialRegister = () => {
   }, [user]);
 
   const handleBackendLogin = async (profileData) => {
+    console.log(
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        profileData.name
+      )}&background=random&color=fff`
+    );
     try {
       const response = await loginUserByGoogle({
         email: profileData.email,
         name: profileData.name,
-        avatar: profileData.picture,
+        avatar:
+          role === "candidate-form"
+            ? profileData.picture
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                profileData.name
+              )}&background=random&color=fff`,
         role: role === "candidate-form" ? "Candidate" : "Employer",
       });
       toast.success("Login success!");
@@ -65,7 +75,7 @@ export const SocialRegister = () => {
       navigate(`/${userRole.toLowerCase()}/dashboard`);
     } catch (error) {
       console.error("Login Failed:", error);
-      alert("Đăng nhập thất bại, vui lòng thử lại!");
+      toast.error("Login Failed! Please try again.");
     }
   };
 

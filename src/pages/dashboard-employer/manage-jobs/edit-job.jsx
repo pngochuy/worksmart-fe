@@ -5,8 +5,8 @@ import { Editor } from "@tinymce/tinymce-react";
 import { toast } from "react-toastify";
 import TagDropdown from "../post-job/TagDropdown";
 import { vietnamProvinces } from "../../../helpers/getLocationVN";
-
-const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
+import LocationDropdown from "../post-job/LocationDropdown";
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY
 const EditJobPage = () => {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ const EditJobPage = () => {
     exp: "",
     priority: false,
     deadline: "",
+    jobPosition: "", // Thêm trường jobPosition
   });
 
   // Khởi tạo danh sách locations
@@ -127,6 +128,29 @@ const EditJobPage = () => {
                         />
                       </div>
 
+                      {/* Thêm trường Job Position */}
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Job Position</label>
+                        <input
+                          type="text"
+                          name="jobPosition"
+                          value={jobData.jobPosition || ""}
+                          onChange={handleChange}
+                          placeholder="Enter job position (e.g. Developer, Manager, etc.)"
+                        />
+                      </div>
+
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Job Level</label>
+                        <input
+                          type="text"
+                          name="level"
+                          value={jobData.level || ""}
+                          onChange={handleChange}
+                          placeholder="Enter job level (e.g. Junior, Senior, etc.)"
+                        />
+                      </div>
+
                       {/* TinyMCE Editor for Job Description */}
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Description</label>
@@ -218,40 +242,33 @@ const EditJobPage = () => {
                         />
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Location</label>
-                        <select
-                          name="location"
-                          value={jobData.location || ""}
+                        <label>Locations</label>
+                        <LocationDropdown
+                          setSearchParams={setJobData}
+                          initialLocation={jobData.location || ""}
+                        />
+                      </div>
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Min Salary ($)</label>
+                        <input
+                          type="number"
+                          name="minSalary"
+                          value={jobData.minSalary}
                           onChange={handleChange}
-                          className="form-control"
-                        >
-                          <option value="">Select a Location</option>
-                          {locations.length > 0 ? (
-                            locations.map((location) => (
-                              <option key={location.name} value={location.name}>
-                                {location.name}
-                              </option>
-                            ))
-                          ) : (
-                            <option>No Location available</option>
-                          )}
-                          {jobData.location && !isLocationValid && (
-                            <option value={jobData.location}>
-                              {jobData.location} (Current)
-                            </option>
-                          )}
-                        </select>
+                          min="0"
+                          placeholder="Enter minimum salary"
+                        />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Salary ($)</label>
+                        <label>Salary (VND)</label>
                         <input
                           type="number"
                           name="salary"
                           value={jobData.salary}
                           onChange={handleChange}
                           min="0"
-                          placeholder="Salary"
+                          placeholder="Enter maximum salary"
                         />
                       </div>
 

@@ -3,7 +3,7 @@ import axios from "axios";
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằng URL backend thật
 
 // Hàm gọi API để lấy danh sách người dùng
-export const fetchUsersList = async () => {
+export const getAllUsers = async () => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/admins/list-user`);
     return response.data; // Trả về dữ liệu từ API

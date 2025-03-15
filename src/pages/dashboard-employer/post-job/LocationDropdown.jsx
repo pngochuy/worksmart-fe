@@ -1,68 +1,78 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
-import { fetchTags } from "../../../services/tagServices";
+import { vietnamProvinces } from "../../../helpers/getLocationVN";
 
-const TagDropdown = ({ setSearchParams, initialTags = [] }) => {
-  const [tagOptions, setTagOptions] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+const LocationDropdown = ({ setSearchParams, initialLocation = "" }) => {
+  const [locationOptions, setLocationOptions] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState([]);
 
-  // Set up tag options from API
+  // Set up location options from vietnamProvinces
   useEffect(() => {
-    const getTags = async () => {
-      try {
-        const data = await fetchTags();
-        const options = data.map((tag) => ({
-          value: tag.tagID,
-          label: tag.tagName,
-        }));
-        setTagOptions(options);
+    const options = vietnamProvinces.map((location) => ({
+      value: location.name,
+      label: location.name,
+    }));
+    setLocationOptions(options);
 
-        // Xử lý initialTags khi có options
-        processInitialTags(options, initialTags);
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-      }
-    };
-
-    getTags();
+    // Xử lý initialLocation khi có options
+    processInitialLocation(options, initialLocation);
   }, []);
 
-  // Update selected tags when initialTags changes
+  // Update selected locations when initialLocation changes
   useEffect(() => {
-    if (tagOptions.length > 0) {
-      processInitialTags(tagOptions, initialTags);
+    if (locationOptions.length > 0) {
+      processInitialLocation(locationOptions, initialLocation);
     }
-  }, [initialTags, tagOptions]);
+  }, [initialLocation, locationOptions]);
 
-  // Hàm xử lý initialTags
-  const processInitialTags = (options, tags) => {
-    if (tags && tags.length > 0) {
-      // Chuyển đổi nếu tags không phải array
-      const tagsArray = Array.isArray(tags) ? tags : [tags];
+  // Hàm xử lý initialLocation
+  const processInitialLocation = (options, locationString) => {
+    if (locationString) {
+      console.log("Processing initialLocation:", locationString);
       
-      // Tìm các tags đã chọn từ options
-      // Khớp theo cả value và label
-      let initialSelectedOptions = options.filter(option => 
-        tagsArray.includes(option.value) || 
-        tagsArray.includes(option.label)
+      // Trường hợp 1: locationString là chuỗi các địa điểm cách nhau bởi dấu phẩy
+      let locationArray = [];
+      if (typeof locationString === 'string') {
+        locationArray = locationString.split(",").map(loc => loc.trim());
+      } 
+      // Trường hợp 2: locationString là một mảng
+      else if (Array.isArray(locationString)) {
+        locationArray = locationString;
+      }
+      
+      console.log("Location array:", locationArray);
+      
+      // Tìm các option tương ứng
+      const initialSelectedOptions = options.filter(option => 
+        locationArray.includes(option.value) || locationArray.includes(option.label)
       );
       
-      // Nếu có tags đã chọn
+      console.log("Selected location options:", initialSelectedOptions);
+      
       if (initialSelectedOptions.length > 0) {
-        setSelectedTags(initialSelectedOptions);
+        setSelectedLocations(initialSelectedOptions);
+        
+        // Cập nhật parent component với danh sách các địa điểm đã chọn
+        updateParentComponent(initialSelectedOptions);
       }
     }
   };
 
-  const handleChange = (selected) => {
-    const newSelected = selected || [];
-    setSelectedTags(newSelected);
+  const updateParentComponent = (selected) => {
+    // Convert selected locations to a comma-separated string
+    const locationString = selected.map(location => location.value).join(", ");
     
-    // Cập nhật giá trị vào component cha
+    // Update parent component's state with the location string
     setSearchParams((prev) => ({
       ...prev,
-      jobTagID: newSelected.map((tag) => tag.value),
+      location: locationString,
     }));
+  };
+
+  const handleChange = (selected) => {
+    const newSelected = selected || [];
+    setSelectedLocations(newSelected);
+    updateParentComponent(newSelected);
   };
 
   const customStyles = {
@@ -167,16 +177,16 @@ const TagDropdown = ({ setSearchParams, initialTags = [] }) => {
 
   return (
     <Select
-      options={tagOptions}
+      options={locationOptions}
       styles={customStyles}
-      value={selectedTags}
-      defaultValue={selectedTags}
+      value={selectedLocations}
+      defaultValue={selectedLocations}
       onChange={handleChange}
-      placeholder="Select Tags"
+      placeholder="Select Locations"
       isMulti
       isSearchable
     />
   );
 };
 
-export default TagDropdown;
+export default LocationDropdown;
