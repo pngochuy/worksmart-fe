@@ -63,7 +63,11 @@ function App() {
   return (
     <>
       <PrimeReactProvider>
-        <ToastContainer />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+        />
         <Router>
           <Routes>
             <Route path="*" element={<NotFoundPage />} /> {/* Route 404 */}
