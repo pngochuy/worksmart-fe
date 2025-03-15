@@ -21,16 +21,18 @@ export default function ManageJobsPage() {
     PageSize: 3,
     title: "",
   });
-  const [verificationLevel, setVerificationLevel] = useState(1);
+  const [verificationLevel, setVerificationLevel] = useState(null);
 
   useEffect(() => {
-      const level = getVerificationLevel();
-      setVerificationLevel(level);
+    const level = getVerificationLevel();
+    setVerificationLevel(level);
+  }, []);
   
-      if (verificationLevel < 3) {
-          navigate("/employer/verification");
-      }
-    }, []);
+  useEffect(() => {
+    if (verificationLevel !== null && verificationLevel < 3) {
+      navigate("/employer/verification");
+    }
+  }, [verificationLevel, navigate]);
   
   useEffect(() => {
     getJobs();

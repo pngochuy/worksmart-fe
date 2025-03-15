@@ -322,7 +322,7 @@ export const Index = () => {
                       <div className="row">
                         {/* Company Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Company name <span style={{color: "red"}}>*</span></label>
+                          <label>Company name <span style={{ color: "red" }}>*</span></label>
                           <input
                             type="text"
                             placeholder="Enter full name"
@@ -364,7 +364,7 @@ export const Index = () => {
                           )}
                         </div>
 
-                        {/* Since */}
+                        {/* Est. Since */}
                         <div className="form-group col-lg-6 col-md-12">
                           <label>Est. Since</label>
                           <br />
@@ -380,10 +380,32 @@ export const Index = () => {
                                   "createdAt",
                                   date.toISOString().split("T")[0]
                                 );
-                              } // Chuyển thành YYYY-MM-DD
+                              }
                             }}
                             dateFormat="dd/MM/yyyy"
-                            style={{ marginRight: "350px" }}
+                            maxDate={new Date()}
+                            showYearDropdown
+                            scrollableYearDropdown
+                            yearDropdownItemNumber={100}
+                            className="form-control"
+                            popperPlacement="bottom-start"
+                            popperModifiers={[
+                              {
+                                name: "offset",
+                                options: {
+                                  offset: [0, 5],  // [skidding, distance]
+                                },
+                              },
+                              {
+                                name: "computeStyles",
+                                options: {
+                                  gpuAcceleration: false,
+                                },
+                              },
+                            ]}
+                            popperContainer={({ children }) => (
+                              <div style={{ position: "relative", zIndex: 999 }}>{children}</div>
+                            )}
                           />
                           {companyErrors.createdAt && (
                             <span className="text-danger">

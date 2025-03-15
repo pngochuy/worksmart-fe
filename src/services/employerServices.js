@@ -108,6 +108,34 @@ export const updateImagesProfile = async (imageUrl) => {
     throw error;
   }
 };
+export const updateAvatar = async (imageUrl) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const updatedData = { avatar: imageUrl };
+    console.log("Image data gửi đi:", updatedData);
+
+    await axios.put(`${BACKEND_API_URL}/employers/edit-avatar`, updatedData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Update avatar in localStorage
+    if (localStorage.getItem("userLoginData")) {
+      const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
+      userLoginData.avatar = updatedData?.avatar; // Update avatar in local storage
+      localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
+    }
+
+    return "Avatar updated successfully!";
+  } catch (error) {
+    console.error("Error updating avatar:", error);
+    throw error;
+  }
+};
 
 export const uploadFile = async (file) => {
   try {
@@ -197,14 +225,15 @@ export const verifyTax = async (taxData) => {
   }
 };
 
-export const uploadBusinessLicense = async (imageUrl) => {
+export const uploadBusinessLicense = async (fileUrl) => {
   try {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
 
+    console.log(fileUrl);
     const response = await axios.post(
       `${BACKEND_API_URL}/employers/upload-business-license`,
-      { businessLicenseImageUrl: imageUrl },
+      { businessLicenseImageUrl: fileUrl },
       {
         headers: {
           Authorization: `Bearer ${token}`,

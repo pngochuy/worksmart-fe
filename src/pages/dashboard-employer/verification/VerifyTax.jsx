@@ -14,6 +14,12 @@ const taxSchema = z.object({
     industry: z.string().min(3, "Industry must be at least 3 characters."),
     companySize: z.string(),
     companyName: z.string().min(3, "Company Name must be at least 3 characters."),
+    companyWebsite: z.string().nullable().optional().refine((val) => {
+        if (!val) return true;
+        return val.startsWith("http://") || val.startsWith("https://");
+    }, {
+        message: "URL must start with http:// or https://"
+    }),
     companyDescription: z.string().min(10, "Company Description must be at least 10 characters."),
     phoneNumber: z
         .string()
@@ -57,20 +63,25 @@ export const VerifyTax = () => {
                     setValue("industry", data.industry || "");
                     setValue("companySize", data.companySize || "");
                     setValue("companyName", data.companyName || "");
+                    setValue("companyWebsite", data.companyWebsite || "");
                     setValue("companyDescription", data.companyDescription || "");
                     setValue("phoneNumber", data.phoneNumber || "");
                     setValue("address", data.address || "");
 
-                    setIsActive(true);
+                    setIsActive(false);
                     setIsVerified(false);
                     setIsPending(false);
+                    setVerificationMessage("");
+
                     if (data.taxVerificationStatus === "Approved") {
                         setIsVerified(true);
                         setVerificationMessage("Your tax verification has been approved.");
-                    }
-                    if (data.taxVerificationStatus === "Pending") {
+                    } else if (data.taxVerificationStatus === "Pending") {
                         setIsPending(true);
                         setVerificationMessage("Your tax verification is pending. Please wait for approval.");
+                    } else if (data.taxVerificationStatus === "Rejected") {
+                        setIsActive(true);
+                        setVerificationMessage("Your tax verification was rejected. Please submit again.");
                     }
                 }
             } catch (error) {
@@ -82,7 +93,7 @@ export const VerifyTax = () => {
 
     const handleEditorChange = (content) => {
         setValue("companyDescription", content)
-      };
+    };
 
     const onSubmit = async (formData) => {
         try {
@@ -103,9 +114,9 @@ export const VerifyTax = () => {
         <>
             <section className="user-dashboard">
                 <div className="dashboard-outer">
-                    <div className="upper-title-box">
-                        <h3>Verify Tax</h3>
-                        <div className="text">Verify your company before post job!</div>
+                    <div className="upper-title-box bg-light p-3 rounded mb-4">
+                        <h3 className="text-primary">Verify Tax</h3>
+                        <div className="text text-secondary">Verify your company before post job!</div>
                     </div>
 
                     <div className="row">
@@ -119,31 +130,35 @@ export const VerifyTax = () => {
                                     </div>
                                     <div className="widget-content">
                                         <div className="form-group col-lg-12 col-md-12">
-                                            {isActive && (
-                                                <p className={`alert ${isVerified ? "alert-success" : isPending ? "alert-warning" : "alert-danger"}`}>
+                                            {(isVerified || isPending || verificationMessage) && (
+                                                <p className={`alert 
+                                                        ${isVerified ? "alert-success"
+                                                        : isPending ? "alert-warning"
+                                                            : "alert-danger"}`}>
                                                     {verificationMessage}
                                                 </p>
                                             )}
                                         </div>
+
                                         <form className="default-form" onSubmit={handleSubmit(onSubmit)}>
                                             <div className="row">
                                                 {/* Tax ID */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Tax ID <span style={{color: "red"}}>*</span></label>
+                                                    <label>Tax ID <span style={{ color: "red" }}>*</span></label>
                                                     <input type="text" {...register("taxId")} />
                                                     {errors.taxId && <span className="text-danger">{errors.taxId.message}</span>}
                                                 </div>
 
                                                 {/* Industry */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Industry <span style={{color: "red"}}>*</span></label>
+                                                    <label>Industry <span style={{ color: "red" }}>*</span></label>
                                                     <input type="text" {...register("industry")} />
                                                     {errors.industry && <span className="text-danger">{errors.industry.message}</span>}
                                                 </div>
 
                                                 {/* Company Size */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Company Size <span style={{color: "red"}}>*</span></label>
+                                                    <label>Company Size <span style={{ color: "red" }}>*</span></label>
                                                     <select {...register("companySize")} onChange={(e) => setValue("companySize", e.target.value)}>
                                                         <option value="">Chọn...</option>
                                                         {companySizeOptions.map((size, index) => (
@@ -157,14 +172,21 @@ export const VerifyTax = () => {
 
                                                 {/* Company Name */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Company Name <span style={{color: "red"}}>*</span></label>
+                                                    <label>Company Name <span style={{ color: "red" }}>*</span></label>
                                                     <input type="text" {...register("companyName")} />
                                                     {errors.companyName && <span className="text-danger">{errors.companyName.message}</span>}
                                                 </div>
 
+                                                {/* Company Website */}
+                                                <div className="form-group col-lg-12 col-md-12">
+                                                    <label>Company Website <span className="text-muted">(optional)</span></label>
+                                                    <input type="text" {...register("companyWebsite")} placeholder="https://example.com" />
+                                                    {errors.companyWebsite && <span className="text-danger">{errors.companyWebsite.message}</span>}
+                                                </div>
+
                                                 {/* Company Description */}
                                                 <div className="form-group col-lg-12 col-md-12">
-                                                    <label>Company Description <span style={{color: "red"}}>*</span></label>
+                                                    <label>Company Description <span style={{ color: "red" }}>*</span></label>
                                                     {/* <textarea {...register("companyDescription")} /> */}
                                                     <Editor
                                                         apiKey={API_TYNI_KEY}
@@ -204,14 +226,14 @@ export const VerifyTax = () => {
 
                                                 {/* Phone Number */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Phone Number <span style={{color: "red"}}>*</span></label>
+                                                    <label>Phone Number <span style={{ color: "red" }}>*</span></label>
                                                     <input type="text" {...register("phoneNumber")} />
                                                     {errors.phoneNumber && <span className="text-danger">{errors.phoneNumber.message}</span>}
                                                 </div>
 
                                                 {/* Address */}
                                                 <div className="form-group col-lg-6 col-md-12">
-                                                    <label>Address <span style={{color: "red"}}>*</span></label>
+                                                    <label>Address <span style={{ color: "red" }}>*</span></label>
                                                     <input type="text" {...register("address")} />
                                                 </div>
 

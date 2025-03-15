@@ -2,7 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+
 import { changePassword } from "@/services/accountServices";
 
 const changePasswordSchema = z.object({
@@ -18,6 +19,7 @@ export const Index = () => {
     register,
     handleSubmit,
     setError,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(changePasswordSchema),
@@ -30,13 +32,26 @@ export const Index = () => {
         OldPassword: data.oldPassword,
         NewPassword: data.newPassword,
       });
-      toast.success("Password changed successfully!");
+      toast.success("Password changed successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true
+      });
+      
+      reset();
       setApiError("");
     } catch (error) {
       console.error("Full Error Response:", error);
       setError("oldPassword", {
         type: "manual",
-        message: error.error || "Error while change password!",
+        message: error.error || "Old password is incorrect",
+      });
+      toast.error(error.error || "Failed to change password", {
+        position: "top-right",
+        autoClose: 5000
       });
     } finally {
       setLoading(false);
@@ -51,7 +66,7 @@ export const Index = () => {
             <h3>Change Password</h3>
             <div className="text">Ready to jump back in?</div>
           </div>
-
+          <ToastContainer />
           {/* Ls widget */}
           <div className="ls-widget">
             <div className="widget-title">
