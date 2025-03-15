@@ -23,3 +23,44 @@ export const getAllJobs = async () => {
     throw error;
   }
 };
+// In adminServices.js
+export const approveJob = async (jobId) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    
+    const response = await axios.put(
+      `${BACKEND_API_URL}/admins/jobs/${jobId}/approve`,
+      {}, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error approving job ${jobId}:`, error);
+    throw error;
+  }
+};
+
+export const rejectJob = async (jobId, reason) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    
+    const response = await axios.put(
+      `${BACKEND_API_URL}/admins/jobs/${jobId}/reject`,
+      { reason }, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    console.log("tets", response.data)
+    return response.data;
+  } catch (error) {
+    console.error(`Error rejecting job ${jobId}:`, error);
+    throw error;
+  }
+};
