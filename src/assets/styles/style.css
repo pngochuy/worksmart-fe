@@ -23162,6 +23162,26 @@ Work Section
   color: white;
 }
 
+.form-group {
+  position: relative;
+}
+
+.react-datepicker-popper {
+  position: absolute !important;
+  inset: auto auto auto 0 !important;
+  transform: translate(0, 40px) !important;
+}
+
+.react-datepicker-wrapper {
+  display: block;
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  display: block;
+  width: 100%;
+}
+
 @media print {
   #resumePreviewContent {
     zoom: 1 !important;
