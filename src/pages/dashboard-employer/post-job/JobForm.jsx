@@ -5,10 +5,11 @@ import { fetchTags } from "../../../services/tagServices";
 import { useNavigate } from "react-router-dom";
 import { vietnamProvinces } from "../../../helpers/getLocationVN";
 import TagDropdown from "./TagDropdown";
+import LocationDropdown from "./LocationDropdown"; // Import component mới
 import { Editor } from "@tinymce/tinymce-react";
-const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 export const JobForm = () => {
+  const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
   const [jobData, setJobData] = useState({
@@ -20,45 +21,36 @@ export const JobForm = () => {
     education: "",
     numberOfRecruitment: "",
     workType: "",
-    location: "",
+    location: [],
     salary: "",
+    minSalary: "",
     exp: "",
     priority: false,
     deadline: "",
+    jobPosition: "", // Thêm trường jobPosition
   });
   // Thêm state riêng cho min-max salary
   const [salaryRange, setSalaryRange] = useState({
     minSalary: "",
     maxSalary: "",
   });
-  const [tags, setTags] = useState([]); // Mảng chứa danh sách tags từ API
-  const [locations, setLocation] = useState([]);
+  const [tags, setTags] = useState([]);
   const navigate = useNavigate();
 
   // Lấy danh sách tags từ API
   useEffect(() => {
     const getTags = async () => {
       try {
-        const data = await fetchTags(); // Gọi API để lấy tags
-        setTags(data); // Cập nhật state tags với dữ liệu từ API
+        const data = await fetchTags();
+        setTags(data);
       } catch (error) {
         console.error("Error fetching tags:", error);
         toast.error("Failed to load tags.");
       }
     };
     getTags();
-    setLocation(vietnamProvinces);
   }, []);
 
-  // Xử lý thay đổi nội dung editor một cách riêng biệt
-  const handleEditorChange = (content) => {
-    setJobData((prevData) => ({
-      ...prevData,
-      description: content,
-    }));
-  };
-
-  // Cập nhật thông tin trong form
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === "checkbox") {
@@ -67,10 +59,9 @@ export const JobForm = () => {
         [name]: checked,
       });
     } else if (name === "jobTagID") {
-      // Cập nhật jobTagID khi người dùng chọn tag
       setJobData({
         ...jobData,
-        jobTagID: value, // Lưu tagID duy nhất
+        jobTagID: value,
       });
     } else {
       setJobData({
@@ -187,6 +178,7 @@ export const JobForm = () => {
                 <div className="widget-content">
                   <form onSubmit={handleSubmit} className="default-form">
                     <div className="row">
+                      {/* Các trường dữ liệu khác giữ nguyên */}
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Title</label>
                         <input
@@ -285,31 +277,15 @@ export const JobForm = () => {
                         </select>
                       </div>
 
-                      {/* Thêm phần chọn tags */}
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Tags</label>
                         <TagDropdown setSearchParams={setJobData} />
                       </div>
 
+                      {/* Thay đổi select location thành LocationDropdown */}
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Location</label>
-                        <select
-                          name="location"
-                          value={jobData.location}
-                          onChange={handleChange}
-                          className="form-control"
-                        >
-                          <option value="">Select a Location</option>
-                          {locations.length > 0 ? (
-                            locations.map((location) => (
-                              <option key={location.name} value={location.name}>
-                                {location.name}
-                              </option>
-                            ))
-                          ) : (
-                            <option>No Location available</option>
-                          )}
-                        </select>
+                        <label>Locations</label>
+                        <LocationDropdown setSearchParams={setJobData} />
                       </div>
 
                       {/* Phần Salary được thay đổi thành 2 ô input */}
@@ -348,7 +324,6 @@ export const JobForm = () => {
                           </div>
                         ) : null}
                       </div>
-
                       <div className="form-group col-lg-6 col-md-12">
                         <label style={{ display: "block" }}>Deadline</label>
                         <input
@@ -356,7 +331,7 @@ export const JobForm = () => {
                           name="deadline"
                           value={jobData.deadline}
                           onChange={handleChange}
-                          min={new Date().toISOString().split("T")[0]} // Giới hạn chỉ có thể chọn ngày hôm nay hoặc ngày trong tương lai
+                          min={new Date().toISOString().split("T")[0]}
                         />
                       </div>
 

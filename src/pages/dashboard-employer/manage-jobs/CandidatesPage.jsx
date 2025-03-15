@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  fetchCandidatesForJob,
-  rejectCandidate,
-  acceptCandidate,
-  fetchJobDetails,
-} from "../../../services/jobServices";
+import { fetchCandidatesForJob, rejectCandidate, acceptCandidate, fetchJobDetails } from "../../../services/jobServices";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
@@ -108,7 +103,7 @@ export default function CandidatesPage() {
   };
 
   const handleBackToJobs = () => {
-    navigate("/employer/manage-jobs");
+    navigate('/employer/manage-jobs');
   };
 
   const getStatusBadge = (status) => {
@@ -229,7 +224,7 @@ export default function CandidatesPage() {
                           </th>
                         </tr>
                       </thead>
-
+                     {/* comment out */}
                       <tbody>
                         {candidates.length > 0 ? (
                           candidates.map((candidate) => (
@@ -273,7 +268,13 @@ export default function CandidatesPage() {
                               <td>{getStatusBadge(candidate.status)}</td>
                               <td className="text-center">
                                 <div className="action-buttons">
+                                  {/* Thêm nút View Detail */}
                                   <button
+                                    className="view-detail-btn"
+                                    onClick={() => navigate(`/employer/manage-jobs/candidates/${jobId}/${candidate.applicationID}`)}>
+                                    <i className="fas fa-eye"></i> View Detail
+                                  </button>
+                                  {/* <button
                                     className="accept-btn"
                                     disabled={candidate.status === "Accepted"}
                                     onClick={() =>
@@ -286,13 +287,9 @@ export default function CandidatesPage() {
                                   <button
                                     className="reject-btn"
                                     disabled={candidate.status === "Rejected"}
-                                    onClick={() =>
-                                      handleReject(candidate.applicationID)
-                                    }
-                                  >
-                                    <i className="fas fa-times-circle"></i>{" "}
-                                    Reject
-                                  </button>
+                                    onClick={() => handleReject(candidate.applicationID)}>
+                                    <i className="fas fa-times-circle"></i> Reject
+                                  </button> */}
                                 </div>
                               </td>
                             </tr>
@@ -325,6 +322,23 @@ export default function CandidatesPage() {
       </div>
 
       <style jsx>{`
+      .view-detail-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .view-detail-btn:hover {
+    background-color: #5a6268;
+  }
         .upper-title-box {
           margin-bottom: 30px;
           display: flex;
