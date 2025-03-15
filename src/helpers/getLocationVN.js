@@ -33,7 +33,7 @@ export const vietnamProvinces = [
   { name: "Hai Duong" },
   { name: "Hai Phong" },
   { name: "Hau Giang" },
-  { name: "Ho Chi Minh City" },
+  { name: "Ho Chi Minh" },
   { name: "Hoa Binh" },
   { name: "Hung Yen" },
   { name: "Khanh Hoa" },

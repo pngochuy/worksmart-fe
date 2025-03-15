@@ -54,6 +54,7 @@ import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
 import { Index as UsersManagementPage } from "./pages/dashboard-admin/users-management";
 import { Index as JobPostingsManagementPage } from "./pages/dashboard-admin/job-postings-management";
 
+import EmployerCandidateDetailPage from "./pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
 function App() {
   return (
     <>
@@ -312,6 +313,11 @@ function App() {
                 element={<CandidatesPage />}
               />{" "}
               {/* ThanhAdd page candidares*/}
+              <Route path="/employer/manage-jobs/candidates/:jobId" element={<CandidatesPage />} />
+              <Route
+                path="/employer/manage-jobs/candidates/:jobId/:candidateId"
+                element={<EmployerCandidateDetailPage />}
+              />
               <Route
                 index
                 path="manage-jobs"
@@ -321,6 +327,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 index
                 path="all-candidates"
