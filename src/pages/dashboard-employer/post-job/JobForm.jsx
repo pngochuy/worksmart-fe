@@ -52,6 +52,7 @@ export const JobForm = () => {
 
   // Xử lý thay đổi nội dung editor một cách riêng biệt
   const handleEditorChange = (content) => {
+    console.log("content: ", content);
     setJobData((prevData) => ({
       ...prevData,
       description: content,
