@@ -191,6 +191,7 @@ export const VerifyTax = () => {
                                                     <Editor
                                                         apiKey={API_TYNI_KEY}
                                                         {...register("companyDescription")}
+                                                        value={watch("companyDescription")}
                                                         init={{
                                                             height: 300,
                                                             menubar: false,

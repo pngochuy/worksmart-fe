@@ -1,6 +1,7 @@
 import { uploadBusinessLicense, uploadImagesProfile, fetchCompanyProfile, uploadFile } from "@/services/employerServices";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 export const BusinessLicense = () => {
     const [businessLicense, setBusinessLicense] = useState("");
@@ -13,6 +14,9 @@ export const BusinessLicense = () => {
     const [isPending, setIsPending] = useState(false);
     const [isUploaded, setIsUploaded] = useState(false);
     const [isActive, setIsActive] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const loadBusinessLicenseInfo = async () => {
@@ -88,16 +92,20 @@ export const BusinessLicense = () => {
             toast.warn("Please upload a business license before submitting!");
             return;
         }
-
+        setIsLoading(true);
         try {
             const response = await uploadBusinessLicense(businessLicense);
             console.log("Submit response:", response);
             setIsUploaded(true);
             toast.success("Business License submitted successfully!");
+            // window.location.reload();
+            navigate("/employer/verification");
         } catch (error) {
             console.error("Error submitting business license:", error);
             const errorMessage = error.response?.data?.message || "Error submitting license, please try again.";
             toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -160,8 +168,10 @@ export const BusinessLicense = () => {
                                                                 onClick={handleSubmitBusinessLicense}
                                                                 disabled={isUploaded || isPending || isVerified}
                                                             >
-                                                                {isVerified ? "Verified" : isPending ? "Pending" : isUploaded ? "Uploaded" : "Upload"}
-                                                            </button>
+                                                                {isVerified ? "Verified" : isPending ? "Pending" : isUploaded ? "Uploaded" : isLoading ? (
+                                                                    <><i className="fa fa-spinner fa-spin"></i> Uploading...</>
+                                                                ) : "Upload"}                                                            
+                                                                </button>
 
                                                             <button
                                                                 className="btn btn-outline-danger"

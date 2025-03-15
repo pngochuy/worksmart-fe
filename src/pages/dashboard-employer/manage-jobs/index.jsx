@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { deleteJob, fetchJobs, fetchCandidatesForJob, hideJob, unhideJob } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
-import { getVerificationLevel } from "@/helpers/decodeJwt";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
 import ConfirmDialog from "./ConfirmDialog"; // Import component ConfirmDialog
+import { fetchCompanyProfile } from "@/services/employerServices";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -21,10 +21,18 @@ export default function ManageJobsPage() {
     IncludeHidden: true,
   });
   const [verificationLevel, setVerificationLevel] = useState(null);
-
+  
   useEffect(() => {
-    const level = getVerificationLevel();
-    setVerificationLevel(level);
+    const loadData = async () => {
+      try {
+        const companyData = await fetchCompanyProfile();
+
+        setVerificationLevel(companyData.verificationLevel);
+      } catch (error) {
+        console.error("Error loading verification data:", error);
+      }
+    };
+    loadData();
   }, []);
   
   useEffect(() => {
