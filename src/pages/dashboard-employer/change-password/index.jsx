@@ -7,8 +7,16 @@ import { toast, ToastContainer } from "react-toastify";
 import { changePassword } from "@/services/accountServices";
 
 const changePasswordSchema = z.object({
-  oldPassword: z.string().min(6, "Old password must be at least 6 characters"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  oldPassword: z.string(),
+  newPassword: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(20, "Password must not exceed 20 characters")
+    .regex(/[a-z]/, "Password must include at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must include at least one uppercase letter")
+    .regex(/\d/, "Password must include at least one numeric character"),
+}).refine((data) => data.oldPassword !== data.newPassword, {
+  message: "Old password cannot be the same as the new password",
+  path: ["newPassword"],
 });
 
 export const Index = () => {
@@ -40,7 +48,7 @@ export const Index = () => {
         pauseOnHover: true,
         draggable: true
       });
-      
+
       reset();
       setApiError("");
     } catch (error) {

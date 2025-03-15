@@ -12,7 +12,7 @@ import {
   uploadImagesProfile,
   deleteImagesProfile,
 } from "../../../services/candidateServices";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 // Validation schema using Zod
 const profileSchema = z.object({
@@ -92,16 +92,6 @@ export const Index = () => {
     resolver: zodResolver(addressSchema),
   });
 
-  // useEffect(() => {
-  //   const id = getUserIdFromToken();
-  //   if (id) {
-  //     setUserId(id);
-  //   } else {
-  //     console.error("Không tìm thấy userId trong token!");
-  //     navigate("/login"); // Chuyển hướng nếu không có userId
-  //   }
-  // }, []);
-
   //Fetch data profile
   useEffect(() => {
     const loadProfile = async () => {
@@ -149,7 +139,6 @@ export const Index = () => {
       };
       const message = await updateCandidateProfile(validData);
       toast.success(message);
-      window.location.reload();
     } catch (error) {
       console.error("Error updating profile", error);
       toast.error("Error updating profile");
@@ -212,7 +201,7 @@ export const Index = () => {
         setAvatar(imageUrl); // Cập nhật UI ngay khi ảnh mới có
         setFileError(""); // Xóa lỗi nếu có
         toast.success("Profile updated successfully!");
-        // window.location.reload();
+        window.location.reload();
       } catch (error) {
         console.error("Error while uploading photo:", error);
         // toast.error("Error while uploading photo!");
@@ -231,7 +220,7 @@ export const Index = () => {
       // Cập nhật state để giao diện hiển thị form upload lại
       setAvatar("");
       toast.success("Image deleted successfully!");
-      // window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.error("Error while deleting photo:", error);
       // toast.error("Error while deleting photo:");
@@ -259,7 +248,7 @@ export const Index = () => {
                   <div className="widget-title">
                     <h4>My Profile</h4>
                   </div>
-
+                  <ToastContainer/>
                   <div className="widget-content">
                     <div className="uploading-outer">
                       {avatar ? (
@@ -434,7 +423,6 @@ export const Index = () => {
                         {/* Save */}
                         <div className="form-group col-lg-6 col-md-12">
                           <button
-                            type="submit"
                             className="theme-btn btn-style-one"
                             disabled={isProfileLoading}
                           >

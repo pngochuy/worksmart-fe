@@ -144,7 +144,6 @@ export const Index = () => {
       console.log("Data gửi đi:", validData);
       const message = await updateCompanyProfile(validData);
       toast.success(message);
-      window.location.reload();
     } catch (error) {
       console.error("Error updating company profile:", error);
       toast.error("Error updating company profile");
@@ -415,7 +414,7 @@ export const Index = () => {
                         </div>
 
                         {/* IsPrivated */}
-                        <div className="form-group col-lg-6 col-md-12">
+                        <div className="form-group col-lg-12 col-md-12">
                           <label>Allow In Search & Listing</label>
                           <select
                             {...registerCompany("isPrivated")}
