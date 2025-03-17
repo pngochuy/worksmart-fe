@@ -7,13 +7,13 @@ import { createCV, getCVsByUserId, setFeatureCV } from "@/services/cvServices";
 import { toast } from "react-toastify";
 
 export const Index = () => {
-  const [resumes, setResumes] = useState([]); // State to store resumes
-  const [totalCount, setTotalCount] = useState(0); // State to store total count
-  const [featuredCVs, setFeaturedCVs] = useState({}); // Trạng thái featured cho từng CV (dùng object để lưu trạng thái theo cvid)
+  const [resumes, setResumes] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [featuredCVs, setFeaturedCVs] = useState({});
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || undefined;
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCVs = async () => {
@@ -21,8 +21,8 @@ export const Index = () => {
         const data = await getCVsByUserId(userID);
 
         if (data) {
-          setResumes(data); // Assuming the data has a `resumes` array
-          setTotalCount(data.length); // Assuming the data has a `totalCount`
+          setResumes(data);
+          setTotalCount(data.length);
 
           // Lưu trạng thái featured cho từng CV
           const featuredStatus = data.reduce((acc, resume) => {
@@ -38,8 +38,8 @@ export const Index = () => {
       }
     };
 
-    fetchCVs(); // Call the fetch function
-  }, []); // Empty dependency array means it runs once on mount
+    fetchCVs();
+  }, []);
 
   // Function to create a new CV
   const handleCreateCV = async () => {
@@ -49,7 +49,6 @@ export const Index = () => {
       setResumes((prevResumes) => [newCV, ...prevResumes]);
       setTotalCount((prevCount) => prevCount + 1);
 
-      // Redirect to the edit page with the newly created cvId
       navigate(`/candidate/my-cv/edit?cvId=${newCV.cvid}`);
     } catch (error) {
       console.error("Error creating CV:", error);
@@ -67,15 +66,11 @@ export const Index = () => {
   // Hàm xử lý khi "Set as Featured" (cập nhật trạng thái featured)
   const handleSetAsFeatured = async (cvId) => {
     try {
-      const newState = !featuredCVs[cvId]; // Lật lại trạng thái featured của CV
-      // Gọi API để cập nhật trạng thái featured của CV
+      const newState = !featuredCVs[cvId];
       await setFeatureCV(cvId, userID);
 
-      // Cập nhật trạng thái `featured` cho tất cả CVs
       setFeaturedCVs((prevState) => {
-        // Tạo một object mới với trạng thái updated
         const updatedFeaturedCVs = Object.keys(prevState).reduce((acc, key) => {
-          // Nếu key là cvId thì set true, còn lại false
           acc[key] = key === cvId ? true : false;
           return acc;
         }, {});
