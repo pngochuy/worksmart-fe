@@ -1,23 +1,29 @@
 import { useEffect, useState } from "react";
 import Select from "react-select";
-import { fetchTags } from "../../services/tagServices";
+import { fetchTagsByCategory } from "../../services/tagServices";
 
-const TagDropdown = ({ setSearchParams }) => {
+const TagDropdown = ({ setSearchParams, searchParams }) => {
   const [tagOptions, setTagOptions] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
 
   const getTags = async () => {
-    const data = await fetchTags();
-    const options = data.map((tag) => ({
-      value: tag.tagID,
-      label: tag.tagName,
-    }));
-    setTagOptions(options);
+    if (searchParams && searchParams.Category) {
+      const data = await fetchTagsByCategory(searchParams.Category);
+      const options = data.map((tag) => ({
+        value: tag.tagID,
+        label: tag.tagName,
+      }));
+      setTagOptions(options);
+    } else {
+      console.log("No category selected or searchParams is undefined");
+      setTagOptions([]); // Reset options when no category
+    }
   };
 
   useEffect(() => {
+    setSelectedTags([]);
     getTags();
-  }, []);
+  }, [searchParams?.Category]);
 
   const handleChange = (selected) => {
     setSelectedTags(selected);
@@ -111,9 +117,16 @@ const TagDropdown = ({ setSearchParams }) => {
       styles={customStyles}
       value={selectedTags}
       onChange={handleChange}
-      placeholder="Select Tags"
+      placeholder={
+        !searchParams?.Category || searchParams?.Category === "All Categories"
+          ? "Select a category first"
+          : "Select Tags"
+      }
       isMulti
       isSearchable
+      isDisabled={
+        !searchParams?.Category || searchParams?.Category === "All Categories"
+      }
     />
   );
 };

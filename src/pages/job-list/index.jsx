@@ -5,6 +5,7 @@ import WorkTypeFilter from "./WorkTypeFilter";
 import JobPositionDropdown from "./JobPositionDropdown";
 import SalaryRangeDropdown from "./SalaryRangeDropdown";
 import TagDropdown from "./TagDropdown";
+import CategoryDropdown from "./CategoryDropdown";
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ export const Index = () => {
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
     PageSize: 9, // Changed default to 9 to support 3x3 grid
+    Category: "",
     Title: "",
     JobPosition: "",
     WorkTypes: [],
@@ -63,7 +65,12 @@ export const Index = () => {
 
   useEffect(() => {
     getJobs();
-  }, [searchParams.PageSize, searchParams.PageIndex, searchParams.MostRecent]);
+  }, [
+    searchParams.PageSize,
+    searchParams.PageIndex,
+    searchParams.MostRecent,
+    searchParams.Category,
+  ]);
 
   // Function to chunk jobs array into rows of 3
   const chunkJobs = (jobs, chunkSize = 3) => {
@@ -160,7 +167,14 @@ export const Index = () => {
                   </div>
                   <div className="form-group">
                     {/* Form Group */}
-                    <TagDropdown setSearchParams={setSearchParams} />
+                    <CategoryDropdown setSearchParams={setSearchParams} />
+                  </div>
+                  <div className="form-group">
+                    {/* Form Group */}
+                    <TagDropdown
+                      setSearchParams={setSearchParams}
+                      searchParams={searchParams}
+                    />
                   </div>
                 </div>
               </div>
