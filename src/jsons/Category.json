@@ -1,0 +1,16 @@
+{
+  "categories": [
+    { "id": 1, "label": "Information Technology" },
+    { "id": 2, "label": "Design" },
+    { "id": 3, "label": "Marketing" },
+    { "id": 4, "label": "Finance" },
+    { "id": 5, "label": "Sales" },
+    { "id": 6, "label": "Customer Service" },
+    { "id": 7, "label": "Education" },
+    { "id": 8, "label": "Healthcare" },
+    { "id": 9, "label": "Engineering" },
+    { "id": 10, "label": "Logistics" },
+    { "id": 11, "label": "Media" },
+    { "id": 12, "label": "Manufacturing" }
+  ]
+}

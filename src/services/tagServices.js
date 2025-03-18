@@ -10,3 +10,14 @@ export const fetchTags = async () => {
     return [];
   }
 };
+export const fetchTagsByCategory = async (category) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/tags/getByCategory/${category}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    return [];
+  }
+};
