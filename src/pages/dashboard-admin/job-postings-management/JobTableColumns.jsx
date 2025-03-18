@@ -36,6 +36,8 @@ import {
 import { useState } from "react";
 import LoadingButton from "@/components/LoadingButton";
 import { toast } from "react-toastify";
+// Import real API functions
+import { approveJob, rejectJob } from "../../../services/adminServices";
 
 // Enum for job statuses
 export const JOB_STATUS = {
@@ -46,41 +48,7 @@ export const JOB_STATUS = {
   ACTIVE: 4,
 };
 
-// Mock service functions - replace with actual API calls
-const approveJob = async (jobId) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log(`Job ${jobId} approved`);
-  return true;
-};
-
-const rejectJob = async (jobId, reason) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Xử lý reason có thể là string hoặc object với detail
-  if (typeof reason === "object" && reason.code === "other") {
-    console.log(`Job ${jobId} rejected with custom reason: ${reason.detail}`);
-  } else {
-    console.log(`Job ${jobId} rejected with reason: ${reason}`);
-  }
-
-  return true;
-};
-
-const hideJob = async (jobId) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log(`Job ${jobId} hidden`);
-  return true;
-};
-
-const unhideJob = async (jobId) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log(`Job ${jobId} unhidden`);
-  return true;
-};
+// Remove mock function definitions since we're importing the real ones
 
 const filterByMultipleValues = (row, id, filterValues) => {
   if (!filterValues || !filterValues.length) return true;
@@ -267,7 +235,7 @@ function ApproveConfirmationDialog({
   async function handleApprove() {
     try {
       setLoading(true);
-      // Gọi API approve job
+      // Use the imported API function instead of the mock
       await approveJob(job.jobID);
 
       // Cập nhật status trong table
@@ -315,16 +283,6 @@ function ApproveConfirmationDialog({
           >
             Approve
           </LoadingButton>
-
-          {/* <LoadingButton
-            variant="outline"
-            type="button"
-            onClick={handleClick}
-            loading={loading}
-          >
-            <WandSparklesIcon className="size-4" />
-            Generate (AI)
-          </LoadingButton> */}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -349,36 +307,35 @@ function RejectConfirmationDialog({
       toast.error("Please select a reason for rejection.");
       return;
     }
-
+  
     // Kiểm tra nếu chọn "other" nhưng chưa nhập lý do
     if (rejectReason === "other" && !otherReasonText.trim()) {
       toast.error("Please provide details for the rejection reason.");
       return;
     }
-
+  
     try {
       setLoading(true);
-
+  
       // Chuẩn bị reason để gửi đi
-      // Nếu là other reason, gửi kèm nội dung chi tiết
-      const reasonToSend =
-        rejectReason === "other"
-          ? { code: rejectReason, detail: otherReasonText.trim() }
-          : rejectReason;
-
-      // Gọi API reject job
+      // Nếu là other reason, chỉ gửi nội dung chi tiết
+      const reasonToSend = rejectReason === "other"
+        ? otherReasonText.trim()  // Chỉ gửi text, không gửi object
+        : rejectReason;
+  
+      // Use the imported API function
       await rejectJob(job.jobID, reasonToSend);
-
+  
       // Cập nhật status trong table
       onStatusChange(job.jobID, JOB_STATUS.REJECTED);
-
+  
       // Đóng dialog và hiển thị thông báo
       onOpenChange(false);
-
+  
       // Reset các giá trị
       setRejectReason("");
       setOtherReasonText("");
-
+  
       toast.success(`Job ID ${job.jobID} has been rejected.`);
     } catch (error) {
       console.error(error);
@@ -471,7 +428,7 @@ function HideConfirmationDialog({ job, open, onOpenChange, onStatusChange }) {
   async function handleHide() {
     try {
       setLoading(true);
-      // Gọi API hide job
+      // Use the imported API function
       await hideJob(job.jobID);
 
       // Cập nhật status trong table
@@ -530,7 +487,7 @@ function UnhideConfirmationDialog({ job, open, onOpenChange, onStatusChange }) {
   async function handleUnhide() {
     try {
       setLoading(true);
-      // Gọi API unhide job
+      // Use the imported API function
       await unhideJob(job.jobID);
 
       // Cập nhật status trong table
@@ -581,7 +538,6 @@ function UnhideConfirmationDialog({ job, open, onOpenChange, onStatusChange }) {
     </Dialog>
   );
 }
-
 // Thay đổi từ định nghĩa cố định sang hàm trả về columns
 export const createColumns = (onStatusChange) => [
   {

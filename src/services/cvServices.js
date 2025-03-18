@@ -19,7 +19,7 @@ export const getCVsByUserId = async (userId) => {
 export const getCVById = async (cvId) => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/CV/${cvId}`);
-
+    console.log("CV ",response.data)
     return response.data;
   } catch (error) {
     console.error("Error fetching CV:", error);

@@ -12,8 +12,10 @@ const EditJobPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [locations, setLocations] = useState([]);
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' cho giảm dần, 'asc' cho tăng dần
+  const [updateHistory, setUpdateHistory] = useState([]);
   const [jobData, setJobData] = useState({
-    jobTagID: [],
+    tags: [],
     title: "",
     description: "",
     level: "",
@@ -40,15 +42,20 @@ const EditJobPage = () => {
         setIsLoading(true);
         const data = await getJobById(jobId);
         // Ensure the deadline is in correct format for the input type="date"
-        const formattedDeadline = data.deadline
-          ? new Date(data.deadline).toLocaleDateString("en-CA") // "en-CA" cho định dạng YYYY-MM-DD
+        const formattedDeadline = data.job.deadline
+          ? new Date(data.job.deadline).toLocaleDateString("en-CA") // "en-CA" cho định dạng YYYY-MM-DD
           : "";
 
+        // Nếu có lịch sử cập nhật, lưu vào state riêng
+        if (data.job.updateHistory) {
+          setUpdateHistory(data.job.updateHistory);
+        }
+
         setJobData({
-          ...data, // Spread other job data
+          ...data.job, // Spread other job data
           deadline: formattedDeadline, // Set formatted deadline
         });
-        console.log("Job data:", data);
+        console.log("Job data:", data.job);
       } catch (error) {
         console.error("Error fetching job:", error);
         toast.error("Failed to fetch job details.");
@@ -59,6 +66,25 @@ const EditJobPage = () => {
 
     fetchJob();
   }, [jobId]);
+
+  // Sắp xếp lịch sử cập nhật khi sortOrder thay đổi
+  useEffect(() => {
+    if (updateHistory.length > 0) {
+      const sortedHistory = [...updateHistory].sort((a, b) => {
+        if (sortOrder === 'desc') {
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+        } else {
+          return new Date(a.updatedAt) - new Date(b.updatedAt);
+        }
+      });
+      setUpdateHistory(sortedHistory);
+    }
+  }, [sortOrder, updateHistory]);
+
+  // Xử lý thay đổi cách sắp xếp
+  const handleSortChange = (e) => {
+    setSortOrder(e.target.value);
+  };
 
   // Handle input changes
   const handleChange = (e) => {
@@ -101,13 +127,41 @@ const EditJobPage = () => {
   return (
     <section className="user-dashboard">
       <div className="dashboard-outer">
-        <div className="upper-title-box">
-          <h3>Edit Job</h3>
-          <div className="text">Update in the job details below</div>
+        <div className="upper-title-box d-flex justify-content-between align-items-center">
+          <div>
+            <h3>Edit Job</h3>
+            <div className="text">Update in the job details below</div>
+          </div>
+          <div className="sort-options">
+            <label className="mr-2">Sắp xếp theo thời gian cập nhật:</label>
+            <select onChange={handleSortChange} value={sortOrder} className="form-control">
+              <option value="desc">Mới nhất trước</option>
+              <option value="asc">Cũ nhất trước</option>
+            </select>
+          </div>
         </div>
 
         <div className="row">
           <div className="col-lg-12">
+            {updateHistory.length > 0 && (
+              <div className="ls-widget mb-4">
+                <div className="widget-title">
+                  <h4>Lịch sử cập nhật</h4>
+                </div>
+                <div className="widget-content">
+                  <div className="update-history">
+                    {updateHistory.map((update, index) => (
+                      <div key={index} className="update-item p-3 mb-2 border-bottom">
+                        <div><strong>Ngày cập nhật:</strong> {new Date(update.updatedAt).toLocaleString()}</div>
+                        {update.updatedBy && <div><strong>Người cập nhật:</strong> {update.updatedBy}</div>}
+                        {update.changes && <div><strong>Thay đổi:</strong> {update.changes}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="ls-widget">
               <div className="tabs-box">
                 <div className="widget-title">
@@ -128,7 +182,7 @@ const EditJobPage = () => {
                         />
                       </div>
 
-                      {/* Thêm trường Job Position */}
+
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Job Position</label>
                         <input
@@ -151,7 +205,7 @@ const EditJobPage = () => {
                         />
                       </div>
 
-                      {/* TinyMCE Editor for Job Description */}
+
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Description</label>
                         <Editor
@@ -238,7 +292,8 @@ const EditJobPage = () => {
                         <label>Tags</label>
                         <TagDropdown
                           setSearchParams={setJobData}
-                          initialTags={jobData.jobTagID}
+                          // initialSelectedTags={jobData.jobTagID || [jobData.jobTagID]}
+                          initialSelectedTags={jobData.tags}
                         />
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
@@ -248,7 +303,7 @@ const EditJobPage = () => {
                           initialLocation={jobData.location || ""}
                         />
                       </div>
-                      <div className="form-group col-lg-6 col-md-12">
+                      {/* <div className="form-group col-lg-6 col-md-12">
                         <label>Min Salary ($)</label>
                         <input
                           type="number"
@@ -258,16 +313,16 @@ const EditJobPage = () => {
                           min="0"
                           placeholder="Enter minimum salary"
                         />
-                      </div>
+                      </div> */}
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Salary (VND)</label>
                         <input
-                          type="number"
+                          type="text"
                           name="salary"
                           value={jobData.salary}
                           onChange={handleChange}
-                          min="0"
+                          // min="0"
                           placeholder="Enter maximum salary"
                         />
                       </div>

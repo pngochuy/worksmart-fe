@@ -326,8 +326,8 @@ export const JobForm = () => {
                         </div>
                         {parseInt(salaryRange.minSalary) >
                           parseInt(salaryRange.maxSalary) &&
-                        salaryRange.minSalary &&
-                        salaryRange.maxSalary ? (
+                          salaryRange.minSalary &&
+                          salaryRange.maxSalary ? (
                           <div
                             className="text-danger mt-1"
                             style={{ fontSize: "0.8rem" }}

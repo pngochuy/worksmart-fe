@@ -1,70 +1,45 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import { fetchTags } from "../../../services/tagServices";
 
-const TagDropdown = ({ setSearchParams, initialTags = [] }) => {
+const TagDropdown = ({ setSearchParams, initialSelectedTags = [] }) => {
   const [tagOptions, setTagOptions] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
 
-  // Set up tag options from API
-  useEffect(() => {
-    const getTags = async () => {
-      try {
-        const data = await fetchTags();
-        const options = data.map((tag) => ({
-          value: tag.tagID,
-          label: tag.tagName,
-        }));
-        setTagOptions(options);
+  const getTags = async () => {
+    const data = await fetchTags();
+    const options = data.map((tag) => ({
+      value: tag.tagID,
+      label: tag.tagName,
+    }));
+    setTagOptions(options);
 
-        // Xử lý initialTags khi có options
-        processInitialTags(options, initialTags);
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-      }
-    };
+    // If we have initialSelectedTags, find and set the matching options
+    if (initialSelectedTags.length > 0) {
+      const initialTags = initialSelectedTags
+        .map((tagId) => {
+          // Find the matching tag from options
+          const matchingTag = options.find((opt) => opt.value === tagId);
+          return matchingTag; // Will include both value and label
+        })
+        .filter((tag) => tag !== undefined); // Filter out any tags that weren't found
 
-    getTags();
-  }, []);
-
-  // Update selected tags when initialTags changes
-  useEffect(() => {
-    if (tagOptions.length > 0) {
-      processInitialTags(tagOptions, initialTags);
-    }
-  }, [initialTags, tagOptions]);
-
-  // Hàm xử lý initialTags
-  const processInitialTags = (options, tags) => {
-    if (tags && tags.length > 0) {
-      // Chuyển đổi nếu tags không phải array
-      const tagsArray = Array.isArray(tags) ? tags : [tags];
-      
-      // Tìm các tags đã chọn từ options
-      // Khớp theo cả value và label
-      let initialSelectedOptions = options.filter(option => 
-        tagsArray.includes(option.value) || 
-        tagsArray.includes(option.label)
-      );
-      
-      // Nếu có tags đã chọn
-      if (initialSelectedOptions.length > 0) {
-        setSelectedTags(initialSelectedOptions);
-      }
+      setSelectedTags(initialTags);
     }
   };
+
+  useEffect(() => {
+    getTags();
+  }, [initialSelectedTags]);
 
   const handleChange = (selected) => {
-    const newSelected = selected || [];
-    setSelectedTags(newSelected);
-    
-    // Cập nhật giá trị vào component cha
+    setSelectedTags(selected);
     setSearchParams((prev) => ({
       ...prev,
-      jobTagID: newSelected.map((tag) => tag.value),
+      Tags: selected.map((tag) => tag.value),
+      PageIndex: 1,
     }));
   };
-
   const customStyles = {
     control: (provided) => ({
       ...provided,

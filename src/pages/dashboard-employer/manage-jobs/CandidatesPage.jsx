@@ -73,7 +73,7 @@ export default function CandidatesPage() {
     try {
       const jobDetails = await fetchJobDetails(jobId);
       console.log("Job details:", jobDetails);
-      setJobTitle(jobDetails.title || `Job #${jobId}`);
+      setJobTitle(jobDetails.job.title || `Job #${jobId}`);
     } catch (error) {
       console.error("Error fetching job details:", error);
       setJobTitle(`Job #${jobId}`);
