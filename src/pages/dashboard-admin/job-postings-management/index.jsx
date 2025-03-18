@@ -32,7 +32,9 @@ export const Index = () => {
             <div className="ls-widget">
               <div className="tabs-box">
                 <div className="widget-title">
-                  <h2 className="text-3xl">Job Postings Management</h2>
+                  <h2 className="text-3xl font-bold">
+                    Job Postings Management
+                  </h2>
                   <JobTable data={jobData} isLoading={isLoading} />
                 </div>
               </div>
