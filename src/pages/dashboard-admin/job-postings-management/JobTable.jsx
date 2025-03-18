@@ -27,7 +27,7 @@ export const JobTable = ({
     title: true,
     education: false,
     workType: true,
-    location: true,
+    location: false,
     salary: true,
     exp: false,
     status: true,
