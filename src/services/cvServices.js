@@ -15,6 +15,7 @@ export const getCVsByUserId = async (userId) => {
     return null;
   }
 };
+
 export const getCVById = async (cvId) => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/CV/${cvId}`);
@@ -84,5 +85,20 @@ export const deleteCV = async (cvId) => {
   } catch (error) {
     console.error("Error deleting CV:", error);
     throw new Error("Failed to delete CV");
+  }
+};
+
+export const uploadCV = async (formData) => {
+  try {
+    const response = await axios.post(`${BACKEND_API_URL}/api/CV/upload-cv`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi tải lên CV:", error);
+    return null;
   }
 };

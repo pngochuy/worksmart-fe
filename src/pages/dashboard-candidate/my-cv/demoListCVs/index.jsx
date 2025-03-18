@@ -3,13 +3,16 @@ import { PlusSquare } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { ResumeItem } from "./ResumeItem";
 import { useEffect, useState } from "react";
-import { createCV, getCVsByUserId, setFeatureCV } from "@/services/cvServices";
+import { createCV, getCVsByUserId, setFeatureCV, uploadCV } from "@/services/cvServices";
 import { toast } from "react-toastify";
 
 export const Index = () => {
   const [resumes, setResumes] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [featuredCVs, setFeaturedCVs] = useState({});
+  const [file, setFile] = useState("");
+  const [filePath, setFilePath] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || undefined;
@@ -89,19 +92,62 @@ export const Index = () => {
     }
   };
 
+  //upload CV
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type === "application/pdf") {
+      setFile(selectedFile); // Lưu file thực tế
+      setFilePath(selectedFile.name);
+    } else {
+      toast.error("Chỉ hỗ trợ tệp PDF.");
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!filePath) return toast.error("Vui lòng chọn một tệp CV!");
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("cvFile", file);
+      formData.append("userId", userID);
+
+      const result = await uploadCV(formData);
+      console.log("Data send:", formData)
+      toast.success("CV đã tải lên thành công!");
+      setResumes((prevResumes) => [result.cvDto, ...prevResumes]);
+      setTotalCount((prevCount) => prevCount + 1);
+    } catch (error) {
+      console.log("Error:", error)
+      toast.error("Lỗi khi tải lên. Vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
-        <Button
-          asChild
-          className="mx-auto flex w-fit gap-2"
-          onClick={handleCreateCV}
-        >
-          <NavLink className="hover:text-white ">
-            <PlusSquare className="size-5 " />
-            New CV
-          </NavLink>
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            asChild
+            className="flex w-fit gap-2"
+            onClick={handleCreateCV}
+          >
+            <NavLink className="hover:text-white">
+              <PlusSquare className="size-5" />
+              New CV
+            </NavLink>
+          </Button>
+
+          <input type="file" accept=".pdf" onChange={handleFileChange} className="hidden" id="upload-cv" />
+          <label htmlFor="upload-cv" className="cursor-pointer">
+            <Button className="flex items-center gap-2">Upload CV</Button>
+          </label>
+          <Button onClick={handleUpload} className="flex items-center gap-2" disabled={isLoading}>
+            {isLoading ? "Uploading..." : "Upload"}
+          </Button>
+        </div>
 
         <div className="space-y-1">
           <h1 className="text-3xl font-bold">My CVs</h1>
