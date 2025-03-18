@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import { fetchTags } from "../../../services/tagServices";
@@ -60,21 +61,21 @@ const TagDropdown = ({ setSearchParams, initialSelectedTags = [] }) => {
       overflowY: "hidden",
       flexWrap: "nowrap",
       scrollbarWidth: "thin",
-      '&::-webkit-scrollbar': {
-        height: '6px',
-        width: '0',  // Hide vertical scrollbar
+      "&::-webkit-scrollbar": {
+        height: "6px",
+        width: "0", // Hide vertical scrollbar
       },
-      '&::-webkit-scrollbar-track': {
-        background: '#f1f1f1',
-        borderRadius: '3px',
+      "&::-webkit-scrollbar-track": {
+        background: "#f1f1f1",
+        borderRadius: "3px",
       },
-      '&::-webkit-scrollbar-thumb': {
-        background: '#c1c1c1',
-        borderRadius: '3px',
+      "&::-webkit-scrollbar-thumb": {
+        background: "#c1c1c1",
+        borderRadius: "3px",
       },
-      '&::-webkit-scrollbar-thumb:hover': {
-        background: '#a8a8a8',
-      }
+      "&::-webkit-scrollbar-thumb:hover": {
+        background: "#a8a8a8",
+      },
     }),
     menu: (provided) => ({
       ...provided,
@@ -84,7 +85,11 @@ const TagDropdown = ({ setSearchParams, initialSelectedTags = [] }) => {
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? "#f5f5f5" : state.isFocused ? "#f8f8f8" : null,
+      backgroundColor: state.isSelected
+        ? "#f5f5f5"
+        : state.isFocused
+        ? "#f8f8f8"
+        : null,
       color: "#333",
       padding: "8px 12px",
     }),
@@ -104,7 +109,7 @@ const TagDropdown = ({ setSearchParams, initialSelectedTags = [] }) => {
       padding: "0 8px",
     }),
     indicatorSeparator: () => ({
-      display: "none"
+      display: "none",
     }),
     multiValue: (provided) => ({
       ...provided,
@@ -123,9 +128,9 @@ const TagDropdown = ({ setSearchParams, initialSelectedTags = [] }) => {
       ...provided,
       color: "#666",
       padding: "0 4px",
-      ':hover': {
-        backgroundColor: '#e0e0e0',
-        color: '#333',
+      ":hover": {
+        backgroundColor: "#e0e0e0",
+        color: "#333",
       },
     }),
     clearIndicator: (provided) => ({

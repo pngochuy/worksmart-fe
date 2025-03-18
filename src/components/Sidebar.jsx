@@ -22,6 +22,7 @@ export const Sidebar = () => {
     const loadData = async () => {
       try {
         const user = getUserLoginData();
+        console.log("user: ", user);
         setUserDataLogin(user);
 
         const companyData = await fetchCompanyProfile();
@@ -53,7 +54,7 @@ export const Sidebar = () => {
                     ? userDataLogin.avatar
                     : "https://www.topcv.vn/images/avatar-default.jpg"
                 }
-                alt="avatar"
+                // alt={userDataLogin.avatar}
                 className="thumb"
               />
             </div>

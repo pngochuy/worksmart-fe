@@ -311,7 +311,7 @@ function App() {
               <Route
                 path="/employer/manage-jobs/applied-candidates/:jobId"
                 element={<CandidatesPage />}
-              />{" "}
+              />
               {/* ThanhAdd page candidares*/}
               <Route
                 path="/employer/manage-jobs/candidates/:jobId"

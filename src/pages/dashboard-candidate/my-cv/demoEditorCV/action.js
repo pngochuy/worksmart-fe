@@ -3,7 +3,7 @@ import { uploadImagesProfile } from "@/services/candidateServices";
 import { editCV, getCVById } from "@/services/cvServices";
 
 export default async function saveResume(values) {
-  const { id, userId } = values;
+  const { id, userId, isFeatured } = values;
   const resumeValues = resumeSchema.parse(values); // resumeValues is the validated data from resumeSchema
   // If there is a photo, upload it and get the URL
   if (resumeValues?.photo && typeof resumeValues.photo !== "string") {
@@ -20,6 +20,7 @@ export default async function saveResume(values) {
     const fetchedCV = await getCVById(id);
     resumeValues.photo = fetchedCV.link; // Set default value if photo is empty
   }
+
   // Mapping resumeValues to the required format for the API
   const mappedResumeValues = {
     cvid: id, // Map the CV id
@@ -37,7 +38,7 @@ export default async function saveResume(values) {
     link: resumeValues.photo,
     borderstyle: resumeValues.borderStyle, // Change borderStyle to borderstyle
     colorhex: resumeValues.colorHex, // Change colorHex to colorhex
-    isFeatured: false, // Default to true
+    isFeatured: isFeatured, // Default to false
     // createdAt: new Date().toISOString(), // You may need to use the actual created date
     updatedAt: new Date().toISOString(), // Use the actual updated date if available
     experiences: resumeValues.workExperiences.map((exp) => ({

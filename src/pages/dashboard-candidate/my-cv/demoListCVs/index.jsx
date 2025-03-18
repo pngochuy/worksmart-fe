@@ -44,6 +44,12 @@ export const Index = () => {
   // Function to create a new CV
   const handleCreateCV = async () => {
     try {
+      // Kiểm tra xem đã đạt giới hạn 3 CV chưa
+      if (resumes.length >= 3) {
+        toast.warning("You can only create a maximum of 3 CVs.");
+        return; // Dừng hàm nếu đã đạt giới hạn
+      }
+
       const newCV = await createCV({ userID: userID });
       console.log("New CV created:", newCV);
       setResumes((prevResumes) => [newCV, ...prevResumes]);

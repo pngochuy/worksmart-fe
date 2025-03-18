@@ -9,6 +9,7 @@ export default function useAutoSaveResume(resumeData) {
   const [searchParams] = useSearchParams();
 
   //   const { toast } = useToast();
+  // console.log("resumeData: ", resumeData);
 
   const debouncedResumeData = useDebounce(resumeData, 1500);
 
@@ -44,6 +45,7 @@ export default function useAutoSaveResume(resumeData) {
           }),
           cvid: resumeId,
           userId: userID,
+          isFeatured: resumeData?.isFeatured,
         });
 
         setResumeId(updatedResume.id);

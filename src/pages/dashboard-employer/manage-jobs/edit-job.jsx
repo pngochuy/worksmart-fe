@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getJobById, updateJob } from "../../../services/jobServices";
 import { Editor } from "@tinymce/tinymce-react";
 import { toast } from "react-toastify";
 import TagDropdown from "../post-job/TagDropdown";
-import { vietnamProvinces } from "../../../helpers/getLocationVN";
 import LocationDropdown from "../post-job/LocationDropdown";
-const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY
+const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
+
 const EditJobPage = () => {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [locations, setLocations] = useState([]);
-  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' cho giảm dần, 'asc' cho tăng dần
+  const [sortOrder, setSortOrder] = useState("desc"); // 'desc' cho giảm dần, 'asc' cho tăng dần
   const [updateHistory, setUpdateHistory] = useState([]);
   const [jobData, setJobData] = useState({
     tags: [],
@@ -29,11 +28,30 @@ const EditJobPage = () => {
     deadline: "",
     jobPosition: "", // Thêm trường jobPosition
   });
+  const [salaryRange, setSalaryRange] = useState({
+    minSalary: "",
+    maxSalary: "",
+  });
+  // Thêm state để theo dõi vị trí con trỏ
+  const [cursorPositions, setCursorPositions] = useState({
+    minSalary: 0,
+    maxSalary: 0,
+  });
+  // Refs để tham chiếu tới các input elements
+  const minSalaryInputRef = useRef(null);
+  const maxSalaryInputRef = useRef(null);
 
-  // Khởi tạo danh sách locations
+  // Cập nhật vị trí con trỏ sau mỗi lần render
   useEffect(() => {
-    setLocations(vietnamProvinces);
-  }, []);
+    if (minSalaryInputRef.current) {
+      minSalaryInputRef.current.selectionStart = cursorPositions.minSalary;
+      minSalaryInputRef.current.selectionEnd = cursorPositions.minSalary;
+    }
+    if (maxSalaryInputRef.current) {
+      maxSalaryInputRef.current.selectionStart = cursorPositions.maxSalary;
+      maxSalaryInputRef.current.selectionEnd = cursorPositions.maxSalary;
+    }
+  }, [salaryRange, cursorPositions]);
 
   // Fetch job data by ID
   useEffect(() => {
@@ -41,21 +59,54 @@ const EditJobPage = () => {
       try {
         setIsLoading(true);
         const data = await getJobById(jobId);
-        // Ensure the deadline is in correct format for the input type="date"
+        console.log("Fetch job data:", data);
+        // Format deadline
         const formattedDeadline = data.job.deadline
-          ? new Date(data.job.deadline).toLocaleDateString("en-CA") // "en-CA" cho định dạng YYYY-MM-DD
+          ? new Date(data.job.deadline).toLocaleDateString("en-CA")
           : "";
 
-        // Nếu có lịch sử cập nhật, lưu vào state riêng
+        // Parse salary string (format: "minSalary - maxSalary")
+        let minSalary = "";
+        let maxSalary = "";
+        if (data.job.salary) {
+          const salaryParts = data.job.salary
+            .split("-")
+            .map((part) => part.trim());
+
+          if (salaryParts.length === 2) {
+            // Xử lý dữ liệu đầu vào - loại bỏ dấu phẩy nếu có
+            const minClean = salaryParts[0].replace(/,/g, "");
+            const maxClean = salaryParts[1].replace(/,/g, "");
+
+            // Chuyển đổi về số và định dạng lại với dấu phẩy
+            const minNum = parseInt(minClean, 10);
+            const maxNum = parseInt(maxClean, 10);
+
+            if (!isNaN(minNum)) {
+              minSalary = minNum.toLocaleString("en-US");
+            }
+
+            if (!isNaN(maxNum)) {
+              maxSalary = maxNum.toLocaleString("en-US");
+            }
+          }
+        }
+
+        // Set salary range
+        setSalaryRange({
+          minSalary,
+          maxSalary,
+        });
+
+        // Update history if available
         if (data.job.updateHistory) {
           setUpdateHistory(data.job.updateHistory);
         }
 
         setJobData({
-          ...data.job, // Spread other job data
-          deadline: formattedDeadline, // Set formatted deadline
+          ...data.job,
+          deadline: formattedDeadline,
         });
-        console.log("Job data:", data.job);
       } catch (error) {
         console.error("Error fetching job:", error);
         toast.error("Failed to fetch job details.");
@@ -71,7 +122,7 @@ const EditJobPage = () => {
   useEffect(() => {
     if (updateHistory.length > 0) {
       const sortedHistory = [...updateHistory].sort((a, b) => {
-        if (sortOrder === 'desc') {
+        if (sortOrder === "desc") {
           return new Date(b.updatedAt) - new Date(a.updatedAt);
         } else {
           return new Date(a.updatedAt) - new Date(b.updatedAt);
@@ -81,6 +132,81 @@ const EditJobPage = () => {
     }
   }, [sortOrder, updateHistory]);
 
+  // Handler cho việc thay đổi lương
+  const handleSalaryChange = (e) => {
+    const { name, value } = e.target;
+    const cursorPos = e.target.selectionStart;
+
+    // Đếm số lượng dấu phẩy trước vị trí con trỏ
+    const valueBeforeCursor = value.substring(0, cursorPos);
+    const commasBeforeCursor = (valueBeforeCursor.match(/,/g) || []).length;
+
+    // Xóa tất cả dấu phẩy và kí tự không phải số
+    const numericValue = value.replace(/[^\d]/g, "");
+
+    // Định dạng số với dấu phẩy
+    let formattedValue = "";
+    if (numericValue) {
+      formattedValue = parseInt(numericValue, 10).toLocaleString("en-US");
+    }
+
+    // Tính toán vị trí con trỏ mới
+    // Vị trí con trỏ sẽ bị đẩy về phía trước khi thêm dấu phẩy
+    let newCursorPos = cursorPos;
+
+    // Đếm số lượng dấu phẩy trong giá trị mới trước vị trí con trỏ
+    const digitsBeforeCursor = valueBeforeCursor.replace(/[^\d]/g, "").length;
+    const newValueBeforeCursor = numericValue.substring(0, digitsBeforeCursor);
+    const newFormattedValueBeforeCursor = parseInt(
+      newValueBeforeCursor || "0",
+      10
+    ).toLocaleString("en-US");
+    const newCommasBeforeCursor = (
+      newFormattedValueBeforeCursor.match(/,/g) || []
+    ).length;
+
+    // Điều chỉnh vị trí con trỏ dựa trên sự thay đổi số lượng dấu phẩy
+    const commasDiff = newCommasBeforeCursor - commasBeforeCursor;
+    newCursorPos = cursorPos + commasDiff;
+
+    // Đảm bảo vị trí con trỏ không vượt quá độ dài chuỗi
+    newCursorPos = Math.min(newCursorPos, formattedValue.length);
+    newCursorPos = Math.max(newCursorPos, 0);
+
+    // Cập nhật state
+    setSalaryRange((prev) => ({
+      ...prev,
+      [name]: formattedValue,
+    }));
+
+    // Lưu vị trí con trỏ mới
+    setCursorPositions((prev) => ({
+      ...prev,
+      [name]: newCursorPos,
+    }));
+
+    // Update the main salary field in jobData
+    const updatedMinSalary =
+      name === "minSalary"
+        ? numericValue
+        : salaryRange.minSalary
+        ? salaryRange.minSalary.replace(/,/g, "")
+        : "";
+
+    const updatedMaxSalary =
+      name === "maxSalary"
+        ? numericValue
+        : salaryRange.maxSalary
+        ? salaryRange.maxSalary.replace(/,/g, "")
+        : "";
+
+    if (updatedMinSalary && updatedMaxSalary) {
+      setJobData((prev) => ({
+        ...prev,
+        salary: `${updatedMinSalary} - ${updatedMaxSalary}`,
+      }));
+    }
+  };
   // Xử lý thay đổi cách sắp xếp
   const handleSortChange = (e) => {
     setSortOrder(e.target.value);
@@ -104,12 +230,48 @@ const EditJobPage = () => {
   };
 
   // Handle form submit
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Convert formatted salary values to numbers by removing commas
+    const minSalaryStr = salaryRange.minSalary
+      ? salaryRange.minSalary.replace(/,/g, "")
+      : "0";
+    const maxSalaryStr = salaryRange.maxSalary
+      ? salaryRange.maxSalary.replace(/,/g, "")
+      : "0";
+
+    const minSalary = parseInt(minSalaryStr, 10);
+    const maxSalary = parseInt(maxSalaryStr, 10);
+
+    if (isNaN(minSalary) || isNaN(maxSalary)) {
+      toast.error("Please enter valid salary values");
+      return;
+    }
+
+    if (minSalary < 0 || maxSalary < 0) {
+      toast.error("Salary cannot be negative");
+      return;
+    }
+
+    if (minSalary > maxSalary) {
+      toast.error("Minimum salary cannot be greater than maximum salary");
+      return;
+    }
+
     try {
-      await updateJob(jobId, jobData);
+      // Create updated job data with formatted salary including commas for display
+      const updatedJobData = {
+        ...jobData,
+        salary: `${minSalary.toLocaleString(
+          "en-US"
+        )} - ${maxSalary.toLocaleString("en-US")}`,
+      };
+
+      await updateJob(jobId, updatedJobData);
       toast.success("Job updated successfully!");
-      navigate("/employer/manage-jobs"); // Điều hướng về trang danh sách job
+      navigate("/employer/manage-jobs");
     } catch (error) {
       console.error("Error updating job:", error);
       toast.error("Failed to update job.");
@@ -120,10 +282,6 @@ const EditJobPage = () => {
     return <div className="text-center p-5">Loading job data...</div>;
   }
 
-  // Kiểm tra xem location đã chọn có trong danh sách không
-  const isLocationValid =
-    jobData.location && locations.some((loc) => loc.name === jobData.location);
-
   return (
     <section className="user-dashboard">
       <div className="dashboard-outer">
@@ -133,10 +291,14 @@ const EditJobPage = () => {
             <div className="text">Update in the job details below</div>
           </div>
           <div className="sort-options">
-            <label className="mr-2">Sắp xếp theo thời gian cập nhật:</label>
-            <select onChange={handleSortChange} value={sortOrder} className="form-control">
-              <option value="desc">Mới nhất trước</option>
-              <option value="asc">Cũ nhất trước</option>
+            <label className="mr-2">Sort Order by Updated Date:</label>
+            <select
+              onChange={handleSortChange}
+              value={sortOrder}
+              className="form-control"
+            >
+              <option value="desc">Lastest</option>
+              <option value="asc">Oldest</option>
             </select>
           </div>
         </div>
@@ -146,15 +308,29 @@ const EditJobPage = () => {
             {updateHistory.length > 0 && (
               <div className="ls-widget mb-4">
                 <div className="widget-title">
-                  <h4>Lịch sử cập nhật</h4>
+                  <h4>Update History</h4>
                 </div>
                 <div className="widget-content">
                   <div className="update-history">
                     {updateHistory.map((update, index) => (
-                      <div key={index} className="update-item p-3 mb-2 border-bottom">
-                        <div><strong>Ngày cập nhật:</strong> {new Date(update.updatedAt).toLocaleString()}</div>
-                        {update.updatedBy && <div><strong>Người cập nhật:</strong> {update.updatedBy}</div>}
-                        {update.changes && <div><strong>Thay đổi:</strong> {update.changes}</div>}
+                      <div
+                        key={index}
+                        className="update-item p-3 mb-2 border-bottom"
+                      >
+                        <div>
+                          <strong>Updated At:</strong>{" "}
+                          {new Date(update.updatedAt).toLocaleString()}
+                        </div>
+                        {update.updatedBy && (
+                          <div>
+                            <strong>Updated By:</strong> {update.updatedBy}
+                          </div>
+                        )}
+                        {update.changes && (
+                          <div>
+                            <strong>Changes:</strong> {update.changes}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -165,7 +341,7 @@ const EditJobPage = () => {
             <div className="ls-widget">
               <div className="tabs-box">
                 <div className="widget-title">
-                  <h4>Post Job</h4>
+                  <h4>Edit Job</h4>
                 </div>
                 <div className="widget-content">
                   <form onSubmit={handleSubmit} className="default-form">
@@ -182,8 +358,7 @@ const EditJobPage = () => {
                         />
                       </div>
 
-
-                      <div className="form-group col-lg-6 col-md-12">
+                      {/* <div className="form-group col-lg-6 col-md-12">
                         <label>Job Position</label>
                         <input
                           type="text"
@@ -203,8 +378,7 @@ const EditJobPage = () => {
                           onChange={handleChange}
                           placeholder="Enter job level (e.g. Junior, Senior, etc.)"
                         />
-                      </div>
-
+                      </div> */}
 
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Description</label>
@@ -283,9 +457,11 @@ const EditJobPage = () => {
                           onChange={handleChange}
                         >
                           <option value="">Select</option>
-                          <option value="Full-time">Full-time</option>
-                          <option value="Part-time">Part-time</option>
-                          <option value="Freelance">Freelance</option>
+                          <option value="Full-Time">Full-Time</option>
+                          <option value="Part-Time">Part-Time</option>
+                          <option value="Contract">Contract</option>
+                          <option value="Internship">Internship</option>
+                          <option value="Remote">Remote</option>
                         </select>
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
@@ -303,28 +479,45 @@ const EditJobPage = () => {
                           initialLocation={jobData.location || ""}
                         />
                       </div>
-                      {/* <div className="form-group col-lg-6 col-md-12">
-                        <label>Min Salary ($)</label>
-                        <input
-                          type="number"
-                          name="minSalary"
-                          value={jobData.minSalary}
-                          onChange={handleChange}
-                          min="0"
-                          placeholder="Enter minimum salary"
-                        />
-                      </div> */}
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Salary (VND)</label>
-                        <input
-                          type="text"
-                          name="salary"
-                          value={jobData.salary}
-                          onChange={handleChange}
-                          // min="0"
-                          placeholder="Enter maximum salary"
-                        />
+                        <label>Salary Range (VND)</label>
+                        <div className="d-flex">
+                          <input
+                            ref={minSalaryInputRef}
+                            type="text"
+                            name="minSalary"
+                            value={salaryRange.minSalary}
+                            onChange={handleSalaryChange}
+                            placeholder="Min salary"
+                            className="mr-2"
+                            style={{ flex: 1, marginRight: "10px" }}
+                          />
+                          <input
+                            ref={maxSalaryInputRef}
+                            type="text"
+                            name="maxSalary"
+                            value={salaryRange.maxSalary}
+                            onChange={handleSalaryChange}
+                            placeholder="Max salary"
+                            style={{ flex: 1 }}
+                          />
+                        </div>
+                        {parseInt(
+                          salaryRange.minSalary?.replace(/,/g, "") || 0
+                        ) >
+                          parseInt(
+                            salaryRange.maxSalary?.replace(/,/g, "") || 0
+                          ) &&
+                        salaryRange.minSalary &&
+                        salaryRange.maxSalary ? (
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.8rem" }}
+                          >
+                            Minimum salary cannot be greater than maximum salary
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
