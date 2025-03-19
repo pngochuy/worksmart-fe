@@ -618,10 +618,12 @@ function LicenseVerificationDialog({
     originalDocumentUrl && originalDocumentUrl.toLowerCase().endsWith(".pdf");
 
   // Create preview URL as jpg if it's a PDF from Cloudinary
-  const viewableUrl =
-    isCloudinaryUrl && isPDF
-      ? originalDocumentUrl.replace("/upload/", "/upload/f_jpg/")
-      : originalDocumentUrl;
+  // const viewableUrl =
+  //   isCloudinaryUrl && isPDF
+  //     ? originalDocumentUrl.replace("/upload/", "/upload/f_jpg/")
+  //     : originalDocumentUrl;
+  
+  const viewableUrl = originalDocumentUrl;
 
   // Properly handle PDF downloading with correct approach
   const downloadDocument = () => {
@@ -808,7 +810,7 @@ function LicenseVerificationDialog({
                           className="flex items-center justify-center"
                         >
                           <Eye className="mr-2 h-4 w-4" />
-                          View as Image
+                          View as File
                         </Button>
 
                         <Button
@@ -819,17 +821,17 @@ function LicenseVerificationDialog({
                           <FileText className="mr-2 h-4 w-4" />
                           Download
                         </Button>
-                      </div>
 
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowPdfViewer(!showPdfViewer)}
-                        className="w-full"
-                      >
-                        {showPdfViewer
-                          ? "Hide Document Viewer"
-                          : "Show Document Viewer Here"}
-                      </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowPdfViewer(!showPdfViewer)}
+                          // className="w-full"
+                        >
+                          {showPdfViewer
+                            ? "Hide Document"
+                            : "Show Document"}
+                        </Button>
+                      </div>
 
                       {showPdfViewer && (
                         <div className="border rounded-md p-1">
@@ -847,7 +849,7 @@ function LicenseVerificationDialog({
                       <div className="text-sm text-muted-foreground">
                         <p>
                           You have multiple options to view this document:
-                          &quot;View as Image&quot; converts the PDF to an image
+                          &quot;View as File&quot; converts the PDF to an file
                           for easy viewing, &quot;View Original&quot; opens the
                           PDF in a new tab, and &quot;Download&quot; allows you
                           to save the file to your device.
