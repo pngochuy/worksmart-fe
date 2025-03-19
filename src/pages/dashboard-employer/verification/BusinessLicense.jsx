@@ -164,7 +164,7 @@ export const BusinessLicense = () => {
                                                             </button>
 
                                                             <button
-                                                                className={`btn ${isVerified ? "btn-success" : isPending ? "btn-warning" : isUploaded ? "btn-info" : "btn-danger"}`}
+                                                                className={`btn ${isVerified ? "btn-success" : isPending ? "btn-warning" : isUploaded ? "btn-secondary" : "btn-info"}`}
                                                                 onClick={handleSubmitBusinessLicense}
                                                                 disabled={isUploaded || isPending || isVerified}
                                                             >

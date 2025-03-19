@@ -1,18 +1,23 @@
 import { Button } from "@/components/ui/button";
-import { PlusSquare } from "lucide-react";
+import { PlusSquare, Upload, FileText } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { ResumeItem } from "./ResumeItem";
 import { useEffect, useState } from "react";
 import { createCV, getCVsByUserId, setFeatureCV, uploadCV } from "@/services/cvServices";
 import { toast } from "react-toastify";
+import { uploadFile  } from "@/services/employerServices";
 
 export const Index = () => {
   const [resumes, setResumes] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [featuredCVs, setFeaturedCVs] = useState({});
-  const [file, setFile] = useState("");
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
   const [filePath, setFilePath] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [fileError, setFileError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || undefined;
@@ -92,43 +97,90 @@ export const Index = () => {
     }
   };
 
-  //upload CV
-  const handleFileChange = (event) => {
+  // Xử lý upload file CV
+  const handleCVFileChange = async (event) => {
     const selectedFile = event.target.files[0];
-    if (selectedFile && selectedFile.type === "application/pdf") {
-      setFile(selectedFile); // Lưu file thực tế
-      setFilePath(selectedFile.name);
-    } else {
-      toast.error("Chỉ hỗ trợ tệp PDF.");
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== "application/pdf") {
+      setFileError("Only PDF files are allowed!");
+      return;
     }
-  };
 
-  const handleUpload = async () => {
-    if (!filePath) return toast.error("Vui lòng chọn một tệp CV!");
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setFileError("File size must be less than 5MB!");
+      return;
+    }
+
+    setFileError("");
+    setFile(selectedFile);
+    setFileName(selectedFile.name);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
+    
     setIsLoading(true);
-
+    setUploadProgress(10);
+    
     try {
-      const formData = new FormData();
-      formData.append("cvFile", file);
-      formData.append("userId", userID);
-
-      const result = await uploadCV(formData);
-      console.log("Data send:", formData)
-      toast.success("CV đã tải lên thành công!");
-      setResumes((prevResumes) => [result.cvDto, ...prevResumes]);
-      setTotalCount((prevCount) => prevCount + 1);
+      // Bước 1: Upload file lên cloudinary thông qua uploadImagesProfile
+      setUploadProgress(30);
+      const uploadResponse = await uploadFile(selectedFile);
+      console.log("File Select:", selectedFile);
+      const fileUrl = uploadResponse.fileUrl;
+      setFilePath(fileUrl);
+      
+      console.log("File uploaded to Cloudinary:", fileUrl);
+      console.log("Data upload:", userID);
+      console.log("Data upload:", selectedFile.name);
+      console.log("Data upload:", fileUrl);
+      setUploadProgress(60);
+      
+      // Bước 2: Gọi API để xử lý file PDF đã upload
+      const cvData = await uploadCV({
+        cvid: 0,
+        userID: userID,
+        fileName: selectedFile.name,
+        filePath: fileUrl
+      });
+      
+      console.log("CV processed:", cvData);
+      setUploadProgress(100);
+      
+      // Bước 3: Cập nhật danh sách CV
+      if (cvData) {
+        setResumes((prevResumes) => [cvData, ...prevResumes]);
+        setTotalCount((prevCount) => prevCount + 1);
+        
+        toast.success("CV uploaded and processed successfully!");
+      }
+      
+      // Reset form sau khi upload thành công
+      setFile(null);
+      setFileName("");
+      setPreviewUrl("");
+      setUploadProgress(0);
+      
     } catch (error) {
-      console.log("Error:", error)
-      toast.error("Lỗi khi tải lên. Vui lòng thử lại.");
+      console.error("Error processing CV:", error);
+      const errorMessage = error.response?.data?.message || "Error processing CV, please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleRemoveFile = () => {
+    setFile(null);
+    setFileName("");
+    setPreviewUrl("");
+    setFilePath("");
+    setFileError("");
+  };
+
   return (
     <>
       <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <Button
             asChild
             className="flex w-fit gap-2"
@@ -139,14 +191,58 @@ export const Index = () => {
               New CV
             </NavLink>
           </Button>
-
-          <input type="file" accept=".pdf" onChange={handleFileChange} className="hidden" id="upload-cv" />
-          <label htmlFor="upload-cv" className="cursor-pointer">
-            <Button className="flex items-center gap-2">Upload CV</Button>
-          </label>
-          <Button onClick={handleUpload} className="flex items-center gap-2" disabled={isLoading}>
-            {isLoading ? "Uploading..." : "Upload"}
-          </Button>
+          
+          <div className="bg-white p-4 rounded-lg shadow-sm w-full sm:w-96">
+            <h2 className="text-lg font-semibold mb-2">Upload CV File</h2>
+            <div className="flex flex-col gap-3">
+              <div className="uploadButton">
+                <input
+                  className="uploadButton-input"
+                  type="file"
+                  accept=".pdf"
+                  id="uploadCV"
+                  onChange={handleCVFileChange}
+                  disabled={isLoading}
+                />
+                <label
+                  className="uploadButton-button ripple-effect flex items-center gap-2"
+                  htmlFor="uploadCV"
+                >
+                  <Upload className="size-4" />
+                  Upload CV PDF
+                </label>
+              </div>
+              
+              {fileName && (
+                <div className="flex items-center gap-2 mt-2">
+                  <FileText className="size-4 text-blue-600" />
+                  <span className="text-sm font-medium">{fileName}</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRemoveFile}
+                    disabled={isLoading}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              )}
+              
+              <div className="text-sm text-gray-500">
+                Max file size is 5MB. Suitable files are .pdf
+                {fileError && (
+                  <div className="text-red-500 mt-2">{fileError}</div>
+                )}
+              </div>
+              
+              {isLoading && (
+                <div className="text-sm flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                  Processing your CV...
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -154,14 +250,13 @@ export const Index = () => {
           <p>Total: {totalCount}</p>
         </div>
         <div className="flex w-full grid-cols-2 flex-col gap-3 sm:grid md:grid-cols-3 lg:grid-cols-4">
-          {/* <ResumeItem /> */}
           {resumes.map((resume) => (
             <ResumeItem
               key={resume?.cvid}
               resume={resume}
-              onDelete={handleDeleteCV} // Truyền hàm xóa CV vào
-              isFeatured={featuredCVs[resume.cvid]} // Truyền trạng thái featured vào
-              onSetAsFeatured={handleSetAsFeatured} // Truyền hàm set featured vào
+              onDelete={handleDeleteCV} 
+              isFeatured={featuredCVs[resume.cvid]} 
+              onSetAsFeatured={handleSetAsFeatured} 
             />
           ))}
         </div>

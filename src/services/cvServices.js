@@ -2,6 +2,12 @@ import axios from "axios";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
+const getAccessToken = () => {
+  // Lấy token để Authorization
+  const token = localStorage.getItem("accessToken");
+  return token ? token.replace(/^"(.*)"$/, "$1") : null;
+};
+
 // services/cvService.js
 export const getCVsByUserId = async (userId) => {
   try {
@@ -88,17 +94,30 @@ export const deleteCV = async (cvId) => {
   }
 };
 
-export const uploadCV = async (formData) => {
+export const uploadCV = async (uploadData) => {
   try {
-    const response = await axios.post(`${BACKEND_API_URL}/api/CV/upload-cv`, formData, {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const dataToSend = {
+      cvid: uploadData.cvid,
+      userId: uploadData.userID, // Note the case change from userID to userId
+      fileName: uploadData.fileName,
+      filePath: uploadData.filePath
+    };
+
+    console.log("Dữ liệu gửi lên API:", JSON.stringify(uploadData, null, 2));
+
+    const response = await axios.post(`${BACKEND_API_URL}/api/CV/upload-cv`, dataToSend, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
 
-    return response.data;
+    return response.data.cvDto;
   } catch (error) {
-    console.error("Lỗi khi tải lên CV:", error);
-    return null;
+    console.error("Error uploading CV:", error);
+    throw error;
   }
 };

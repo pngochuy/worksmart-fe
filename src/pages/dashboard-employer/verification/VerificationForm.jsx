@@ -20,16 +20,16 @@ export const VerificationForm = () => {
                 setLoading(true);
                 const user = getUserLoginData();
                 setUserDataLogin(user);
-                
+
                 const companyData = await fetchCompanyProfile();
-                
+
                 setVerificationLevel(companyData.verificationLevel);
-                
+
                 setVerificationStatuses({
                     taxStatus: companyData.taxVerificationStatus,
                     licenseStatus: companyData.licenseVerificationStatus
                 });
-                
+
                 console.log("Company Data:", companyData);
                 console.log("Verification Level:", companyData.verificationLevel);
             } catch (error) {
@@ -39,7 +39,7 @@ export const VerificationForm = () => {
                 setLoading(false);
             }
         };
-        
+
         loadData();
     }, []);
 
@@ -145,7 +145,7 @@ export const VerificationForm = () => {
                                                         </div>
                                                     </div>
                                                     <button className={`verification-action-btn ${verificationLevel >= 2 ? "edit" : "start"}`} onClick={handleVerifyTax}>
-                                                        Verify Tax ID
+                                                        {verificationLevel >= 2 ? "Verify Successfully" : "Verify Tax ID "}
                                                         <i className="fa-solid fa-arrow-right ml-2"></i>
                                                     </button>
                                                 </div>
@@ -172,7 +172,8 @@ export const VerificationForm = () => {
                                                         onClick={handleUploadLicense}
                                                         disabled={verificationLevel < 2}
                                                     >
-                                                        Upload Document
+                                                        {verificationLevel >= 3 ? "Verify Successfully" : "Upload Document"}
+
                                                         <i className="fa-solid fa-arrow-right ml-2"></i>
                                                     </button>
                                                 </div>

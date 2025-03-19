@@ -1,10 +1,9 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { fetchCompanyProfile, verifyTax } from "@/services/employerServices";
 import { Editor } from "@tinymce/tinymce-react";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
@@ -12,7 +11,7 @@ const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 const taxSchema = z.object({
     taxId: z.string().min(6, "Tax ID must be at least 6 characters."),
     industry: z.string().min(3, "Industry must be at least 3 characters."),
-    companySize: z.string(),
+    companySize: z.string().nonempty("Company Size is required."),
     companyName: z.string().min(3, "Company Name must be at least 3 characters."),
     companyWebsite: z.string().nullable().optional().refine((val) => {
         if (!val) return true;
@@ -40,6 +39,7 @@ export const VerifyTax = () => {
     const [isActive, setIsActive] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
     const [isPending, setIsPending] = useState(false);
+    const [timeout, setTimeout] = useState(false);
     const [verificationMessage, setVerificationMessage] = useState("");
     const navigate = useNavigate();
 
@@ -96,9 +96,8 @@ export const VerifyTax = () => {
     };
 
     const onSubmit = async (formData) => {
+        setIsLoading(true);
         try {
-            setIsLoading(true);
-            console.log("Submitting tax verification data:", formData);
             await verifyTax(formData);
             toast.success("Tax verification submitted successfully!");
             navigate("/employer/verification");
@@ -139,7 +138,7 @@ export const VerifyTax = () => {
                                                 </p>
                                             )}
                                         </div>
-
+                                        <ToastContainer position="top-right" autoClose={3000} />
                                         <form className="default-form" onSubmit={handleSubmit(onSubmit)}>
                                             <div className="row">
                                                 {/* Tax ID */}
@@ -167,7 +166,7 @@ export const VerifyTax = () => {
                                                             </option>
                                                         ))}
                                                     </select>
-                                                    {errors.companySize && <p>{errors.companySize.message}</p>}
+                                                    {errors.companySize && <span className="text-danger">{errors.companySize.message}</span>}
                                                 </div>
 
                                                 {/* Company Name */}
