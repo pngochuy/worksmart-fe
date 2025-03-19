@@ -57,7 +57,6 @@ function PersonalInfoHeader({ resumeData }) {
     // const objectUrl = photo instanceof File ? URL.createObjectURL(photo) : "";
     const objectUrl =
       photo instanceof File ? URL.createObjectURL(photo) : photo;
-    console.log("objectUrl: ", objectUrl);
     if (objectUrl) setPhotoSrc(objectUrl);
     if (photo === null) setPhotoSrc("");
     return () => URL.revokeObjectURL(objectUrl);

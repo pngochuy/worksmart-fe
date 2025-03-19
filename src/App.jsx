@@ -27,7 +27,7 @@ import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jo
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
-import { index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
+import { Index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
 import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
 import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
 // Employer Pages
@@ -311,9 +311,12 @@ function App() {
               <Route
                 path="/employer/manage-jobs/applied-candidates/:jobId"
                 element={<CandidatesPage />}
-              />{" "}
+              />
               {/* ThanhAdd page candidares*/}
-              <Route path="/employer/manage-jobs/candidates/:jobId" element={<CandidatesPage />} />
+              <Route
+                path="/employer/manage-jobs/candidates/:jobId"
+                element={<CandidatesPage />}
+              />
               <Route
                 path="/employer/manage-jobs/candidates/:jobId/:candidateId"
                 element={<EmployerCandidateDetailPage />}
@@ -327,7 +330,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 index
                 path="all-candidates"
@@ -360,7 +362,7 @@ function App() {
                 path="messages"
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
-                    <EmployerMessagesPage />
+                    <CandidateMessagesPage />
                   </ProtectedRoute>
                 }
               />
@@ -445,7 +447,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               UploadFileTest
             </Route>
           </Routes>

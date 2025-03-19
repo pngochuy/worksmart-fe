@@ -32,7 +32,7 @@ const companySizeOptions = [
     "51 - 200 employees",
     "201 - 500 employees",
     "501 - 1000 employees",
-    "Trên 1000 employees"
+    "Over 1000 employees"
 ]
 export const VerifyTax = () => {
     const [isLoading, setIsLoading] = useState(false);

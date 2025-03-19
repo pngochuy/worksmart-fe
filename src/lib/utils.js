@@ -50,5 +50,6 @@ export function mapToResumeValues(data) {
     borderStyle: data?.borderstyle || undefined,
     colorHex: data?.colorhex || undefined,
     summary: data?.summary || undefined,
+    isFeatured: data?.isFeatured || false,
   };
 }

@@ -11,7 +11,7 @@ import {
 import { TableContent } from "./TableContent";
 import { TablePagination } from "./TablePagination";
 import { createColumns } from "./UserTableColumns";
-import { TableToolbar } from "./TableToolbar";
+import { UserToolbar } from "./UserToolbar";
 import "react-toastify/dist/ReactToastify.css";
 
 export const UserTable = ({
@@ -24,12 +24,15 @@ export const UserTable = ({
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({
     userID: false,
+    userName: false,
     fullName: true,
     email: true,
     role: true,
     verificationLevel: true,
-    isEmailConfirmed: true,
+    phoneNumber: false,
     isBanned: true,
+    gender: false,
+    address: false,
     createdAt: true,
     updatedAt: false,
     actions: true,
@@ -49,42 +52,16 @@ export const UserTable = ({
   }, []);
 
   // Callback function to update user status
-  const handleStatusChange = useCallback((userId, isBanned) => {
+  const handleStatusChange = useCallback((userId, statusChanges) => {
     setData((currentData) =>
       currentData.map((user) =>
-        user.userID === userId ? { ...user, isBanned } : user
+        user.userID === userId ? { ...user, ...statusChanges } : user
       )
     );
   }, []);
 
   // Create columns with callback function
   const columns = createColumns(handleStatusChange);
-
-  // Default filter for createdAt - last week
-  const today = new Date();
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(today.getDate() - 7);
-
-  // Set default filter for createdAt
-  useEffect(() => {
-    setColumnFilters((prev) => {
-      // Check if there's already a filter for createdAt
-      const hasDateFilter = prev.some((filter) => filter.id === "createdAt");
-
-      if (!hasDateFilter) {
-        // Add new filter for one week
-        return [
-          ...prev,
-          {
-            id: "createdAt",
-            value: [oneWeekAgo, today],
-          },
-        ];
-      }
-
-      return prev;
-    });
-  }, []);
 
   const table = useReactTable({
     data,
@@ -112,7 +89,7 @@ export const UserTable = ({
 
   return (
     <div className="w-full">
-      <TableToolbar table={table} onRefreshData={handleRefreshData} />
+      <UserToolbar table={table} onRefreshData={handleRefreshData} />
       <TableContent table={table} isLoading={isLoading} />
       <TablePagination table={table} />
     </div>

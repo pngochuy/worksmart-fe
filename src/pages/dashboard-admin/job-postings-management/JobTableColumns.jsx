@@ -38,6 +38,7 @@ import LoadingButton from "@/components/LoadingButton";
 import { toast } from "react-toastify";
 // Import real API functions
 import { approveJob, rejectJob } from "../../../services/adminServices";
+import { hideJob, unhideJob } from "@/services/jobServices";
 
 // Enum for job statuses
 export const JOB_STATUS = {
@@ -307,35 +308,36 @@ function RejectConfirmationDialog({
       toast.error("Please select a reason for rejection.");
       return;
     }
-  
+
     // Kiểm tra nếu chọn "other" nhưng chưa nhập lý do
     if (rejectReason === "other" && !otherReasonText.trim()) {
       toast.error("Please provide details for the rejection reason.");
       return;
     }
-  
+
     try {
       setLoading(true);
-  
+
       // Chuẩn bị reason để gửi đi
       // Nếu là other reason, chỉ gửi nội dung chi tiết
-      const reasonToSend = rejectReason === "other"
-        ? otherReasonText.trim()  // Chỉ gửi text, không gửi object
-        : rejectReason;
-  
+      const reasonToSend =
+        rejectReason === "other"
+          ? otherReasonText.trim() // Chỉ gửi text, không gửi object
+          : rejectReason;
+
       // Use the imported API function
       await rejectJob(job.jobID, reasonToSend);
-  
+
       // Cập nhật status trong table
       onStatusChange(job.jobID, JOB_STATUS.REJECTED);
-  
+
       // Đóng dialog và hiển thị thông báo
       onOpenChange(false);
-  
+
       // Reset các giá trị
       setRejectReason("");
       setOtherReasonText("");
-  
+
       toast.success(`Job ID ${job.jobID} has been rejected.`);
     } catch (error) {
       console.error(error);
@@ -564,28 +566,68 @@ export const createColumns = (onStatusChange) => [
   },
   {
     accessorKey: "jobID",
-    header: "Job ID",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Job ID
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div>{row.getValue("jobID")}</div>,
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Title
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div>{row.getValue("title")}</div>,
   },
   {
     accessorKey: "education",
-    header: "Education",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Education
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div>{row.getValue("education")}</div>,
   },
   {
     accessorKey: "workType",
-    header: "Job Type",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Work Type
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div>{row.getValue("workType")}</div>,
     filterFn: filterByMultipleValues, // Sử dụng filter tùy chỉnh
   },
   {
     accessorKey: "location",
-    header: "Location",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Location
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div>{row.getValue("location")}</div>,
     // Custom filter function for multi-location support
     filterFn: (row, id, value) => {
@@ -602,20 +644,38 @@ export const createColumns = (onStatusChange) => [
   },
   {
     accessorKey: "salary",
-    header: "Salary (VND)",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Salary (VND)
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
-      const salary = parseFloat(row.getValue("salary"));
-      const formatted = new Intl.NumberFormat("vi-VN", {
-        style: "decimal",
-        currency: "VND",
-      }).format(salary);
+      // const salary = parseFloat(row.getValue("salary"));
+      // const formatted = new Intl.NumberFormat("vi-VN", {
+      //   style: "decimal",
+      //   currency: "VND",
+      // }).format(salary);
 
-      return <div className="text-left font-medium">{formatted}</div>;
+      return (
+        <div className="text-left font-medium">{row.getValue("salary")}</div>
+      );
     },
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Status
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       return (
         <div>
@@ -627,19 +687,45 @@ export const createColumns = (onStatusChange) => [
   },
   {
     accessorKey: "exp",
-    header: "Experience (Years)",
-    cell: ({ row }) => <div>{row.getValue("exp")}</div>,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Experience (years)
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("exp")}</div>,
   },
   {
     accessorKey: "priority",
-    header: "Priority",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Priority
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div>{row.getValue("priority") ? "Yes" : "No"}</div>,
   },
   {
     accessorKey: "deadline",
-    header: "Deadline",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Deadline
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
-      <div>{new Date(row.getValue("deadline")).toLocaleDateString()}</div>
+      <div className="text-center">
+        {new Date(row.getValue("deadline")).toLocaleDateString()}
+      </div>
     ),
   },
   {
