@@ -1,39 +1,40 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import Cate from "../../../jsons/Category.json";
 import Select from "react-select";
-import { fetchTagsByCategory } from "../../../services/tagServices";
+import { Tags } from "lucide-react";
 
-const TagDropdown = ({ setSearchParams, searchParams }) => {
-  const [tagOptions, setTagOptions] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
-
-  const getTags = async () => {
-    if (searchParams && searchParams.categoryID) {
-      try {
-        const data = await fetchTagsByCategory(searchParams.categoryID);
-        const options = data.map((tag) => ({
-          value: tag.tagID,
-          label: tag.tagName,
-        }));
-        setTagOptions(options);
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-        setTagOptions([]);
-      }
-    } else {
-      setTagOptions([]); // Reset options when no category
-    }
-  };
+const CategoryDropdown = ({ setSearchParams, initialCategory }) => {
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [selectedCategoryOption, setSelectedCategoryOption] = useState(null);
 
   useEffect(() => {
-    setSelectedTags([]);
-    getTags();
-  }, [searchParams?.categoryID]);
+    console.log("initialCategory", initialCategory)
+    // Chuyển đổi dữ liệu JSON thành format của react-select
+    const options = [
+      { value: "0", label: "All Categories" },
+      ...Cate.categories.map((cate) => ({
+        value: cate.id,
+        label: cate.label,
+      })),
+    ];
+    setCategoryOptions(options);
 
-  const handleChange = (selected) => {
-    setSelectedTags(selected);
+    //init category 
+    if (initialCategory) {
+      const matchingOption = options.find(option => option.label === initialCategory);
+      if (matchingOption) {
+        setSelectedCategoryOption(matchingOption);
+      }
+    }
+  }, [initialCategory, setSearchParams]);
+
+  const handleCategoryChange = (selectedCategories) => {
+    console.log(selectedCategories);
+    setSelectedCategoryOption(selectedCategories);
     setSearchParams((prev) => ({
       ...prev,
-      jobTagID: selected.map((tag) => tag.value),
+      categoryID: selectedCategories?.label || "",
+      tags: [],
     }));
   };
 
@@ -89,27 +90,6 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
       color: "#333",
       padding: "8px 12px",
     }),
-    multiValue: (provided) => ({
-      ...provided,
-      backgroundColor: "#e6e6e6",
-      borderRadius: "2px",
-      margin: "2px 4px 2px 0",
-    }),
-    multiValueLabel: (provided) => ({
-      ...provided,
-      color: "#333",
-      fontSize: "12px",
-      padding: "0 4px",
-    }),
-    multiValueRemove: (provided) => ({
-      ...provided,
-      color: "#666",
-      cursor: "pointer",
-      ":hover": {
-        backgroundColor: "#d1d1d1",
-        color: "#333",
-      },
-    }),
     singleValue: (provided) => ({
       ...provided,
       color: "#333",
@@ -142,22 +122,14 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
 
   return (
     <Select
-      options={tagOptions}
+      placeholder="All Categories"
       styles={customStyles}
-      value={selectedTags}
-      onChange={handleChange}
-      placeholder={
-        !searchParams?.categoryID || searchParams?.categoryID === "All Categories"
-          ? "Select a category first"
-          : "Select Tags"
-      }
-      isMulti
+      options={categoryOptions}
+      onChange={handleCategoryChange}
+      value={selectedCategoryOption}
       isSearchable
-      isDisabled={
-        !searchParams?.categoryID || searchParams?.categoryID === "All Categories"
-      }
     />
   );
 };
 
-export default TagDropdown;
+export default CategoryDropdown;

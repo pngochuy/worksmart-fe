@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { createJob } from "../../../services/jobServices";
 import { toast } from "react-toastify";
+import { fetchTags } from "../../../services/tagServices";
 import { useNavigate } from "react-router-dom";
+import { vietnamProvinces } from "../../../helpers/getLocationVN";
 import TagDropdown from "./TagDropdown";
-import LocationDropdown from "./LocationDropdown"; // Import component mới
+import LocationDropdown from "./LocationDropdown";
+import CategoryDropdown from "./CategoryDropdown";
 import { Editor } from "@tinymce/tinymce-react";
 
 export const JobForm = () => {
@@ -25,34 +28,34 @@ export const JobForm = () => {
     exp: "",
     priority: false,
     deadline: "",
-    jobPosition: "", // Thêm trường jobPosition
+    jobPosition: "",
+    categoryID: "", 
   });
+  
   // Thêm state riêng cho min-max salary
   const [salaryRange, setSalaryRange] = useState({
     minSalary: "",
     maxSalary: "",
   });
+  
+  const [tags, setTags] = useState([]);
+  const [locations, setLocation] = useState([]);
   const navigate = useNavigate();
-  // Thêm state để theo dõi vị trí con trỏ
-  const [cursorPositions, setCursorPositions] = useState({
-    minSalary: 0,
-    maxSalary: 0,
-  });
-  // Refs để tham chiếu tới các input elements
-  const minSalaryInputRef = useRef(null);
-  const maxSalaryInputRef = useRef(null);
 
-  // Cập nhật vị trí con trỏ sau mỗi lần render
+  // Lấy danh sách tags từ API
   useEffect(() => {
-    if (minSalaryInputRef.current) {
-      minSalaryInputRef.current.selectionStart = cursorPositions.minSalary;
-      minSalaryInputRef.current.selectionEnd = cursorPositions.minSalary;
-    }
-    if (maxSalaryInputRef.current) {
-      maxSalaryInputRef.current.selectionStart = cursorPositions.maxSalary;
-      maxSalaryInputRef.current.selectionEnd = cursorPositions.maxSalary;
-    }
-  }, [salaryRange, cursorPositions]);
+    const getTags = async () => {
+      try {
+        const data = await fetchTags();
+        setTags(data);
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+        toast.error("Failed to load tags.");
+      }
+    };
+    getTags();
+    setLocation(vietnamProvinces);
+  }, []);
 
   // Xử lý thay đổi nội dung editor một cách riêng biệt
   const handleEditorChange = (content) => {
@@ -66,87 +69,33 @@ export const JobForm = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === "checkbox") {
-      setJobData({
-        ...jobData,
+      setJobData((prev) => ({
+        ...prev,
         [name]: checked,
-      });
-    } else if (name === "jobTagID") {
-      // Cập nhật jobTagID khi người dùng chọn tag
-      setJobData({
-        ...jobData,
-        jobTagID: value, // Lưu tagID duy nhất
-      });
+      }));
     } else {
-      setJobData({
-        ...jobData,
+      setJobData((prev) => ({
+        ...prev,
         [name]: value,
-      });
+      }));
     }
   };
 
-  // Handler cho việc thay đổi lương với xử lý dấu phẩy và vị trí con trỏ
+  // Xử lý thay đổi giá trị lương min-max
   const handleSalaryChange = (e) => {
     const { name, value } = e.target;
-    const cursorPos = e.target.selectionStart;
 
-    // Đếm số lượng dấu phẩy trước vị trí con trỏ
-    const valueBeforeCursor = value.substring(0, cursorPos);
-    const commasBeforeCursor = (valueBeforeCursor.match(/,/g) || []).length;
-
-    // Xóa tất cả dấu phẩy và kí tự không phải số
+    // Loại bỏ các ký tự không phải số
     const numericValue = value.replace(/[^\d]/g, "");
 
-    // Định dạng số với dấu phẩy
-    let formattedValue = "";
-    if (numericValue) {
-      formattedValue = parseInt(numericValue, 10).toLocaleString("en-US");
-    }
-
-    // Tính toán vị trí con trỏ mới
-    const digitsBeforeCursor = valueBeforeCursor.replace(/[^\d]/g, "").length;
-    const newValueBeforeCursor = numericValue.substring(0, digitsBeforeCursor);
-    const newFormattedValueBeforeCursor = parseInt(
-      newValueBeforeCursor || "0",
-      10
-    ).toLocaleString("en-US");
-    const newCommasBeforeCursor = (
-      newFormattedValueBeforeCursor.match(/,/g) || []
-    ).length;
-
-    // Điều chỉnh vị trí con trỏ dựa trên sự thay đổi số lượng dấu phẩy
-    const commasDiff = newCommasBeforeCursor - commasBeforeCursor;
-    let newCursorPos = cursorPos + commasDiff;
-
-    // Đảm bảo vị trí con trỏ không vượt quá độ dài chuỗi
-    newCursorPos = Math.min(newCursorPos, formattedValue.length);
-    newCursorPos = Math.max(newCursorPos, 0);
-
-    // Cập nhật state
     setSalaryRange((prev) => ({
       ...prev,
-      [name]: formattedValue,
+      [name]: numericValue ? parseInt(numericValue, 10).toLocaleString("en-US") : "",
     }));
 
-    // Lưu vị trí con trỏ mới
-    setCursorPositions((prev) => ({
-      ...prev,
-      [name]: newCursorPos,
-    }));
-
-    // Cập nhật jobData với giá trị số không có dấu phẩy
-    const updatedMinSalary =
-      name === "minSalary"
-        ? numericValue
-        : salaryRange.minSalary
-        ? salaryRange.minSalary.replace(/,/g, "")
-        : "";
-
-    const updatedMaxSalary =
-      name === "maxSalary"
-        ? numericValue
-        : salaryRange.maxSalary
-        ? salaryRange.maxSalary.replace(/,/g, "")
-        : "";
+    // Cập nhật jobData.salary
+    const updatedMinSalary = name === "minSalary" ? numericValue : salaryRange.minSalary.replace(/,/g, "");
+    const updatedMaxSalary = name === "maxSalary" ? numericValue : salaryRange.maxSalary.replace(/,/g, "");
 
     if (updatedMinSalary && updatedMaxSalary) {
       setJobData((prev) => ({
@@ -160,16 +109,9 @@ export const JobForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Convert formatted salary values to numbers by removing commas
-    const minSalaryStr = salaryRange.minSalary
-      ? salaryRange.minSalary.replace(/,/g, "")
-      : "0";
-    const maxSalaryStr = salaryRange.maxSalary
-      ? salaryRange.maxSalary.replace(/,/g, "")
-      : "0";
-
-    const minSalary = parseInt(minSalaryStr, 10);
-    const maxSalary = parseInt(maxSalaryStr, 10);
+    // Kiểm tra tính hợp lệ của dữ liệu lương
+    const minSalary = parseInt(salaryRange.minSalary.replace(/,/g, ""), 10);
+    const maxSalary = parseInt(salaryRange.maxSalary.replace(/,/g, ""), 10);
 
     // Kiểm tra xem giá trị lương có hợp lệ không
     if (isNaN(minSalary) || isNaN(maxSalary)) {
@@ -188,12 +130,9 @@ export const JobForm = () => {
     }
 
     try {
-      // Tạo bản sao của jobData với salary đã định dạng để đảm bảo dữ liệu mới nhất được gửi đi
       const updatedJobData = {
         ...jobData,
-        salary: `${minSalary.toLocaleString(
-          "en-US"
-        )} - ${maxSalary.toLocaleString("en-US")}`,
+        salary: `${minSalary.toLocaleString("en-US")} - ${maxSalary.toLocaleString("en-US")}`,
       };
 
       await createJob(updatedJobData);
@@ -205,7 +144,6 @@ export const JobForm = () => {
       toast.error("Failed to create job. Please try again!");
     }
   };
-
   return (
     <section className="user-dashboard">
       <div className="dashboard-outer">
@@ -224,7 +162,6 @@ export const JobForm = () => {
                 <div className="widget-content">
                   <form onSubmit={handleSubmit} className="default-form">
                     <div className="row">
-                      {/* Các trường dữ liệu khác giữ nguyên */}
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Title</label>
                         <input
@@ -237,7 +174,6 @@ export const JobForm = () => {
                         />
                       </div>
 
-                      {/* TinyMCE Editor for Job Description */}
                       <div className="form-group col-lg-12 col-md-12">
                         <label>Job Description</label>
                         <Editor
@@ -247,29 +183,15 @@ export const JobForm = () => {
                             height: 300,
                             menubar: false,
                             plugins: [
-                              "advlist",
-                              "autolink",
-                              "lists",
-                              "link",
-                              "charmap",
-                              "print",
-                              "preview",
-                              "anchor",
-                              "searchreplace",
-                              "visualblocks",
-                              "code",
-                              "fullscreen",
-                              "insertdatetime",
-                              "media",
-                              "table",
-                              "paste",
-                              "help",
-                              "wordcount",
+                              "advlist", "autolink", "lists", "link", "charmap", 
+                              "print", "preview", "anchor", "searchreplace", 
+                              "visualblocks", "code", "fullscreen", "insertdatetime", 
+                              "media", "table", "paste", "help", "wordcount"
                             ],
                             toolbar:
                               "undo redo | formatselect | bold italic backcolor | \
-                                                    alignleft aligncenter alignright alignjustify | \
-                                                    bullist numlist outdent indent | removeformat | help",
+                              alignleft aligncenter alignright alignjustify | \
+                              bullist numlist outdent indent | removeformat | help",
                           }}
                           onEditorChange={handleEditorChange}
                         />
@@ -315,8 +237,8 @@ export const JobForm = () => {
                           onChange={handleChange}
                         >
                           <option value="">Select</option>
-                          <option value="Full-Time">Full-Time</option>
-                          <option value="Part-Time">Part-Time</option>
+                          <option value="Full-time">Full-time</option>
+                          <option value="Part-time">Part-time</option>
                           <option value="Contract">Contract</option>
                           <option value="Internship">Internship</option>
                           <option value="Remote">Remote</option>
@@ -324,21 +246,31 @@ export const JobForm = () => {
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Tags</label>
-                        <TagDropdown setSearchParams={setJobData} />
+                        <label>Categories</label>
+                        <CategoryDropdown 
+                          setSearchParams={setJobData} 
+                        />
                       </div>
 
-                      {/* Thay đổi select location thành LocationDropdown */}
+                      <div className="form-group col-lg-6 col-md-12">
+                        <label>Tags</label>
+                        <TagDropdown 
+                          setSearchParams={setJobData} 
+                          searchParams={jobData} 
+                        />
+                      </div>
+
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Locations</label>
-                        <LocationDropdown setSearchParams={setJobData} />
+                        <LocationDropdown 
+                          setSearchParams={setJobData} 
+                        />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Salary Range (VND)</label>
                         <div className="d-flex">
                           <input
-                            ref={minSalaryInputRef}
                             type="text"
                             name="minSalary"
                             value={salaryRange.minSalary}
@@ -348,7 +280,6 @@ export const JobForm = () => {
                             style={{ flex: 1, marginRight: "10px" }}
                           />
                           <input
-                            ref={maxSalaryInputRef}
                             type="text"
                             name="maxSalary"
                             value={salaryRange.maxSalary}
@@ -357,14 +288,10 @@ export const JobForm = () => {
                             style={{ flex: 1 }}
                           />
                         </div>
-                        {parseInt(
-                          salaryRange.minSalary?.replace(/,/g, "") || 0
-                        ) >
-                          parseInt(
-                            salaryRange.maxSalary?.replace(/,/g, "") || 0
-                          ) &&
-                        salaryRange.minSalary &&
-                        salaryRange.maxSalary ? (
+                        {parseInt(salaryRange.minSalary.replace(/,/g, "") || 0) >
+                          parseInt(salaryRange.maxSalary.replace(/,/g, "") || 0) &&
+                          salaryRange.minSalary &&
+                          salaryRange.maxSalary ? (
                           <div
                             className="text-danger mt-1"
                             style={{ fontSize: "0.8rem" }}
@@ -373,7 +300,6 @@ export const JobForm = () => {
                           </div>
                         ) : null}
                       </div>
-
                       <div className="form-group col-lg-6 col-md-12">
                         <label style={{ display: "block" }}>Deadline</label>
                         <input

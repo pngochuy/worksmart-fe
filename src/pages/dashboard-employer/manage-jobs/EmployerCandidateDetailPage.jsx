@@ -86,11 +86,9 @@ export default function EmployerCandidateDetailPage() {
   };
 
   const handleViewFullCV = () => {
-    if (cv && cv.link) {
-      window.open(cv.link, '_blank');
-    } else if (candidate.cvUrl) {
-      window.open(candidate.cvUrl, '_blank');
-    }
+    if (cv && cv.filePath) {
+      window.open(cv.filePath, '_blank');
+    } 
   };
 
   if (loading) {
@@ -356,22 +354,22 @@ export default function EmployerCandidateDetailPage() {
                         <button
                           className="view-cv-btn"
                           onClick={handleViewFullCV}
-                          disabled={!(cv?.link || candidate.cvUrl)}>
+                          disabled={!(cv?.filePath )}>
                           <i className="fas fa-eye"></i> View Full CV
                         </button>
-                        {(cv?.link || candidate.cvUrl) && (
+                        {(cv?.filePath ) && (
                           <a
-                            href={cv?.link || candidate.cvUrl}
+                            href={cv?.filePath }
                             download
                             className="download-cv-btn">
                             <i className="fas fa-download"></i> Download CV
                           </a>
                         )}
                       </div>
-                      {(cv?.link || candidate.cvPreview) ? (
+                      {(cv?.filePath) ? (
                         <div className="cv-preview-container">
                           <iframe
-                            src={cv?.link || candidate.cvUrl}
+                            src={cv?.filePath}
                             title="CV Preview"
                             className="cv-preview-frame"
                             frameBorder="0"
