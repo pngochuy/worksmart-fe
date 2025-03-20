@@ -212,12 +212,6 @@ const ActionCell = ({ row, onStatusChange }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem
-            onClick={() => navigator.clipboard.writeText(user.userID)}
-          >
-            Copy User ID
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
 
           {/* Render actions based on user status */}
           {getActions().map((action, index) => (
@@ -556,7 +550,7 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
                   </SelectTrigger>
                   <SelectContent>
                     {rejectionReasons.map((reason) => (
-                      <SelectItem key={reason.value} value={reason.value}>
+                      <SelectItem key={reason.value} value={reason.label}>
                         {reason.label}
                       </SelectItem>
                     ))}
@@ -566,8 +560,8 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
 
               {rejectReason === "other" && (
                 <div>
-                  <Label htmlFor="other-reason">Please specify:</Label>
-                  <Textarea
+                  <label htmlFor="other-reason">Please specify:</label>
+                  <textarea
                     id="other-reason"
                     value={otherReason}
                     onChange={(e) => setOtherReason(e.target.value)}
@@ -904,7 +898,7 @@ function LicenseVerificationDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {rejectionReasons.map((reason) => (
-                      <SelectItem key={reason.value} value={reason.value}>
+                      <SelectItem key={reason.value} value={reason.label}>
                         {reason.label}
                       </SelectItem>
                     ))}
