@@ -45,6 +45,14 @@ import LoadingButton from "@/components/LoadingButton";
 import { toast } from "react-toastify";
 import { UserVerificationBadge } from "./UserVerificationBadge";
 import { UserRoleBadge } from "./UserBadge";
+import { 
+  banUser, 
+  unbanUser,
+  approveTaxVerification,
+  rejectTaxVerification,
+  approveLicenseVerification,
+  rejectLicenseVerification,
+} from "@/services/adminServices";
 
 // Enum for user roles
 export const USER_ROLE = {
@@ -61,46 +69,46 @@ export const VERIFICATION_LEVEL = {
   FULLY_VERIFIED: 3,
 };
 
-// Mock API functions
-const banUser = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Ban user ${userId}`);
-  return { success: true };
-};
+// // Mock API functions
+// const banUser = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Ban user ${userId}`);
+//   return { success: true };
+// };
 
-const unbanUser = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Unban user ${userId}`);
-  return { success: true };
-};
+// const unbanUser = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Unban user ${userId}`);
+//   return { success: true };
+// };
 
-const approveTaxVerification = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Approve tax verification for user ${userId}`);
-  return { success: true };
-};
+// const approveTaxVerification = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Approve tax verification for user ${userId}`);
+//   return { success: true };
+// };
 
-const rejectTaxVerification = async (userId, reason) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(
-    `Reject tax verification for user ${userId} with reason: ${reason}`
-  );
-  return { success: true };
-};
+// const rejectTaxVerification = async (userId, reason) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(
+//     `Reject tax verification for user ${userId} with reason: ${reason}`
+//   );
+//   return { success: true };
+// };
 
-const approveLicenseVerification = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Approve license verification for user ${userId}`);
-  return { success: true };
-};
+// const approveLicenseVerification = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Approve license verification for user ${userId}`);
+//   return { success: true };
+// };
 
-const rejectLicenseVerification = async (userId, reason) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(
-    `Reject license verification for user ${userId} with reason: ${reason}`
-  );
-  return { success: true };
-};
+// const rejectLicenseVerification = async (userId, reason) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(
+//     `Reject license verification for user ${userId} with reason: ${reason}`
+//   );
+//   return { success: true };
+// };
 
 // Filter functions
 const filterByMultipleValues = (row, id, filterValues) => {
@@ -135,10 +143,8 @@ const ActionCell = ({ row, onStatusChange }) => {
 
   const [showBanConfirmation, setShowBanConfirmation] = useState(false);
   const [showUnbanConfirmation, setShowUnbanConfirmation] = useState(false);
-  const [showTaxVerificationDialog, setShowTaxVerificationDialog] =
-    useState(false);
-  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] =
-    useState(false);
+  const [showTaxVerificationDialog, setShowTaxVerificationDialog] = useState(false);
+  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] = useState(false);
 
   // Get actions based on user status
   const getActions = () => {
@@ -206,12 +212,6 @@ const ActionCell = ({ row, onStatusChange }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem
-            onClick={() => navigator.clipboard.writeText(user.userID)}
-          >
-            Copy User ID
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
 
           {/* Render actions based on user status */}
           {getActions().map((action, index) => (
@@ -265,13 +265,14 @@ function BanConfirmationDialog({ user, open, onOpenChange, onStatusChange }) {
   async function handleBan() {
     try {
       setLoading(true);
-      await banUser(user.userID);
+      // Gọi API ban user thông qua service
+      const result = await banUser(user.userID);
       onStatusChange(user.userID, { isBanned: true });
       onOpenChange(false);
-      toast.success(`User ${user.userName} has been banned.`);
+      toast.success(result.Message || `User ${user.email} has been banned.`);
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error.Message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -321,13 +322,14 @@ function UnbanConfirmationDialog({ user, open, onOpenChange, onStatusChange }) {
   async function handleUnban() {
     try {
       setLoading(true);
-      await unbanUser(user.userID);
+      // Gọi API unban user thông qua service
+      const result = await unbanUser(user.userID);
       onStatusChange(user.userID, { isBanned: false });
       onOpenChange(false);
-      toast.success(`User ${user.userName} has been unbanned.`);
+      toast.success(result.Message || `User ${user.email} has been unbanned.`);
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error.Message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -548,7 +550,7 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
                   </SelectTrigger>
                   <SelectContent>
                     {rejectionReasons.map((reason) => (
-                      <SelectItem key={reason.value} value={reason.value}>
+                      <SelectItem key={reason.value} value={reason.label}>
                         {reason.label}
                       </SelectItem>
                     ))}
@@ -558,8 +560,8 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
 
               {rejectReason === "other" && (
                 <div>
-                  <Label htmlFor="other-reason">Please specify:</Label>
-                  <Textarea
+                  <label htmlFor="other-reason">Please specify:</label>
+                  <textarea
                     id="other-reason"
                     value={otherReason}
                     onChange={(e) => setOtherReason(e.target.value)}
@@ -618,10 +620,12 @@ function LicenseVerificationDialog({
     originalDocumentUrl && originalDocumentUrl.toLowerCase().endsWith(".pdf");
 
   // Create preview URL as jpg if it's a PDF from Cloudinary
-  const viewableUrl =
-    isCloudinaryUrl && isPDF
-      ? originalDocumentUrl.replace("/upload/", "/upload/f_jpg/")
-      : originalDocumentUrl;
+  // const viewableUrl =
+  //   isCloudinaryUrl && isPDF
+  //     ? originalDocumentUrl.replace("/upload/", "/upload/f_jpg/")
+  //     : originalDocumentUrl;
+  
+  const viewableUrl = originalDocumentUrl;
 
   // Properly handle PDF downloading with correct approach
   const downloadDocument = () => {
@@ -808,7 +812,7 @@ function LicenseVerificationDialog({
                           className="flex items-center justify-center"
                         >
                           <Eye className="mr-2 h-4 w-4" />
-                          View as Image
+                          View as File
                         </Button>
 
                         <Button
@@ -819,17 +823,17 @@ function LicenseVerificationDialog({
                           <FileText className="mr-2 h-4 w-4" />
                           Download
                         </Button>
-                      </div>
 
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowPdfViewer(!showPdfViewer)}
-                        className="w-full"
-                      >
-                        {showPdfViewer
-                          ? "Hide Document Viewer"
-                          : "Show Document Viewer Here"}
-                      </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowPdfViewer(!showPdfViewer)}
+                          // className="w-full"
+                        >
+                          {showPdfViewer
+                            ? "Hide Document"
+                            : "Show Document"}
+                        </Button>
+                      </div>
 
                       {showPdfViewer && (
                         <div className="border rounded-md p-1">
@@ -847,7 +851,7 @@ function LicenseVerificationDialog({
                       <div className="text-sm text-muted-foreground">
                         <p>
                           You have multiple options to view this document:
-                          &quot;View as Image&quot; converts the PDF to an image
+                          &quot;View as File&quot; converts the PDF to an file
                           for easy viewing, &quot;View Original&quot; opens the
                           PDF in a new tab, and &quot;Download&quot; allows you
                           to save the file to your device.
@@ -894,7 +898,7 @@ function LicenseVerificationDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {rejectionReasons.map((reason) => (
-                      <SelectItem key={reason.value} value={reason.value}>
+                      <SelectItem key={reason.value} value={reason.label}>
                         {reason.label}
                       </SelectItem>
                     ))}

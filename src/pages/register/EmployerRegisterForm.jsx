@@ -13,11 +13,11 @@ const schema = z
     gender: z.enum(["male", "female"], {
       required_error: "Gender is required",
     }),
-    personalPhone: z
+    phoneNumber: z
       .string()
       .regex(/^[0-9]{10}$/, "Phone number must be 10 digits"),
     companyName: z.string().min(2, "Company name is required"),
-    workLocation: z.string().min(1, "Work location is required"),
+    address: z.string().min(1, "Work location is required"),
     district: z.string().optional(), // District không bắt buộc
     email: z.string().email("Invalid email address"),
     password: z
@@ -74,9 +74,9 @@ export const EmployerRegisterForm = () => {
         password: data.password,
         fullname: data.fullname,
         gender: data.gender,
-        personalPhone: data.personalPhone,
+        phoneNumber: data.phoneNumber,
         companyName: data.companyName,
-        workLocation: data.workLocation,
+        address: data.address,
         role: "Employer",
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
           data.fullname
@@ -214,11 +214,11 @@ export const EmployerRegisterForm = () => {
           <input
             type="text"
             placeholder="Enter your phone number"
-            {...register("personalPhone")}
-            style={{ borderColor: errors.personalPhone ? "red" : "" }}
+            {...register("phoneNumber")}
+            style={{ borderColor: errors.phoneNumber ? "red" : "" }}
           />
-          {errors.personalPhone && (
-            <p className="error-text">{errors.personalPhone.message}</p>
+          {errors.phoneNumber && (
+            <p className="error-text">{errors.phoneNumber.message}</p>
           )}
         </div>
         <div className="form-group">
@@ -240,7 +240,7 @@ export const EmployerRegisterForm = () => {
             Work Location <span style={{ color: "red" }}>*</span>
           </label>
           <Controller
-            name="workLocation"
+            name="address"
             control={control}
             defaultValue="" // Đặt giá trị mặc định
             render={({ field }) => (
@@ -256,7 +256,7 @@ export const EmployerRegisterForm = () => {
                 // 2 là selectedProvince  mới chạy đc selection quận ở dưới
                 // => chắc cho chọn tiếng Việt rồi lưu bawfg english
                 className="select-dropdown"
-                style={{ borderColor: errors.workLocation ? "red" : "" }}
+                style={{ borderColor: errors.address ? "red" : "" }}
               >
                 <option value="" disabled>
                   Select province/city
@@ -270,8 +270,8 @@ export const EmployerRegisterForm = () => {
             )}
           />
 
-          {errors.workLocation && (
-            <p className="error-text">{errors.workLocation.message}</p>
+          {errors.address && (
+            <p className="error-text">{errors.address.message}</p>
           )}
         </div>
 
