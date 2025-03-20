@@ -45,6 +45,14 @@ import LoadingButton from "@/components/LoadingButton";
 import { toast } from "react-toastify";
 import { UserVerificationBadge } from "./UserVerificationBadge";
 import { UserRoleBadge } from "./UserBadge";
+import { 
+  banUser, 
+  unbanUser,
+  approveTaxVerification,
+  rejectTaxVerification,
+  approveLicenseVerification,
+  rejectLicenseVerification,
+} from "@/services/adminServices";
 
 // Enum for user roles
 export const USER_ROLE = {
@@ -61,46 +69,46 @@ export const VERIFICATION_LEVEL = {
   FULLY_VERIFIED: 3,
 };
 
-// Mock API functions
-const banUser = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Ban user ${userId}`);
-  return { success: true };
-};
+// // Mock API functions
+// const banUser = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Ban user ${userId}`);
+//   return { success: true };
+// };
 
-const unbanUser = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Unban user ${userId}`);
-  return { success: true };
-};
+// const unbanUser = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Unban user ${userId}`);
+//   return { success: true };
+// };
 
-const approveTaxVerification = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Approve tax verification for user ${userId}`);
-  return { success: true };
-};
+// const approveTaxVerification = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Approve tax verification for user ${userId}`);
+//   return { success: true };
+// };
 
-const rejectTaxVerification = async (userId, reason) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(
-    `Reject tax verification for user ${userId} with reason: ${reason}`
-  );
-  return { success: true };
-};
+// const rejectTaxVerification = async (userId, reason) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(
+//     `Reject tax verification for user ${userId} with reason: ${reason}`
+//   );
+//   return { success: true };
+// };
 
-const approveLicenseVerification = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(`Approve license verification for user ${userId}`);
-  return { success: true };
-};
+// const approveLicenseVerification = async (userId) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(`Approve license verification for user ${userId}`);
+//   return { success: true };
+// };
 
-const rejectLicenseVerification = async (userId, reason) => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  console.log(
-    `Reject license verification for user ${userId} with reason: ${reason}`
-  );
-  return { success: true };
-};
+// const rejectLicenseVerification = async (userId, reason) => {
+//   await new Promise((resolve) => setTimeout(resolve, 500));
+//   console.log(
+//     `Reject license verification for user ${userId} with reason: ${reason}`
+//   );
+//   return { success: true };
+// };
 
 // Filter functions
 const filterByMultipleValues = (row, id, filterValues) => {
@@ -135,10 +143,8 @@ const ActionCell = ({ row, onStatusChange }) => {
 
   const [showBanConfirmation, setShowBanConfirmation] = useState(false);
   const [showUnbanConfirmation, setShowUnbanConfirmation] = useState(false);
-  const [showTaxVerificationDialog, setShowTaxVerificationDialog] =
-    useState(false);
-  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] =
-    useState(false);
+  const [showTaxVerificationDialog, setShowTaxVerificationDialog] = useState(false);
+  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] = useState(false);
 
   // Get actions based on user status
   const getActions = () => {
@@ -265,13 +271,14 @@ function BanConfirmationDialog({ user, open, onOpenChange, onStatusChange }) {
   async function handleBan() {
     try {
       setLoading(true);
-      await banUser(user.userID);
+      // Gọi API ban user thông qua service
+      const result = await banUser(user.userID);
       onStatusChange(user.userID, { isBanned: true });
       onOpenChange(false);
-      toast.success(`User ${user.userName} has been banned.`);
+      toast.success(result.Message || `User ${user.email} has been banned.`);
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error.Message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -321,13 +328,14 @@ function UnbanConfirmationDialog({ user, open, onOpenChange, onStatusChange }) {
   async function handleUnban() {
     try {
       setLoading(true);
-      await unbanUser(user.userID);
+      // Gọi API unban user thông qua service
+      const result = await unbanUser(user.userID);
       onStatusChange(user.userID, { isBanned: false });
       onOpenChange(false);
-      toast.success(`User ${user.userName} has been unbanned.`);
+      toast.success(result.Message || `User ${user.email} has been unbanned.`);
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error.Message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

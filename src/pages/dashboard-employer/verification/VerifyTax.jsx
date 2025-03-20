@@ -99,7 +99,8 @@ export const VerifyTax = () => {
         setIsLoading(true);
         try {
             await verifyTax(formData);
-            toast.success("Tax verification submitted successfully!");
+            
+            sessionStorage.setItem("taxVerified", "true");
             navigate("/employer/verification");
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Error submitting tax verification, please try again.";

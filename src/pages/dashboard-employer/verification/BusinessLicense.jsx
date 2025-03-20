@@ -28,13 +28,13 @@ export const BusinessLicense = () => {
       try {
         const data = await fetchCompanyProfile();
         if (data) {
-          setBusinessLicense(data.businessLicenseImageUrl || "");
+          setBusinessLicense(data.BusinessLicenseImage || "");
 
           setIsActive(false);
           setIsVerified(false);
           setIsPending(false);
           setVerificationMessage("");
-
+          console.log("Business Image:", businessLicense)
           if (data.licenseVerificationStatus === "Approved") {
             setIsVerified(true);
             setVerificationMessage("Your business license has been approved.");
@@ -79,7 +79,6 @@ export const BusinessLicense = () => {
     try {
       const response = await uploadFile(file);
       setBusinessLicense(response.fileUrl);
-      toast.success("File uploaded successfully!");
       console.log("Business License Image URL:", response.fileUrl);
     } catch (error) {
       console.error("Error uploading business license image:", error);
@@ -108,7 +107,8 @@ export const BusinessLicense = () => {
       const response = await uploadBusinessLicense(businessLicense);
       console.log("Submit response:", response);
       setIsUploaded(true);
-      toast.success("Business License submitted successfully!");
+
+      sessionStorage.setItem("businessLicenseVerified", "true");
       // window.location.reload();
       navigate("/employer/verification");
     } catch (error) {
@@ -145,13 +145,12 @@ export const BusinessLicense = () => {
                       {(isVerified || isPending || verificationMessage) && (
                         <p
                           className={`alert 
-                                                        ${
-                                                          isVerified
-                                                            ? "alert-success"
-                                                            : isPending
-                                                            ? "alert-warning"
-                                                            : "alert-danger"
-                                                        }`}
+                            ${isVerified
+                              ? "alert-success"
+                              : isPending
+                                ? "alert-warning"
+                                : "alert-danger"
+                            }`}
                         >
                           {verificationMessage}
                         </p>
@@ -168,8 +167,8 @@ export const BusinessLicense = () => {
                           <div className="form-group col-lg-8 col-md-10">
                             <h4>Your Business License:</h4>
                             {previewUrl && (
-                              <div className="p-3 bg-light rounded">
-                                <p className="mb-0">
+                              <div className="p-3 bg-light rounded" style={{ minHeight: "60px", width: "100%", maxWidth: "500px" }}>
+                                <p className="mb-0 text-truncate">
                                   <i className="fa fa-file-pdf text-danger me-2"></i>
                                   <a
                                     href={previewUrl}
@@ -184,48 +183,48 @@ export const BusinessLicense = () => {
                             )}
                           </div>
                           <div className="col-lg-4">
-                            <div className="d-grid gap-2">
+                            <div style={{ width: "200px", display: "flex", flexDirection: "column", gap: "8px" }}>
                               <button
-                                className="btn btn-primary"
-                                onClick={() =>
-                                  window.open(previewUrl, "_blank")
-                                }
+                                className="btn btn-success"
+                                onClick={() => window.open(previewUrl, "_blank")}
+                                style={{ width: "100%", height: "40px" }}
                               >
-                                <i className="fa fa-eye me-2"></i>View PDF
+                                <i className="fa fa-eye me-2"></i>View
                               </button>
 
                               <button
-                                className={`btn ${
-                                  isVerified
-                                    ? "btn-success"
-                                    : isPending
+                                className={`btn w-100 ${isVerified
+                                  ? "btn-success"
+                                  : isPending
                                     ? "btn-warning"
                                     : isUploaded
-                                    ? "btn-info"
-                                    : "btn-danger"
-                                }`}
+                                      ? "btn-info"
+                                      : "btn-primary"
+                                  }`}
                                 onClick={handleSubmitBusinessLicense}
                                 disabled={isUploaded || isPending || isVerified}
+                                style={{ width: "100%", height: "40px" }}
                               >
                                 {isVerified ? (
-                                  "Verified"
+                                  <><i className="fa fa-check-circle me-2"></i>Verified</>
                                 ) : isPending ? (
-                                  "Pending"
+                                  <><i className="fa fa-clock me-2"></i>Pending</>
                                 ) : isUploaded ? (
-                                  "Uploaded"
+                                  <><i className="fa fa-file-upload me-2"></i>Uploaded</>
                                 ) : isLoading ? (
                                   <>
                                     <i className="fa fa-spinner fa-spin"></i>{" "}
                                     Uploading...
                                   </>
                                 ) : (
-                                  "Upload"
+                                  <><i className="fa fa-upload me-2"></i>Upload</>
                                 )}
                               </button>
 
                               <button
-                                className="btn btn-outline-danger"
+                                className="btn btn-outline-danger w-100"
                                 onClick={handleRemoveBusinessLicense}
+                                style={{ width: "100%", height: "40px" }}
                               >
                                 <i className="fa fa-trash me-2"></i>Remove
                               </button>
@@ -234,7 +233,7 @@ export const BusinessLicense = () => {
                         </div>
                       ) : (
                         <>
-                          <div className="uploadButton">
+                          <div className="uploadButton" style={{ width: "250px" }}>
                             <input
                               className="uploadButton-input"
                               type="file"
@@ -246,6 +245,7 @@ export const BusinessLicense = () => {
                             <label
                               className="uploadButton-button ripple-effect"
                               htmlFor="uploadBusinessLicense"
+                              style={{ width: "100%", textAlign: "center" }}
                             >
                               Upload Business License
                             </label>

@@ -64,3 +64,95 @@ export const rejectJob = async (jobId, reason) => {
     throw error;
   }
 };
+
+export const banUser = async (userId) => {
+  try {
+    console.log("User data", userId);
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/admins/ban/${userId}`,
+      {},
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error banning user:', error);
+    throw error.response?.data || { Message: 'Failed to ban user' };
+  }
+};
+
+export const unbanUser = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/admins/unban/${userId}`,
+      {},
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error banning user:', error);
+    throw error.response?.data || { Message: 'Failed to ban user' };
+  }
+};
+
+export const approveTaxVerification = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/admins/approve-tax/${userId}`,
+      { isApproved: true },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error approving tax verification:', error);
+    throw error.response?.data || { message: 'Failed to approve tax verification' };
+  }
+};
+
+export const rejectTaxVerification = async (userId, reason) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/admins/approve-tax/${userId}`,
+      { 
+        isApproved: false,
+        reason: reason 
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error rejecting tax verification:', error);
+    throw error.response?.data || { message: 'Failed to reject tax verification' };
+  }
+};
+
+export const approveLicenseVerification = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/admins/approve-license/${userId}`,
+      { isApproved: true },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error approving license verification:', error);
+    throw error.response?.data || { message: 'Failed to approve license verification' };
+  }
+};
+
+export const rejectLicenseVerification = async (userId, reason) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/admins/approve-license/${userId}`,
+      { 
+        isApproved: false,
+        reason: reason 
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error rejecting license verification:', error);
+    throw error.response?.data || { message: 'Failed to reject license verification' };
+  }
+};
