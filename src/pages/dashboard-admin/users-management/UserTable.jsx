@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 export const UserTable = ({
   data: initialData,
   isLoading: initialIsLoading,
+  onStatusChange,
 }) => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(initialIsLoading);
@@ -61,7 +62,7 @@ export const UserTable = ({
   }, []);
 
   // Create columns with callback function
-  const columns = createColumns(handleStatusChange);
+  const columns = createColumns(onStatusChange);
 
   const table = useReactTable({
     data,

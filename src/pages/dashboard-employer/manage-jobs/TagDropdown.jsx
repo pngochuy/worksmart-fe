@@ -1,39 +1,53 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import { fetchTagsByCategory } from "../../../services/tagServices";
 
-const TagDropdown = ({ setSearchParams, searchParams }) => {
+const TagDropdown = ({
+  setSearchParams,
+  searchParams,
+  initialSelectedTags = [],
+}) => {
   const [tagOptions, setTagOptions] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
 
   const getTags = async () => {
+    console.log("select taggggggggggggggg", initialSelectedTags);
     if (searchParams && searchParams.categoryID) {
-      try {
-        const data = await fetchTagsByCategory(searchParams.categoryID);
-        const options = data.map((tag) => ({
-          value: tag.tagID,
-          label: tag.tagName,
-        }));
-        setTagOptions(options);
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-        setTagOptions([]);
+      const data = await fetchTagsByCategory(searchParams.categoryID);
+      const options = data.map((tag) => ({
+        value: tag.tagID,
+        label: tag.tagName,
+      }));
+      setTagOptions(options);
+      // If we have initialSelectedTags, find and set the matching options
+      if (initialSelectedTags.length > 0) {
+        const initialTags = initialSelectedTags
+          .map((tagId) => {
+            // Find the matching tag from options
+            const matchingTag = options.find((opt) => opt.value === tagId);
+            return matchingTag;
+          })
+          .filter((tag) => tag !== undefined);
+
+        setSelectedTags(initialTags);
       }
     } else {
-      setTagOptions([]); // Reset options when no category
+      console.log("No category selected or searchParams is undefined");
+      setTagOptions([]);
     }
   };
 
   useEffect(() => {
     setSelectedTags([]);
     getTags();
-  }, [searchParams?.categoryID]);
+  }, [searchParams?.categoryID, initialSelectedTags]);
 
   const handleChange = (selected) => {
-    setSelectedTags(selected);
+    setSelectedTags(selected || []);
     setSearchParams((prev) => ({
       ...prev,
-      jobTagID: selected.map((tag) => tag.value),
+      tags: (selected || []).map((tag) => tag.value),
     }));
   };
 
@@ -89,27 +103,6 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
       color: "#333",
       padding: "8px 12px",
     }),
-    multiValue: (provided) => ({
-      ...provided,
-      backgroundColor: "#e6e6e6",
-      borderRadius: "2px",
-      margin: "2px 4px 2px 0",
-    }),
-    multiValueLabel: (provided) => ({
-      ...provided,
-      color: "#333",
-      fontSize: "12px",
-      padding: "0 4px",
-    }),
-    multiValueRemove: (provided) => ({
-      ...provided,
-      color: "#666",
-      cursor: "pointer",
-      ":hover": {
-        backgroundColor: "#d1d1d1",
-        color: "#333",
-      },
-    }),
     singleValue: (provided) => ({
       ...provided,
       color: "#333",
@@ -127,6 +120,28 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
     }),
     indicatorSeparator: () => ({
       display: "none",
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "#f5f5f5",
+      borderRadius: "2px",
+      margin: "2px 4px 2px 0",
+      flexShrink: 0,
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: "#333",
+      padding: "2px 4px",
+      fontSize: "13px",
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: "#666",
+      padding: "0 4px",
+      ":hover": {
+        backgroundColor: "#e0e0e0",
+        color: "#333",
+      },
     }),
     clearIndicator: (provided) => ({
       ...provided,

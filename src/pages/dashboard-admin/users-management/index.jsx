@@ -26,6 +26,48 @@ export const Index = () => {
     pendingVerifications: 0,
   });
 
+  // Function to update user data and recalculate stats
+  const handleUserDataUpdate = (userId, updatedData) => {
+    // Update the user in the userData array
+    setUserData((prevData) => {
+      const updatedUserData = prevData.map((user) =>
+        user.userID === userId ? { ...user, ...updatedData } : user
+      );
+
+      // Recalculate stats with updated data
+      if (updatedUserData && updatedUserData.length > 0) {
+        const total = updatedUserData.length;
+        const active = updatedUserData.filter((user) => !user.isBanned).length;
+        const banned = updatedUserData.filter((user) => user.isBanned).length;
+        const employers = updatedUserData.filter(
+          (user) => user.role === "Employer"
+        ).length;
+        const candidates = updatedUserData.filter(
+          (user) => user.role === "Candidate"
+        ).length;
+
+        // Count pending verifications (tax or license) for employers
+        const pendingVerifications = updatedUserData.filter(
+          (user) =>
+            user.role === "Employer" &&
+            (user.taxVerificationStatus === "Pending" ||
+              user.licenseVerificationStatus === "Pending")
+        ).length;
+
+        setStats({
+          total,
+          active,
+          banned,
+          employers,
+          candidates,
+          pendingVerifications,
+        });
+      }
+
+      return updatedUserData;
+    });
+  };
+
   // Fetch user data from API
   useEffect(() => {
     const fetchUserData = async () => {
@@ -136,7 +178,11 @@ export const Index = () => {
                     </TabsList>
 
                     <TabsContent value="all">
-                      <UserTable data={userData} isLoading={isLoading} />
+                      <UserTable
+                        data={userData}
+                        isLoading={isLoading}
+                        onStatusChange={handleUserDataUpdate}
+                      />
                     </TabsContent>
 
                     <TabsContent value="employers">
@@ -145,6 +191,7 @@ export const Index = () => {
                           (user) => user.role === "Employer"
                         )}
                         isLoading={isLoading}
+                        onStatusChange={handleUserDataUpdate}
                       />
                     </TabsContent>
 
@@ -154,6 +201,7 @@ export const Index = () => {
                           (user) => user.role === "Candidate"
                         )}
                         isLoading={isLoading}
+                        onStatusChange={handleUserDataUpdate}
                       />
                     </TabsContent>
 
@@ -166,6 +214,7 @@ export const Index = () => {
                               user.licenseVerificationStatus === "Pending")
                         )}
                         isLoading={isLoading}
+                        onStatusChange={handleUserDataUpdate}
                       />
                     </TabsContent>
                   </Tabs>

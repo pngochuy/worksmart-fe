@@ -11,6 +11,7 @@ import ConfirmDialog from "./ConfirmDialog"; // Import component ConfirmDialog
 import { fetchCompanyProfile } from "@/services/employerServices";
 import { fetchJobsForManagement } from "../../../services/jobServices";
 import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -33,9 +34,14 @@ export default function ManageJobsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const companyData = await fetchCompanyProfile();
+        const user = getUserLoginData();
+        console.log("user: ", user);
 
-        setVerificationLevel(companyData.verificationLevel);
+        if (user.role === "Employer") {
+          const companyData = await fetchCompanyProfile();
+
+          setVerificationLevel(companyData.verificationLevel);
+        }
       } catch (error) {
         console.error("Error loading verification data:", error);
       }

@@ -378,7 +378,7 @@ function App() {
                 path="messages"
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
-                    <CandidateMessagesPage />
+                    <EmployerMessagesPage />
                   </ProtectedRoute>
                 }
               />

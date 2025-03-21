@@ -8,7 +8,7 @@ import LocationDropdown from "../post-job/LocationDropdown";
 import CategoryDropdown from "./CategoryDropdown";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
-export default function EditJobPage() {
+const EditJobPage = () => {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -293,7 +293,7 @@ export default function EditJobPage() {
             <h3>Edit Job</h3>
             <div className="text">Update in the job details below</div>
           </div>
-          <div className="sort-options">
+          {/* <div className="sort-options">
             <label className="mr-2">Sort Order by Updated Date:</label>
             <select
               onChange={handleSortChange}
@@ -303,7 +303,7 @@ export default function EditJobPage() {
               <option value="desc">Lastest</option>
               <option value="asc">Oldest</option>
             </select>
-          </div>
+          </div> */}
         </div>
 
         <div className="row">
@@ -547,7 +547,7 @@ export default function EditJobPage() {
                         />
                       </div>
 
-                      <div className="form-group form-group col-lg-12 col-md-12">
+                      {/* <div className="form-group form-group col-lg-12 col-md-12">
                         <label>
                           <input
                             type="checkbox"
@@ -557,7 +557,7 @@ export default function EditJobPage() {
                           />
                           &nbsp; High Priority Job
                         </label>
-                      </div>
+                      </div> */}
                     </div>
                     <div className="form-group text-right">
                       <button type="submit" className="theme-btn btn-style-one">
@@ -573,4 +573,6 @@ export default function EditJobPage() {
       </div>
     </section>
   );
-}
+};
+
+export default EditJobPage;
