@@ -6,7 +6,6 @@ import { getUserLoginData } from "@/helpers/decodeJwt";
 import { Tooltip } from "primereact/tooltip";
 import { AdminSidebar } from "./AdminSiderbar";
 import { fetchCompanyProfile } from "@/services/employerServices";
-import { toast } from "react-toastify";
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -25,10 +24,12 @@ export const Sidebar = () => {
         console.log("user: ", user);
         setUserDataLogin(user);
 
-        const companyData = await fetchCompanyProfile();
+        if (user.role === "Employer") {
+          const companyData = await fetchCompanyProfile();
 
-        setVerificationLevel(companyData.verificationLevel);
-        console.log("Verification Level:", companyData.verificationLevel);
+          setVerificationLevel(companyData.verificationLevel);
+          console.log("Verification Level:", companyData.verificationLevel);
+        }
       } catch (error) {
         console.error("Error loading verification data:", error);
       }

@@ -18,7 +18,7 @@ export const fetchJobs = async (searchParams) => {
           }),
       }
     );
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
     return { jobs: [], totalPage: 0 };
@@ -48,7 +48,7 @@ export const fetchJobsForManagement = async (searchParams) => {
 export const getAllJobs = async () => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/Job/getAllJob`);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
     throw error;
@@ -60,10 +60,10 @@ export const fetchCandidateDetail = async (candidateId, jobId) => {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/Application/Job/${jobId}/application/${candidateId}`
     );
-    console.log("test",response.data);
+    console.log("test", response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching candidate detail:', error);
+    console.error("Error fetching candidate detail:", error);
     throw error;
   }
 };
@@ -71,13 +71,11 @@ export const fetchCandidateDetail = async (candidateId, jobId) => {
 // Fetch chi tiết của công việc
 export const fetchJobDetails = async (jobId) => {
   try {
-    const response = await axios.get(
-      `${BACKEND_API_URL}/api/Job/${jobId}`
-    );
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/${jobId}`);
     console.log("detail job", response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching job details:', error);
+    console.error("Error fetching job details:", error);
     throw error;
   }
 };
@@ -90,7 +88,7 @@ export const createJob = async (jobData) => {
       jobData
     );
     console.log(jobData);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error creating job:", error);
     throw error;
@@ -100,8 +98,10 @@ export const createJob = async (jobData) => {
 // Hàm lấy danh sách ứng viên cho công việc theo ID
 export const fetchCandidatesForJob = async (jobId) => {
   try {
-    const response = await axios.get(`${BACKEND_API_URL}/api/Application/Job/${jobId}/applications`);
-    return response.data; 
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/Job/${jobId}/applications`
+    );
+    return response.data;
   } catch (error) {
     console.error("Error fetching candidates:", error);
     throw error;
@@ -112,7 +112,7 @@ export const fetchCandidatesForJob = async (jobId) => {
 export const acceptCandidate = async (applicationId, jobId) => {
   try {
     const response = await axios.put(
-      `${BACKEND_API_URL}/api/Application/${applicationId}/accept`, 
+      `${BACKEND_API_URL}/api/Application/${applicationId}/accept`,
       { jobId }
     );
     console.log("data", response.data);
@@ -124,17 +124,21 @@ export const acceptCandidate = async (applicationId, jobId) => {
 };
 
 // Hàm từ chối ứng viên - Updated to include rejection reason
-export const rejectCandidate = async (applicationId, jobId, rejectionReason) => {
+export const rejectCandidate = async (
+  applicationId,
+  jobId,
+  rejectionReason
+) => {
   try {
     const response = await axios.put(
-      `${BACKEND_API_URL}/api/Application/${applicationId}/reject`, 
-      { 
-        jobId, 
-        rejectionReason 
+      `${BACKEND_API_URL}/api/Application/${applicationId}/reject`,
+      {
+        jobId,
+        rejectionReason,
       }
     );
     console.log("data rej", response.data);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error rejecting candidate:", error);
     throw error;
@@ -145,7 +149,7 @@ export const rejectCandidate = async (applicationId, jobId, rejectionReason) => 
 export const getJobById = async (id) => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/Job/${id}`);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching job:", error);
     throw error;
@@ -184,8 +188,8 @@ export const hideJob = async (id) => {
   try {
     console.log(`Calling hideJob API for job ID: ${id}`);
     const response = await axios.put(`${BACKEND_API_URL}/api/Job/hide/${id}`);
-    console.log('Hide job response:', response.data);
-    return response.data; 
+    console.log("Hide job response:", response.data);
+    return response.data;
   } catch (error) {
     console.error("Error hiding job:", error);
     throw error;
@@ -197,8 +201,8 @@ export const unhideJob = async (id) => {
   try {
     console.log(`Calling unhideJob API for job ID: ${id}`);
     const response = await axios.put(`${BACKEND_API_URL}/api/Job/unhide/${id}`);
-    console.log('Unhide job response:', response.data);
-    return response.data;  
+    console.log("Unhide job response:", response.data);
+    return response.data;
   } catch (error) {
     console.error("Error unhiding job:", error);
     throw error;
@@ -211,10 +215,10 @@ export const applyToJob = async (userId, jobId) => {
     const response = await axios.post(
       `${BACKEND_API_URL}/api/Application/ApplyToJob?userId=${userId}&jobId=${jobId}`
     );
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error applying to job:", error);
-    throw error; 
+    throw error;
   }
 };
 export const fetchJobTags = async () => {

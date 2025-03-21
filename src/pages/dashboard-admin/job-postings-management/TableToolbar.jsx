@@ -27,10 +27,9 @@ export const jobLocations = [
 
 export const jobStatuses = [
   { value: 0, label: "Pending" },
-  { value: 1, label: "Approved" },
-  { value: 2, label: "Rejected" },
-  { value: 3, label: "Hidden" },
-  { value: 4, label: "Active" },
+  { value: 1, label: "Rejected" },
+  { value: 2, label: "Hidden" },
+  { value: 3, label: "Active" },
 ];
 
 export const TableToolbar = ({ table, onRefreshData }) => {

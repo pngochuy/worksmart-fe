@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  deleteJob,
-  fetchJobs,
   fetchCandidatesForJob,
   hideJob,
   unhideJob,
@@ -31,24 +29,24 @@ export default function ManageJobsPage() {
   });
   const [verificationLevel, setVerificationLevel] = useState(null);
 
-  // useEffect(() => {
-  //   const loadData = async () => {
-  //     try {
-  //       const companyData = await fetchCompanyProfile();
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const companyData = await fetchCompanyProfile();
 
-  //       setVerificationLevel(companyData.verificationLevel);
-  //     } catch (error) {
-  //       console.error("Error loading verification data:", error);
-  //     }
-  //   };
-  //   loadData();
-  // }, []);
+        setVerificationLevel(companyData.verificationLevel);
+      } catch (error) {
+        console.error("Error loading verification data:", error);
+      }
+    };
+    loadData();
+  }, []);
 
-  // useEffect(() => {
-  //   if (verificationLevel !== null && verificationLevel < 3) {
-  //     navigate("/employer/verification");
-  //   }
-  // }, [verificationLevel, navigate]);
+  useEffect(() => {
+    if (verificationLevel !== null && verificationLevel < 3) {
+      navigate("/employer/verification");
+    }
+  }, [verificationLevel, navigate]);
 
   useEffect(() => {
     getJobs();
@@ -129,18 +127,6 @@ export default function ManageJobsPage() {
     }));
   };
 
-  // Delete job - removed window.confirm
-  const handleDelete = async (jobId) => {
-    try {
-      await deleteJob(jobId);
-      toast.success("Job deleted successfully!");
-      getJobs();
-    } catch (error) {
-      console.error("Failed to delete job:", error);
-      toast.error("Failed to delete job.");
-    }
-  };
-
   // Hide job - Updated to use status instead of isHidden
   const handleHideJob = async (jobId) => {
     try {
@@ -203,8 +189,8 @@ export default function ManageJobsPage() {
     return count === 0
       ? "No Candidates"
       : count === 1
-        ? "View 1 Candidate"
-        : `View ${count} Candidates`;
+      ? "View 1 Candidate"
+      : `View ${count} Candidates`;
   };
 
   // Updated to use status values instead of isHidden
@@ -221,16 +207,16 @@ export default function ManageJobsPage() {
       case 0: // Pending
         badgeClass += " pending";
         return <span className={badgeClass}>Pending</span>;
-      case 1: // Approved
-        badgeClass += " accepted";
-        return <span className={badgeClass}>Active</span>;
-      case 2: // Rejected
+      // case 1: // Approved
+      //   badgeClass += " accepted";
+      //   return <span className={badgeClass}>Active</span>;
+      case 1: // Rejected
         badgeClass += " rejected";
         return <span className={badgeClass}>Rejected</span>;
-      case 3: // Hidden
+      case 2: // Hidden
         badgeClass += " hidden";
         return <span className={badgeClass}>Hidden</span>;
-      case 4: // Active
+      case 3: // Active
         badgeClass += " accepted";
         return <span className={badgeClass}>Active</span>;
       default:
@@ -269,7 +255,8 @@ export default function ManageJobsPage() {
               <div className="expired-job-notice">
                 <i className="fas fa-exclamation-circle"></i>
                 <span>
-                  This job has expired. It's no longer accepting applications.
+                  This job has expired. It&apos;s no longer accepting
+                  applications.
                 </span>
               </div>
             )}
@@ -293,10 +280,11 @@ export default function ManageJobsPage() {
                   <i className="fas fa-edit"></i> Edit
                 </button>
                 <button
-                  className={`view-candidates-btn ${candidateCounts[selectedJob.jobID]
+                  className={`view-candidates-btn ${
+                    candidateCounts[selectedJob.jobID]
                       ? "has-candidates"
                       : "no-candidates"
-                    }`}
+                  }`}
                   onClick={() => {
                     closeDetailModal();
                     handleViewCandidates(selectedJob.jobID);
@@ -327,10 +315,10 @@ export default function ManageJobsPage() {
                   {selectedJob.minSalary && selectedJob.salary
                     ? `${selectedJob.minSalary.toLocaleString()} - ${selectedJob.salary.toLocaleString()}`
                     : selectedJob.salary
-                      ? `Up to ${selectedJob.salary.toLocaleString()}`
-                      : selectedJob.minSalary
-                        ? `From ${selectedJob.minSalary.toLocaleString()}`
-                        : "Negotiable"}
+                    ? `Up to ${selectedJob.salary.toLocaleString()}`
+                    : selectedJob.minSalary
+                    ? `From ${selectedJob.minSalary.toLocaleString()}`
+                    : "Negotiable"}
                 </div>
               </div>
 
@@ -619,20 +607,27 @@ export default function ManageJobsPage() {
                           jobs.map((job) => (
                             <tr
                               key={job.jobID}
-                              className={`job-row ${job.status === 3 ? "job-hidden" : ""
-                                } ${isJobExpired(job.deadline) ? "job-expired" : ""
-                                }`}
+                              className={`job-row ${
+                                job.status === 3 ? "job-hidden" : ""
+                              } ${
+                                isJobExpired(job.deadline) ? "job-expired" : ""
+                              }`}
                             >
                               <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
                               >
                                 <div
-                                  className={`job-title ${job.status === 3 ? "text-danger" : ""
-                                    }`}
+                                  className={`job-title ${
+                                    job.status === 3 ? "text-danger" : ""
+                                  }`}
                                 >
                                   <span
-                                    className={`job-title ${isJobExpired(job.deadline) ? 'text-danger' : ''}`}
+                                    className={`job-title ${
+                                      isJobExpired(job.deadline)
+                                        ? "text-danger"
+                                        : ""
+                                    }`}
                                   >
                                     {job.title}
                                   </span>
@@ -751,10 +746,11 @@ export default function ManageJobsPage() {
                               </td>
                               <td className="text-center">
                                 <button
-                                  className={`view-candidates-btn ${candidateCounts[job.jobID]
+                                  className={`view-candidates-btn ${
+                                    candidateCounts[job.jobID]
                                       ? "has-candidates"
                                       : "no-candidates"
-                                    }`}
+                                  }`}
                                   onClick={() =>
                                     handleViewCandidates(job.jobID)
                                   }
@@ -795,7 +791,7 @@ export default function ManageJobsPage() {
 
       {renderJobDetailModal()}
 
-      <style jsx>{`
+      <style>{`
         .upper-title-box {
           margin-bottom: 30px;
           display: flex;
