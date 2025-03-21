@@ -11,7 +11,6 @@ import {
   UserX,
   Briefcase,
   User as UserIcon,
-  FileCheck,
   AlertCircle,
 } from "lucide-react";
 

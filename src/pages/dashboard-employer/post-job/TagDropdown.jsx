@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import { fetchTagsByCategory } from "../../../services/tagServices";
@@ -147,14 +148,16 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
       value={selectedTags}
       onChange={handleChange}
       placeholder={
-        !searchParams?.categoryID || searchParams?.categoryID === "All Categories"
+        !searchParams?.categoryID ||
+        searchParams?.categoryID === "All Categories"
           ? "Select a category first"
           : "Select Tags"
       }
       isMulti
       isSearchable
       isDisabled={
-        !searchParams?.categoryID || searchParams?.categoryID === "All Categories"
+        !searchParams?.categoryID ||
+        searchParams?.categoryID === "All Categories"
       }
     />
   );

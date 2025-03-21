@@ -8,7 +8,7 @@ import LocationDropdown from "../post-job/LocationDropdown";
 import CategoryDropdown from "./CategoryDropdown";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
-const EditJobPage = () => {
+export default function EditJobPage() {
   const { jobId } = useParams(); // Lấy jobId từ URL
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -234,7 +234,7 @@ const EditJobPage = () => {
   // Handle form submit
   // Handle form submit
   const handleSubmit = async (e) => {
-    console.log("JOB",jobData)
+    console.log("JOB", jobData);
     e.preventDefault();
 
     // Convert formatted salary values to numbers by removing commas
@@ -468,11 +468,12 @@ const EditJobPage = () => {
                         </select>
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
-                      <label>Categories</label>
-                    <CategoryDropdown setSearchParams={setJobData}
-                    initialCategory={jobData.categoryID} 
-                    />
-                  </div>
+                        <label>Categories</label>
+                        <CategoryDropdown
+                          setSearchParams={setJobData}
+                          initialCategory={jobData.categoryID}
+                        />
+                      </div>
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Tags</label>
                         <TagDropdown
@@ -482,7 +483,7 @@ const EditJobPage = () => {
                           initialSelectedTags={jobData.tags}
                         />
                       </div>
-                      
+
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Locations</label>
                         <LocationDropdown
@@ -572,6 +573,4 @@ const EditJobPage = () => {
       </div>
     </section>
   );
-};
-
-export default EditJobPage;
+}
