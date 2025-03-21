@@ -231,7 +231,7 @@ function ApproveConfirmationDialog({
       await approveJob(job.jobID);
 
       // Cập nhật status trong table
-      onStatusChange(job.jobID, JOB_STATUS.APPROVED);
+      onStatusChange(job.jobID, JOB_STATUS.ACTIVE);
 
       // Đóng dialog và hiển thị thông báo
       onOpenChange(false);

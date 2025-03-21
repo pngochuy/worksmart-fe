@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 const WorkTypeFilter = ({ searchParams, setSearchParams }) => {
-  const allTypes = ["Freelance", "Full Time", "Internship", "Part-time"];
+  const allTypes = ["Freelance", "Full Time", "Internship", "Part-Time"];
   const workTypes = searchParams.WorkTypes || [];
 
   const handleCheckboxChange = (event) => {
@@ -22,7 +22,7 @@ const WorkTypeFilter = ({ searchParams, setSearchParams }) => {
   };
 
   return (
-    <div className="switchbox-outer"> 
+    <div className="switchbox-outer">
       <h4>Work Type</h4>
       <ul className="switchbox at-jlv16">
         {allTypes.map((type) => (

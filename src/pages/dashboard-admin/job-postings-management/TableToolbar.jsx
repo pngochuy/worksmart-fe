@@ -10,8 +10,8 @@ import { RefreshCcwIcon } from "lucide-react";
 import { getAllJobs } from "@/services/adminServices";
 
 export const jobTypes = [
-  { value: "Full-time", label: "Full-time" },
-  { value: "Part-time", label: "Part-time" },
+  { value: "Full-Time", label: "Full-Time" },
+  { value: "Part-Time", label: "Part-Time" },
   { value: "Contract", label: "Contract" },
   { value: "Internship", label: "Internship" },
   { value: "Remote", label: "Remote" },

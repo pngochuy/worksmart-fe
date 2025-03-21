@@ -261,8 +261,8 @@ export const JobForm = () => {
                           onChange={handleChange}
                         >
                           <option value="">Select</option>
-                          <option value="Full-time">Full-time</option>
-                          <option value="Part-time">Part-time</option>
+                          <option value="Full-Time">Full-Time</option>
+                          <option value="Part-Time">Part-Time</option>
                           <option value="Contract">Contract</option>
                           <option value="Internship">Internship</option>
                           <option value="Remote">Remote</option>
