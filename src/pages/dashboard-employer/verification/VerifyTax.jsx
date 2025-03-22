@@ -160,7 +160,7 @@ export const VerifyTax = () => {
                                                 <div className="form-group col-lg-6 col-md-12">
                                                     <label>Company Size <span style={{ color: "red" }}>*</span></label>
                                                     <select {...register("companySize")} onChange={(e) => setValue("companySize", e.target.value)}>
-                                                        <option value="">Chọn...</option>
+                                                        <option value="">Choose...</option>
                                                         {companySizeOptions.map((size, index) => (
                                                             <option key={index} value={size}>
                                                                 {size}

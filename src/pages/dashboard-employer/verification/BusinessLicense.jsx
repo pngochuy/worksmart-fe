@@ -34,7 +34,6 @@ export const BusinessLicense = () => {
           setIsVerified(false);
           setIsPending(false);
           setVerificationMessage("");
-          console.log("Business Image:", businessLicense)
           if (data.licenseVerificationStatus === "Approved") {
             setIsVerified(true);
             setVerificationMessage("Your business license has been approved.");
@@ -75,10 +74,12 @@ export const BusinessLicense = () => {
     setBusinessLicenseError("");
     setFile(file);
     setFileName(file.name);
-    setPreviewUrl(URL.createObjectURL(file)); // Tạo URL tạm để xem trước
+    // setPreviewUrl(URL.createObjectURL(file)); // Tạo URL tạm để xem trước
     try {
       const response = await uploadFile(file);
       setBusinessLicense(response.fileUrl);
+      setPreviewUrl(response.fileUrl);
+
       console.log("Business License Image URL:", response.fileUrl);
     } catch (error) {
       console.error("Error uploading business license image:", error);
@@ -166,12 +167,12 @@ export const BusinessLicense = () => {
                         >
                           <div className="form-group col-lg-8 col-md-10">
                             <h4>Your Business License:</h4>
-                            {previewUrl && (
+                            {businessLicense  && (
                               <div className="p-3 bg-light rounded" style={{ minHeight: "60px", width: "100%", maxWidth: "500px" }}>
                                 <p className="mb-0 text-truncate">
                                   <i className="fa fa-file-pdf text-danger me-2"></i>
                                   <a
-                                    href={previewUrl}
+                                    href={businessLicense }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-primary"
@@ -186,7 +187,7 @@ export const BusinessLicense = () => {
                             <div style={{ width: "200px", display: "flex", flexDirection: "column", gap: "8px" }}>
                               <button
                                 className="btn btn-success"
-                                onClick={() => window.open(previewUrl, "_blank")}
+                                onClick={() => window.open(businessLicense, "_blank")}
                                 style={{ width: "100%", height: "40px" }}
                               >
                                 <i className="fa fa-eye me-2"></i>View

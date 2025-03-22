@@ -43,19 +43,6 @@ export const fetchCandidatesProfile = async () => {
     };
   } catch (error) {
     console.error("Error fetching candidate profile:", error);
-    // Xử lý lỗi
-    // if (error.response && error.response.status === 401) {
-    //   toast.warn("⚠ Your session has expired. Please log in again.");
-    //   localStorage.removeItem("accessToken");
-    //   window.location.href = "/login";
-    // }
-    // if (
-    //   error.message.includes("ERR_CONNECTION_REFUSED") ||
-    //   error.code === "ERR_NETWORK"
-    // ) {
-    //   toast.warn("🚫 Unable to connect to server. Please try again later.");
-    // }
-
     throw error;
   }
 };
@@ -66,15 +53,15 @@ export const updateCandidateProfile = async (profileData) => {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
 
-    const updatedData = {
-      ...profileData,
-      isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
-    };
-    console.log("Profile data gửi đi:", updatedData);
+    // const updatedData = {
+    //   ...profileData,
+    //   isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
+    // };
+    console.log("Profile data gửi đi:", profileData);
 
     const res = await axios.put(
       `${BACKEND_API_URL}/candidates/edit-profile`,
-      updatedData,
+      profileData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -85,8 +72,8 @@ export const updateCandidateProfile = async (profileData) => {
     console.log("response: ", res);
     if (localStorage.getItem("userLoginData")) {
       const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
-      userLoginData.fullName = updatedData?.fullName;
-      userLoginData.avatar = updatedData?.avatar; // error
+      userLoginData.fullName = profileData?.fullName;
+      userLoginData.avatar = profileData?.avatar; // error
       localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
     }
 

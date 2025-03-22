@@ -19,9 +19,7 @@ const profileSchema = z.object({
   avatar: z.string().optional().or(z.literal("")), // Cho phép khoảng trắng
   fullName: z
     .string()
-    .min(2, "Full Name must be at least 2 characters.")
-    .optional()
-    .or(z.literal("")), // Cho phép khoảng trắng
+    .min(2, "Full Name must be at least 2 characters."),  
   phoneNumber: z
     .string()
     .min(10, "Phone number is invalid")
@@ -33,10 +31,10 @@ const profileSchema = z.object({
     })
     .optional()
     .or(z.literal("")),
-  isPrivated: z
-    .enum(["Yes", "No"], { message: "Please select Yes or No." })
-    .optional()
-    .or(z.literal("")),
+  // isPrivated: z
+  //   .enum(["Yes", "No"], { message: "Please select Yes or No." })
+  //   .optional()
+  //   .or(z.literal("")),
 });
 
 const addressSchema = z.object({
@@ -105,7 +103,7 @@ export const Index = () => {
           setProfileValue("phoneNumber", data.phoneNumber || "");
           setProfileValue("email", data.email || "");
           setProfileValue("gender", data.gender || "Other");
-          setProfileValue("isPrivated", data.isPrivated);
+          // setProfileValue("isPrivated", data.isPrivated);
 
           setAddressValue("address", data.address || "");
         }
@@ -126,12 +124,12 @@ export const Index = () => {
   const onSubmitProfile = async (formData) => {
     setIsProfileLoading(true);
     try {
-      const validData = {
-        ...formData,
-        avatar,
-        isPrivated: formData.isPrivated ? formData.isPrivated : "No",
-      };
-      const message = await updateCandidateProfile(validData);
+      // const validData = {
+      //   ...formData,
+      //   avatar,
+      //   isPrivated: formData.isPrivated ? formData.isPrivated : "No",
+      // };
+      const message = await updateCandidateProfile(formData);
       toast.success(message);
     } catch (error) {
       console.error("Error updating profile", error);
@@ -318,7 +316,7 @@ export const Index = () => {
                       <div className="row">
                         {/* Full Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Full Name</label>
+                          <label>Full Name<span style={{ color: "red" }}>*</span></label>
                           <input
                             type="text"
                             placeholder="Enter full name"
@@ -382,7 +380,7 @@ export const Index = () => {
                         </div>
 
                         {/* IsPrivated */}
-                        <div className="form-group col-lg-12 col-md-12">
+                        {/* <div className="form-group col-lg-12 col-md-12">
                           <label>Allow In Search & Listing</label>
                           <select
                             {...registerProfile("isPrivated")}
@@ -397,7 +395,7 @@ export const Index = () => {
                               {profileErrors.isPrivated.message}
                             </span>
                           )}
-                        </div>
+                        </div> */}
 
                         {/* Save */}
                         <div className="form-group col-lg-6 col-md-12">

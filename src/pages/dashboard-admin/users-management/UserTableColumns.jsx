@@ -417,7 +417,7 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
       return;
     }
 
-    if (rejectReason === "other" && !otherReason.trim()) {
+    if (rejectReason === "Other reason" && !otherReason.trim()) {
       toast.error("Please provide details for the rejection reason.");
       return;
     }
@@ -425,7 +425,7 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
     try {
       setLoading(true);
       const reasonText =
-        rejectReason === "other" ? otherReason.trim() : rejectReason;
+        rejectReason === "Other reason" ? otherReason.trim() : rejectReason;
       await rejectTaxVerification(user.userID, reasonText);
 
       onStatusChange(user.userID, {
@@ -559,10 +559,10 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
                 </Select>
               </div>
 
-              {rejectReason === "other" && (
+              {rejectReason === "Other reason" && (
                 <div>
-                  <label htmlFor="other-reason">Please specify:</label>
-                  <textarea
+                  <Label htmlFor="other-reason">Please specify:</Label>
+                  <Textarea
                     id="other-reason"
                     value={otherReason}
                     onChange={(e) => setOtherReason(e.target.value)}
@@ -721,7 +721,7 @@ function LicenseVerificationDialog({
       return;
     }
 
-    if (rejectReason === "other" && !otherReason.trim()) {
+    if (rejectReason === "Other reason" && !otherReason.trim()) {
       toast.error("Please provide details for the rejection reason.");
       return;
     }
@@ -729,7 +729,7 @@ function LicenseVerificationDialog({
     try {
       setLoading(true);
       const reasonText =
-        rejectReason === "other" ? otherReason.trim() : rejectReason;
+        rejectReason === "Other reason" ? otherReason.trim() : rejectReason;
       await rejectLicenseVerification(user.userID, reasonText);
 
       onStatusChange(user.userID, {
@@ -905,7 +905,7 @@ function LicenseVerificationDialog({
                 </Select>
               </div>
 
-              {rejectReason === "other" && (
+              {rejectReason === "Other reason" && (
                 <div>
                   <Label htmlFor="other-reason">Please specify:</Label>
                   <Textarea
