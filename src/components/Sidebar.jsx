@@ -6,7 +6,6 @@ import { getUserLoginData } from "@/helpers/decodeJwt";
 import { Tooltip } from "primereact/tooltip";
 import { AdminSidebar } from "./AdminSiderbar";
 import { fetchCompanyProfile } from "@/services/employerServices";
-import { toast } from "react-toastify";
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -25,10 +24,12 @@ export const Sidebar = () => {
         console.log("user: ", user);
         setUserDataLogin(user);
 
-        const companyData = await fetchCompanyProfile();
+        if (user.role === "Employer") {
+          const companyData = await fetchCompanyProfile();
 
-        setVerificationLevel(companyData.verificationLevel);
-        console.log("Verification Level:", companyData.verificationLevel);
+          setVerificationLevel(companyData.verificationLevel);
+          console.log("Verification Level:", companyData.verificationLevel);
+        }
       } catch (error) {
         console.error("Error loading verification data:", error);
       }
@@ -93,10 +94,14 @@ export const Sidebar = () => {
                 <Tooltip
                   target=".fa-circle-question"
                   className="custom-tooltip"
-                  // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+                // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
                 />
                 <span>Account Verification: </span>
-                <span className="text-green-500">
+                <a
+                  href="/employer/verification"
+                  className="text-green-500"
+                  style={{ textDecoration: "none", color: "#22c55e"}}
+                >
                   Level {verificationLevel}/3{" "}
                   <i
                     className="fa-solid fa-circle-question text-gray-400"
@@ -106,7 +111,7 @@ export const Sidebar = () => {
                     data-pr-my="left center-2"
                     style={{ cursor: "pointer" }}
                   ></i>
-                </span>
+                </a>
               </div>
             </>
           )}

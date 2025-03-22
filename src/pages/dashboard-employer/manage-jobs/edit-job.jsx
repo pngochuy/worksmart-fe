@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getJobById, updateJob } from "../../../services/jobServices";
 import { Editor } from "@tinymce/tinymce-react";
 import { toast } from "react-toastify";
-import TagDropdown from "../post-job/TagDropdown";
+import TagDropdown from "./TagDropdown";
 import LocationDropdown from "../post-job/LocationDropdown";
+import CategoryDropdown from "./CategoryDropdown";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 const EditJobPage = () => {
@@ -26,7 +27,8 @@ const EditJobPage = () => {
     exp: "",
     priority: false,
     deadline: "",
-    jobPosition: "", // Thêm trường jobPosition
+    jobPosition: "",
+    categoryID: "",
   });
   const [salaryRange, setSalaryRange] = useState({
     minSalary: "",
@@ -232,6 +234,7 @@ const EditJobPage = () => {
   // Handle form submit
   // Handle form submit
   const handleSubmit = async (e) => {
+    console.log("JOB", jobData);
     e.preventDefault();
 
     // Convert formatted salary values to numbers by removing commas
@@ -290,7 +293,7 @@ const EditJobPage = () => {
             <h3>Edit Job</h3>
             <div className="text">Update in the job details below</div>
           </div>
-          <div className="sort-options">
+          {/* <div className="sort-options">
             <label className="mr-2">Sort Order by Updated Date:</label>
             <select
               onChange={handleSortChange}
@@ -300,7 +303,7 @@ const EditJobPage = () => {
               <option value="desc">Lastest</option>
               <option value="asc">Oldest</option>
             </select>
-          </div>
+          </div> */}
         </div>
 
         <div className="row">
@@ -465,13 +468,22 @@ const EditJobPage = () => {
                         </select>
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
+                        <label>Categories</label>
+                        <CategoryDropdown
+                          setSearchParams={setJobData}
+                          initialCategory={jobData.categoryID}
+                        />
+                      </div>
+                      <div className="form-group col-lg-6 col-md-12">
                         <label>Tags</label>
                         <TagDropdown
                           setSearchParams={setJobData}
+                          searchParams={jobData}
                           // initialSelectedTags={jobData.jobTagID || [jobData.jobTagID]}
                           initialSelectedTags={jobData.tags}
                         />
                       </div>
+
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Locations</label>
                         <LocationDropdown
@@ -535,7 +547,7 @@ const EditJobPage = () => {
                         />
                       </div>
 
-                      <div className="form-group form-group col-lg-12 col-md-12">
+                      {/* <div className="form-group form-group col-lg-12 col-md-12">
                         <label>
                           <input
                             type="checkbox"
@@ -545,7 +557,7 @@ const EditJobPage = () => {
                           />
                           &nbsp; High Priority Job
                         </label>
-                      </div>
+                      </div> */}
                     </div>
                     <div className="form-group text-right">
                       <button type="submit" className="theme-btn btn-style-one">

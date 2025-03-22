@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  deleteJob,
-  fetchJobs,
   fetchCandidatesForJob,
   hideJob,
   unhideJob,
@@ -12,6 +10,8 @@ import Pagination from "./Pagination";
 import ConfirmDialog from "./ConfirmDialog"; // Import component ConfirmDialog
 import { fetchCompanyProfile } from "@/services/employerServices";
 import { fetchJobsForManagement } from "../../../services/jobServices";
+import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -34,9 +34,14 @@ export default function ManageJobsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const companyData = await fetchCompanyProfile();
+        const user = getUserLoginData();
+        console.log("user: ", user);
 
-        setVerificationLevel(companyData.verificationLevel);
+        if (user.role === "Employer") {
+          const companyData = await fetchCompanyProfile();
+
+          setVerificationLevel(companyData.verificationLevel);
+        }
       } catch (error) {
         console.error("Error loading verification data:", error);
       }
@@ -58,19 +63,6 @@ export default function ManageJobsPage() {
     searchParams.title,
     searchParams.MostRecent,
   ]);
-
-  // Format date to DD/MM/YYYY HH:MM
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, "0");
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
 
   // Check if job is expired
   const isJobExpired = (deadline) => {
@@ -129,27 +121,15 @@ export default function ManageJobsPage() {
     }));
   };
 
-  // Delete job - removed window.confirm
-  const handleDelete = async (jobId) => {
-    try {
-      await deleteJob(jobId);
-      toast.success("Job deleted successfully!");
-      getJobs();
-    } catch (error) {
-      console.error("Failed to delete job:", error);
-      toast.error("Failed to delete job.");
-    }
-  };
-
   // Hide job - Updated to use status instead of isHidden
   const handleHideJob = async (jobId) => {
     try {
       await hideJob(jobId);
 
-      // Update local state to reflect the new status (3 = Hidden)
+      // Update local state to reflect the new status (2 = Hidden)
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
-          job.jobID === jobId ? { ...job, status: 3 } : job
+          job.jobID === jobId ? { ...job, status: 2 } : job
         )
       );
 
@@ -165,10 +145,10 @@ export default function ManageJobsPage() {
     try {
       await unhideJob(jobId);
 
-      // Update local state to set status to Active (4)
+      // Update local state to set status to Active (3)
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
-          job.jobID === jobId ? { ...job, status: 4 } : job
+          job.jobID === jobId ? { ...job, status: 3 } : job
         )
       );
 
@@ -216,21 +196,21 @@ export default function ManageJobsPage() {
 
     // Handle status based on JobStatus enum values
     let badgeClass = "status-badge";
-
+    console.log("Job status: ", status);
     switch (status) {
       case 0: // Pending
         badgeClass += " pending";
         return <span className={badgeClass}>Pending</span>;
-      case 1: // Approved
-        badgeClass += " accepted";
-        return <span className={badgeClass}>Active</span>;
-      case 2: // Rejected
+      // case 1: // Approved
+      //   badgeClass += " accepted";
+      //   return <span className={badgeClass}>Active</span>;
+      case 1: // Rejected
         badgeClass += " rejected";
         return <span className={badgeClass}>Rejected</span>;
-      case 3: // Hidden
+      case 2: // Hidden
         badgeClass += " hidden";
         return <span className={badgeClass}>Hidden</span>;
-      case 4: // Active
+      case 3: // Active
         badgeClass += " accepted";
         return <span className={badgeClass}>Active</span>;
       default:
@@ -269,7 +249,8 @@ export default function ManageJobsPage() {
               <div className="expired-job-notice">
                 <i className="fas fa-exclamation-circle"></i>
                 <span>
-                  This job has expired. It's no longer accepting applications.
+                  This job has expired. It&apos;s no longer accepting
+                  applications.
                 </span>
               </div>
             )}
@@ -346,7 +327,7 @@ export default function ManageJobsPage() {
 
               <div className="detail-item">
                 <div className="detail-label">
-                  <i className="fas fa-user-plus"></i> Number of Openings
+                  <i className="fas fa-user-plus"></i> Openings
                 </div>
                 <div className="detail-value">
                   {selectedJob.numberOfRecruitment || 1}
@@ -371,14 +352,14 @@ export default function ManageJobsPage() {
                 </div>
               </div>
 
-              <div className="detail-item">
+              {/* <div className="detail-item">
                 <div className="detail-label">
                   <i className="fas fa-id-badge"></i> Position
                 </div>
                 <div className="detail-value">
                   {selectedJob.jobPosition || "Not Specified"}
                 </div>
-              </div>
+              </div> */}
 
               <div className="detail-item">
                 <div className="detail-label">
@@ -396,7 +377,7 @@ export default function ManageJobsPage() {
                   <i className="fas fa-calendar-plus"></i> Created Date
                 </div>
                 <div className="detail-value">
-                  {formatDateTime(selectedJob.createdAt)}
+                  {formatDateTimeNotIncludeTime(selectedJob.createdAt)}
                 </div>
               </div>
 
@@ -405,7 +386,7 @@ export default function ManageJobsPage() {
                   <i className="fas fa-calendar-day"></i> Updated
                 </div>
                 <div className="detail-value">
-                  {formatDateTime(selectedJob.updatedAt)}
+                  {formatDateTimeNotIncludeTime(selectedJob.updatedAt)}
                 </div>
               </div>
 
@@ -414,7 +395,7 @@ export default function ManageJobsPage() {
                   <i className="fas fa-calendar-times"></i> Expires
                 </div>
                 <div className="detail-value">
-                  {formatDateTime(selectedJob.deadline)}
+                  {formatDateTimeNotIncludeTime(selectedJob.deadline)}
                 </div>
               </div>
 
@@ -589,9 +570,9 @@ export default function ManageJobsPage() {
                           <th>
                             <i className="fas fa-briefcase mr-1"></i> Work Type
                           </th>
-                          <th>
+                          {/* <th>
                             <i className="fas fa-id-badge mr-1"></i> Position
-                          </th>
+                          </th> */}
                           <th>
                             <i className="fas fa-flag mr-1"></i> Priority
                           </th>
@@ -621,7 +602,7 @@ export default function ManageJobsPage() {
                             <tr
                               key={job.jobID}
                               className={`job-row ${
-                                job.status === 3 ? "job-hidden" : ""
+                                job.status === 2 ? "job-hidden" : ""
                               } ${
                                 isJobExpired(job.deadline) ? "job-expired" : ""
                               }`}
@@ -635,12 +616,15 @@ export default function ManageJobsPage() {
                                     job.status === 3 ? "text-danger" : ""
                                   }`}
                                 >
-                                  {job.title}
-                                  {isJobExpired(job.deadline) && (
-                                    <span className="expired-tag ml-2 text-danger">
-                                      Expired
-                                    </span>
-                                  )}
+                                  <span
+                                    className={`job-title ${
+                                      isJobExpired(job.deadline)
+                                        ? "text-danger"
+                                        : ""
+                                    }`}
+                                  >
+                                    {job.title}
+                                  </span>
                                 </div>
                               </td>
                               <td
@@ -654,7 +638,7 @@ export default function ManageJobsPage() {
                                 onClick={() => handleViewDetail(job)}
                               >
                                 {job.salary
-                                  ? `Up to ${job.salary.toLocaleString()}`
+                                  ? `${job.salary.toLocaleString()}`
                                   : "Negotiable"}
                               </td>
                               <td
@@ -664,17 +648,17 @@ export default function ManageJobsPage() {
                                 {getStatusBadge(job.status, job.deadline)}
                               </td>
                               <td
-                                className="clickable-cell"
+                                className="clickable-cell text-center"
                                 onClick={() => handleViewDetail(job)}
                               >
                                 {job.workType || "Full-Time"}
                               </td>
-                              <td
+                              {/* <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
                               >
                                 {job.jobPosition || "Not specified"}
-                              </td>
+                              </td> */}
                               <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
@@ -685,16 +669,16 @@ export default function ManageJobsPage() {
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
                               >
-                                {formatDateTime(job.createdAt)}
+                                {formatDateTimeNotIncludeTime(job.createdAt)}
                               </td>
                               <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
                               >
-                                {formatDateTime(job.deadline)}
+                                {formatDateTimeNotIncludeTime(job.deadline)}
                               </td>
                               <td
-                                className="clickable-cell"
+                                className="clickable-cell text-center"
                                 onClick={() => handleViewDetail(job)}
                               >
                                 {job.numberOfRecruitment || 1}
@@ -713,7 +697,7 @@ export default function ManageJobsPage() {
                                   >
                                     <i className="fas fa-edit"></i> Edit
                                   </button>
-                                  {job.status !== 3 ? (
+                                  {job.status !== 2 ? (
                                     <ConfirmDialog
                                       title="Hide job?"
                                       description="Are you sure you want to hide this job? It will not be visible to candidates."
@@ -801,7 +785,7 @@ export default function ManageJobsPage() {
 
       {renderJobDetailModal()}
 
-      <style jsx>{`
+      <style>{`
         .upper-title-box {
           margin-bottom: 30px;
           display: flex;

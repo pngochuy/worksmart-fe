@@ -190,10 +190,10 @@ export const Index = () => {
     img.src = URL.createObjectURL(file);
 
     img.onload = async () => {
-      if (img.width < 330 || img.height < 300) {
-        setFileError("Minimum dimensions are 330x300 pixels.");
-        return;
-      }
+      // if (img.width < 330 || img.height < 300) {
+      //   setFileError("Minimum dimensions are 330x300 pixels.");
+      //   return;
+      // }
 
       // Nếu qua hết validate, tiếp tục upload ảnh
       try {

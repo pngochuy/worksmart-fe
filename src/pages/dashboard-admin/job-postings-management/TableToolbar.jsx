@@ -10,8 +10,8 @@ import { RefreshCcwIcon } from "lucide-react";
 import { getAllJobs } from "@/services/adminServices";
 
 export const jobTypes = [
-  { value: "Full-time", label: "Full-time" },
-  { value: "Part-time", label: "Part-time" },
+  { value: "Full-Time", label: "Full-Time" },
+  { value: "Part-Time", label: "Part-Time" },
   { value: "Contract", label: "Contract" },
   { value: "Internship", label: "Internship" },
   { value: "Remote", label: "Remote" },
@@ -27,10 +27,9 @@ export const jobLocations = [
 
 export const jobStatuses = [
   { value: 0, label: "Pending" },
-  { value: 1, label: "Approved" },
-  { value: 2, label: "Rejected" },
-  { value: 3, label: "Hidden" },
-  { value: 4, label: "Active" },
+  { value: 1, label: "Rejected" },
+  { value: 2, label: "Hidden" },
+  { value: 3, label: "Active" },
 ];
 
 export const TableToolbar = ({ table, onRefreshData }) => {

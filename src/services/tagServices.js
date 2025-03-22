@@ -15,6 +15,7 @@ export const fetchTagsByCategory = async (category) => {
     const response = await axios.get(
       `${BACKEND_API_URL}/tags/getByCategory/${category}`
     );
+    console.log("Tags",response.data)
     return response.data;
   } catch (error) {
     console.error("Error fetching tags:", error);

@@ -1,5 +1,4 @@
 import axios from "axios";
-import { toast } from "react-toastify";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL; // Thay thế bằng URL backend thật
 
@@ -211,12 +210,16 @@ export const verifyTax = async (taxData) => {
 
     console.log("Tax Data gửi đi:", taxData);
 
-    const response = await axios.post(`${BACKEND_API_URL}/employers/verify-tax`, taxData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      `${BACKEND_API_URL}/employers/verify-tax`,
+      taxData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     return response.data;
   } catch (error) {
