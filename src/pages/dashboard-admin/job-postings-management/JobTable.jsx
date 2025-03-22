@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 export const JobTable = ({
   data: initialData,
   isLoading: initialIsLoading,
+  onStatusChange,
 }) => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(initialIsLoading);
@@ -51,17 +52,26 @@ export const JobTable = ({
     setIsLoading(false);
   }, []);
 
-  // Callback function để cập nhật status của job
-  const handleStatusChange = useCallback((jobId, newStatus) => {
-    setData((currentData) =>
-      currentData.map((job) =>
-        job.jobID === jobId ? { ...job, status: newStatus } : job
-      )
-    );
-  }, []);
+  // Callback function to update job status locally and pass to parent
+  const handleJobStatusChange = useCallback(
+    (jobId, newStatus) => {
+      // Update local component state
+      setData((currentData) =>
+        currentData.map((job) =>
+          job.jobID === jobId ? { ...job, status: newStatus } : job
+        )
+      );
 
-  // Tạo columns với callback function
-  const columns = createColumns(handleStatusChange);
+      // Call the parent component's status change handler to update global state
+      if (onStatusChange) {
+        onStatusChange(jobId, newStatus);
+      }
+    },
+    [onStatusChange]
+  );
+
+  // Create columns with the statusChange callback
+  const columns = createColumns(handleJobStatusChange);
 
   const table = useReactTable({
     data,

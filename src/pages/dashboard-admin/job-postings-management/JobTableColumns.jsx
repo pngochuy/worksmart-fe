@@ -43,10 +43,9 @@ import { hideJob, unhideJob } from "@/services/jobServices";
 // Enum for job statuses
 export const JOB_STATUS = {
   PENDING: 0,
-  APPROVED: 1,
-  REJECTED: 2,
-  HIDDEN: 3,
-  ACTIVE: 4,
+  REJECTED: 1,
+  HIDDEN: 2,
+  ACTIVE: 3,
 };
 
 // Remove mock function definitions since we're importing the real ones
@@ -116,14 +115,6 @@ const ActionCell = ({ row, onStatusChange }) => {
             label: "Reject",
             icon: <X className="size-4 mr-2" />,
             onClick: () => setShowRejectConfirmation(true),
-          },
-        ];
-      case JOB_STATUS.APPROVED:
-        return [
-          {
-            label: "Hide",
-            icon: <EyeOff className="size-4 mr-2" />,
-            onClick: () => setShowHideConfirmation(true),
           },
         ];
       case JOB_STATUS.REJECTED:
@@ -240,7 +231,7 @@ function ApproveConfirmationDialog({
       await approveJob(job.jobID);
 
       // Cập nhật status trong table
-      onStatusChange(job.jobID, JOB_STATUS.APPROVED);
+      onStatusChange(job.jobID, JOB_STATUS.ACTIVE);
 
       // Đóng dialog và hiển thị thông báo
       onOpenChange(false);

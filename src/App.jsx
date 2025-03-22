@@ -308,20 +308,36 @@ function App() {
               </Route>
               <Route
                 path="/employer/manage-jobs/edit/:jobId"
-                element={<EditJobPage />}
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <EditJobPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/employer/manage-jobs/applied-candidates/:jobId"
-                element={<CandidatesPage />}
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <CandidatesPage />
+                  </ProtectedRoute>
+                }
               />
               {/* ThanhAdd page candidares*/}
               <Route
                 path="/employer/manage-jobs/candidates/:jobId"
-                element={<CandidatesPage />}
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <CandidatesPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/employer/manage-jobs/candidates/:jobId/:candidateId"
-                element={<EmployerCandidateDetailPage />}
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <EmployerCandidateDetailPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 index
@@ -364,7 +380,7 @@ function App() {
                 path="messages"
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
-                    <CandidateMessagesPage />
+                    <EmployerMessagesPage />
                   </ProtectedRoute>
                 }
               />

@@ -19,7 +19,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -45,8 +44,8 @@ import LoadingButton from "@/components/LoadingButton";
 import { toast } from "react-toastify";
 import { UserVerificationBadge } from "./UserVerificationBadge";
 import { UserRoleBadge } from "./UserBadge";
-import { 
-  banUser, 
+import {
+  banUser,
   unbanUser,
   approveTaxVerification,
   rejectTaxVerification,
@@ -143,8 +142,10 @@ const ActionCell = ({ row, onStatusChange }) => {
 
   const [showBanConfirmation, setShowBanConfirmation] = useState(false);
   const [showUnbanConfirmation, setShowUnbanConfirmation] = useState(false);
-  const [showTaxVerificationDialog, setShowTaxVerificationDialog] = useState(false);
-  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] = useState(false);
+  const [showTaxVerificationDialog, setShowTaxVerificationDialog] =
+    useState(false);
+  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] =
+    useState(false);
 
   // Get actions based on user status
   const getActions = () => {
@@ -624,7 +625,7 @@ function LicenseVerificationDialog({
   //   isCloudinaryUrl && isPDF
   //     ? originalDocumentUrl.replace("/upload/", "/upload/f_jpg/")
   //     : originalDocumentUrl;
-  
+
   const viewableUrl = originalDocumentUrl;
 
   // Properly handle PDF downloading with correct approach
@@ -829,9 +830,7 @@ function LicenseVerificationDialog({
                           onClick={() => setShowPdfViewer(!showPdfViewer)}
                           // className="w-full"
                         >
-                          {showPdfViewer
-                            ? "Hide Document"
-                            : "Show Document"}
+                          {showPdfViewer ? "Hide Document" : "Show Document"}
                         </Button>
                       </div>
 

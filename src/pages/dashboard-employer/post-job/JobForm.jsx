@@ -29,15 +29,15 @@ export const JobForm = () => {
     priority: false,
     deadline: "",
     jobPosition: "",
-    categoryID: "", 
+    categoryID: "",
   });
-  
+
   // Thêm state riêng cho min-max salary
   const [salaryRange, setSalaryRange] = useState({
     minSalary: "",
     maxSalary: "",
   });
-  
+
   const [tags, setTags] = useState([]);
   const [locations, setLocation] = useState([]);
   const navigate = useNavigate();
@@ -90,12 +90,20 @@ export const JobForm = () => {
 
     setSalaryRange((prev) => ({
       ...prev,
-      [name]: numericValue ? parseInt(numericValue, 10).toLocaleString("en-US") : "",
+      [name]: numericValue
+        ? parseInt(numericValue, 10).toLocaleString("en-US")
+        : "",
     }));
 
     // Cập nhật jobData.salary
-    const updatedMinSalary = name === "minSalary" ? numericValue : salaryRange.minSalary.replace(/,/g, "");
-    const updatedMaxSalary = name === "maxSalary" ? numericValue : salaryRange.maxSalary.replace(/,/g, "");
+    const updatedMinSalary =
+      name === "minSalary"
+        ? numericValue
+        : salaryRange.minSalary.replace(/,/g, "");
+    const updatedMaxSalary =
+      name === "maxSalary"
+        ? numericValue
+        : salaryRange.maxSalary.replace(/,/g, "");
 
     if (updatedMinSalary && updatedMaxSalary) {
       setJobData((prev) => ({
@@ -132,9 +140,11 @@ export const JobForm = () => {
     try {
       const updatedJobData = {
         ...jobData,
-        salary: `${minSalary.toLocaleString("en-US")} - ${maxSalary.toLocaleString("en-US")}`,
+        salary: `${minSalary.toLocaleString(
+          "en-US"
+        )} - ${maxSalary.toLocaleString("en-US")}`,
       };
-
+      console.log("updatedJobData: ", updatedJobData);
       await createJob(updatedJobData);
       console.log(updatedJobData);
       toast.success("Job created successfully!");
@@ -183,10 +193,24 @@ export const JobForm = () => {
                             height: 300,
                             menubar: false,
                             plugins: [
-                              "advlist", "autolink", "lists", "link", "charmap", 
-                              "print", "preview", "anchor", "searchreplace", 
-                              "visualblocks", "code", "fullscreen", "insertdatetime", 
-                              "media", "table", "paste", "help", "wordcount"
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "charmap",
+                              "print",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "paste",
+                              "help",
+                              "wordcount",
                             ],
                             toolbar:
                               "undo redo | formatselect | bold italic backcolor | \
@@ -237,8 +261,8 @@ export const JobForm = () => {
                           onChange={handleChange}
                         >
                           <option value="">Select</option>
-                          <option value="Full-time">Full-time</option>
-                          <option value="Part-time">Part-time</option>
+                          <option value="Full-Time">Full-Time</option>
+                          <option value="Part-Time">Part-Time</option>
                           <option value="Contract">Contract</option>
                           <option value="Internship">Internship</option>
                           <option value="Remote">Remote</option>
@@ -247,24 +271,20 @@ export const JobForm = () => {
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Categories</label>
-                        <CategoryDropdown 
-                          setSearchParams={setJobData} 
-                        />
+                        <CategoryDropdown setSearchParams={setJobData} />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Tags</label>
-                        <TagDropdown 
-                          setSearchParams={setJobData} 
-                          searchParams={jobData} 
+                        <TagDropdown
+                          setSearchParams={setJobData}
+                          searchParams={jobData}
                         />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Locations</label>
-                        <LocationDropdown 
-                          setSearchParams={setJobData} 
-                        />
+                        <LocationDropdown setSearchParams={setJobData} />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
@@ -288,10 +308,14 @@ export const JobForm = () => {
                             style={{ flex: 1 }}
                           />
                         </div>
-                        {parseInt(salaryRange.minSalary.replace(/,/g, "") || 0) >
-                          parseInt(salaryRange.maxSalary.replace(/,/g, "") || 0) &&
-                          salaryRange.minSalary &&
-                          salaryRange.maxSalary ? (
+                        {parseInt(
+                          salaryRange.minSalary.replace(/,/g, "") || 0
+                        ) >
+                          parseInt(
+                            salaryRange.maxSalary.replace(/,/g, "") || 0
+                          ) &&
+                        salaryRange.minSalary &&
+                        salaryRange.maxSalary ? (
                           <div
                             className="text-danger mt-1"
                             style={{ fontSize: "0.8rem" }}
