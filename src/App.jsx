@@ -7,6 +7,7 @@ import { index as NotFoundPage } from "./pages/404-not-found";
 import { Index as LoginPage } from "./pages/login";
 import { Index as RegisterPage } from "./pages/register";
 import { Index as ForgotPasswordPage } from "./pages/forgot-password";
+import { Index as VerifyOTPPage } from "./pages/forgot-password";
 import { Index as ResetPasswordPage } from "./pages/forgot-password";
 import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
@@ -80,6 +81,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/verify-otp" element={<VerifyOTPPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             {/* Job */}
             <Route

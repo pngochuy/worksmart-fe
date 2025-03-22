@@ -109,14 +109,31 @@ export const forgotPassword = async (email) => {
   }
 };
 
-export const resetPassword = async (resetData) => {
+export const verifyOTP  = async (data) => {
   try {
     const response = await axios.post(
-      `${BACKEND_API_URL}/accounts/resetPassword`,
-      resetData,
-      { headers: { "Content-Type": "application/json" } }
+      `${BACKEND_API_URL}/accounts/verifyOTP`, {
+        email: data.email,
+        otp: data.otp
+      }    
     );
-    console.log("Submitting reset data:", { resetData });
+    console.log("Submitting data:", data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Something went wrong!";
+  }
+};
+
+export const resetPassword = async (data) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/accounts/resetPassword`,{
+        email: data.email,
+        resetToken: data.resetToken,
+        newPassword: data.newPassword
+      }
+    );
+    console.log("Submitting reset data:", { data });
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || "Something went wrong!";

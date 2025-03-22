@@ -31,24 +31,24 @@ export default function ManageJobsPage() {
   });
   const [verificationLevel, setVerificationLevel] = useState(null);
 
-  // useEffect(() => {
-  //   const loadData = async () => {
-  //     try {
-  //       const companyData = await fetchCompanyProfile();
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const companyData = await fetchCompanyProfile();
 
-  //       setVerificationLevel(companyData.verificationLevel);
-  //     } catch (error) {
-  //       console.error("Error loading verification data:", error);
-  //     }
-  //   };
-  //   loadData();
-  // }, []);
+        setVerificationLevel(companyData.verificationLevel);
+      } catch (error) {
+        console.error("Error loading verification data:", error);
+      }
+    };
+    loadData();
+  }, []);
 
-  // useEffect(() => {
-  //   if (verificationLevel !== null && verificationLevel < 3) {
-  //     navigate("/employer/verification");
-  //   }
-  // }, [verificationLevel, navigate]);
+  useEffect(() => {
+    if (verificationLevel !== null && verificationLevel < 3) {
+      navigate("/employer/verification");
+    }
+  }, [verificationLevel, navigate]);
 
   useEffect(() => {
     getJobs();
