@@ -12,12 +12,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotificationDropdown from "./NotificationDropdown";
+import ChatPopup from "./ChatPopup";
+import axios from "axios";
+const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 export const Header = () => {
   const location = useLocation();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [userRole, setUserRole] = useState(null); // State lưu role người dùng
   const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const role = getUserRoleFromToken(); // Lấy role từ token
@@ -46,6 +51,34 @@ export const Header = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userLoginData");
     window.location.href = "/login";
+  };
+
+  // Fetch unread message count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const currentUserId = getUserLoginData().userID;
+        const response = await axios.get(
+          `${BACKEND_API_URL}/api/Messages/unread/${currentUserId}`
+        );
+        setUnreadCount(response.data.count);
+      } catch (err) {
+        console.error("Error fetching unread count:", err);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Set up polling for unread messages (optional)
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 1000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const toggleChat = () => {
+    setIsChatOpen(!isChatOpen);
   };
 
   return (
@@ -165,18 +198,22 @@ export const Header = () => {
                   </a>
                 )}
 
-                {/* <a
-                  href={`/${userRole.toLowerCase()}/notifications`}
+                {/* Chat Button - Added to header */}
+                <div
                   className="menu-btn"
-                  style={{ marginRight: "30px" }}
+                  onClick={toggleChat}
+                  style={{ cursor: "pointer", marginRight: "15px" }}
                 >
-                  <span className="count" style={{ textAlign: "center" }}>
-                    1
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="count" style={{ textAlign: "center" }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                  <span className="icon la la-comments"></span>
+                </div>
 
-                  <span className="icon la la-bell"></span>
-                </a> */}
                 <NotificationDropdown userId={userDataLogin?.userID} />
+
                 <DropdownMenu className="ml-8">
                   <DropdownMenuTrigger>
                     <Avatar>
@@ -244,6 +281,10 @@ export const Header = () => {
           </div>
         </div>
       </header>
+
+      {/* Chat Popup */}
+      {isChatOpen && <ChatPopup isOpen={isChatOpen} onClose={toggleChat} />}
+
       {/* End Main Header */}
     </>
   );

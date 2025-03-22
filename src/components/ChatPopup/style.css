@@ -1,0 +1,117 @@
+.chat-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.chat-popup-container {
+  background-color: white;
+  width: 90%;
+  max-width: 1200px;
+  height: 80vh;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.chat-popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #888;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+/* Custom Scrollbar Styling */
+.contacts_body,
+.msg_card_body {
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #6697db #f1f1f1;
+}
+
+/* WebKit browsers (Chrome, Safari, etc.) */
+.contacts_body::-webkit-scrollbar,
+.msg_card_body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contacts_body::-webkit-scrollbar-track,
+.msg_card_body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.contacts_body::-webkit-scrollbar-thumb,
+.msg_card_body::-webkit-scrollbar-thumb {
+  background: #6697db;
+  border-radius: 10px;
+}
+
+.contacts_body::-webkit-scrollbar-thumb:hover,
+.msg_card_body::-webkit-scrollbar-thumb:hover {
+  background: #6697db;
+}
+
+/* Ensure scroll containers have proper height */
+.contacts_body {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  padding-right: 4px; /* Add padding to prevent content from touching scrollbar */
+}
+
+.msg_card_body {
+  height: calc(100% - 120px);
+  overflow-y: auto;
+  padding-right: 4px; /* Add padding to prevent content from touching scrollbar */
+}
+
+/* Add scrollbar space in tight layouts on Windows */
+@supports (-ms-overflow-style: none) {
+  .contacts_body,
+  .msg_card_body {
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    padding-right: 10px;
+  }
+}
+
+/* Show scrollbar on hover for better UX */
+.contacts_body:hover::-webkit-scrollbar-thumb,
+.msg_card_body:hover::-webkit-scrollbar-thumb {
+  background: #6697db;
+}
+
+/* Make sure mobile scrolling feels natural */
+@media (max-width: 767px) {
+  .contacts_body,
+  .msg_card_body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
