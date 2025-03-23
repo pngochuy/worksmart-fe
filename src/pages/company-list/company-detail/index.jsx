@@ -1,10 +1,129 @@
-import companyLogo from "../../../assets/images/resource/company-logo/5-1.png";
+import LocationMap from "@/components/LocationMap";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { fetchCompanyDetails } from "@/services/employerServices";
 
-export const index = () => {
+export const Index = () => {
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [companyJobs, setCompanyJobs] = useState([]);
+  const { companyName } = useParams(); // Lấy companyName từ URL
+
+  // States cho message dialog
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageContent, setMessageContent] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+
+  // Lấy thông tin user từ localStorage
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userRole = user?.role || null;
+
+  // Kiểm tra xem user có phải là Candidate hay không
+  const isCandidate = userRole === "Candidate";
+
+  useEffect(() => {
+    const fetchCompanyDetail = async () => {
+      setLoading(true);
+      try {
+        // Sử dụng companyName từ URL nếu có, nếu không thì dùng "Tech Corp" hoặc giá trị mặc định
+        const name = companyName || "Tech Corp";
+        const data = await fetchCompanyDetails(name);
+
+        if (data) {
+          console.log("Company data fetched:", data);
+          setCompany(data);
+
+          // Nếu API trả về danh sách jobs
+          if (data.postedJobs) {
+            // Lọc chỉ lấy các job có status là 3 (ACTIVE)
+            const activeJobs = data.postedJobs.filter(
+              (job) => job.status === 3
+            );
+            setCompanyJobs(activeJobs);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching company details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanyDetail();
+  }, [companyName]);
+
+  // Set message mẫu khi dialog mở
+  useEffect(() => {
+    if (showMessageDialog && company) {
+      setMessageContent(
+        `Dear ${
+          company.companyName
+        },\n\nI am writing to express my interest in potential job opportunities at your company. I am impressed by your work in the ${
+          company.industry || "industry"
+        } field and would like to learn more about current or upcoming positions that might match my qualifications.\n\nI look forward to your response.\n\nBest regards,\n${
+          user?.fullName || "A potential candidate"
+        }`
+      );
+    }
+  }, [showMessageDialog, company, user]);
+
+  // Hàm xử lý gửi tin nhắn
+  const handleSendMessage = async () => {
+    if (!messageContent.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+
+    setIsSendingMessage(true);
+
+    try {
+      // Giả định hàm API gửi tin nhắn
+      // await sendMessageToEmployer({
+      //   employerId: company.userID,
+      //   senderId: userID,
+      //   content: messageContent,
+      // });
+
+      // Giả lập call API thành công
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Đóng dialog và thông báo thành công
+      setShowMessageDialog(false);
+      setMessageContent("");
+      alert("Message sent successfully!");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again later.");
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-overlay">
+        <div className="loading-spinner"></div>
+        <p>Loading company information...</p>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div
+        className="error-message"
+        style={{ marginTop: "100px", textAlign: "center" }}
+      >
+        <h3>Company Not Found</h3>
+        <p>Sorry, we couldn&apos;t find information for this company.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Job Detail Section */}
-      <section className="job-detail-section" style={{ marginTop: "120px" }}>
+      <section className="job-detail-section" style={{ marginTop: "100px" }}>
         {/* Upper Box */}
         <div className="upper-box">
           <div className="auto-container">
@@ -13,38 +132,60 @@ export const index = () => {
               <div className="inner-box">
                 <div className="content">
                   <span className="company-logo">
-                    <img src={companyLogo} alt="" />
+                    <img
+                      src={company.avatar || "https://via.placeholder.com/150"}
+                      alt={company.companyName}
+                      style={{ maxWidth: "100px", maxHeight: "100px" }}
+                    />
                   </span>
                   <h4>
-                    <a href="#">Invision</a>
+                    <a href="#">{company.companyName}</a>
                   </h4>
                   <ul className="job-info">
                     <li>
                       <span className="icon flaticon-map-locator"></span>{" "}
-                      London, UK
+                      {company.address || "No address provided"}
                     </li>
                     <li>
                       <span className="icon flaticon-briefcase"></span>{" "}
-                      Accounting / Finance
+                      {company.industry || "Industry not specified"}
                     </li>
                     <li>
-                      <span className="icon flaticon-telephone-1"></span> 123
-                      456 7890
+                      <span className="icon flaticon-telephone-1"></span>{" "}
+                      {company.phoneNumber || "No phone provided"}
                     </li>
                     <li>
                       <span className="icon flaticon-mail"></span>{" "}
-                      info@invision.com
+                      {company.email || "No email provided"}
                     </li>
                   </ul>
                   <ul className="job-other-info">
-                    <li className="time">Open Jobs – 3</li>
+                    <li className="time">Open Jobs – {companyJobs.length}</li>
                   </ul>
                 </div>
 
                 <div className="btn-box">
-                  <a href="#" className="theme-btn btn-style-one">
-                    Apply For Job
-                  </a>
+                  {company.companyWebsite && (
+                    <a
+                      href={company.companyWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="theme-btn btn-style-one"
+                    >
+                      Visit Website
+                    </a>
+                  )}
+
+                  {/* Nút gửi tin nhắn - Chỉ hiển thị khi user là Candidate */}
+                  {isCandidate && (
+                    <button
+                      className="theme-btn btn-style-four message-btn ml-2"
+                      onClick={() => setShowMessageDialog(true)}
+                    >
+                      <i className="fas fa-envelope mr-2"></i> Message Company
+                    </button>
+                  )}
+
                   <button className="bookmark-btn">
                     <i className="flaticon-bookmark"></i>
                   </button>
@@ -60,238 +201,88 @@ export const index = () => {
               <div className="content-column col-lg-8 col-md-12 col-sm-12">
                 <div className="job-detail">
                   <h4>About Company</h4>
-                  <p>
-                    Moody’s Corporation, often referred to as Moody’s, is an
-                    American business and financial services company. It is the
-                    holding company for Moody’s Investors Service (MIS), an
-                    American credit rating agency, and Moody’s Analytics (MA),
-                    an American provider of financial analysis software and
-                    services.
-                  </p>
-                  <p>
-                    Moody’s was founded by John Moody in 1909 to produce manuals
-                    of statistics related to stocks and bonds and bond ratings.
-                    Moody’s was acquired by Dun & Bradstreet in 1962. In 2000,
-                    Dun & Bradstreet spun off Moody’s Corporation as a separate
-                    company that was listed on the NYSE under MCO. In 2007,
-                    Moody’s Corporation was split into two operating divisions,
-                    Moody’s Investors Service, the rating agency, and Moody’s
-                    Analytics, with all of its other products.
-                  </p>
-                  <div className="row images-outer">
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-1.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-1.png"
-                            alt=""
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-2.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-2.png"
-                            alt=""
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-3.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-3.png"
-                            alt=""
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-4.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-4.png"
-                            alt=""
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                  </div>
-                  <p>
-                    Moody’s Corporation, often referred to as Moody’s, is an
-                    American business and financial services company. It is the
-                    holding company for Moody’s Investors Service (MIS), an
-                    American credit rating agency, and Moody’s Analytics (MA),
-                    an American provider of financial analysis software and
-                    services.
-                  </p>
-                  <p>
-                    Moody’s was founded by John Moody in 1909 to produce manuals
-                    of statistics related to stocks and bonds and bond ratings.
-                    Moody’s was acquired by Dun & Bradstreet in 1962. In 2000,
-                    Dun & Bradstreet spun off Moody’s Corporation as a separate
-                    company that was listed on the NYSE under MCO. In 2007,
-                    Moody’s Corporation was split into two operating divisions,
-                    Moody’s Investors Service, the rating agency, and Moody’s
-                    Analytics, with all of its other products.
-                  </p>
+                  {company.companyDescription ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: company.companyDescription,
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <p>
+                        {company.companyName} is a company in the{" "}
+                        {company.industry || "technology"} industry.
+                      </p>
+                      <p>
+                        For more information, please visit their website or
+                        contact them directly.
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Related Jobs */}
-                <div className="related-jobs">
-                  <div className="title-box">
-                    <h3>3 jobs at Invision</h3>
-                    <div className="text">
-                      2020 jobs live - 293 added today.
-                    </div>
-                  </div>
-
-                  {/* Job Block */}
-                  <div className="job-block">
-                    <div className="inner-box">
-                      <div className="content">
-                        <span className="company-logo">
-                          <img
-                            src="images/resource/company-logo/1-3.png"
-                            alt=""
-                          />
-                        </span>
-                        <h4>
-                          <a href="#">
-                            Senior Full Stack Engineer, Creator Success
-                          </a>
-                        </h4>
-                        <ul className="job-info">
-                          <li>
-                            <span className="icon flaticon-briefcase"></span>{" "}
-                            Segment
-                          </li>
-                          <li>
-                            <span className="icon flaticon-map-locator"></span>{" "}
-                            London, UK
-                          </li>
-                          <li>
-                            <span className="icon flaticon-clock-3"></span> 11
-                            hours ago
-                          </li>
-                          <li>
-                            <span className="icon flaticon-money"></span> $35k -
-                            $45k
-                          </li>
-                        </ul>
-                        <ul className="job-other-info">
-                          <li className="time">Full Time</li>
-                          <li className="required">Urgent</li>
-                        </ul>
-                        <button className="bookmark-btn">
-                          <span className="flaticon-bookmark"></span>
-                        </button>
+                {companyJobs.length > 0 && (
+                  <div className="related-jobs">
+                    <div className="title-box">
+                      <h3>
+                        {companyJobs.length} jobs at {company.companyName}
+                      </h3>
+                      <div className="text">
+                        Apply now to work at {company.companyName}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Job Block */}
-                  <div className="job-block">
-                    <div className="inner-box">
-                      <div className="content">
-                        <span className="company-logo">
-                          <img
-                            src="images/resource/company-logo/1-3.png"
-                            alt=""
-                          />
-                        </span>
-                        <h4>
-                          <a href="#">Web Developer</a>
-                        </h4>
-                        <ul className="job-info">
-                          <li>
-                            <span className="icon flaticon-briefcase"></span>{" "}
-                            Segment
-                          </li>
-                          <li>
-                            <span className="icon flaticon-map-locator"></span>{" "}
-                            London, UK
-                          </li>
-                          <li>
-                            <span className="icon flaticon-clock-3"></span> 11
-                            hours ago
-                          </li>
-                          <li>
-                            <span className="icon flaticon-money"></span> $35k -
-                            $45k
-                          </li>
-                        </ul>
-                        <ul className="job-other-info">
-                          <li className="time">Part Time</li>
-                          <li className="required">Urgent</li>
-                        </ul>
-                        <button className="bookmark-btn">
-                          <span className="flaticon-bookmark"></span>
-                        </button>
+                    {/* Job Blocks */}
+                    {companyJobs.map((job) => (
+                      <div className="job-block" key={job.jobID}>
+                        <div className="inner-box">
+                          <div className="content">
+                            <span className="company-logo">
+                              <img
+                                src={
+                                  company.avatar ||
+                                  "https://via.placeholder.com/150"
+                                }
+                                alt={company.companyName}
+                              />
+                            </span>
+                            <h4>
+                              <a href={`/jobs/${job.jobID}`}>{job.title}</a>
+                            </h4>
+                            <ul className="job-info">
+                              <li>
+                                <span className="icon flaticon-briefcase"></span>{" "}
+                                {company.companyName}
+                              </li>
+                              <li>
+                                <span className="icon flaticon-map-locator"></span>{" "}
+                                {job.location}
+                              </li>
+                              <li>
+                                <span className="icon flaticon-clock-3"></span>{" "}
+                                {new Date(job.createdAt).toLocaleDateString()}
+                              </li>
+                              <li>
+                                <span className="icon flaticon-money"></span>{" "}
+                                {job.salary}
+                              </li>
+                            </ul>
+                            <ul className="job-other-info">
+                              <li className="time">{job.workType}</li>
+                              {job.priority && (
+                                <li className="required">Featured</li>
+                              )}
+                            </ul>
+                            <button className="bookmark-btn">
+                              <span className="flaticon-bookmark"></span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-
-                  {/* Job Block */}
-                  <div className="job-block">
-                    <div className="inner-box">
-                      <div className="content">
-                        <span className="company-logo">
-                          <img
-                            src="images/resource/company-logo/1-3.png"
-                            alt=""
-                          />
-                        </span>
-                        <h4>
-                          <a href="#">Sr. Full Stack Engineer</a>
-                        </h4>
-                        <ul className="job-info">
-                          <li>
-                            <span className="icon flaticon-briefcase"></span>{" "}
-                            Segment
-                          </li>
-                          <li>
-                            <span className="icon flaticon-map-locator"></span>{" "}
-                            London, UK
-                          </li>
-                          <li>
-                            <span className="icon flaticon-clock-3"></span> 11
-                            hours ago
-                          </li>
-                          <li>
-                            <span className="icon flaticon-money"></span> $35k -
-                            $45k
-                          </li>
-                        </ul>
-                        <ul className="job-other-info">
-                          <li className="time">Part Time</li>
-                        </ul>
-                        <button className="bookmark-btn">
-                          <span className="flaticon-bookmark"></span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="sidebar-column col-lg-4 col-md-12 col-sm-12">
@@ -300,22 +291,31 @@ export const index = () => {
                     <div className="widget-content">
                       <ul className="company-info mt-0">
                         <li>
-                          Primary industry: <span>Software</span>
+                          Primary industry:{" "}
+                          <span>{company.industry || "Not specified"}</span>
                         </li>
                         <li>
-                          Company size: <span>501-1,000</span>
+                          Company size:{" "}
+                          <span>{company.companySize || "Not specified"}</span>
                         </li>
                         <li>
-                          Founded in: <span>2011</span>
+                          Founded in:{" "}
+                          <span>{company.foundedYear || "Not specified"}</span>
                         </li>
                         <li>
-                          Phone: <span>123 456 7890</span>
+                          Phone:{" "}
+                          <span>{company.phoneNumber || "Not provided"}</span>
                         </li>
                         <li>
-                          Email: <span>info@joio.com</span>
+                          Email: <span>{company.email || "Not provided"}</span>
                         </li>
                         <li>
-                          Location: <span>London, UK</span>
+                          Location:{" "}
+                          <span>
+                            {company.workLocation ||
+                              company.address ||
+                              "Not specified"}
+                          </span>
                         </li>
                         <li>
                           Social media:
@@ -336,40 +336,302 @@ export const index = () => {
                         </li>
                       </ul>
 
-                      <div className="btn-box">
-                        <a href="#" className="theme-btn btn-style-three">
-                          www.invisionapp.com
-                        </a>
-                      </div>
+                      {company.companyWebsite && (
+                        <div className="btn-box">
+                          <a
+                            href={company.companyWebsite}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="theme-btn btn-style-three"
+                          >
+                            {company.companyWebsite}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <div className="sidebar-widget">
-                    {/* Map Widget */}
-                    <h4 className="widget-title">Job Location</h4>
-                    <div className="widget-content">
-                      <div className="map-outer mb-0">
-                        <div
-                          className="map-canvas"
-                          data-zoom="12"
-                          data-lat="-37.817085"
-                          data-lng="144.955631"
-                          data-type="roadmap"
-                          data-hue="#ffc400"
-                          data-title="Envato"
-                          data-icon-path="images/resource/map-marker.png"
-                          data-content="Melbourne VIC 3000, Australia<br><a href='mailto:info@youremail.com'>info@youremail.com</a>"
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
+                  <LocationMap
+                    address={
+                      company.address ||
+                      company.workLocation ||
+                      "Ha Noi, Vietnam"
+                    }
+                    companyName={company.companyName}
+                  />
                 </aside>
               </div>
             </div>
           </div>
         </div>
       </section>
-      {/* End Job Detail Section */}
+
+      {/* Message Dialog */}
+      {showMessageDialog && (
+        <div className="message-dialog-overlay">
+          <div className="message-dialog">
+            <div className="message-dialog-header">
+              <h3>Send Message to {company.companyName}</h3>
+              <button
+                className="close-dialog"
+                onClick={() => setShowMessageDialog(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="message-dialog-body">
+              <p className="message-instructions">
+                Use this form to send a message directly to{" "}
+                <b>{company.companyName}</b>. They will receive your message
+                along with your contact information.
+              </p>
+
+              <div className="message-form">
+                <div className="form-group">
+                  <label htmlFor="messageContent">Message:</label>
+                  <textarea
+                    id="messageContent"
+                    className="message-textarea"
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    rows={10}
+                    placeholder="Type your message here..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div className="message-dialog-footer">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowMessageDialog(false)}
+                disabled={isSendingMessage}
+              >
+                Cancel
+              </button>
+              <button
+                className="send-btn"
+                onClick={handleSendMessage}
+                disabled={isSendingMessage}
+              >
+                {isSendingMessage ? (
+                  <>
+                    <span className="send-spinner"></span> Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane"></i> Send Message
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading and Error Styles */}
+      <style>{`
+        .loading-overlay {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 60vh;
+          margin-top: 100px;
+        }
+
+        .loading-spinner {
+          border: 4px solid rgba(0, 0, 0, 0.1);
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          border-left-color: #09f;
+          animation: spin 1s linear infinite;
+          margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .error-message {
+          background-color: #fff3cd;
+          border: 1px solid #ffeeba;
+          padding: 20px;
+          border-radius: 5px;
+          max-width: 500px;
+          margin: 100px auto 0;
+        }
+
+        .error-message h3 {
+          color: #856404;
+          margin-bottom: 10px;
+        }
+        
+        /* Message Button Styles */
+        .message-btn {
+          margin-right: 10px;
+          display: inline-flex;
+          align-items: center;
+        }
+        
+        .mr-2 {
+          margin-right: 0.5rem;
+        }
+        
+        /* Message Dialog Styles */
+        .message-dialog-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        
+        .message-dialog {
+          background-color: white;
+          border-radius: 8px;
+          width: 90%;
+          max-width: 600px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+        }
+        
+        .message-dialog-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 15px 20px;
+          border-bottom: 1px solid #eee;
+        }
+        
+        .message-dialog-header h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+        }
+        
+        .close-dialog {
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          color: #888;
+        }
+        
+        .close-dialog:hover {
+          color: #333;
+        }
+        
+        .message-dialog-body {
+          padding: 20px;
+          overflow-y: auto;
+        }
+        
+        .message-instructions {
+          margin-bottom: 15px;
+          color: #555;
+          font-size: 14px;
+        }
+        
+        .message-form {
+          margin-top: 15px;
+        }
+        
+        .form-group {
+          margin-bottom: 15px;
+        }
+        
+        .form-group label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+        }
+        
+        .message-textarea {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          resize: vertical;
+          font-family: inherit;
+          font-size: 14px;
+        }
+        
+        .message-textarea:focus {
+          border-color: #26ae61;
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(38, 174, 97, 0.2);
+        }
+        
+        .message-dialog-footer {
+          padding: 15px 20px;
+          border-top: 1px solid #eee;
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+        
+        .cancel-btn, .send-btn {
+          padding: 8px 20px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.3s;
+        }
+        
+        .cancel-btn {
+          background-color: #f8f9fa;
+          border: 1px solid #ddd;
+          color: #495057;
+        }
+        
+        .cancel-btn:hover:not(:disabled) {
+          background-color: #e9ecef;
+        }
+        
+        .send-btn {
+          background-color: #26ae61;
+          border: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+          background-color: #20925a;
+        }
+        
+        .send-btn:disabled, .cancel-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        
+        .send-spinner {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: white;
+          animation: spin 1s linear infinite;
+        }
+      `}</style>
     </>
   );
 };
+
+export default Index;

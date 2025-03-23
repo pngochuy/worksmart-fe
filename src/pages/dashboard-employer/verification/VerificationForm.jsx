@@ -254,8 +254,8 @@ export const VerificationForm = () => {
                           </div>
                           <div className="verification-item-content">
                             <p>
-                              Submit your company's tax identification number
-                              for verification.
+                              Submit your company&apos;s tax identification
+                              number for verification.
                             </p>
                             <div className="estimated-time">
                               <i className="far fa-clock mr-1"></i> Est. time: 5
@@ -272,19 +272,22 @@ export const VerificationForm = () => {
                             onClick={handleVerifyTax}
                             disabled={verificationLevel < 1}
                           >
-                            {verificationLevel >= 2 ? "Already Verified" : "Verify Tax ID"}
+                            {verificationLevel >= 2
+                              ? "Already Verified"
+                              : "Verify Tax ID"}
                             <i className="fa-solid fa-arrow-right ml-2"></i>
                           </button>
                         </div>
 
                         {/* Step 3: Business License (previously Step 2) */}
                         <div
-                          className={`verification-item ${verificationLevel < 2
-                            ? "disabled"
-                            : verificationLevel >= 3
+                          className={`verification-item ${
+                            verificationLevel < 2
+                              ? "disabled"
+                              : verificationLevel >= 3
                               ? "completed"
                               : "active"
-                            }`}
+                          }`}
                         >
                           <div className="verification-item-header">
                             <div className="verification-item-status">
@@ -304,7 +307,7 @@ export const VerificationForm = () => {
                           <div className="verification-item-content">
                             <p>
                               Upload a valid business license to verify your
-                              company's legal status.
+                              company&apos;s legal status.
                             </p>
                             <div className="estimated-time">
                               <i className="far fa-clock mr-1"></i> Est. time: 3
@@ -312,16 +315,19 @@ export const VerificationForm = () => {
                             </div>
                           </div>
                           <button
-                            className={`verification-action-btn ${verificationLevel < 2
-                              ? "disabled"
-                              : verificationLevel >= 3
+                            className={`verification-action-btn ${
+                              verificationLevel < 2
+                                ? "disabled"
+                                : verificationLevel >= 3
                                 ? "edit"
                                 : "start"
-                              }`}
+                            }`}
                             onClick={handleUploadLicense}
                             disabled={verificationLevel < 2}
                           >
-                            {verificationLevel >= 3 ? "Verification Complete" : "Upload Document"}
+                            {verificationLevel >= 3
+                              ? "Verification Complete"
+                              : "Upload Document"}
                             <i className="fa-solid fa-arrow-right ml-2"></i>
                           </button>
                         </div>
@@ -366,7 +372,8 @@ export const VerificationForm = () => {
                       <li>
                         <i className="fas fa-check-circle"></i>
                         <span>
-                          Receive "Verified Employer" badge to increase trust
+                          Receive &quot;Verified Employer&quot; badge to
+                          increase trust
                         </span>
                       </li>
                       <li>
@@ -406,6 +413,14 @@ export const VerificationForm = () => {
                           {verificationLevel === 3 ? "Enabled" : "Disabled"}
                         </span>
                       </div>
+                      {verificationLevel === 3 && (
+                        <div className="verification-complete-actions flex justify-center align-items-center">
+                          <button className="btn btn-success">
+                            <i className="fas fa-plus-circle mr-2"></i>Post a
+                            New Job
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

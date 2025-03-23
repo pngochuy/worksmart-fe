@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+/* eslint-disable react/prop-types */
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
 import "../assets/styles/notification.css";
+// Import notification sound
+import notificationSound from "../assets/sounds/notificationSound.mp3";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 const FRONTEND_URL = import.meta.env.VITE_FRONTEND_API_URL;
@@ -11,9 +13,41 @@ const NotificationDropdown = ({ userId }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isTabActive, setIsTabActive] = useState(true);
+  // const [newNotificationCount, setNewNotificationCount] = useState(0);
+
   const dropdownRef = useRef(null);
   const hubConnectionRef = useRef(null);
-  const navigate = useNavigate();
+  const audioRef = useRef(new Audio(notificationSound));
+  const originalTitle = useRef(document.title);
+
+  // Track tab visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsTabActive(false);
+      } else {
+        setIsTabActive(true);
+        // Reset title and notification count when tab becomes active
+        document.title = originalTitle.current;
+        // setNewNotificationCount(0);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Reset title when notifications are viewed
+  useEffect(() => {
+    if (isOpen) {
+      document.title = originalTitle.current;
+      // setNewNotificationCount(0);
+    }
+  }, [isOpen]);
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -30,6 +64,17 @@ const NotificationDropdown = ({ userId }) => {
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
+  };
+
+  // Initialize audio (call this on first user interaction)
+  const initializeAudio = () => {
+    audioRef.current
+      .play()
+      .then(() => {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      })
+      .catch((err) => console.log("Audio initialization failed:", err));
   };
 
   // Start SignalR connection
@@ -64,8 +109,23 @@ const NotificationDropdown = ({ userId }) => {
           createdAt: new Date().toISOString(),
         };
 
+        // Add the new notification to the list
         setNotifications((prev) => [newNotification, ...prev]);
         setUnreadCount((prev) => prev + 1);
+
+        // Play notification sound
+        audioRef.current
+          .play()
+          .catch((err) => console.log("Audio play error:", err));
+
+        // Update tab title if tab is not active
+        if (!isTabActive) {
+          // setNewNotificationCount((prevCount) => {
+          //   const newCount = prevCount + 1;
+          //   document.title = `(${newCount}) New Notification - ${originalTitle.current}`;
+          //   return newCount;
+          // });
+        }
       });
 
       // Start connection
@@ -109,7 +169,16 @@ const NotificationDropdown = ({ userId }) => {
   }, []);
 
   const toggleDropdown = () => {
+    // Initialize audio on user interaction
+    initializeAudio();
+
     setIsOpen(!isOpen);
+
+    // Reset notification count and title when opening dropdown
+    if (!isOpen) {
+      document.title = originalTitle.current;
+      // setNewNotificationCount(0);
+    }
   };
 
   const handleNotificationClick = async (notification) => {
@@ -135,7 +204,6 @@ const NotificationDropdown = ({ userId }) => {
 
     if (notification.link) {
       window.location.href = `${FRONTEND_URL}${notification.link}`;
-
       setIsOpen(false);
     }
   };
@@ -153,7 +221,7 @@ const NotificationDropdown = ({ userId }) => {
     <div className="notification-wrapper" ref={dropdownRef}>
       <a
         className="menu-btn"
-        style={{ marginRight: "30px" }}
+        style={{ marginRight: "30px", marginLeft: "15px" }}
         onClick={toggleDropdown}
       >
         {unreadCount > 0 && (
@@ -167,13 +235,13 @@ const NotificationDropdown = ({ userId }) => {
       {isOpen && (
         <div className="notification-dropdown">
           <div className="notification-header">
-            <h3>Thông báo</h3>
-            {unreadCount > 0 && <span>{unreadCount} chưa đọc</span>}
+            <h3>Notifications</h3>
+            {unreadCount > 0 && <span>{unreadCount} unread</span>}
           </div>
 
           <div className="notification-list">
             {notifications.length === 0 ? (
-              <div className="notification-empty">Không có thông báo nào</div>
+              <div className="notification-empty">No notifications</div>
             ) : (
               notifications.map((notification) => (
                 <div

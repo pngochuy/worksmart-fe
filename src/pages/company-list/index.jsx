@@ -1,4 +1,4 @@
-export const index = () => {
+export const Index = () => {
   return (
     <>
       {/*Page Title*/}
