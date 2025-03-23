@@ -250,3 +250,17 @@ export const uploadBusinessLicense = async (fileUrl) => {
     throw error;
   }
 };
+
+// Fetch chi tiết của company và job của company đó
+export const fetchCompanyDetails = async (companyName) => {
+  console.log("companyName: ", companyName);
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/employers/company-list/${companyName}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching company details:", error);
+    throw error;
+  }
+};

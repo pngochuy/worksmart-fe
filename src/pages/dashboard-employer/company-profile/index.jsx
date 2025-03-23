@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fetchCompanyProfile, updateCompanyProfile, updateCompanyAddress, updateImagesProfile, uploadImagesProfile, deleteImagesProfile, } from "@/services/employerServices";
+import {
+  fetchCompanyProfile,
+  updateCompanyProfile,
+  updateCompanyAddress,
+  updateImagesProfile,
+  uploadImagesProfile,
+} from "@/services/employerServices";
 import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
-// import { getUserIdFromToken } from "../../../helpers/decodeJwt";
 import { toast } from "react-toastify";
 import { Editor } from "@tinymce/tinymce-react";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
@@ -17,7 +22,8 @@ const companySchema = z.object({
     .min(10, "Phone number is invalid")
     .regex(
       /^0\d{9,}$/,
-      "Phone number must start with 0 and contain only numbers.")
+      "Phone number must start with 0 and contain only numbers."
+    )
     .optional()
     .or(z.literal("")),
   companyName: z
@@ -36,10 +42,6 @@ const companySchema = z.object({
     })
     .optional()
     .or(z.literal("")),
-  // isPrivated: z
-  //   .enum(["Yes", "No"], { message: "Please select Yes or No." })
-  //   .optional()
-  //   .or(z.literal("")),
 });
 
 const addressSchema = z.object({
@@ -53,11 +55,20 @@ const addressSchema = z.object({
 
 export const Index = () => {
   const navigate = useNavigate();
-  // const [UserId, setUserId] = useState(null);
   const [isCompanyLoading, setIsCompanyLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [fileError, setFileError] = useState("");
   const [avatar, setAvatar] = useState("");
+
+  // Map related states
+  const [showMap, setShowMap] = useState(false);
+  const [mapCoordinates, setMapCoordinates] = useState({
+    lat: 10.762622,
+    lng: 106.660172,
+  }); // Default to HCMC
+  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
+  const [geocodeError, setGeocodeError] = useState("");
+  const addressInputRef = useRef(null);
 
   const {
     register: registerCompany,
@@ -74,22 +85,15 @@ export const Index = () => {
     register: registerAddress,
     handleSubmit: handleSubmitAddress,
     setValue: setAddressValue,
+    watch: watchAddress,
     formState: { errors: addressErrors },
   } = useForm({
     mode: "onChange",
     resolver: zodResolver(addressSchema),
   });
 
-  // useEffect(() => {
-  //   const id = getUserIdFromToken();
-  //   if (id) {
-  //     setUserId(id);
-  //   } else {
-  //     console.error("UserId not found in token!");
-  //     toast.error("UserId not found in token!");
-  //     navigate("/login");
-  //   }
-  // }, []);
+  // Watch the address field for changes
+  const currentAddress = watchAddress("address");
 
   useEffect(() => {
     const loadCompanyProfile = async () => {
@@ -110,27 +114,24 @@ export const Index = () => {
           setCompanyValue(
             "createdAt",
             data.createdAt ? data.createdAt.split("T")[0] : ""
-          ); // Định dạng YYYY-MM-DD
-          // setCompanyValue("isPrivated", data.isPrivated);
+          );
 
           setAddressValue("address", data.address || "");
+
+          // Try to geocode the address if it exists
+          if (data.address) {
+            geocodeAddress(data.address);
+          }
         }
       } catch (error) {
-        console.error("Error fetching candidate profile", error.response);
-        // toast.error("Error fetching candidate profile");
-        // if (
-        //   error.message.includes("Unauthorized") ||
-        //   error.message.includes("Token expired")
-        // ) {
-        //   navigate("/login");
-        // }
+        console.error("Error fetching company profile", error.response);
       }
     };
     loadCompanyProfile();
   }, [setAvatar, setCompanyValue, setAddressValue, navigate]);
 
   const handleEditorChange = (content) => {
-    setCompanyValue("companyDescription", content)
+    setCompanyValue("companyDescription", content);
   };
 
   const onSubmitCompany = async (formData) => {
@@ -151,6 +152,11 @@ export const Index = () => {
       setIsAddressLoading(true);
       const message = await updateCompanyAddress(formData);
       toast.success(message);
+
+      // After successful update, geocode the new address
+      if (formData.address) {
+        await geocodeAddress(formData.address);
+      }
     } catch (error) {
       console.error("Error updating company address:", error);
       toast.error("Error updating company profile");
@@ -184,11 +190,6 @@ export const Index = () => {
     img.src = URL.createObjectURL(file);
 
     img.onload = async () => {
-      // if (img.width < 330 || img.height < 300) {
-      //   setFileError("Minimum dimensions are 330x300 pixels.");
-      //   return;
-      // }
-
       // Nếu qua hết validate, tiếp tục upload ảnh
       try {
         const uploadResponse = await uploadImagesProfile(file);
@@ -203,7 +204,6 @@ export const Index = () => {
         window.location.reload();
       } catch (error) {
         console.error("Upload failed:", error);
-        // toast.error("Error while uploading photo!");
         setFileError("Upload failed. Please try again.");
       }
     };
@@ -212,19 +212,60 @@ export const Index = () => {
   const handleRemoveImage = async () => {
     if (!avatar) return;
     try {
-      // await deleteImagesProfile(avatar);
       await updateImagesProfile("");
-
-      // Cập nhật state để giao diện hiển thị form upload lại
       setAvatar("");
       console.log("Image deleted successfully!");
       toast.success("Image deleted successfully!");
       window.location.reload();
     } catch (error) {
       console.error("Error while deleting photo:", error);
-      // toast.error("Error while deleting photo:");
       setFileError("Delete failed. Please try again.");
     }
+  };
+
+  // Function to geocode address to coordinates
+  const geocodeAddress = async (address) => {
+    if (!address || address.trim() === "") {
+      setGeocodeError("Please enter an address to find on map");
+      return;
+    }
+
+    setIsGeocodingLoading(true);
+    setGeocodeError("");
+
+    try {
+      // Use Nominatim API (OpenStreetMap's geocoding service)
+      const encodedAddress = encodeURIComponent(address);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        setMapCoordinates({
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        });
+        setShowMap(true);
+      } else {
+        setGeocodeError("Location not found. Please try a different address");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      setGeocodeError("Error finding location. Please try again");
+    } finally {
+      setIsGeocodingLoading(false);
+    }
+  };
+
+  const handleFindOnMap = () => {
+    geocodeAddress(currentAddress);
+  };
+
+  const handleToggleMap = () => {
+    setShowMap(!showMap);
   };
 
   return (
@@ -238,8 +279,7 @@ export const Index = () => {
 
           <div className="row">
             <div className="col-lg-12">
-              {/*  */}
-              {/* Ls widget */}
+              {/* Company Profile Widget */}
               <div className="ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
@@ -257,7 +297,6 @@ export const Index = () => {
                               className="avatar-preview"
                               style={{
                                 width: "150px",
-                                // height: "300px",
                                 objectFit: "cover",
                                 borderRadius: "10px",
                               }}
@@ -315,7 +354,9 @@ export const Index = () => {
                       <div className="row">
                         {/* Company Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Company name <span style={{ color: "red" }}>*</span></label>
+                          <label>
+                            Company name <span style={{ color: "red" }}>*</span>
+                          </label>
                           <input
                             type="text"
                             placeholder="Enter full name"
@@ -386,7 +427,7 @@ export const Index = () => {
                               {
                                 name: "offset",
                                 options: {
-                                  offset: [0, 5],  // [skidding, distance]
+                                  offset: [0, 5],
                                 },
                               },
                               {
@@ -397,7 +438,11 @@ export const Index = () => {
                               },
                             ]}
                             popperContainer={({ children }) => (
-                              <div style={{ position: "relative", zIndex: 999 }}>{children}</div>
+                              <div
+                                style={{ position: "relative", zIndex: 999 }}
+                              >
+                                {children}
+                              </div>
                             )}
                           />
                           {companyErrors.createdAt && (
@@ -406,24 +451,6 @@ export const Index = () => {
                             </span>
                           )}
                         </div>
-
-                        {/* IsPrivated */}
-                        {/* <div className="form-group col-lg-12 col-md-12">
-                          <label>Allow In Search & Listing</label>
-                          <select
-                            {...registerCompany("isPrivated")}
-                            className="chosen-select"
-                          >
-                            <option value="">Select</option>
-                            <option value="No">Yes</option>
-                            <option value="Yes">No</option>
-                          </select>
-                          {companyErrors.isPrivated && (
-                            <span className="text-danger">
-                              {companyErrors.isPrivated.message}
-                            </span>
-                          )}
-                        </div> */}
 
                         {/* Company Description */}
                         <div className="form-group col-lg-12 col-md-12">
@@ -435,7 +462,8 @@ export const Index = () => {
                             init={{
                               height: 300,
                               menubar: false,
-                              plugins: "advlist autolink lists link charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
+                              plugins:
+                                "advlist autolink lists link charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
                               toolbar:
                                 "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
                             }}
@@ -464,7 +492,7 @@ export const Index = () => {
                 </div>
               </div>
 
-              {/* Ls widget */}
+              {/* Contact Information Widget */}
               <div className="ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
@@ -480,18 +508,93 @@ export const Index = () => {
                         {/* Address */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>Address</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Enter your address"
-                            {...registerAddress("address")}
-                          />
+                          <div className="location-input-container">
+                            <input
+                              type="text"
+                              name="name"
+                              placeholder="Enter your address"
+                              ref={addressInputRef}
+                              {...registerAddress("address")}
+                              className="location-input"
+                            />
+                            <button
+                              type="button"
+                              className="find-on-map-btn"
+                              onClick={handleFindOnMap}
+                              disabled={!currentAddress || isGeocodingLoading}
+                            >
+                              {isGeocodingLoading ? (
+                                <span className="loading-spinner-small"></span>
+                              ) : (
+                                <>
+                                  <i className="fas fa-map-marker-alt"></i> Find
+                                  on Map
+                                </>
+                              )}
+                            </button>
+                          </div>
                           {addressErrors.address && (
                             <p className="text-danger">
                               {addressErrors.address.message}
                             </p>
                           )}
+                          {geocodeError && (
+                            <p className="text-danger">{geocodeError}</p>
+                          )}
                         </div>
+
+                        {/* Map Container */}
+                        {currentAddress && (
+                          <div className="form-group col-lg-12 col-md-12">
+                            <div className="map-toggle-container">
+                              <button
+                                type="button"
+                                className="map-toggle-btn"
+                                onClick={handleToggleMap}
+                              >
+                                {showMap ? "Hide Map" : "Show Map"}
+                              </button>
+                            </div>
+
+                            {showMap && (
+                              <div className="map-container">
+                                <iframe
+                                  title="Location Map"
+                                  width="100%"
+                                  height="300"
+                                  frameBorder="0"
+                                  scrolling="no"
+                                  marginHeight="0"
+                                  marginWidth="0"
+                                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${
+                                    mapCoordinates.lng - 0.002
+                                  }%2C${mapCoordinates.lat - 0.002}%2C${
+                                    mapCoordinates.lng + 0.002
+                                  }%2C${
+                                    mapCoordinates.lat + 0.002
+                                  }&layer=mapnik&marker=${
+                                    mapCoordinates.lat
+                                  }%2C${mapCoordinates.lng}`}
+                                  style={{ border: 0, borderRadius: "8px" }}
+                                ></iframe>
+
+                                <div className="map-actions">
+                                  <a
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                      currentAddress
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="view-on-google-btn"
+                                  >
+                                    <i className="fas fa-external-link-alt"></i>{" "}
+                                    View on Google Maps
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Save */}
                         <div className="form-group col-lg-12 col-md-12">
@@ -512,6 +615,101 @@ export const Index = () => {
           </div>
         </div>
       </section>
+
+      <style>{`
+        .location-input-container {
+          display: flex;
+          gap: 10px;
+        }
+
+        .location-input {
+          flex: 1;
+        }
+
+        .find-on-map-btn {
+          padding: 10px 15px;
+          background-color: #0074d9;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .find-on-map-btn:hover {
+          background-color: #0063b1;
+        }
+
+        .find-on-map-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
+        }
+
+        .loading-spinner-small {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: #fff;
+          animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .map-toggle-container {
+          margin: 10px 0;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .map-toggle-btn {
+          padding: 5px 15px;
+          background-color: #f8f9fa;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .map-toggle-btn:hover {
+          background-color: #e2e6ea;
+        }
+
+        .map-container {
+          margin-top: 10px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .map-actions {
+          padding: 10px;
+          background-color: #f8f9fa;
+          border-top: 1px solid #ddd;
+          text-align: center;
+        }
+
+        .view-on-google-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #0074d9;
+          text-decoration: none;
+          font-weight: 500;
+        }
+
+        .view-on-google-btn:hover {
+          text-decoration: underline;
+        }
+      `}</style>
     </>
   );
 };
