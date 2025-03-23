@@ -4,11 +4,13 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import { SocialRegister } from "../register/SocialRegister";
 import { ForgotPassword} from "./ForgotPassword";
+import { VerifyOTP } from "./VerifyOTP";
 import { ResetPassword} from "./ResetPassword";
 // import "react-toastify/dist/ReactToastify.css";
 
 export const Index = () => {
   const [email, setEmail] = useState(null);
+  const [resetToken, setResetToken] = useState(null);
 
   return (
     <>
@@ -31,15 +33,28 @@ export const Index = () => {
                   WorkSmart
                 </a>
               </h3>
-              <p style={{ marginBottom: "32px" }}>
-                Enter your email to receive a reset code.
-              </p>
-
               {!email ? (
-              <ForgotPassword onSuccess={setEmail} />
-            ) : (
-              <ResetPassword email={email} />
-            )}
+                <>
+                  <p style={{ marginBottom: "32px" }}>
+                    Enter your email to receive a reset code.
+                  </p>
+                  <ForgotPassword onSuccess={setEmail} />
+                </>
+              ) : !resetToken ? (
+                <>
+                  <p style={{ marginBottom: "32px" }}>
+                    Enter the verification code sent to your email.
+                  </p>
+                  <VerifyOTP email={email} onSuccess={setResetToken} />
+                </>
+              ) : (
+                <>
+                  <p style={{ marginBottom: "32px" }}>
+                    Create a new password for your account.
+                  </p>
+                  <ResetPassword email={email} resetToken={resetToken} />
+                </>
+              )}
               <div className="bottom-box">
                 <div className="text">
                   Don&apos;t have an account?{" "}

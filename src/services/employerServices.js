@@ -36,13 +36,13 @@ export const updateCompanyProfile = async (profileData) => {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
 
-    const updatedData = {
-      ...profileData,
-      isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
-    };
-    console.log("Profile data gửi đi:", updatedData);
+    // const updatedData = {
+    //   ...profileData,
+    //   isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
+    // };
+    // console.log("Profile data gửi đi:", updatedData);
 
-    await axios.put(`${BACKEND_API_URL}/employers/edit-profile`, updatedData, {
+    await axios.put(`${BACKEND_API_URL}/employers/edit-profile`, profileData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -50,8 +50,8 @@ export const updateCompanyProfile = async (profileData) => {
     });
     if (localStorage.getItem("userLoginData")) {
       const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
-      userLoginData.fullName = updatedData?.fullName;
-      userLoginData.avatar = updatedData?.avatar; // error
+      userLoginData.fullName = profileData?.fullName;
+      userLoginData.avatar = profileData?.avatar; // error
       localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
     }
     return "Profile updated successfully!";
@@ -233,7 +233,6 @@ export const uploadBusinessLicense = async (fileUrl) => {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
 
-    console.log(fileUrl);
     const response = await axios.post(
       `${BACKEND_API_URL}/employers/upload-business-license`,
       { businessLicenseImageUrl: fileUrl },

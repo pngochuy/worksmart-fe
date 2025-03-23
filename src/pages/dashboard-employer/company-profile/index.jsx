@@ -17,8 +17,7 @@ const companySchema = z.object({
     .min(10, "Phone number is invalid")
     .regex(
       /^0\d{9,}$/,
-      "Phone number must start with 0 and contain only numbers."
-    )
+      "Phone number must start with 0 and contain only numbers.")
     .optional()
     .or(z.literal("")),
   companyName: z
@@ -37,10 +36,10 @@ const companySchema = z.object({
     })
     .optional()
     .or(z.literal("")),
-  isPrivated: z
-    .enum(["Yes", "No"], { message: "Please select Yes or No." })
-    .optional()
-    .or(z.literal("")),
+  // isPrivated: z
+  //   .enum(["Yes", "No"], { message: "Please select Yes or No." })
+  //   .optional()
+  //   .or(z.literal("")),
 });
 
 const addressSchema = z.object({
@@ -112,7 +111,7 @@ export const Index = () => {
             "createdAt",
             data.createdAt ? data.createdAt.split("T")[0] : ""
           ); // Định dạng YYYY-MM-DD
-          setCompanyValue("isPrivated", data.isPrivated);
+          // setCompanyValue("isPrivated", data.isPrivated);
 
           setAddressValue("address", data.address || "");
         }
@@ -137,12 +136,7 @@ export const Index = () => {
   const onSubmitCompany = async (formData) => {
     try {
       setIsCompanyLoading(true);
-      const validData = {
-        ...formData,
-        isPrivated: formData.isPrivated ? formData.isPrivated : "No",
-      };
-      console.log("Data gửi đi:", validData);
-      const message = await updateCompanyProfile(validData);
+      const message = await updateCompanyProfile(formData);
       toast.success(message);
     } catch (error) {
       console.error("Error updating company profile:", error);
@@ -414,7 +408,7 @@ export const Index = () => {
                         </div>
 
                         {/* IsPrivated */}
-                        <div className="form-group col-lg-12 col-md-12">
+                        {/* <div className="form-group col-lg-12 col-md-12">
                           <label>Allow In Search & Listing</label>
                           <select
                             {...registerCompany("isPrivated")}
@@ -429,7 +423,7 @@ export const Index = () => {
                               {companyErrors.isPrivated.message}
                             </span>
                           )}
-                        </div>
+                        </div> */}
 
                         {/* Company Description */}
                         <div className="form-group col-lg-12 col-md-12">

@@ -6,7 +6,7 @@ import { fetchCompanyProfile } from "@/services/employerServices";
 export const Index = () => {
   const [verificationLevel, setVerificationLevel] = useState(null);
   const navigate = useNavigate();
-
+  
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -19,7 +19,7 @@ export const Index = () => {
     };
     loadData();
   }, []);
-
+  
   useEffect(() => {
     if (verificationLevel !== null && verificationLevel < 3) {
       navigate("/employer/verification");
