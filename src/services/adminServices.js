@@ -13,6 +13,28 @@ export const getAllUsers = async () => {
   }
 };
 
+// Function to get user profile details
+export const getUserProfile = async (userId) => {
+  try {
+    const response = await axios.get(`${BACKEND_API_URL}/admins/user-profile/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
+// Function to get job details
+export const getJobDetails = async (jobId) => {
+  try {
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/${jobId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job details:", error);
+    throw error;
+  }
+};
+
 // Hàm lấy tất cả công việc
 export const getAllJobs = async () => {
   try {

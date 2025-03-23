@@ -6,9 +6,10 @@ import { fetchCompanyProfile } from "@/services/employerServices";
 
 export const VerificationForm = () => {
   const navigate = useNavigate();
-  const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
+  const [userDataLogin, setUserDataLogin] = useState(null);
   const [verificationLevel, setVerificationLevel] = useState("");
   const [verificationStatuses, setVerificationStatuses] = useState({
+    emailStatus: "",
     taxStatus: "",
     licenseStatus: "",
   });
@@ -38,15 +39,17 @@ export const VerificationForm = () => {
 
         const companyData = await fetchCompanyProfile();
 
-        setVerificationLevel(companyData.verificationLevel);
+        const newVerificationLevel = companyData.verificationLevel ? parseInt(companyData.verificationLevel) : 1;
+        setVerificationLevel(newVerificationLevel);
 
         setVerificationStatuses({
+          emailStatus: user.email ? "verified" : "pending",
           taxStatus: companyData.taxVerificationStatus,
           licenseStatus: companyData.licenseVerificationStatus,
         });
 
         console.log("Company Data:", companyData);
-        console.log("Verification Level:", companyData.verificationLevel);
+        console.log("Verification Level:", newVerificationLevel);
       } catch (error) {
         console.error("Error loading verification data:", error);
         toast.error("Failed to load verification information");
@@ -59,31 +62,58 @@ export const VerificationForm = () => {
   }, []);
 
   // Xác định trạng thái hoàn thành
-  let completionStatus = "1/3 Complete";
-  if (verificationLevel === 2) {
+  let completionStatus = "0/3 Complete";
+  if (verificationLevel === 1) {
+    completionStatus = "1/3 Complete";
+  } else if (verificationLevel === 2) {
     completionStatus = "2/3 Complete";
   } else if (verificationLevel === 3) {
     completionStatus = "3/3 Complete";
   }
 
-  // Xử lý click nút xác thực
+  // Handle email verification
+  const handleVerifyEmail = () => {
+    if (!userDataLogin || !userDataLogin.email) {
+      // Redirect to login page if not logged in
+      navigate("/login");
+      return;
+    }
+
+    toast.success("Email verification complete!");
+  };
+
+  // Xử lý click nút xác thực tax
   const handleVerifyTax = () => {
+    // Check if email is verified first
+    if (verificationLevel < 1) {
+      toast.warn("Please verify your email first");
+      return;
+    }
+
     if (verificationLevel >= 2) {
-      toast.success("You have successfully verified your tax.");
+      toast.success("Tax verification complete!");
       return;
     }
     navigate("/employer/verify-tax");
   };
 
+  // Xử lý click nút xác thực business license
   const handleUploadLicense = () => {
-    if (verificationLevel === 1) {
+    if (verificationLevel < 1) {
+      toast.warn("Please verify your email first");
+      return;
+    }
+
+    if (verificationLevel < 2) {
       toast.warn("Please verify tax first");
       return;
     }
+
     if (verificationLevel >= 3) {
       toast.success("You have completed authentication.");
       return;
     }
+
     navigate("/employer/business-license");
   };
 
@@ -94,12 +124,10 @@ export const VerificationForm = () => {
           <div className="verification-container">
             <div className="upper-title-box">
               <div className="welcome-header">
-                <h3>Hello, {userDataLogin?.fullName}</h3>
+                <h3>Hello, {userDataLogin?.fullName || "Guest"}</h3>
                 <div className="account-status">
                   <span
-                    className={`status-badge ${
-                      verificationLevel === 3 ? "verified" : "pending"
-                    }`}
+                    className={`status-badge ${verificationLevel === 3 ? "verified" : "pending"}`}
                   >
                     {verificationLevel === 3
                       ? "Verified Account"
@@ -145,23 +173,17 @@ export const VerificationForm = () => {
                           </div>
                           <div className="progress-steps">
                             <div
-                              className={`step-indicator ${
-                                verificationLevel >= 1 ? "completed" : ""
-                              }`}
+                              className={`step-indicator ${verificationLevel >= 1 ? "completed" : ""}`}
                             >
                               1
                             </div>
                             <div
-                              className={`step-indicator ${
-                                verificationLevel >= 2 ? "completed" : ""
-                              }`}
+                              className={`step-indicator ${verificationLevel >= 2 ? "completed" : ""}`}
                             >
                               2
                             </div>
                             <div
-                              className={`step-indicator ${
-                                verificationLevel >= 3 ? "completed" : ""
-                              }`}
+                              className={`step-indicator ${verificationLevel >= 3 ? "completed" : ""}`}
                             >
                               3
                             </div>
@@ -170,20 +192,55 @@ export const VerificationForm = () => {
                       </div>
                       <ToastContainer position="top-right" autoClose={3000} />
                       <div className="verification-list">
-                        {/* Cập nhật thông tin công ty */}
+                        {/* Step 1: Email Verification */}
                         <div
-                          className={`verification-item ${
-                            verificationLevel >= 2 ? "completed" : "active"
-                          }`}
+                          className={`verification-item ${verificationLevel >= 1 ? "completed" : "active"}`}
                         >
                           <div className="verification-item-header">
                             <div className="verification-item-status">
                               <span
-                                className={`status-icon ${
-                                  verificationLevel >= 2
-                                    ? "completed"
-                                    : "pending"
-                                }`}
+                                className={`status-icon ${verificationLevel >= 1 ? "completed" : "pending"}`}
+                              >
+                                {verificationLevel >= 1 ? (
+                                  <i className="fas fa-check-circle"></i>
+                                ) : (
+                                  <i className="fas fa-circle"></i>
+                                )}
+                              </span>
+                              <span className="step-number">Step 1</span>
+                            </div>
+                            <h5>Verify Email Address</h5>
+                          </div>
+                          <div className="verification-item-content">
+                            <p>
+                              Verify your email address to start the verification process.
+                            </p>
+                            <div className="estimated-time">
+                              <i className="far fa-clock mr-1"></i> Est. time: 1 minute
+                            </div>
+                          </div>
+                          <button
+                            className={`verification-action-btn ${verificationLevel >= 1 ? "edit" : "start"}`}
+                            onClick={handleVerifyEmail}
+                          >
+                            {verificationLevel >= 1 ? "Email Verified" : "Verify Email"}
+                            <i className="fa-solid fa-arrow-right ml-2"></i>
+                          </button>
+                        </div>
+
+                        {/* Step 2: Tax Verification (previously Step 1) */}
+                        <div
+                          className={`verification-item ${verificationLevel < 1
+                            ? "disabled"
+                            : verificationLevel >= 2
+                              ? "completed"
+                              : "active"
+                            }`}
+                        >
+                          <div className="verification-item-header">
+                            <div className="verification-item-status">
+                              <span
+                                className={`status-icon ${verificationLevel >= 2 ? "completed" : "pending"}`}
                               >
                                 {verificationLevel >= 2 ? (
                                   <i className="fas fa-check-circle"></i>
@@ -191,7 +248,7 @@ export const VerificationForm = () => {
                                   <i className="fas fa-circle"></i>
                                 )}
                               </span>
-                              <span className="step-number">Step 1</span>
+                              <span className="step-number">Step 2</span>
                             </div>
                             <h5>Verify Tax Identification Number</h5>
                           </div>
@@ -206,10 +263,14 @@ export const VerificationForm = () => {
                             </div>
                           </div>
                           <button
-                            className={`verification-action-btn ${
-                              verificationLevel >= 2 ? "edit" : "start"
-                            }`}
+                            className={`verification-action-btn ${verificationLevel < 1
+                              ? "disabled"
+                              : verificationLevel >= 2
+                                ? "edit"
+                                : "start"
+                              }`}
                             onClick={handleVerifyTax}
+                            disabled={verificationLevel < 1}
                           >
                             {verificationLevel >= 2
                               ? "Already Verified"
@@ -218,7 +279,7 @@ export const VerificationForm = () => {
                           </button>
                         </div>
 
-                        {/* Cập nhật Giấy phép đăng ký doanh nghiệp */}
+                        {/* Step 3: Business License (previously Step 2) */}
                         <div
                           className={`verification-item ${
                             verificationLevel < 2
@@ -231,11 +292,7 @@ export const VerificationForm = () => {
                           <div className="verification-item-header">
                             <div className="verification-item-status">
                               <span
-                                className={`status-icon ${
-                                  verificationLevel >= 3
-                                    ? "completed"
-                                    : "pending"
-                                }`}
+                                className={`status-icon ${verificationLevel >= 3 ? "completed" : "pending"}`}
                               >
                                 {verificationLevel >= 3 ? (
                                   <i className="fas fa-check-circle"></i>
@@ -243,7 +300,7 @@ export const VerificationForm = () => {
                                   <i className="fas fa-circle"></i>
                                 )}
                               </span>
-                              <span className="step-number">Step 2</span>
+                              <span className="step-number">Step 3</span>
                             </div>
                             <h5>Upload Business Registration Certificate</h5>
                           </div>
@@ -273,6 +330,21 @@ export const VerificationForm = () => {
                               : "Upload Document"}
                             <i className="fa-solid fa-arrow-right ml-2"></i>
                           </button>
+                        </div>
+                        <div className="verify-actions">
+                          <div className="verify-later">
+                            <a href="/">I will verify later</a>
+                            <span className="notice">
+                              (Limited features available)
+                            </span>
+                          </div>
+                          {verificationLevel === 3 && (
+                            <div className="verification-complete-actions">
+                              <a href="/employer/post-job" className="btn btn-success">
+                                <i className="fas fa-plus-circle mr-2"></i>Post a New Job
+                              </a>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -309,9 +381,9 @@ export const VerificationForm = () => {
                         <span>Improved visibility in search results</span>
                       </li>
                       {/* <li>
-                                                <i className="fas fa-check-circle"></i>
-                                                <span>Access to premium analytics and reporting tools</span>
-                                            </li> */}
+                        <i className="fas fa-check-circle"></i>
+                        <span>Access to premium analytics and reporting tools</span>
+                      </li> */}
                     </ul>
                   </div>
                   <div className="account-status-summary">
@@ -320,9 +392,7 @@ export const VerificationForm = () => {
                       <div className="status-item">
                         <span className="status-label">Job Posting:</span>
                         <span
-                          className={`status-value ${
-                            verificationLevel === 3 ? "enabled" : "disabled"
-                          }`}
+                          className={`status-value ${verificationLevel === 3 ? "enabled" : "disabled"}`}
                         >
                           {verificationLevel === 3 ? "Enabled" : "Disabled"}
                         </span>
@@ -330,9 +400,7 @@ export const VerificationForm = () => {
                       <div className="status-item">
                         <span className="status-label">Job Management:</span>
                         <span
-                          className={`status-value ${
-                            verificationLevel === 3 ? "enabled" : "disabled"
-                          }`}
+                          className={`status-value ${verificationLevel === 3 ? "enabled" : "disabled"}`}
                         >
                           {verificationLevel === 3 ? "Enabled" : "Disabled"}
                         </span>
@@ -340,11 +408,9 @@ export const VerificationForm = () => {
                       <div className="status-item">
                         <span className="status-label">List Candidate:</span>
                         <span
-                          className={`status-value ${
-                            verificationLevel == 3 ? "enabled" : "disabled"
-                          }`}
+                          className={`status-value ${verificationLevel === 3 ? "enabled" : "disabled"}`}
                         >
-                          {verificationLevel == 3 ? "Enabled" : "Disabled"}
+                          {verificationLevel === 3 ? "Enabled" : "Disabled"}
                         </span>
                       </div>
                       {verificationLevel === 3 && (

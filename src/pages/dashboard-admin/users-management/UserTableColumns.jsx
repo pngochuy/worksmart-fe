@@ -13,6 +13,16 @@ import {
   FileText,
   FileWarning,
   AlertCircle,
+  Mail,
+  Phone,
+  MapPin,
+  User,
+  Building,
+  Calendar,
+  Clock,
+  Globe,
+  Briefcase,
+  Users
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,12 +49,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LoadingButton from "@/components/LoadingButton";
 import { toast } from "react-toastify";
 import { UserVerificationBadge } from "./UserVerificationBadge";
 import { UserRoleBadge } from "./UserBadge";
 import {
+  getUserProfile,
   banUser,
   unbanUser,
   approveTaxVerification,
@@ -140,12 +151,11 @@ const ActionCell = ({ row, onStatusChange }) => {
   const taxVerificationStatus = user.taxVerificationStatus;
   const licenseVerificationStatus = user.licenseVerificationStatus;
 
+  const [showViewProfileDialog, setShowViewProfileDialog] = useState(false);
   const [showBanConfirmation, setShowBanConfirmation] = useState(false);
   const [showUnbanConfirmation, setShowUnbanConfirmation] = useState(false);
-  const [showTaxVerificationDialog, setShowTaxVerificationDialog] =
-    useState(false);
-  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] =
-    useState(false);
+  const [showTaxVerificationDialog, setShowTaxVerificationDialog] = useState(false);
+  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] = useState(false);
 
   // Get actions based on user status
   const getActions = () => {
@@ -155,7 +165,7 @@ const ActionCell = ({ row, onStatusChange }) => {
     actions.push({
       label: "View Profile",
       icon: <Eye className="size-4 mr-2" />,
-      onClick: () => console.log("View profile", user.userID),
+      onClick: () => setShowViewProfileDialog(true),
     });
 
     // Ban/Unban actions
@@ -224,6 +234,13 @@ const ActionCell = ({ row, onStatusChange }) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* View Profile Dialog */}
+      <ViewProfileDialog
+        user={user}
+        open={showViewProfileDialog}
+        onOpenChange={setShowViewProfileDialog}
+      />
+
       {/* Ban Confirmation Dialog */}
       <BanConfirmationDialog
         user={user}
@@ -258,6 +275,327 @@ const ActionCell = ({ row, onStatusChange }) => {
     </>
   );
 };
+
+function ViewProfileDialog({ user, open, onOpenChange }) {
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(null);
+  const [activeTab, setActiveTab] = useState("basic");
+
+  useEffect(() => {
+    // Fetch user profile data when dialog opens
+    if (open && user) {
+      setLoading(true);
+      getUserProfile(user.userID)
+        .then((data) => {
+          setProfileData(data);
+        })
+        .catch((error) => {
+          toast.error(error.Message || "Could not load user profile");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [open, user]);
+
+  // Format date function
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>User Profile</DialogTitle>
+          <DialogDescription>
+            View detailed information for user {user?.userName || user?.email}
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid grid-cols-3">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="verification">Verification</TabsTrigger>
+              {user?.role === "Employer" && (
+                <TabsTrigger value="company">Company Details</TabsTrigger>
+              )}
+            </TabsList>
+
+            {/* Basic Info Tab */}
+            <TabsContent value="basic" className="py-4">
+              <div className="space-y-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold mb-2">User Information</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">User ID:</span>
+                          <span>{user?.userID}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Username:</span>
+                          <span>{user?.userName || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Full Name:</span>
+                          <span>{user?.fullName || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Email:</span>
+                          <span>{user?.email}</span>
+                          {user?.isEmailConfirmed && (
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Role:</span>
+                          <UserRoleBadge role={user?.role} />
+                        </div>
+
+                        <div className="flex items-center">
+                          <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Phone:</span>
+                          <span>{user?.phoneNumber || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Address:</span>
+                          <span className="break-words">{user?.address || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Status:</span>
+                          {user?.isBanned ? (
+                            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full">
+                              Banned
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span className="font-medium mr-2">Registered On:</span>
+                        <span>{formatDate(user?.createdAt)}</span>
+                      </div>
+
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span className="font-medium mr-2">Last Updated:</span>
+                        <span>{formatDate(user?.updatedAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Verification Tab */}
+            <TabsContent value="verification" className="py-4">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Verification Status</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Verification Level:</span>
+                        <UserVerificationBadge
+                          verificationLevel={user?.verificationLevel}
+                          taxVerificationStatus={user?.taxVerificationStatus}
+                          licenseVerificationStatus={user?.licenseVerificationStatus}
+                          role={user?.role}
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span className="font-medium mr-2">Email Verification:</span>
+                        {user?.isEmailConfirmed ? (
+                          <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                            Not Verified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {user?.role === "Employer" && (
+                      <div className="space-y-4">
+                        <div className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Tax Verification:</span>
+                          {user?.taxVerificationStatus === "Approved" ? (
+                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                              Approved
+                            </span>
+                          ) : user?.taxVerificationStatus === "Pending" ? (
+                            <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                              Pending
+                            </span>
+                          ) : user?.taxVerificationStatus === "Rejected" ? (
+                            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full">
+                              Rejected
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded-full">
+                              Not Submitted
+                            </span>
+                          )}
+                        </div>
+
+                        {user?.taxVerificationReason && (
+                          <div className="ml-6">
+                            <span className="text-sm text-gray-500">Rejection Reason: {user.taxVerificationReason}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center">
+                          <FileCheck className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">License Verification:</span>
+                          {user?.licenseVerificationStatus === "Approved" ? (
+                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                              Approved
+                            </span>
+                          ) : user?.licenseVerificationStatus === "Pending" ? (
+                            <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                              Pending
+                            </span>
+                          ) : user?.licenseVerificationStatus === "Rejected" ? (
+                            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full">
+                              Rejected
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded-full">
+                              Not Submitted
+                            </span>
+                          )}
+                        </div>
+
+                        {user?.licenseVerificationReason && (
+                          <div className="ml-6">
+                            <span className="text-sm text-gray-500">Rejection Reason: {user.licenseVerificationReason}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Company Details Tab (only for employers) */}
+            {user?.role === "Employer" && (
+              <TabsContent value="company" className="py-4">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Company Information</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Company Name:</span>
+                          <span>{user?.companyName || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Tax ID:</span>
+                          <span>{user?.taxId || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Industry:</span>
+                          <span>{user?.industry || "N/A"}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Company Size:</span>
+                          <span>{user?.companySize || "N/A"}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <Globe className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Website:</span>
+                          <span>
+                            {user?.companyWebsite ? (
+                              <a
+                                href={user.companyWebsite.startsWith('http') ? user.companyWebsite : `https://${user.companyWebsite}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {user.companyWebsite}
+                              </a>
+                            ) : (
+                              "N/A"
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Address:</span>
+                          <span className="break-words">{user?.address || "N/A"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
+        )}
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // Ban Confirmation Dialog
 function BanConfirmationDialog({ user, open, onOpenChange, onStatusChange }) {
@@ -408,8 +746,7 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
       });
       onOpenChange(false);
       toast.success(
-        `Tax information for ${
-          user.companyName || user.userName
+        `Tax information for ${user.companyName || user.userName
         } has been verified.`
       );
     } catch (error) {
@@ -444,8 +781,7 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
 
       onOpenChange(false);
       toast.success(
-        `Tax verification for ${
-          user.companyName || user.userName
+        `Tax verification for ${user.companyName || user.userName
         } has been rejected.`
       );
     } catch (error) {
@@ -772,8 +1108,7 @@ function LicenseVerificationDialog({
       });
       onOpenChange(false);
       toast.success(
-        `Business license for ${
-          user.companyName || user.userName
+        `Business license for ${user.companyName || user.userName
         } has been verified.`
       );
     } catch (error) {
@@ -808,8 +1143,7 @@ function LicenseVerificationDialog({
 
       onOpenChange(false);
       toast.success(
-        `License verification for ${
-          user.companyName || user.userName
+        `License verification for ${user.companyName || user.userName
         } has been rejected.`
       );
     } catch (error) {
@@ -897,7 +1231,7 @@ function LicenseVerificationDialog({
                         <Button
                           variant="outline"
                           onClick={() => setShowPdfViewer(!showPdfViewer)}
-                          // className="w-full"
+                        // className="w-full"
                         >
                           {showPdfViewer ? "Hide Document" : "Show Document"}
                         </Button>
