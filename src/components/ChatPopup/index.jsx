@@ -4,7 +4,7 @@ import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { formatDistanceToNow } from "date-fns";
 import { getUserLoginData } from "../../helpers/decodeJwt";
 import "./style.css";
-
+import notificationSound from "../../assets/sounds/messageSound.mp3";
 const BACKEND_API_URL =
   import.meta.env.VITE_BACKEND_API_URL || "https://localhost:5001";
 
@@ -21,17 +21,40 @@ const ChatPopup = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  const [isTabActive, setIsTabActive] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
 
   const selectedUserRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatPopupRef = useRef(null);
-
+  const audioRef = useRef(new Audio(notificationSound));
+  const messageContainerRef = useRef(null);
+  const originalTitle = useRef(document.title);
   // Prevent click propagation for the popup container
   const handlePopupClick = (e) => {
     e.stopPropagation();
   };
+  // Check if tab is active/visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsTabActive(false);
+      } else {
+        setIsTabActive(true);
+        // Reset title and message count when tab becomes active
+        document.title = originalTitle.current;
+        setNewMessageCount(0);
+      }
+    };
 
-  // Connect to SignalR hub when popup opens
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Connect to SignalR hub
   useEffect(() => {
     if (!isOpen) return;
 
@@ -58,20 +81,59 @@ const ChatPopup = ({ isOpen, onClose }) => {
           // Use ref to access current selectedUser value
           const currentSelectedUser = selectedUserRef.current;
 
-          if (
+          // Check if message is relevant to current conversation
+          const isRelevantMessage =
             currentSelectedUser &&
             ((message.senderId === currentSelectedUser.userId &&
               message.receiverId === userID) ||
               (message.receiverId === currentSelectedUser.userId &&
-                message.senderId === userID))
-          ) {
+                message.senderId === userID));
+
+          // If it's a relevant message
+          if (isRelevantMessage) {
             console.log("Received message:", message);
 
+            // Add message to conversation
             setMessages((prev) => [...prev, message]);
 
-            // Mark as read if the message is from the currently selected user
+            // Mark as read if from selected user
             if (message.senderId === currentSelectedUser.userId) {
               markMessagesAsRead(currentSelectedUser.userId);
+
+              // Play notification sound only if message is from someone else
+              if (!isTabActive || !isOpen) {
+                audioRef.current
+                  .play()
+                  .catch((err) => console.log("Audio play error:", err));
+
+                // Update tab title when receiving messages and tab is not active
+                if (!isTabActive) {
+                  setNewMessageCount((prevCount) => {
+                    const newCount = prevCount + 1;
+                    document.title = `(${newCount}) New Message - ${originalTitle.current}`;
+                    return newCount;
+                  });
+                }
+              }
+            }
+
+            // Scroll to bottom with messages update
+          } else {
+            // If the message is not for the current conversation but is for the current user
+            if (message.receiverId === userID) {
+              // Play notification sound
+              audioRef.current
+                .play()
+                .catch((err) => console.log("Audio play error:", err));
+
+              // Update tab title when receiving messages and tab is not active
+              if (!isTabActive) {
+                setNewMessageCount((prevCount) => {
+                  const newCount = prevCount + 1;
+                  document.title = `(${newCount}) New Message - ${originalTitle.current}`;
+                  return newCount;
+                });
+              }
             }
           }
         });
@@ -93,6 +155,10 @@ const ChatPopup = ({ isOpen, onClose }) => {
 
     createHubConnection();
 
+    // Reset title when popup opens
+    document.title = originalTitle.current;
+    setNewMessageCount(0);
+
     // Cleanup function
     return () => {
       if (hubConnection) {
@@ -100,7 +166,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
         console.log("SignalR Disconnected");
       }
     };
-  }, [isOpen, selectedUser, userID]);
+  }, [isOpen, selectedUser, userID, isTabActive]);
 
   // Update ref whenever selectedUser changes
   useEffect(() => {
@@ -138,7 +204,6 @@ const ChatPopup = ({ isOpen, onClose }) => {
       setTotalUnreadCount(response.data.count);
     } catch (err) {
       console.error("Error fetching unread count:", err);
-      setTotalUnreadCount(2); // Mock data
     }
   };
 
@@ -153,33 +218,6 @@ const ChatPopup = ({ isOpen, onClose }) => {
       markMessagesAsRead(userId);
     } catch (err) {
       console.error("Error fetching messages:", err);
-      // Mock data for demonstration
-      setMessages([
-        {
-          personalMessageID: 1,
-          senderId: userId,
-          receiverId: userID,
-          content: "Hey there! How are you?",
-          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          isRead: true,
-        },
-        {
-          personalMessageID: 2,
-          senderId: userID,
-          receiverId: userId,
-          content: "I'm good, thanks! Just working on some code.",
-          createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-          isRead: true,
-        },
-        {
-          personalMessageID: 3,
-          senderId: userId,
-          receiverId: userID,
-          content: "Sounds interesting! What are you building?",
-          createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-          isRead: false,
-        },
-      ]);
     }
   };
 
