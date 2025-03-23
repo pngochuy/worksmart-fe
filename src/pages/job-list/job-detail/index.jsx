@@ -179,7 +179,7 @@ export const Index = () => {
                           <figure className="image">
                             <img
                               className="rounded-circle w70"
-                              src="images/resource/company-logo/3-1.png"
+                              src={job.avatar}
                               alt={job.companyName}
                             />
                           </figure>
@@ -440,13 +440,13 @@ export const Index = () => {
                     <div className="widget-content">
                       <div className="company-title">
                         <div className="company-logo">
-                          <img
-                            src="images/resource/company-7.png"
-                            alt={job.companyName}
-                          />
+                          <img src={job.avatar} alt={job.companyName} />
                         </div>
                         <h5 className="company-name">{job.companyName}</h5>
-                        <a href={job.companyWebsite} className="profile-link">
+                        <a
+                          href={`/company-list/${job.companyName}`}
+                          className="profile-link"
+                        >
                           View company profile
                         </a>
                       </div>

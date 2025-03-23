@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
@@ -52,15 +52,16 @@ export const Index = () => {
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [fileError, setFileError] = useState("");
   const [avatar, setAvatar] = useState("");
-  // const [profileData, setProfileData] = useState({
-  //   fullName: "",
-  //   phoneNumber: "",
-  //   gender: "",
-  //   dateOfBirth: "",
-  //   identityNumber: "",
-  //   isPrivated: "",
-  //   avatar: "",
-  // });
+
+  // Map related states
+  const [showMap, setShowMap] = useState(false);
+  const [mapCoordinates, setMapCoordinates] = useState({
+    lat: 10.762622,
+    lng: 106.660172,
+  }); // Default to HCMC
+  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
+  const [geocodeError, setGeocodeError] = useState("");
+  const addressInputRef = useRef(null);
 
   const {
     register: registerProfile,
@@ -76,11 +77,15 @@ export const Index = () => {
     register: registerAddress,
     handleSubmit: handleSubmitAddress,
     setValue: setAddressValue,
+    watch: watchAddress,
     formState: { errors: addressErrors },
   } = useForm({
     mode: "onChange",
     resolver: zodResolver(addressSchema),
   });
+
+  // Watch the address field for changes
+  const currentAddress = watchAddress("address");
 
   //Fetch data profile
   useEffect(() => {
@@ -88,8 +93,6 @@ export const Index = () => {
       try {
         const data = await fetchCandidatesProfile();
         if (data) {
-          // setProfileData(data);
-
           if (data.avatar) {
             setAvatar(data.avatar);
           } else {
@@ -106,13 +109,6 @@ export const Index = () => {
         }
       } catch (error) {
         console.error("Error fetching candidate profile", error.response);
-        // toast.error("Error fetching candidate profile");
-        // if (
-        //   error.message.includes("Unauthorized") ||
-        //   error.message.includes("Token expired")
-        // ) {
-        //   navigate("/login");
-        // }
       }
     };
     loadProfile();
@@ -121,11 +117,6 @@ export const Index = () => {
   const onSubmitProfile = async (formData) => {
     setIsProfileLoading(true);
     try {
-      // const validData = {
-      //   ...formData,
-      //   avatar,
-      //   isPrivated: formData.isPrivated ? formData.isPrivated : "No",
-      // };
       const message = await updateCandidateProfile(formData);
       toast.success(message);
       window.location.reload(); // reload để update fullName từ localstorage cho Sidebar
@@ -140,6 +131,7 @@ export const Index = () => {
   const onSubmitAddress = async (formData) => {
     setIsAddressLoading(true);
     try {
+      console.log("formData: ", formData);
       const message = await updateCandidateAddress(formData);
       toast.success(message);
     } catch (error) {
@@ -218,6 +210,51 @@ export const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to geocode address to coordinates
+  const geocodeAddress = async (address) => {
+    if (!address || address.trim() === "") {
+      setGeocodeError("Please enter an address to find on map");
+      return;
+    }
+
+    setIsGeocodingLoading(true);
+    setGeocodeError("");
+
+    try {
+      // Use Nominatim API (OpenStreetMap's geocoding service)
+      const encodedAddress = encodeURIComponent(address);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        setMapCoordinates({
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        });
+        setShowMap(true);
+      } else {
+        setGeocodeError("Location not found. Please try a different address");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      setGeocodeError("Error finding location. Please try again");
+    } finally {
+      setIsGeocodingLoading(false);
+    }
+  };
+
+  const handleFindOnMap = () => {
+    geocodeAddress(currentAddress);
+  };
+
+  const handleToggleMap = () => {
+    setShowMap(!showMap);
   };
 
   return (
@@ -416,7 +453,7 @@ export const Index = () => {
                 </div>
               </div>
 
-              {/* Ls widget */}
+              {/* Contact Information Widget */}
               <div className="ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
@@ -432,18 +469,93 @@ export const Index = () => {
                         {/* Address */}
                         <div className="form-group col-lg-12 col-md-12">
                           <label>Address</label>
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Enter your address"
-                            {...registerAddress("address")}
-                          />
+                          <div className="location-input-container">
+                            <input
+                              type="text"
+                              name="name"
+                              placeholder="Enter your address"
+                              ref={addressInputRef}
+                              {...registerAddress("address")}
+                              className="location-input"
+                            />
+                            <button
+                              type="button"
+                              className="find-on-map-btn"
+                              onClick={handleFindOnMap}
+                              disabled={!currentAddress || isGeocodingLoading}
+                            >
+                              {isGeocodingLoading ? (
+                                <span className="loading-spinner-small"></span>
+                              ) : (
+                                <>
+                                  <i className="fas fa-map-marker-alt"></i> Find
+                                  on Map
+                                </>
+                              )}
+                            </button>
+                          </div>
                           {addressErrors.address && (
                             <p className="text-danger">
                               {addressErrors.address.message}
                             </p>
                           )}
+                          {geocodeError && (
+                            <p className="text-danger">{geocodeError}</p>
+                          )}
                         </div>
+
+                        {/* Map Container */}
+                        {currentAddress && (
+                          <div className="form-group col-lg-12 col-md-12">
+                            <div className="map-toggle-container">
+                              <button
+                                type="button"
+                                className="map-toggle-btn"
+                                onClick={handleToggleMap}
+                              >
+                                {showMap ? "Hide Map" : "Show Map"}
+                              </button>
+                            </div>
+
+                            {showMap && (
+                              <div className="map-container">
+                                <iframe
+                                  title="Location Map"
+                                  width="100%"
+                                  height="300"
+                                  frameBorder="0"
+                                  scrolling="no"
+                                  marginHeight="0"
+                                  marginWidth="0"
+                                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${
+                                    mapCoordinates.lng - 0.002
+                                  }%2C${mapCoordinates.lat - 0.002}%2C${
+                                    mapCoordinates.lng + 0.002
+                                  }%2C${
+                                    mapCoordinates.lat + 0.002
+                                  }&layer=mapnik&marker=${
+                                    mapCoordinates.lat
+                                  }%2C${mapCoordinates.lng}`}
+                                  style={{ border: 0, borderRadius: "8px" }}
+                                ></iframe>
+
+                                <div className="map-actions">
+                                  <a
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                      currentAddress
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="view-on-google-btn"
+                                  >
+                                    <i className="fas fa-external-link-alt"></i>{" "}
+                                    View on Google Maps
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Save */}
                         <div className="form-group col-lg-12 col-md-12">
@@ -452,11 +564,7 @@ export const Index = () => {
                             className="theme-btn btn-style-one"
                             disabled={isAddressLoading}
                           >
-                            {isAddressLoading ? (
-                              <span className="loading-spinner"></span>
-                            ) : (
-                              "Update"
-                            )}
+                            {isAddressLoading ? "Saving..." : "Save"}
                           </button>
                         </div>
                       </div>
@@ -469,6 +577,101 @@ export const Index = () => {
         </div>
       </section>
       {/* End Dashboard */}
+
+      <style>{`
+        .location-input-container {
+          display: flex;
+          gap: 10px;
+        }
+
+        .location-input {
+          flex: 1;
+        }
+
+        .find-on-map-btn {
+          padding: 10px 15px;
+          background-color: #0074d9;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .find-on-map-btn:hover {
+          background-color: #0063b1;
+        }
+
+        .find-on-map-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
+        }
+
+        .loading-spinner-small {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: #fff;
+          animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .map-toggle-container {
+          margin: 10px 0;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .map-toggle-btn {
+          padding: 5px 15px;
+          background-color: #f8f9fa;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .map-toggle-btn:hover {
+          background-color: #e2e6ea;
+        }
+
+        .map-container {
+          margin-top: 10px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .map-actions {
+          padding: 10px;
+          background-color: #f8f9fa;
+          border-top: 1px solid #ddd;
+          text-align: center;
+        }
+
+        .view-on-google-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #0074d9;
+          text-decoration: none;
+          font-weight: 500;
+        }
+
+        .view-on-google-btn:hover {
+          text-decoration: underline;
+        }
+      `}</style>
     </>
   );
 };

@@ -226,7 +226,7 @@ export const fetchJobTags = async () => {
     const response = await axios.get(`${BACKEND_API_URL}/api/JobTag/getAll`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching job tags:', error);
+    console.error("Error fetching job tags:", error);
     throw error;
   }
 };
