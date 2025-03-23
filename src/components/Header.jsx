@@ -326,7 +326,7 @@ export const Header = () => {
                 <div
                   className="menu-btn"
                   onClick={toggleChat}
-                  style={{ cursor: "pointer", marginRight: "15px" }}
+                  style={{ cursor: "pointer" }}
                 >
                   {unreadCount > 0 && (
                     <span className="count" style={{ textAlign: "center" }}>

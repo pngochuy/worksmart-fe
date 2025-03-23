@@ -389,6 +389,15 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
     { value: "other", label: "Other reason" },
   ];
 
+  // Function to open tax verification website in a new tab
+  const openTaxVerificationSite = () => {
+    window.open(
+      "https://tracuunnt.gdt.gov.vn/tcnnt/mstcn.jsp",
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
   async function handleApprove() {
     try {
       setLoading(true);
@@ -486,8 +495,42 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
                       <div className="font-medium">Company Name:</div>
                       <div>{user.companyName || "N/A"}</div>
 
-                      <div className="font-medium">Tax ID:</div>
-                      <div>{user.taxId || "N/A"}</div>
+                      {/* Enhanced Tax ID row with highlight and external verification link */}
+                      <div className="font-medium flex items-center text-blue-600">
+                        <span className="font-bold">Tax ID:</span>
+                        <button
+                          onClick={openTaxVerificationSite}
+                          className="ml-2 p-1 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          title="Verify Tax ID at tracuunnt.gdt.gov.vn"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="flex items-center">
+                        <span>{user.taxId || "N/A"}</span>
+                        {user.taxId && (
+                          <button
+                            onClick={openTaxVerificationSite}
+                            className="ml-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                            title="Check at Tax Portal"
+                          >
+                            Verify
+                          </button>
+                        )}
+                      </div>
 
                       <div className="font-medium">Industry:</div>
                       <div>{user.industry || "N/A"}</div>
@@ -521,6 +564,32 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Add a helper note about tax verification */}
+              <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                <p className="text-sm text-blue-800 flex items-start">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>
+                    You can verify tax information via the official Vietnam Tax
+                    Portal using the &quot;Tax ID&quot; link above. Before
+                    approving, please ensure the company tax information matches
+                    the registration details.
+                  </span>
+                </p>
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">

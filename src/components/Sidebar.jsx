@@ -94,23 +94,27 @@ export const Sidebar = () => {
                 <Tooltip
                   target=".fa-circle-question"
                   className="custom-tooltip"
-                // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+                  // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
                 />
                 <span>Account Verification: </span>
                 <a
                   href="/employer/verification"
                   className="text-green-500"
-                  style={{ textDecoration: "none", color: "#22c55e"}}
+                  style={{ textDecoration: "none", color: "#22c55e" }}
                 >
-                  Level {verificationLevel}/3{" "}
-                  <i
-                    className="fa-solid fa-circle-question text-gray-400"
-                    data-pr-tooltip="Verify your account to unlock more features"
-                    data-pr-position="right"
-                    data-pr-at="right+9 top"
-                    data-pr-my="left center-2"
-                    style={{ cursor: "pointer" }}
-                  ></i>
+                  Level {verificationLevel}/3
+                  {verificationLevel === 3 ? (
+                    <i className="fa-solid fa-circle-check ml-2"></i>
+                  ) : (
+                    <i
+                      className="fa-solid fa-circle-question text-gray-400"
+                      data-pr-tooltip="Verify your account to unlock more features"
+                      data-pr-position="right"
+                      data-pr-at="right+9 top"
+                      data-pr-my="left center-2"
+                      style={{ cursor: "pointer" }}
+                    ></i>
+                  )}
                 </a>
               </div>
             </>

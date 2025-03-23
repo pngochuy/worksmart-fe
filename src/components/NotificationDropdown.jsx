@@ -222,7 +222,7 @@ const NotificationDropdown = ({ userId }) => {
     <div className="notification-wrapper" ref={dropdownRef}>
       <a
         className="menu-btn"
-        style={{ marginRight: "30px" }}
+        style={{ marginRight: "30px", marginLeft: "15px" }}
         onClick={toggleDropdown}
       >
         {unreadCount > 0 && (
