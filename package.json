@@ -61,6 +61,7 @@
     "react-select": "^5.10.0",
     "react-to-print": "^3.0.5",
     "react-toastify": "^11.0.3",
+    "recharts": "^2.15.1",
     "rellax": "^1.12.1",
     "scrollmagic": "^2.0.8",
     "styled-jsx": "^5.1.6",
