@@ -153,33 +153,6 @@ const ChatPopup = ({ isOpen, onClose }) => {
       markMessagesAsRead(userId);
     } catch (err) {
       console.error("Error fetching messages:", err);
-      // Mock data for demonstration
-      setMessages([
-        {
-          personalMessageID: 1,
-          senderId: userId,
-          receiverId: userID,
-          content: "Hey there! How are you?",
-          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          isRead: true,
-        },
-        {
-          personalMessageID: 2,
-          senderId: userID,
-          receiverId: userId,
-          content: "I'm good, thanks! Just working on some code.",
-          createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-          isRead: true,
-        },
-        {
-          personalMessageID: 3,
-          senderId: userId,
-          receiverId: userID,
-          content: "Sounds interesting! What are you building?",
-          createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-          isRead: false,
-        },
-      ]);
     }
   };
 
@@ -207,34 +180,10 @@ const ChatPopup = ({ isOpen, onClose }) => {
     try {
       // Send message via API
       await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
-
-      // Add message locally for immediate display
-      const newMsg = {
-        personalMessageID: Date.now(), // Temporary ID
-        senderId: userID,
-        receiverId: selectedUser.userId,
-        content: newMessage.trim(),
-        createdAt: new Date().toISOString(),
-        isRead: false,
-      };
-
-      setMessages((prev) => [...prev, newMsg]);
-
       // Clear input
       setNewMessage("");
     } catch (err) {
       console.error("Error sending message:", err);
-      // Still show message locally for demo
-      const newMsg = {
-        personalMessageID: Date.now(), // Temporary ID
-        senderId: userID,
-        receiverId: selectedUser.userId,
-        content: newMessage.trim(),
-        createdAt: new Date().toISOString(),
-        isRead: false,
-      };
-
-      setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
     }
   };
@@ -429,7 +378,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
                           <div className="img_cont_msg">
                             <img
                               src={
-                                msg.senderId === userID ||
+                                msg.senderID === userID ||
                                 msg.senderID === userID
                                   ? msg.senderAvatar
                                   : selectedUser.avatar ||

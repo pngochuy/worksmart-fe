@@ -1,7 +1,8 @@
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getUserLoginData, getUserRoleFromToken } from "../helpers/decodeJwt";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,25 +15,54 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotificationDropdown from "./NotificationDropdown";
 import ChatPopup from "./ChatPopup";
 import axios from "axios";
+import notificationSound from "../assets/sounds/messageSound.mp3";
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 export const Header = () => {
   const location = useLocation();
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [userRole, setUserRole] = useState(null); // State lưu role người dùng
-  const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
+  const [userRole, setUserRole] = useState(null);
+  const [userDataLogin, setUserDataLogin] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isTabActive, setIsTabActive] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
 
+  // Reference to store SignalR connection
+  const signalRConnection = useRef(null);
+  const audioRef = useRef(new Audio(notificationSound));
+  const originalTitle = useRef(document.title);
+
+  // Track tab visibility
   useEffect(() => {
-    const role = getUserRoleFromToken(); // Lấy role từ token
-    setUserRole(role); // Cập nhật state với role người dùng
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsTabActive(false);
+      } else {
+        setIsTabActive(true);
+        // Reset title and message count when tab becomes active
+        document.title = originalTitle.current;
+        setNewMessageCount(0);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Load user data on component mount
+  useEffect(() => {
+    const role = getUserRoleFromToken();
+    setUserRole(role);
     const user = getUserLoginData();
     setUserDataLogin(user);
   }, []);
 
+  // Setup active dropdown based on current location
   useEffect(() => {
-    // Lấy danh sách tất cả các dropdown
     const dropdowns = document.querySelectorAll(".nav .dropdown");
 
     dropdowns.forEach((dropdown) => {
@@ -47,17 +77,16 @@ export const Header = () => {
     });
   }, [location.pathname]);
 
-  const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userLoginData");
-    window.location.href = "/login";
-  };
-
-  // Fetch unread message count
+  // Initial fetch for unread count and SignalR connection setup
   useEffect(() => {
+    const user = getUserLoginData();
+    if (!user || !user.userID) return; // Don't proceed if no user is logged in
+
+    const currentUserId = user.userID;
+
+    // Initial fetch for unread count
     const fetchUnreadCount = async () => {
       try {
-        const currentUserId = getUserLoginData().userID;
         const response = await axios.get(
           `${BACKEND_API_URL}/api/Messages/unread/${currentUserId}`
         );
@@ -69,13 +98,108 @@ export const Header = () => {
 
     fetchUnreadCount();
 
-    // Set up polling for unread messages (optional)
-    const interval = setInterval(() => {
-      fetchUnreadCount();
-    }, 1000); // Check every minute
+    // Setup SignalR connection
+    const createHubConnection = async () => {
+      const hubConnection = new HubConnectionBuilder()
+        .withUrl(`${BACKEND_API_URL}/chatHub`)
+        .configureLogging(LogLevel.Information)
+        .withAutomaticReconnect({
+          nextRetryDelayInMilliseconds: (retryContext) => {
+            // Implement exponential backoff for reconnection attempts
+            if (retryContext.previousRetryCount < 10) {
+              // First 10 retries happen more quickly
+              return Math.min(
+                1000 * Math.pow(2, retryContext.previousRetryCount),
+                30000
+              );
+            } else {
+              // After that, we try every 30 seconds
+              return 30000;
+            }
+          },
+        })
+        .build();
 
-    return () => clearInterval(interval);
-  }, []);
+      try {
+        await hubConnection.start();
+        console.log("Header SignalR Connected!");
+
+        // Register user to receive updates
+        await hubConnection.invoke("RegisterUser", currentUserId);
+
+        // Listen for unread count updates
+        hubConnection.on("UpdateUnreadCount", (count) => {
+          console.log("Received unread count update:", count);
+          setUnreadCount(count);
+        });
+
+        // Listen for new message notifications
+        hubConnection.on("ReceiveMessage", (message) => {
+          // If message is for current user
+          if (message.receiverId === currentUserId) {
+            // Play notification sound (but not if the chat is already open)
+            if (!isChatOpen) {
+              audioRef.current
+                .play()
+                .catch((err) => console.log("Audio play error:", err));
+            }
+
+            // Update tab title if tab is not active
+            if (!isTabActive) {
+              setNewMessageCount((prevCount) => {
+                const newCount = prevCount + 1;
+                document.title = `(${newCount}) New Message - ${originalTitle.current}`;
+                return newCount;
+              });
+            }
+          }
+        });
+
+        // Store connection in ref for later cleanup
+        signalRConnection.current = hubConnection;
+      } catch (err) {
+        console.error("Error establishing SignalR connection in Header:", err);
+      }
+    };
+
+    createHubConnection();
+
+    // Cleanup function to stop SignalR connection when component unmounts
+    return () => {
+      if (signalRConnection.current) {
+        signalRConnection.current
+          .stop()
+          .then(() => console.log("Header SignalR connection stopped"))
+          .catch((err) =>
+            console.error("Error stopping SignalR connection:", err)
+          );
+      }
+    };
+  }, [isTabActive, isChatOpen]); // Added dependencies for when these states change
+
+  // Reset title when chat is opened
+  useEffect(() => {
+    if (isChatOpen) {
+      document.title = originalTitle.current;
+      setNewMessageCount(0);
+    }
+  }, [isChatOpen]);
+  // Logout function
+  const logout = () => {
+    // Stop SignalR connection before logout
+    if (signalRConnection.current) {
+      signalRConnection.current
+        .stop()
+        .then(() => console.log("SignalR connection stopped on logout"))
+        .catch((err) =>
+          console.error("Error stopping SignalR connection on logout:", err)
+        );
+    }
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userLoginData");
+    window.location.href = "/login";
+  };
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -283,7 +407,13 @@ export const Header = () => {
       </header>
 
       {/* Chat Popup */}
-      {isChatOpen && <ChatPopup isOpen={isChatOpen} onClose={toggleChat} />}
+      {isChatOpen && (
+        <ChatPopup
+          isOpen={isChatOpen}
+          onClose={toggleChat}
+          existingConnection={signalRConnection.current}
+        />
+      )}
 
       {/* End Main Header */}
     </>
