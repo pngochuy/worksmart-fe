@@ -5,6 +5,7 @@ import {
 } from "../../../services/jobServices";
 import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
+import { toast } from "react-toastify";
 
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState([]);
@@ -132,7 +133,7 @@ export default function CandidatesPage() {
     setSelectedCandidate(null);
 
     // You might want to show a success toast here
-    alert("Message sent successfully!"); // Replace with your toast implementation
+    toast.success("Message sent successfully!"); // Replace with your toast implementation
   };
 
   return (
