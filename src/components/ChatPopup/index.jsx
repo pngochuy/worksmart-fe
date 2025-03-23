@@ -4,7 +4,7 @@ import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { formatDistanceToNow } from "date-fns";
 import { getUserLoginData } from "../../helpers/decodeJwt";
 import "./style.css";
-import notificationSound from "../../assets/sounds/messageSound.mp3";
+
 const BACKEND_API_URL =
   import.meta.env.VITE_BACKEND_API_URL || "https://localhost:5001";
 
@@ -21,40 +21,17 @@ const ChatPopup = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
-  const [isTabActive, setIsTabActive] = useState(true);
-  const [newMessageCount, setNewMessageCount] = useState(0);
 
   const selectedUserRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatPopupRef = useRef(null);
-  const audioRef = useRef(new Audio(notificationSound));
-  const messageContainerRef = useRef(null);
-  const originalTitle = useRef(document.title);
+
   // Prevent click propagation for the popup container
   const handlePopupClick = (e) => {
     e.stopPropagation();
   };
-  // Check if tab is active/visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsTabActive(false);
-      } else {
-        setIsTabActive(true);
-        // Reset title and message count when tab becomes active
-        document.title = originalTitle.current;
-        setNewMessageCount(0);
-      }
-    };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-  // Connect to SignalR hub
+  // Connect to SignalR hub when popup opens
   useEffect(() => {
     if (!isOpen) return;
 
@@ -81,59 +58,20 @@ const ChatPopup = ({ isOpen, onClose }) => {
           // Use ref to access current selectedUser value
           const currentSelectedUser = selectedUserRef.current;
 
-          // Check if message is relevant to current conversation
-          const isRelevantMessage =
+          if (
             currentSelectedUser &&
             ((message.senderId === currentSelectedUser.userId &&
               message.receiverId === userID) ||
               (message.receiverId === currentSelectedUser.userId &&
-                message.senderId === userID));
-
-          // If it's a relevant message
-          if (isRelevantMessage) {
+                message.senderId === userID))
+          ) {
             console.log("Received message:", message);
 
-            // Add message to conversation
             setMessages((prev) => [...prev, message]);
 
-            // Mark as read if from selected user
+            // Mark as read if the message is from the currently selected user
             if (message.senderId === currentSelectedUser.userId) {
               markMessagesAsRead(currentSelectedUser.userId);
-
-              // Play notification sound only if message is from someone else
-              if (!isTabActive || !isOpen) {
-                audioRef.current
-                  .play()
-                  .catch((err) => console.log("Audio play error:", err));
-
-                // Update tab title when receiving messages and tab is not active
-                if (!isTabActive) {
-                  setNewMessageCount((prevCount) => {
-                    const newCount = prevCount + 1;
-                    document.title = `(${newCount}) New Message - ${originalTitle.current}`;
-                    return newCount;
-                  });
-                }
-              }
-            }
-
-            // Scroll to bottom with messages update
-          } else {
-            // If the message is not for the current conversation but is for the current user
-            if (message.receiverId === userID) {
-              // Play notification sound
-              audioRef.current
-                .play()
-                .catch((err) => console.log("Audio play error:", err));
-
-              // Update tab title when receiving messages and tab is not active
-              if (!isTabActive) {
-                setNewMessageCount((prevCount) => {
-                  const newCount = prevCount + 1;
-                  document.title = `(${newCount}) New Message - ${originalTitle.current}`;
-                  return newCount;
-                });
-              }
             }
           }
         });
@@ -155,10 +93,6 @@ const ChatPopup = ({ isOpen, onClose }) => {
 
     createHubConnection();
 
-    // Reset title when popup opens
-    document.title = originalTitle.current;
-    setNewMessageCount(0);
-
     // Cleanup function
     return () => {
       if (hubConnection) {
@@ -166,7 +100,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
         console.log("SignalR Disconnected");
       }
     };
-  }, [isOpen, selectedUser, userID, isTabActive]);
+  }, [isOpen, selectedUser, userID]);
 
   // Update ref whenever selectedUser changes
   useEffect(() => {
@@ -204,6 +138,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
       setTotalUnreadCount(response.data.count);
     } catch (err) {
       console.error("Error fetching unread count:", err);
+      setTotalUnreadCount(2); // Mock data
     }
   };
 
@@ -245,34 +180,10 @@ const ChatPopup = ({ isOpen, onClose }) => {
     try {
       // Send message via API
       await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
-
-      // Add message locally for immediate display
-      const newMsg = {
-        personalMessageID: Date.now(), // Temporary ID
-        senderId: userID,
-        receiverId: selectedUser.userId,
-        content: newMessage.trim(),
-        createdAt: new Date().toISOString(),
-        isRead: false,
-      };
-
-      setMessages((prev) => [...prev, newMsg]);
-
       // Clear input
       setNewMessage("");
     } catch (err) {
       console.error("Error sending message:", err);
-      // Still show message locally for demo
-      const newMsg = {
-        personalMessageID: Date.now(), // Temporary ID
-        senderId: userID,
-        receiverId: selectedUser.userId,
-        content: newMessage.trim(),
-        createdAt: new Date().toISOString(),
-        isRead: false,
-      };
-
-      setMessages((prev) => [...prev, newMsg]);
       setNewMessage("");
     }
   };
@@ -467,7 +378,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
                           <div className="img_cont_msg">
                             <img
                               src={
-                                msg.senderId === userID ||
+                                msg.senderID === userID ||
                                 msg.senderID === userID
                                   ? msg.senderAvatar
                                   : selectedUser.avatar ||
