@@ -7,7 +7,6 @@ import { resetPassword } from "@/services/accountServices";
 import { useNavigate } from "react-router-dom";
 
 const resetPasswordSchema = z.object({
-  token: z.string().min(6, "OTP must be 6 digits"),
   newPassword: z
     .string()
     .min(6, "Password must be at least 6 characters")
@@ -15,10 +14,14 @@ const resetPasswordSchema = z.object({
     .regex(/[a-z]/, "Password must include at least one lowercase letter")
     .regex(/[A-Z]/, "Password must include at least one uppercase letter")
     .regex(/\d/, "Password must include at least one numeric character")
-    .regex(/[^a-zA-Z\d]/, "Password must include at least one special character"), // Thêm kiểm tra ký tự đặc biệt
+    .regex(/[^a-zA-Z\d]/, "Password must include at least one special character"),
+  confirmPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
-export const ResetPassword = ({ email }) => {
+export const ResetPassword = ({ email, resetToken }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { 
@@ -26,7 +29,7 @@ export const ResetPassword = ({ email }) => {
     handleSubmit, 
     setError, 
     formState: { errors },
-    } = useForm({
+  } = useForm({
     resolver: zodResolver(resetPasswordSchema),
   });
 
@@ -35,7 +38,7 @@ export const ResetPassword = ({ email }) => {
     try {
       const resetData = {
         email,
-        token: data.token,
+        resetToken,
         newPassword: data.newPassword,
       };
 
@@ -43,11 +46,14 @@ export const ResetPassword = ({ email }) => {
       toast.success("Password changed successfully! Please login again.");
       navigate("/login");
     } catch (error) {
-        if (error.response?.status === 500) {
-            toast.error(error.response.data?.error || "Server error, please try again.");
-        } else {
-            setError("token", { type: "manual", message: error.response?.data?.error || "Invalid OTP" });
-        }
+      if (error.response?.status === 500) {
+        toast.error(error.response.data?.error || "Server error, please try again.");
+      } else {
+        setError("newPassword", { 
+          type: "manual", 
+          message: error.response?.data || "Failed to reset password" 
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -56,18 +62,18 @@ export const ResetPassword = ({ email }) => {
   return (
     <form className="default-form" onSubmit={handleSubmit(onSubmit)}>
       <div className="form-group">
-        <label>OTP</label>
-        <input type="text" {...register("token")} />
-        {errors.token && <p className="text-danger">{errors.token.message}</p>}
-      </div>
-      <div className="form-group">
         <label>New Password</label>
-        <input type="password" {...register("newPassword")} />
+        <input type="password" {...register("newPassword")} placeholder="Enter new password" />
         {errors.newPassword && <p className="text-danger">{errors.newPassword.message}</p>}
       </div>
       <div className="form-group">
+        <label>Confirm Password</label>
+        <input type="password" {...register("confirmPassword")} placeholder="Confirm new password" />
+        {errors.confirmPassword && <p className="text-danger">{errors.confirmPassword.message}</p>}
+      </div>
+      <div className="form-group">
         <button className="theme-btn btn-style-one" disabled={loading}>
-            {loading ? <span className="loading-spinner"></span> : "Reset Password"}
+          {loading ? <span className="loading-spinner"></span> : "Reset Password"}
         </button>
       </div>
     </form>
