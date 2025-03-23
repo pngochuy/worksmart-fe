@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { fetchCandidatesForJob, rejectCandidate, acceptCandidate, fetchJobDetails } from "../../../services/jobServices";
+import { useEffect, useState } from "react";
+import {
+  fetchCandidatesForJob,
+  fetchJobDetails,
+} from "../../../services/jobServices";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 
 export default function CandidatesPage() {
@@ -16,6 +18,13 @@ export default function CandidatesPage() {
     PageSize: 5, // Show 5 candidates per page
     name: "", // To filter by candidate name
   });
+
+  // New state for message dialog
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [messageText, setMessageText] = useState(
+    "Congratulations! We've reviewed your application and would like to schedule an interview with you. Please let us know your availability for the coming week."
+  );
 
   useEffect(() => {
     getJobDetails(jobId);
@@ -80,30 +89,8 @@ export default function CandidatesPage() {
     }
   };
 
-  const handleReject = async (candidateId) => {
-    try {
-      await rejectCandidate(candidateId, jobId);
-      toast.success("Candidate rejected successfully!");
-      getCandidates(jobId);
-    } catch (error) {
-      toast.error("Failed to reject candidate.");
-      console.error("Error rejecting candidate:", error);
-    }
-  };
-
-  const handleAccept = async (candidateId) => {
-    try {
-      await acceptCandidate(candidateId, jobId);
-      toast.success("Candidate accepted successfully!");
-      getCandidates(jobId);
-    } catch (error) {
-      toast.error("Failed to accept candidate.");
-      console.error("Error accepting candidate:", error);
-    }
-  };
-
   const handleBackToJobs = () => {
-    navigate('/employer/manage-jobs');
+    navigate("/employer/manage-jobs");
   };
 
   const getStatusBadge = (status) => {
@@ -113,7 +100,7 @@ export default function CandidatesPage() {
       case "pending":
         badgeClass += " pending";
         break;
-      case "accepted":
+      case "approved":
         badgeClass += " accepted";
         break;
       case "rejected":
@@ -124,6 +111,28 @@ export default function CandidatesPage() {
     }
 
     return <span className={badgeClass}>{status || "Unknown"}</span>;
+  };
+
+  // New function to handle message button click
+  const handleMessageClick = (candidate) => {
+    setSelectedCandidate(candidate);
+    setShowMessageDialog(true);
+  };
+
+  // New function to send message
+  const handleSendMessage = () => {
+    // Here you would implement the API call to send the message
+    // For example: sendMessage(selectedCandidate.id, messageText)
+
+    console.log("Sending message to:", selectedCandidate);
+    console.log("Message:", messageText);
+
+    // Close the dialog after sending
+    setShowMessageDialog(false);
+    setSelectedCandidate(null);
+
+    // You might want to show a success toast here
+    alert("Message sent successfully!"); // Replace with your toast implementation
   };
 
   return (
@@ -224,7 +233,7 @@ export default function CandidatesPage() {
                           </th>
                         </tr>
                       </thead>
-                     {/* comment out */}
+                      {/* comment out */}
                       <tbody>
                         {candidates.length > 0 ? (
                           candidates.map((candidate) => (
@@ -232,11 +241,19 @@ export default function CandidatesPage() {
                               <td>
                                 <div className="candidate-name">
                                   <div className="candidate-avatar">
-                                    {candidate.fullName
-                                      ? candidate.fullName
-                                          .charAt(0)
-                                          .toUpperCase()
-                                      : "?"}
+                                    <img
+                                      src={
+                                        candidate?.avatar
+                                          ? candidate.avatar
+                                          : "https://www.topcv.vn/images/avatar-default.jpg"
+                                      }
+                                      alt={candidate.avatar}
+                                      className={{
+                                        height: "50px",
+                                        width: "50px",
+                                        borderRadius: "50%",
+                                      }}
+                                    />
                                   </div>
                                   <div className="candidate-info">
                                     <span className="name">
@@ -268,28 +285,31 @@ export default function CandidatesPage() {
                               <td>{getStatusBadge(candidate.status)}</td>
                               <td className="text-center">
                                 <div className="action-buttons">
-                                  {/* Thêm nút View Detail */}
+                                  {/* View Detail Button */}
                                   <button
                                     className="view-detail-btn"
-                                    onClick={() => navigate(`/employer/manage-jobs/candidates/${jobId}/${candidate.applicationID}`)}>
-                                    <i className="fas fa-eye"></i> View Detail
-                                  </button>
-                                  {/* <button
-                                    className="accept-btn"
-                                    disabled={candidate.status === "Accepted"}
                                     onClick={() =>
-                                      handleAccept(candidate.applicationID)
+                                      navigate(
+                                        `/employer/manage-jobs/candidates/${jobId}/${candidate.applicationID}`
+                                      )
                                     }
                                   >
-                                    <i className="fas fa-check-circle"></i>{" "}
-                                    Accept
+                                    <i className="fas fa-eye"></i> View Detail
                                   </button>
-                                  <button
-                                    className="reject-btn"
-                                    disabled={candidate.status === "Rejected"}
-                                    onClick={() => handleReject(candidate.applicationID)}>
-                                    <i className="fas fa-times-circle"></i> Reject
-                                  </button> */}
+
+                                  {/* Message Button - Only show for Approved candidates */}
+                                  {candidate.status?.toLowerCase() ===
+                                    "approved" && (
+                                    <button
+                                      className="message-btn"
+                                      onClick={() =>
+                                        handleMessageClick(candidate)
+                                      }
+                                    >
+                                      <i className="fas fa-comment-alt"></i>{" "}
+                                      Message
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -321,24 +341,256 @@ export default function CandidatesPage() {
         </div>
       </div>
 
-      <style jsx>{`
-      .view-detail-btn {
-    padding: 6px 12px;
-    border-radius: 4px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background-color: #6c757d;
-    color: white;
-  }
-  
-  .view-detail-btn:hover {
-    background-color: #5a6268;
-  }
+      {/* Message Dialog */}
+      {showMessageDialog && selectedCandidate && (
+        <div className="message-dialog-overlay">
+          <div className="message-dialog">
+            <div className="message-dialog-header">
+              <h3>Send Message to {selectedCandidate.fullName}</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowMessageDialog(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="message-dialog-body">
+              <p className="message-info">
+                You&apos;re about to send a message to this approved candidate.
+                This will notify them via email and in-app notification.
+              </p>
+
+              <div className="candidate-details">
+                <div className="detail-item">
+                  <span className="label">Email:</span>
+                  <span className="value">{selectedCandidate.email}</span>
+                </div>
+                {selectedCandidate.phoneNumber && (
+                  <div className="detail-item">
+                    <span className="label">Phone:</span>
+                    <span className="value">
+                      {selectedCandidate.phoneNumber}
+                    </span>
+                  </div>
+                )}
+                <div className="detail-item">
+                  <span className="label">Job Position:</span>
+                  <span className="value">{jobTitle}</span>
+                </div>
+              </div>
+
+              <div className="message-textarea-container">
+                <label>Your message:</label>
+                <textarea
+                  className="message-textarea"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="Enter your message to the candidate..."
+                  rows={6}
+                ></textarea>
+              </div>
+            </div>
+            <div className="message-dialog-footer">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowMessageDialog(false)}
+              >
+                Cancel
+              </button>
+              <button className="send-btn" onClick={handleSendMessage}>
+                <i className="fas fa-paper-plane"></i> Send Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .view-detail-btn, .message-btn {
+          padding: 6px 12px;
+          border-radius: 4px;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .view-detail-btn {
+          background-color: #6c757d;
+          color: white;
+        }
+
+        .view-detail-btn:hover {
+          background-color: #5a6268;
+        }
+        
+        .message-btn {
+          background-color: #0088cc;
+          color: white;
+        }
+        
+        .message-btn:hover {
+          background-color: #0077b5;
+        }
+        
+        /* Message Dialog Styles */
+        .message-dialog-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        
+        .message-dialog {
+          background-color: white;
+          border-radius: 8px;
+          width: 90%;
+          max-width: 600px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+          overflow: hidden;
+        }
+        
+        .message-dialog-header {
+          padding: 15px 20px;
+          border-bottom: 1px solid #eee;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .message-dialog-header h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+        }
+        
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          color: #888;
+          padding: 5px;
+        }
+        
+        .close-btn:hover {
+          color: #333;
+        }
+        
+        .message-dialog-body {
+          padding: 20px;
+          overflow-y: auto;
+        }
+        
+        .message-info {
+          background-color: #f8f9fa;
+          padding: 12px;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          color: #495057;
+          font-size: 14px;
+          border-left: 4px solid #0088cc;
+        }
+        
+        .candidate-details {
+          margin-bottom: 20px;
+          background-color: #f8f9fa;
+          padding: 12px;
+          border-radius: 6px;
+        }
+        
+        .detail-item {
+          margin-bottom: 8px;
+          display: flex;
+        }
+        
+        .detail-item .label {
+          font-weight: 600;
+          width: 100px;
+          color: #495057;
+        }
+        
+        .detail-item .value {
+          color: #212529;
+        }
+        
+        .message-textarea-container {
+          margin-bottom: 10px;
+        }
+        
+        .message-textarea-container label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+        }
+        
+        .message-textarea {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-family: inherit;
+          resize: vertical;
+          min-height: 120px;
+        }
+        
+        .message-textarea:focus {
+          border-color: #0088cc;
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(0, 136, 204, 0.2);
+        }
+        
+        .message-dialog-footer {
+          padding: 15px 20px;
+          border-top: 1px solid #eee;
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+        
+        .cancel-btn, .send-btn {
+          padding: 8px 16px;
+          border-radius: 4px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        
+        .cancel-btn {
+          background-color: #f8f9fa;
+          border: 1px solid #ddd;
+          color: #495057;
+        }
+        
+        .cancel-btn:hover {
+          background-color: #e9ecef;
+        }
+        
+        .send-btn {
+          background-color: #0088cc;
+          border: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        
+        .send-btn:hover {
+          background-color: #0077b5;
+        }
+        
         .upper-title-box {
           margin-bottom: 30px;
           display: flex;

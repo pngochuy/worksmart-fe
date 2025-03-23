@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+/* eslint-disable react/prop-types */
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
 import "../assets/styles/notification.css";
 // Import notification sound
@@ -14,13 +14,12 @@ const NotificationDropdown = ({ userId }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isTabActive, setIsTabActive] = useState(true);
-  const [newNotificationCount, setNewNotificationCount] = useState(0);
+  // const [newNotificationCount, setNewNotificationCount] = useState(0);
 
   const dropdownRef = useRef(null);
   const hubConnectionRef = useRef(null);
   const audioRef = useRef(new Audio(notificationSound));
   const originalTitle = useRef(document.title);
-  const navigate = useNavigate();
 
   // Track tab visibility
   useEffect(() => {
@@ -31,7 +30,7 @@ const NotificationDropdown = ({ userId }) => {
         setIsTabActive(true);
         // Reset title and notification count when tab becomes active
         document.title = originalTitle.current;
-        setNewNotificationCount(0);
+        // setNewNotificationCount(0);
       }
     };
 
@@ -46,7 +45,7 @@ const NotificationDropdown = ({ userId }) => {
   useEffect(() => {
     if (isOpen) {
       document.title = originalTitle.current;
-      setNewNotificationCount(0);
+      // setNewNotificationCount(0);
     }
   }, [isOpen]);
 
@@ -121,11 +120,11 @@ const NotificationDropdown = ({ userId }) => {
 
         // Update tab title if tab is not active
         if (!isTabActive) {
-          setNewNotificationCount((prevCount) => {
-            const newCount = prevCount + 1;
-            document.title = `(${newCount}) New Notification - ${originalTitle.current}`;
-            return newCount;
-          });
+          // setNewNotificationCount((prevCount) => {
+          //   const newCount = prevCount + 1;
+          //   document.title = `(${newCount}) New Notification - ${originalTitle.current}`;
+          //   return newCount;
+          // });
         }
       });
 
@@ -178,7 +177,7 @@ const NotificationDropdown = ({ userId }) => {
     // Reset notification count and title when opening dropdown
     if (!isOpen) {
       document.title = originalTitle.current;
-      setNewNotificationCount(0);
+      // setNewNotificationCount(0);
     }
   };
 
@@ -236,13 +235,13 @@ const NotificationDropdown = ({ userId }) => {
       {isOpen && (
         <div className="notification-dropdown">
           <div className="notification-header">
-            <h3>Thông báo</h3>
-            {unreadCount > 0 && <span>{unreadCount} chưa đọc</span>}
+            <h3>Notifications</h3>
+            {unreadCount > 0 && <span>{unreadCount} unread</span>}
           </div>
 
           <div className="notification-list">
             {notifications.length === 0 ? (
-              <div className="notification-empty">Không có thông báo nào</div>
+              <div className="notification-empty">No notifications</div>
             ) : (
               notifications.map((notification) => (
                 <div

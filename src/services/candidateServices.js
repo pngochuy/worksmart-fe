@@ -73,7 +73,7 @@ export const updateCandidateProfile = async (profileData) => {
     if (localStorage.getItem("userLoginData")) {
       const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
       userLoginData.fullName = profileData?.fullName;
-      userLoginData.avatar = profileData?.avatar; // error
+      // userLoginData.avatar = profileData?.avatar; // error
       localStorage.setItem("userLoginData", JSON.stringify(userLoginData));
     }
 

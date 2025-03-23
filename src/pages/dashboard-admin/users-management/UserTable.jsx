@@ -52,15 +52,6 @@ export const UserTable = ({
     setIsLoading(false);
   }, []);
 
-  // Callback function to update user status
-  const handleStatusChange = useCallback((userId, statusChanges) => {
-    setData((currentData) =>
-      currentData.map((user) =>
-        user.userID === userId ? { ...user, ...statusChanges } : user
-      )
-    );
-  }, []);
-
   // Create columns with callback function
   const columns = createColumns(onStatusChange);
 

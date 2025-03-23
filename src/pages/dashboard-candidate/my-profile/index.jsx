@@ -10,16 +10,13 @@ import {
   updateCandidateProfile,
   updateImagesProfile,
   uploadImagesProfile,
-  deleteImagesProfile,
 } from "../../../services/candidateServices";
 import { toast, ToastContainer } from "react-toastify";
 
 // Validation schema using Zod
 const profileSchema = z.object({
   avatar: z.string().optional().or(z.literal("")), // Cho phép khoảng trắng
-  fullName: z
-    .string()
-    .min(2, "Full Name must be at least 2 characters."),  
+  fullName: z.string().min(2, "Full Name must be at least 2 characters."),
   phoneNumber: z
     .string()
     .min(10, "Phone number is invalid")
@@ -131,6 +128,7 @@ export const Index = () => {
       // };
       const message = await updateCandidateProfile(formData);
       toast.success(message);
+      window.location.reload(); // reload để update fullName từ localstorage cho Sidebar
     } catch (error) {
       console.error("Error updating profile", error);
       toast.error("Error updating profile");
@@ -240,7 +238,7 @@ export const Index = () => {
                   <div className="widget-title">
                     <h4>My Profile</h4>
                   </div>
-                  <ToastContainer/>
+                  <ToastContainer />
                   <div className="widget-content">
                     <div className="uploading-outer">
                       {avatar ? (
@@ -316,7 +314,9 @@ export const Index = () => {
                       <div className="row">
                         {/* Full Name */}
                         <div className="form-group col-lg-6 col-md-12">
-                          <label>Full Name<span style={{ color: "red" }}>*</span></label>
+                          <label>
+                            Full Name<span style={{ color: "red" }}>*</span>
+                          </label>
                           <input
                             type="text"
                             placeholder="Enter full name"
