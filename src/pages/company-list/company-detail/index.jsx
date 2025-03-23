@@ -9,6 +9,18 @@ export const Index = () => {
   const [companyJobs, setCompanyJobs] = useState([]);
   const { companyName } = useParams(); // Lấy companyName từ URL
 
+  // States cho message dialog
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageContent, setMessageContent] = useState("");
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+
+  // Lấy thông tin user từ localStorage
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userRole = user?.role || null;
+
+  // Kiểm tra xem user có phải là Candidate hay không
+  const isCandidate = userRole === "Candidate";
+
   useEffect(() => {
     const fetchCompanyDetail = async () => {
       setLoading(true);
@@ -39,6 +51,53 @@ export const Index = () => {
 
     fetchCompanyDetail();
   }, [companyName]);
+
+  // Set message mẫu khi dialog mở
+  useEffect(() => {
+    if (showMessageDialog && company) {
+      setMessageContent(
+        `Dear ${
+          company.companyName
+        },\n\nI am writing to express my interest in potential job opportunities at your company. I am impressed by your work in the ${
+          company.industry || "industry"
+        } field and would like to learn more about current or upcoming positions that might match my qualifications.\n\nI look forward to your response.\n\nBest regards,\n${
+          user?.fullName || "A potential candidate"
+        }`
+      );
+    }
+  }, [showMessageDialog, company, user]);
+
+  // Hàm xử lý gửi tin nhắn
+  const handleSendMessage = async () => {
+    if (!messageContent.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+
+    setIsSendingMessage(true);
+
+    try {
+      // Giả định hàm API gửi tin nhắn
+      // await sendMessageToEmployer({
+      //   employerId: company.userID,
+      //   senderId: userID,
+      //   content: messageContent,
+      // });
+
+      // Giả lập call API thành công
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Đóng dialog và thông báo thành công
+      setShowMessageDialog(false);
+      setMessageContent("");
+      alert("Message sent successfully!");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again later.");
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -116,6 +175,17 @@ export const Index = () => {
                       Visit Website
                     </a>
                   )}
+
+                  {/* Nút gửi tin nhắn - Chỉ hiển thị khi user là Candidate */}
+                  {isCandidate && (
+                    <button
+                      className="theme-btn btn-style-four message-btn ml-2"
+                      onClick={() => setShowMessageDialog(true)}
+                    >
+                      <i className="fas fa-envelope mr-2"></i> Message Company
+                    </button>
+                  )}
+
                   <button className="bookmark-btn">
                     <i className="flaticon-bookmark"></i>
                   </button>
@@ -149,66 +219,6 @@ export const Index = () => {
                       </p>
                     </>
                   )}
-
-                  {/* Company Images Section - If you have company images */}
-                  {/* <div className="row images-outer">
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-1.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-1.png"
-                            alt="Company office"
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-2.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-2.png"
-                            alt="Company workspace"
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-3.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-3.png"
-                            alt="Company meeting"
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                    <div className="col-lg-3 col-md-3 col-sm-6">
-                      <figure className="image">
-                        <a
-                          href="images/resource/employers-single-4.png"
-                          className="lightbox-image"
-                          data-fancybox="gallery"
-                        >
-                          <img
-                            src="images/resource/employers-single-4.png"
-                            alt="Company team"
-                          />
-                        </a>
-                      </figure>
-                    </div>
-                  </div> */}
                 </div>
 
                 {/* Related Jobs */}
@@ -355,6 +365,70 @@ export const Index = () => {
         </div>
       </section>
 
+      {/* Message Dialog */}
+      {showMessageDialog && (
+        <div className="message-dialog-overlay">
+          <div className="message-dialog">
+            <div className="message-dialog-header">
+              <h3>Send Message to {company.companyName}</h3>
+              <button
+                className="close-dialog"
+                onClick={() => setShowMessageDialog(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="message-dialog-body">
+              <p className="message-instructions">
+                Use this form to send a message directly to{" "}
+                <b>{company.companyName}</b>. They will receive your message
+                along with your contact information.
+              </p>
+
+              <div className="message-form">
+                <div className="form-group">
+                  <label htmlFor="messageContent">Message:</label>
+                  <textarea
+                    id="messageContent"
+                    className="message-textarea"
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    rows={10}
+                    placeholder="Type your message here..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div className="message-dialog-footer">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowMessageDialog(false)}
+                disabled={isSendingMessage}
+              >
+                Cancel
+              </button>
+              <button
+                className="send-btn"
+                onClick={handleSendMessage}
+                disabled={isSendingMessage}
+              >
+                {isSendingMessage ? (
+                  <>
+                    <span className="send-spinner"></span> Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane"></i> Send Message
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading and Error Styles */}
       <style>{`
         .loading-overlay {
@@ -397,6 +471,163 @@ export const Index = () => {
         .error-message h3 {
           color: #856404;
           margin-bottom: 10px;
+        }
+        
+        /* Message Button Styles */
+        .message-btn {
+          margin-right: 10px;
+          display: inline-flex;
+          align-items: center;
+        }
+        
+        .mr-2 {
+          margin-right: 0.5rem;
+        }
+        
+        /* Message Dialog Styles */
+        .message-dialog-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        
+        .message-dialog {
+          background-color: white;
+          border-radius: 8px;
+          width: 90%;
+          max-width: 600px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+        }
+        
+        .message-dialog-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 15px 20px;
+          border-bottom: 1px solid #eee;
+        }
+        
+        .message-dialog-header h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+        }
+        
+        .close-dialog {
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          color: #888;
+        }
+        
+        .close-dialog:hover {
+          color: #333;
+        }
+        
+        .message-dialog-body {
+          padding: 20px;
+          overflow-y: auto;
+        }
+        
+        .message-instructions {
+          margin-bottom: 15px;
+          color: #555;
+          font-size: 14px;
+        }
+        
+        .message-form {
+          margin-top: 15px;
+        }
+        
+        .form-group {
+          margin-bottom: 15px;
+        }
+        
+        .form-group label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+        }
+        
+        .message-textarea {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          resize: vertical;
+          font-family: inherit;
+          font-size: 14px;
+        }
+        
+        .message-textarea:focus {
+          border-color: #26ae61;
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(38, 174, 97, 0.2);
+        }
+        
+        .message-dialog-footer {
+          padding: 15px 20px;
+          border-top: 1px solid #eee;
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+        
+        .cancel-btn, .send-btn {
+          padding: 8px 20px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.3s;
+        }
+        
+        .cancel-btn {
+          background-color: #f8f9fa;
+          border: 1px solid #ddd;
+          color: #495057;
+        }
+        
+        .cancel-btn:hover:not(:disabled) {
+          background-color: #e9ecef;
+        }
+        
+        .send-btn {
+          background-color: #26ae61;
+          border: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+          background-color: #20925a;
+        }
+        
+        .send-btn:disabled, .cancel-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        
+        .send-spinner {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: white;
+          animation: spin 1s linear infinite;
         }
       `}</style>
     </>

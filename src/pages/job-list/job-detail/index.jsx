@@ -339,7 +339,7 @@ export const Index = () => {
                               <figure className="image mb-sm-0">
                                 <img
                                   className="rounded-circle w60"
-                                  src="images/resource/company-logo/3-1.png"
+                                  src={job.avatar}
                                   alt={job.companyName}
                                 />
                               </figure>
