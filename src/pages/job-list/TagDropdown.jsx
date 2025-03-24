@@ -34,15 +34,26 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
     }));
   };
 
+  // Define a fixed width wrapper
+  const wrapperStyle = {
+    width: "440px", // Fixed width - adjust this value as needed
+    maxWidth: "100%", // But don't exceed container width on small screens
+  };
+
+  // Updated styles with fixed width
   const customStyles = {
+    container: (provided) => ({
+      ...provided,
+      width: "100%", // Fill the wrapper
+    }),
     control: (provided) => ({
       ...provided,
-      width: "65vh",
+      width: "100%", // Fill the wrapper
       minHeight: "40px",
       borderRadius: "8px",
       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       border: "1px solid #e0e0e0",
-      position: "relative", // Ensure proper positioning
+      position: "relative",
     }),
     valueContainer: (provided) => ({
       ...provided,
@@ -76,6 +87,7 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
     }),
     menu: (provided) => ({
       ...provided,
+      width: "100%", // Match the width of the control
       zIndex: 9999,
       borderRadius: "8px",
       boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
@@ -112,22 +124,25 @@ const TagDropdown = ({ setSearchParams, searchParams }) => {
   };
 
   return (
-    <Select
-      options={tagOptions}
-      styles={customStyles}
-      value={selectedTags}
-      onChange={handleChange}
-      placeholder={
-        !searchParams?.Category || searchParams?.Category === "All Categories"
-          ? "Select a category first"
-          : "Select Tags"
-      }
-      isMulti
-      isSearchable
-      isDisabled={
-        !searchParams?.Category || searchParams?.Category === "All Categories"
-      }
-    />
+    <div className="tag-dropdown-wrapper" style={wrapperStyle}>
+      <Select
+        options={tagOptions}
+        styles={customStyles}
+        value={selectedTags}
+        onChange={handleChange}
+        placeholder={
+          !searchParams?.Category || searchParams?.Category === "All Categories"
+            ? "Select a category first"
+            : "Select Tags"
+        }
+        isMulti
+        isSearchable
+        isDisabled={
+          !searchParams?.Category || searchParams?.Category === "All Categories"
+        }
+        className="tag-dropdown"
+      />
+    </div>
   );
 };
 

@@ -41,7 +41,7 @@ import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employ
 import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
 import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
-import { index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
+import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
 import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
 import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";

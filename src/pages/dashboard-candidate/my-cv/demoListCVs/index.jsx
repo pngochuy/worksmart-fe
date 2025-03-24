@@ -1,10 +1,15 @@
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusSquare, Upload, FileText } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
 import { ResumeItem } from "./ResumeItem";
-import { useEffect, useState } from "react";
-import { createCV, getCVsByUserId, setFeatureCV, uploadCV, deleteCV } from "@/services/cvServices";
 import { toast } from "react-toastify";
+import {
+  createCV,
+  getCVsByUserId,
+  setFeatureCV,
+  uploadCV,
+  deleteCV,
+} from "@/services/cvServices";
 import { uploadFile } from "@/services/employerServices";
 
 export const Index = () => {
@@ -22,22 +27,19 @@ export const Index = () => {
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || undefined;
-  const navigate = useNavigate();
 
   const fetchCVs = async () => {
     try {
       const data = await getCVsByUserId(userID);
 
       if (data) {
-        // Phân tách CV được tạo từ hệ thống và CV được upload
-        const systemCVs = data.filter(cv => !cv.filePath);
-        const uploadedCVs = data.filter(cv => cv.filePath);
-        
+        const systemCVs = data.filter((cv) => !cv.filePath);
+        const uploadedCVs = data.filter((cv) => cv.filePath);
+
         setResumes(systemCVs);
         setUploadedResumes(uploadedCVs);
         setTotalCount(data.length);
 
-        // Lưu trạng thái featured cho từng CV
         const featuredStatus = data.reduce((acc, resume) => {
           acc[resume.cvid] = resume.isFeatured || false;
           return acc;
@@ -53,41 +55,38 @@ export const Index = () => {
   };
 
   useEffect(() => {
-    fetchCVs();
+    if (userID) {
+      fetchCVs();
+    }
   }, [userID]);
 
-  // Function to create a new CV
   const handleCreateCV = async () => {
     try {
-      // Kiểm tra xem đã đạt giới hạn 3 CV chưa
       if (resumes.length >= 3) {
         toast.warning("You can only create a maximum of 3 CVs.");
-        return; // Dừng hàm nếu đã đạt giới hạn
+        return;
       }
 
-      const newCV = await createCV({ userID: userID });
-      console.log("New CV created:", newCV);
+      const newCV = await createCV({ userID });
       setResumes((prevResumes) => [newCV, ...prevResumes]);
       setTotalCount((prevCount) => prevCount + 1);
 
-      navigate(`/candidate/my-cv/edit?cvId=${newCV.cvid}`);
+      // Assuming you want to navigate to edit page
+      // navigate(`/candidate/my-cv/edit?cvId=${newCV.cvid}`);
     } catch (error) {
       console.error("Error creating CV:", error);
       toast.error("Failed to create new CV. Please try again.");
     }
   };
 
-  // Hàm cập nhật danh sách CV sau khi xóa
   const handleDeleteCV = async (deletedCVId, isUploadedCV = false) => {
-    if (isDeleting) return; // Tránh nhấn nút xóa nhiều lần
-    
+    if (isDeleting) return;
+
     try {
       setIsDeleting(true);
-      
-      // Gọi API xóa CV từ cơ sở dữ liệu
+
       await deleteCV(deletedCVId);
-      
-      // Sau khi xóa thành công từ DB, cập nhật state
+
       if (isUploadedCV) {
         setUploadedResumes((prevResumes) =>
           prevResumes.filter((resume) => resume.cvid !== deletedCVId)
@@ -97,7 +96,7 @@ export const Index = () => {
           prevResumes.filter((resume) => resume.cvid !== deletedCVId)
         );
       }
-      
+
       setTotalCount((prevCount) => prevCount - 1);
       toast.success("CV deleted successfully");
     } catch (error) {
@@ -108,49 +107,41 @@ export const Index = () => {
     }
   };
 
-  // Hàm xử lý khi "Set as Featured" (cập nhật trạng thái featured)
   const handleSetAsFeatured = async (cvId) => {
     try {
-      const newState = !featuredCVs[cvId];
       await setFeatureCV(cvId, userID);
-  
-      // Cập nhật trạng thái featured cho danh sách CV
+
       setFeaturedCVs((prevState) => {
         const updatedFeaturedCVs = Object.keys(prevState).reduce((acc, key) => {
-          acc[key] = key === cvId ? true : false;
+          acc[key] = key === cvId.toString();
           return acc;
         }, {});
-  
+
         return updatedFeaturedCVs;
       });
-  
-      // Cập nhật lại danh sách CV để đảm bảo CV mới không bị ẩn
-      setResumes((prevResumes) => {
-        return prevResumes.map((resume) => ({
+
+      // Update both system and uploaded CVs
+      setResumes((prevResumes) =>
+        prevResumes.map((resume) => ({
           ...resume,
-          isFeatured: resume.cvid === cvId ? true : false,
-        }));
-      });
-      
-      setUploadedResumes((prevResumes) => {
-        return prevResumes.map((resume) => ({
-          ...resume,
-          isFeatured: resume.cvid === cvId ? true : false,
-        }));
-      });
-  
-      toast.success(
-        newState
-          ? "Resume set as featured successfully."
-          : "Resume removed from featured"
+          isFeatured: resume.cvid === cvId,
+        }))
       );
+
+      setUploadedResumes((prevResumes) =>
+        prevResumes.map((resume) => ({
+          ...resume,
+          isFeatured: resume.cvid === cvId,
+        }))
+      );
+
+      toast.success("CV featured status updated successfully");
     } catch (error) {
-      console.log("error: ", error);
-      toast.error("Failed to set resume as featured.");
+      console.error("Error setting featured CV:", error);
+      toast.error("Failed to update CV featured status.");
     }
   };
-  
-  // Xử lý upload file CV
+
   const handleCVFileChange = async (event) => {
     const selectedFile = event.target.files[0];
 
@@ -174,42 +165,31 @@ export const Index = () => {
     setIsLoading(true);
 
     try {
-      // Bước 1: Upload file lên cloudinary thông qua uploadImagesProfile
       const uploadResponse = await uploadFile(selectedFile);
-      console.log("File Select:", selectedFile);
       const fileUrl = uploadResponse.fileUrl;
-      setFilePath(fileUrl);
 
-      console.log("File uploaded to Cloudinary:", fileUrl);
-      console.log("Data upload:", userID);
-      console.log("Data upload:", selectedFile.name);
-      console.log("Data upload:", fileUrl);
-
-      // Bước 2: Gọi API để xử lý file PDF đã upload
       const cvData = await uploadCV({
         cvid: 0,
-        userID: userID,
+        userID,
         fileName: selectedFile.name,
-        filePath: fileUrl
+        filePath: fileUrl,
       });
 
-      console.log("CV processed:", cvData);
-
-      // Bước 3: Cập nhật danh sách CV đã upload (không thêm vào danh sách My CVs)
       if (cvData) {
         setUploadedResumes((prevResumes) => [cvData, ...prevResumes]);
         setTotalCount((prevCount) => prevCount + 1);
         toast.success("CV uploaded and processed successfully!");
       }
 
-      // Reset form sau khi upload thành công
+      // Reset file state
       setFile(null);
       setFileName("");
       setPreviewUrl("");
-
     } catch (error) {
       console.error("Error processing CV:", error);
-      const errorMessage = error.response?.data?.message || "Error processing CV, please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "Error processing CV, please try again.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -225,77 +205,83 @@ export const Index = () => {
   };
 
   return (
-    <>
-      <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <Button
-            asChild
-            className="flex w-fit gap-2"
-            onClick={handleCreateCV}
-          >
-            <NavLink className="hover:text-white">
-              <PlusSquare className="size-5" />
-              New CV
-            </NavLink>
-          </Button>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm w-full sm:w-96">
-            <h2 className="text-lg font-semibold mb-2">Upload CV File</h2>
-            <div className="flex flex-col gap-3">
-              <div className="uploadButton">
-                <input
-                  className="uploadButton-input"
-                  type="file"
-                  accept=".pdf"
-                  id="uploadCV"
-                  onChange={handleCVFileChange}
-                  disabled={isLoading}
-                />
-                <label
-                  className="uploadButton-button ripple-effect flex items-center gap-2"
-                  htmlFor="uploadCV"
-                >
-                  <Upload className="size-4" />
-                  Upload CV PDF
-                </label>
-              </div>
-
-              {fileName && (
-                <div className="flex items-center gap-2 mt-2">
-                  <FileText className="size-4 text-blue-600" />
-                  <span className="text-sm font-medium">{fileName}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRemoveFile}
-                    disabled={isLoading}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              )}
-
-              <div className="text-sm text-gray-500">
-                Max file size is 5MB. Suitable files are .pdf
-                {fileError && <div className="text-red-500 mt-2">{fileError}</div>}
-              </div>
-
-              {isLoading && (
-                <div className="text-sm flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
-                  Processing your CV...
-                </div>
-              )}
-            </div>
+    <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
+      {/* Total CV Count */}
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-blue-800">Total CVs</h2>
+            <p className="text-blue-600">
+              You have <span className="font-semibold">{totalCount}</span> CVs
+              in total ({resumes.length} system CVs, {uploadedResumes.length}{" "}
+              uploaded CVs)
+            </p>
           </div>
+          <Button onClick={handleCreateCV} className="flex items-center gap-2">
+            <PlusSquare className="size-5" />
+            New CV
+          </Button>
         </div>
+      </div>
 
-        {/* My CVs - Chỉ hiển thị CV tạo từ hệ thống */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold">My CVs</h1>
-          <p className="text-gray-500">CVs created in our system</p>
+      {/* Upload CV Section */}
+      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <h2 className="text-lg font-semibold mb-4">Upload CV File</h2>
+        <div className="flex flex-col gap-3">
+          <div className="uploadButton">
+            <input
+              className="uploadButton-input"
+              type="file"
+              accept=".pdf"
+              id="uploadCV"
+              onChange={handleCVFileChange}
+              disabled={isLoading}
+            />
+            <label
+              className="uploadButton-button ripple-effect flex items-center gap-2"
+              htmlFor="uploadCV"
+            >
+              <Upload className="size-4" />
+              Upload CV PDF
+            </label>
+          </div>
+
+          {fileName && (
+            <div className="flex items-center gap-2 mt-2">
+              <FileText className="size-4 text-blue-600" />
+              <span className="text-sm font-medium">{fileName}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRemoveFile}
+                disabled={isLoading}
+              >
+                Remove
+              </Button>
+            </div>
+          )}
+
+          <div className="text-sm text-gray-500">
+            Max file size is 5MB. Suitable files are .pdf
+            {fileError && <div className="text-red-500 mt-2">{fileError}</div>}
+          </div>
+
+          {isLoading && (
+            <div className="text-sm flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+              Processing your CV...
+            </div>
+          )}
         </div>
-        <div className="flex w-full grid-cols-2 flex-col gap-3 sm:grid md:grid-cols-3 lg:grid-cols-4">
+      </div>
+
+      {/* System-Created CVs */}
+      <section>
+        <div className="space-y-4 mb-4">
+          <h1 className="text-2xl font-bold">My System CVs</h1>
+          <p className="text-gray-500">CVs created directly in our system</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {resumes.length > 0 ? (
             resumes.map((resume) => (
               <ResumeItem
@@ -309,22 +295,33 @@ export const Index = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-6 text-gray-500">
-              No CVs created yet. Click "New CV" to create one.
+              No system CVs created yet. Click "New CV" to create one.
             </div>
           )}
         </div>
+      </section>
 
-        {/* CV UPLOAD - Chỉ hiển thị CV đã upload */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold">CV UPLOAD</h1>
+      {/* Uploaded CVs */}
+      <section className="mt-8">
+        <div className="space-y-4 mb-4">
+          <h1 className="text-2xl font-bold">Uploaded CVs</h1>
           <p className="text-gray-500">CVs uploaded to our system</p>
         </div>
-        <div className="flex w-full grid-cols-2 flex-col gap-3 sm:grid md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {uploadedResumes.length > 0 ? (
             uploadedResumes.map((resume) => (
-              <div key={resume.cvid} className="border rounded-md p-4 shadow-sm">
-                <h2 className="text-lg font-bold truncate mb-2">{resume.fileName || "Uploaded CV"}</h2>
-                
+              <div
+                key={resume.cvid}
+                className={`border rounded-md p-4 shadow-sm ${
+                  featuredCVs[resume.cvid]
+                    ? "bg-yellow-50 border-yellow-300"
+                    : "bg-white"
+                }`}
+              >
+                <h2 className="text-lg font-bold truncate mb-2">
+                  {resume.fileName || "Uploaded CV"}
+                </h2>
+
                 <div className="h-64 overflow-hidden mb-4 bg-gray-100 rounded">
                   <iframe
                     src={resume.filePath}
@@ -332,7 +329,7 @@ export const Index = () => {
                     width="100%"
                     height="100%"
                     frameBorder="0"
-                    className="pointer-events-none"
+                    className="cv-preview-frame"
                   ></iframe>
                 </div>
 
@@ -350,7 +347,7 @@ export const Index = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleSetAsFeatured(resume.cvid)}
-                    className={featuredCVs[resume.cvid] ? "bg-blue-100" : ""}
+                    className={featuredCVs[resume.cvid] ? "bg-yellow-200" : ""}
                   >
                     {featuredCVs[resume.cvid] ? "Featured" : "Set as Featured"}
                   </Button>
@@ -367,11 +364,12 @@ export const Index = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-6 text-gray-500">
-              No uploaded CVs yet. Use the upload button to add your existing CV.
+              No uploaded CVs yet. Use the upload button to add your existing
+              CV.
             </div>
           )}
         </div>
-      </main>
-    </>
+      </section>
+    </main>
   );
 };

@@ -34,9 +34,14 @@ export default function ManageJobsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const companyData = await fetchCompanyProfile();
+        const user = getUserLoginData();
 
-        setVerificationLevel(companyData.verificationLevel);
+        if (user.role === "Employer") {
+          const companyData = await fetchCompanyProfile();
+
+          setVerificationLevel(companyData.verificationLevel);
+          console.log("Verification Level:", companyData.verificationLevel);
+        }
       } catch (error) {
         console.error("Error loading verification data:", error);
       }

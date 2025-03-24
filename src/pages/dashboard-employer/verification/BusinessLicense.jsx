@@ -1,24 +1,25 @@
 import {
   uploadBusinessLicense,
-  uploadImagesProfile,
+  // uploadImagesProfile,
   fetchCompanyProfile,
   uploadFile,
 } from "@/services/employerServices";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 
 export const BusinessLicense = () => {
   const [businessLicense, setBusinessLicense] = useState("");
   const [fileName, setFileName] = useState("");
   const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
+  // const [previewUrl, setPreviewUrl] = useState("");
   const [businessLicenseError, setBusinessLicenseError] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  // const [isActive, setIsActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -26,27 +27,33 @@ export const BusinessLicense = () => {
   useEffect(() => {
     const loadBusinessLicenseInfo = async () => {
       try {
-        const data = await fetchCompanyProfile();
-        if (data) {
-          setBusinessLicense(data.BusinessLicenseImage || "");
+        const user = getUserLoginData();
 
-          setIsActive(false);
-          setIsVerified(false);
-          setIsPending(false);
-          setVerificationMessage("");
-          if (data.licenseVerificationStatus === "Approved") {
-            setIsVerified(true);
-            setVerificationMessage("Your business license has been approved.");
-          } else if (data.licenseVerificationStatus === "Pending") {
-            setIsPending(true);
-            setVerificationMessage(
-              "Your business license verification is pending. Please wait for approval."
-            );
-          } else if (data.licenseVerificationStatus === "Rejected") {
-            setIsActive(true);
-            setVerificationMessage(
-              "Your business license was rejected. Please submit again."
-            );
+        if (user.role === "Employer") {
+          const data = await fetchCompanyProfile();
+          if (data) {
+            setBusinessLicense(data.BusinessLicenseImage || "");
+
+            // setIsActive(false);
+            setIsVerified(false);
+            setIsPending(false);
+            setVerificationMessage("");
+            if (data.licenseVerificationStatus === "Approved") {
+              setIsVerified(true);
+              setVerificationMessage(
+                "Your business license has been approved."
+              );
+            } else if (data.licenseVerificationStatus === "Pending") {
+              setIsPending(true);
+              setVerificationMessage(
+                "Your business license verification is pending. Please wait for approval."
+              );
+            } else if (data.licenseVerificationStatus === "Rejected") {
+              // setIsActive(true);
+              setVerificationMessage(
+                "Your business license was rejected. Please submit again."
+              );
+            }
           }
         }
       } catch (error) {
@@ -78,7 +85,7 @@ export const BusinessLicense = () => {
     try {
       const response = await uploadFile(file);
       setBusinessLicense(response.fileUrl);
-      setPreviewUrl(response.fileUrl);
+      // setPreviewUrl(response.fileUrl);
 
       console.log("Business License Image URL:", response.fileUrl);
     } catch (error) {
@@ -92,7 +99,7 @@ export const BusinessLicense = () => {
 
   const handleRemoveBusinessLicense = () => {
     setFile(null);
-    setPreviewUrl("");
+    // setPreviewUrl("");
     setBusinessLicense("");
     setIsUploaded(false);
     setBusinessLicenseError("");
@@ -146,9 +153,10 @@ export const BusinessLicense = () => {
                       {(isVerified || isPending || verificationMessage) && (
                         <p
                           className={`alert 
-                            ${isVerified
-                              ? "alert-success"
-                              : isPending
+                            ${
+                              isVerified
+                                ? "alert-success"
+                                : isPending
                                 ? "alert-warning"
                                 : "alert-danger"
                             }`}
@@ -167,12 +175,19 @@ export const BusinessLicense = () => {
                         >
                           <div className="form-group col-lg-8 col-md-10">
                             <h4>Your Business License:</h4>
-                            {businessLicense  && (
-                              <div className="p-3 bg-light rounded" style={{ minHeight: "60px", width: "100%", maxWidth: "500px" }}>
+                            {businessLicense && (
+                              <div
+                                className="p-3 bg-light rounded"
+                                style={{
+                                  minHeight: "60px",
+                                  width: "100%",
+                                  maxWidth: "500px",
+                                }}
+                              >
                                 <p className="mb-0 text-truncate">
                                   <i className="fa fa-file-pdf text-danger me-2"></i>
                                   <a
-                                    href={businessLicense }
+                                    href={businessLicense}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-primary"
@@ -184,41 +199,61 @@ export const BusinessLicense = () => {
                             )}
                           </div>
                           <div className="col-lg-4">
-                            <div style={{ width: "200px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <div
+                              style={{
+                                width: "200px",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                              }}
+                            >
                               <button
                                 className="btn btn-success"
-                                onClick={() => window.open(businessLicense, "_blank")}
+                                onClick={() =>
+                                  window.open(businessLicense, "_blank")
+                                }
                                 style={{ width: "100%", height: "40px" }}
                               >
                                 <i className="fa fa-eye me-2"></i>View
                               </button>
 
                               <button
-                                className={`btn w-100 ${isVerified
-                                  ? "btn-success"
-                                  : isPending
+                                className={`btn w-100 ${
+                                  isVerified
+                                    ? "btn-success"
+                                    : isPending
                                     ? "btn-warning"
                                     : isUploaded
-                                      ? "btn-info"
-                                      : "btn-primary"
-                                  }`}
+                                    ? "btn-info"
+                                    : "btn-primary"
+                                }`}
                                 onClick={handleSubmitBusinessLicense}
                                 disabled={isUploaded || isPending || isVerified}
                                 style={{ width: "100%", height: "40px" }}
                               >
                                 {isVerified ? (
-                                  <><i className="fa fa-check-circle me-2"></i>Verified</>
+                                  <>
+                                    <i className="fa fa-check-circle me-2"></i>
+                                    Verified
+                                  </>
                                 ) : isPending ? (
-                                  <><i className="fa fa-clock me-2"></i>Pending</>
+                                  <>
+                                    <i className="fa fa-clock me-2"></i>Pending
+                                  </>
                                 ) : isUploaded ? (
-                                  <><i className="fa fa-file-upload me-2"></i>Uploaded</>
+                                  <>
+                                    <i className="fa fa-file-upload me-2"></i>
+                                    Uploaded
+                                  </>
                                 ) : isLoading ? (
                                   <>
                                     <i className="fa fa-spinner fa-spin"></i>{" "}
                                     Uploading...
                                   </>
                                 ) : (
-                                  <><i className="fa fa-upload me-2"></i>Upload</>
+                                  <>
+                                    <i className="fa fa-upload me-2"></i>Upload
+                                  </>
                                 )}
                               </button>
 
@@ -234,7 +269,10 @@ export const BusinessLicense = () => {
                         </div>
                       ) : (
                         <>
-                          <div className="uploadButton" style={{ width: "250px" }}>
+                          <div
+                            className="uploadButton"
+                            style={{ width: "250px" }}
+                          >
                             <input
                               className="uploadButton-input"
                               type="file"
