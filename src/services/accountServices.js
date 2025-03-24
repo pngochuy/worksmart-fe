@@ -96,6 +96,67 @@ export const changePassword = async (data) => {
   }
 };
 
+export const requestChangePasswordOTP = async (email) => {
+  try {
+    const token = getAccessToken();
+    const response = await axios.post(
+      `${BACKEND_API_URL}/accounts/changePassword/requestOTP`,
+      { email },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Request OTP Error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Failed to send OTP!" };
+  }
+};
+
+export const verifyChangePasswordOTP = async (email, otp) => {
+  try {
+    const token = getAccessToken();
+    const response = await axios.post(
+      `${BACKEND_API_URL}/accounts/changePassword/verifyOTP`,
+      { email, otp },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Verify OTP Error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Failed to verify OTP!" };
+  }
+};
+
+export const confirmChangePassword = async (data) => {
+  try {
+    const token = getAccessToken();
+    console.log("Data sending:", data);
+    const response = await axios.post(
+      `${BACKEND_API_URL}/accounts/changePassword/confirm`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Change Password Error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Failed to change password!" };
+  }
+};
+
 export const forgotPassword = async (email) => {
   try {
     const response = await axios.post(
