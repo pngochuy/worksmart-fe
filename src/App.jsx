@@ -25,6 +25,7 @@ import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
 import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
 import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-cv";
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
+import { Index as CategoryTagsManagerPage } from "./pages/dashboard-candidate/category-tag-management";
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
@@ -216,6 +217,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
                     <AppliedJobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="category-tag-management"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CategoryTagsManagerPage />
                   </ProtectedRoute>
                 }
               />
