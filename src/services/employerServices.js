@@ -264,3 +264,70 @@ export const fetchCompanyDetails = async (companyName) => {
     throw error;
   }
 };
+
+export const createPaymentLink = async (userId, packageId) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Payment/create-payment`, {
+      userId,
+      packageId
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi tạo liên kết thanh toán:', error);
+    throw error;
+  }
+};
+
+export const checkPaymentStatus = async (orderCode) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Payment/payment-status/${orderCode}`);
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi kiểm tra trạng thái thanh toán:', error);
+    throw error;
+  }
+};
+
+export const cancelPayment = async (orderCode) => {
+  try {
+    const token = getAccessToken();
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Payment/cancel`,
+      { orderCode },
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi hủy thanh toán:', error);
+    throw error;
+  }
+};
+
+export const processPaymentReturn = async (orderCode, status, code, id, cancel) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Payment/payment-return`, {
+      params: {
+        orderCode,
+        status,
+        code,
+        id,
+        cancel
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error processing payment return:', error);
+    throw error;
+  }
+};
