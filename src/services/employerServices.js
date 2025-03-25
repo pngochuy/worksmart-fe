@@ -11,7 +11,7 @@ const getAccessToken = () => {
 export const fetchCompanyProfile = async () => {
   try {
     const token = getAccessToken();
-    if (!token) throw new Error("No Access Token Found!");
+    // if (!token) throw new Error("No Access Token Found!");
 
     const response = await axios.get(`${BACKEND_API_URL}/employers/profile`, {
       headers: {

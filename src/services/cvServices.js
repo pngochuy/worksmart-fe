@@ -25,7 +25,7 @@ export const getCVsByUserId = async (userId) => {
 export const getCVById = async (cvId) => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/CV/${cvId}`);
-    console.log("CV ",response.data)
+    console.log("CV ", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching CV:", error);
@@ -103,17 +103,21 @@ export const uploadCV = async (uploadData) => {
       cvid: uploadData.cvid,
       userId: uploadData.userID, // Note the case change from userID to userId
       fileName: uploadData.fileName,
-      filePath: uploadData.filePath
+      filePath: uploadData.filePath,
     };
 
     console.log("Dữ liệu gửi lên API:", JSON.stringify(uploadData, null, 2));
 
-    const response = await axios.post(`${BACKEND_API_URL}/api/CV/upload-cv`, dataToSend, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/CV/upload-cv`,
+      dataToSend,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     return response.data.cvDto;
   } catch (error) {

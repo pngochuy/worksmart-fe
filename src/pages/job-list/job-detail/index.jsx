@@ -112,21 +112,28 @@ export const Index = () => {
           <DialogHeader>
             <DialogTitle>Confirm Application</DialogTitle>
             <DialogDescription>
-              You have set <b>{featuredCV?.title}</b> as your featured CV. The
-              system will use this CV to apply for <b>{job.title}</b>.
+              You have set <b>{featuredCV?.title || featuredCV?.fileName}</b> as
+              your featured CV. The system will use this CV to apply for{" "}
+              <b>{job.title}</b>.
             </DialogDescription>
           </DialogHeader>
           {featuredCV && (
             <div className="py-4">
               <div className="flex justify-between items-center p-3 border rounded-md mb-4 bg-gray-50">
                 <div>
-                  <h4 className="font-medium">{featuredCV.title}</h4>
+                  <h4 className="font-medium">
+                    {featuredCV?.title || featuredCV?.fileName}
+                  </h4>
                   <p className="text-sm text-gray-500">
-                    {featuredCV.jobPosition || "No position specified"}
+                    {featuredCV.jobPosition}
                   </p>
                 </div>
                 <a
-                  href={`/candidate/my-cv/edit?cvId=${featuredCV.cvid}`}
+                  href={
+                    featuredCV.fileName
+                      ? featuredCV.filePath
+                      : `/candidate/my-cv/edit?cvId=${featuredCV.cvid}`
+                  }
                   className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
                   target="_blank"
                 >
@@ -399,10 +406,16 @@ export const Index = () => {
                         <h5 className="text-sm font-medium mb-2">
                           Featured CV
                         </h5>
-                        <p className="text-xs mb-2">{featuredCV.title}</p>
+                        <p className="text-xs mb-2">
+                          {featuredCV?.title || featuredCV?.fileName}
+                        </p>
                         <div className="flex justify-between items-center">
                           <a
-                            href={`/candidate/my-cv/edit?cvId=${featuredCV.cvid}`}
+                            href={
+                              featuredCV.fileName
+                                ? featuredCV.filePath
+                                : `/candidate/my-cv/edit?cvId=${featuredCV.cvid}`
+                            }
                             className="text-xs text-blue-600 hover:underline"
                             target="_blank"
                           >

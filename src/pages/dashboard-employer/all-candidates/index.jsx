@@ -1,29 +1,35 @@
+import { getUserLoginData } from "@/helpers/decodeJwt";
 import { fetchCompanyProfile } from "@/services/employerServices";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export const index = () => {
-    const [verificationLevel, setVerificationLevel] = useState(null);
-    const navigate = useNavigate();
+export const Index = () => {
+  const [verificationLevel, setVerificationLevel] = useState(null);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-      const loadData = async () => {
-        try {
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const user = getUserLoginData();
+
+        if (user.role === "Employer") {
           const companyData = await fetchCompanyProfile();
-  
+
           setVerificationLevel(companyData.verificationLevel);
-        } catch (error) {
-          console.error("Error loading verification data:", error);
+          console.log("Verification Level:", companyData.verificationLevel);
         }
-      };
-      loadData();
-    }, []);
-  
-    useEffect(() => {
-      if (verificationLevel !== null && verificationLevel < 3) {
-        navigate("/employer/verification");
+      } catch (error) {
+        console.error("Error loading verification data:", error);
       }
-    }, [verificationLevel, navigate]);
+    };
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (verificationLevel !== null && verificationLevel < 3) {
+      navigate("/employer/verification");
+    }
+  }, [verificationLevel, navigate]);
 
   return (
     <>

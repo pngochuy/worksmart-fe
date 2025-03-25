@@ -1,43 +1,112 @@
-import { Button } from "@/components/ui/button";
-import { PlusSquare, Upload, FileText } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { ResumeItem } from "./ResumeItem";
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { createCV, getCVsByUserId, setFeatureCV, uploadCV, deleteCV } from "@/services/cvServices";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  PlusSquare,
+  Upload,
+  FileText,
+  Star,
+  ExternalLink,
+  Trash2,
+  FileCheck,
+  Briefcase,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { toast } from "react-toastify";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  createCV,
+  getCVsByUserId,
+  setFeatureCV,
+  uploadCV,
+  deleteCV,
+} from "@/services/cvServices";
 import { uploadFile } from "@/services/employerServices";
+import { ResumePreview } from "@/components/ResumePreview";
+import { mapToResumeValues } from "@/lib/utils";
+import { NavLink, useNavigate } from "react-router-dom";
+
+// Pagination component
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  return (
+    <div className="flex items-center justify-center space-x-2 mt-6">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+
+      <div className="flex items-center space-x-1">
+        {[...Array(totalPages)].map((_, index) => (
+          <Button
+            key={index}
+            variant={currentPage === index + 1 ? "default" : "outline"}
+            size="sm"
+            onClick={() => onPageChange(index + 1)}
+            className="w-8 h-8 p-0"
+          >
+            {index + 1}
+          </Button>
+        ))}
+      </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
 
 export const Index = () => {
   const [resumes, setResumes] = useState([]);
   const [uploadedResumes, setUploadedResumes] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [featuredCVs, setFeaturedCVs] = useState({});
-  const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
-  const [filePath, setFilePath] = useState("");
-  const [previewUrl, setPreviewUrl] = useState("");
   const [fileError, setFileError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
+
+  // Search and pagination states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(4);
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || undefined;
-  const navigate = useNavigate();
 
   const fetchCVs = async () => {
     try {
       const data = await getCVsByUserId(userID);
 
       if (data) {
-        // Phân tách CV được tạo từ hệ thống và CV được upload
-        const systemCVs = data.filter(cv => !cv.filePath);
-        const uploadedCVs = data.filter(cv => cv.filePath);
-        
+        const systemCVs = data.filter((cv) => !cv.filePath);
+        const uploadedCVs = data.filter((cv) => cv.filePath);
+
         setResumes(systemCVs);
         setUploadedResumes(uploadedCVs);
         setTotalCount(data.length);
 
-        // Lưu trạng thái featured cho từng CV
         const featuredStatus = data.reduce((acc, resume) => {
           acc[resume.cvid] = resume.isFeatured || false;
           return acc;
@@ -53,23 +122,29 @@ export const Index = () => {
   };
 
   useEffect(() => {
-    fetchCVs();
+    if (userID) {
+      fetchCVs();
+    }
   }, [userID]);
 
-  // Function to create a new CV
+  // Reset to first page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   const handleCreateCV = async () => {
     try {
-      // Kiểm tra xem đã đạt giới hạn 3 CV chưa
       if (resumes.length >= 3) {
         toast.warning("You can only create a maximum of 3 CVs.");
-        return; // Dừng hàm nếu đã đạt giới hạn
+        return;
       }
 
-      const newCV = await createCV({ userID: userID });
-      console.log("New CV created:", newCV);
+      const newCV = await createCV({ userID });
       setResumes((prevResumes) => [newCV, ...prevResumes]);
       setTotalCount((prevCount) => prevCount + 1);
 
+      toast.success("New CV template created successfully");
+      // Assuming you want to navigate to edit page
       navigate(`/candidate/my-cv/edit?cvId=${newCV.cvid}`);
     } catch (error) {
       console.error("Error creating CV:", error);
@@ -77,17 +152,14 @@ export const Index = () => {
     }
   };
 
-  // Hàm cập nhật danh sách CV sau khi xóa
   const handleDeleteCV = async (deletedCVId, isUploadedCV = false) => {
-    if (isDeleting) return; // Tránh nhấn nút xóa nhiều lần
-    
+    if (isDeleting) return;
+
     try {
       setIsDeleting(true);
-      
-      // Gọi API xóa CV từ cơ sở dữ liệu
+
       await deleteCV(deletedCVId);
-      
-      // Sau khi xóa thành công từ DB, cập nhật state
+
       if (isUploadedCV) {
         setUploadedResumes((prevResumes) =>
           prevResumes.filter((resume) => resume.cvid !== deletedCVId)
@@ -97,7 +169,7 @@ export const Index = () => {
           prevResumes.filter((resume) => resume.cvid !== deletedCVId)
         );
       }
-      
+
       setTotalCount((prevCount) => prevCount - 1);
       toast.success("CV deleted successfully");
     } catch (error) {
@@ -108,49 +180,6 @@ export const Index = () => {
     }
   };
 
-  // Hàm xử lý khi "Set as Featured" (cập nhật trạng thái featured)
-  const handleSetAsFeatured = async (cvId) => {
-    try {
-      const newState = !featuredCVs[cvId];
-      await setFeatureCV(cvId, userID);
-  
-      // Cập nhật trạng thái featured cho danh sách CV
-      setFeaturedCVs((prevState) => {
-        const updatedFeaturedCVs = Object.keys(prevState).reduce((acc, key) => {
-          acc[key] = key === cvId ? true : false;
-          return acc;
-        }, {});
-  
-        return updatedFeaturedCVs;
-      });
-  
-      // Cập nhật lại danh sách CV để đảm bảo CV mới không bị ẩn
-      setResumes((prevResumes) => {
-        return prevResumes.map((resume) => ({
-          ...resume,
-          isFeatured: resume.cvid === cvId ? true : false,
-        }));
-      });
-      
-      setUploadedResumes((prevResumes) => {
-        return prevResumes.map((resume) => ({
-          ...resume,
-          isFeatured: resume.cvid === cvId ? true : false,
-        }));
-      });
-  
-      toast.success(
-        newState
-          ? "Resume set as featured successfully."
-          : "Resume removed from featured"
-      );
-    } catch (error) {
-      console.log("error: ", error);
-      toast.error("Failed to set resume as featured.");
-    }
-  };
-  
-  // Xử lý upload file CV
   const handleCVFileChange = async (event) => {
     const selectedFile = event.target.files[0];
 
@@ -167,211 +196,664 @@ export const Index = () => {
     }
 
     setFileError("");
-    setFile(selectedFile);
     setFileName(selectedFile.name);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
 
     setIsLoading(true);
 
     try {
-      // Bước 1: Upload file lên cloudinary thông qua uploadImagesProfile
       const uploadResponse = await uploadFile(selectedFile);
-      console.log("File Select:", selectedFile);
       const fileUrl = uploadResponse.fileUrl;
-      setFilePath(fileUrl);
 
-      console.log("File uploaded to Cloudinary:", fileUrl);
-      console.log("Data upload:", userID);
-      console.log("Data upload:", selectedFile.name);
-      console.log("Data upload:", fileUrl);
-
-      // Bước 2: Gọi API để xử lý file PDF đã upload
       const cvData = await uploadCV({
         cvid: 0,
-        userID: userID,
+        userID,
         fileName: selectedFile.name,
-        filePath: fileUrl
+        filePath: fileUrl,
       });
 
-      console.log("CV processed:", cvData);
-
-      // Bước 3: Cập nhật danh sách CV đã upload (không thêm vào danh sách My CVs)
       if (cvData) {
-        setUploadedResumes((prevResumes) => [cvData, ...prevResumes]);
+        // Thêm CV mới với thông tin isFeatured
+        setUploadedResumes((prevResumes) => [
+          { ...cvData, isFeatured: false }, // Đảm bảo có thuộc tính isFeatured
+          ...prevResumes,
+        ]);
+
+        // Cập nhật tổng số CV
         setTotalCount((prevCount) => prevCount + 1);
+
+        // Cập nhật trạng thái featured để bao gồm CV mới
+        setFeaturedCVs((prevState) => ({
+          ...prevState,
+          [cvData.cvid]: false, // Thêm CV mới với trạng thái không featured
+        }));
+
         toast.success("CV uploaded and processed successfully!");
       }
 
-      // Reset form sau khi upload thành công
-      setFile(null);
+      // Reset file state
       setFileName("");
-      setPreviewUrl("");
-
     } catch (error) {
       console.error("Error processing CV:", error);
-      const errorMessage = error.response?.data?.message || "Error processing CV, please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "Error processing CV, please try again.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSetAsFeatured = async (cvId) => {
+    try {
+      await setFeatureCV(cvId, userID);
+
+      // Cập nhật featured status trong state
+      setFeaturedCVs((prevState) => {
+        const updatedFeaturedCVs = {};
+
+        // Đặt tất cả CV là không featured
+        Object.keys(prevState).forEach((key) => {
+          updatedFeaturedCVs[key] = false;
+        });
+
+        // Đặt CV được chọn là featured
+        updatedFeaturedCVs[cvId.toString()] = true;
+
+        return updatedFeaturedCVs;
+      });
+
+      // Cập nhật cả system CVs và uploaded CVs
+      setResumes((prevResumes) =>
+        prevResumes.map((resume) => ({
+          ...resume,
+          isFeatured: resume.cvid === cvId,
+        }))
+      );
+
+      setUploadedResumes((prevResumes) =>
+        prevResumes.map((resume) => ({
+          ...resume,
+          isFeatured: resume.cvid === cvId,
+        }))
+      );
+
+      toast.success("CV featured status updated successfully");
+    } catch (error) {
+      console.error("Error setting featured CV:", error);
+      toast.error("Failed to update CV featured status.");
+    }
+  };
+
   const handleRemoveFile = () => {
-    setFile(null);
     setFileName("");
-    setPreviewUrl("");
-    setFilePath("");
     setFileError("");
   };
 
+  // Filter and pagination functions
+  const filterCVs = (cvs) => {
+    if (!searchQuery) return cvs;
+
+    return cvs.filter((cv) => {
+      const title = cv.title || cv.fileName || "";
+      return title.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  };
+
+  const paginateItems = (items) => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return items.slice(indexOfFirstItem, indexOfLastItem);
+  };
+
+  // Get all CVs (both system and uploaded)
+  const allCVs = [...resumes, ...uploadedResumes];
+
+  // Filter CVs based on search query
+  const filteredAllCVs = filterCVs(allCVs);
+  const filteredSystemCVs = filterCVs(resumes);
+  const filteredUploadedCVs = filterCVs(uploadedResumes);
+
+  // Apply pagination
+  const paginatedAllCVs = paginateItems(filteredAllCVs);
+  const paginatedSystemCVs = paginateItems(filteredSystemCVs);
+  const paginatedUploadedCVs = paginateItems(filteredUploadedCVs);
+
+  // Calculate total pages for each tab
+  const totalAllPages = Math.ceil(filteredAllCVs.length / itemsPerPage);
+  const totalSystemPages = Math.ceil(filteredSystemCVs.length / itemsPerPage);
+  const totalUploadedPages = Math.ceil(
+    filteredUploadedCVs.length / itemsPerPage
+  );
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
-    <>
-      <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 bg-gray-50">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Briefcase className="size-6 text-blue-600" />
+            CV Management Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Manage, create and upload candidate CVs for your hiring process
+          </p>
+        </div>
+        <div className="flex gap-3">
           <Button
-            asChild
-            className="flex w-fit gap-2"
             onClick={handleCreateCV}
+            variant="default"
+            className="flex items-center gap-2"
           >
-            <NavLink className="hover:text-white">
-              <PlusSquare className="size-5" />
-              New CV
-            </NavLink>
+            <PlusSquare className="size-4" />
+            Create New CV
           </Button>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm w-full sm:w-96">
-            <h2 className="text-lg font-semibold mb-2">Upload CV File</h2>
-            <div className="flex flex-col gap-3">
-              <div className="uploadButton">
-                <input
-                  className="uploadButton-input"
-                  type="file"
-                  accept=".pdf"
-                  id="uploadCV"
-                  onChange={handleCVFileChange}
-                  disabled={isLoading}
-                />
-                <label
-                  className="uploadButton-button ripple-effect flex items-center gap-2"
-                  htmlFor="uploadCV"
-                >
-                  <Upload className="size-4" />
-                  Upload CV PDF
-                </label>
-              </div>
-
-              {fileName && (
-                <div className="flex items-center gap-2 mt-2">
-                  <FileText className="size-4 text-blue-600" />
-                  <span className="text-sm font-medium">{fileName}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRemoveFile}
-                    disabled={isLoading}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              )}
-
-              <div className="text-sm text-gray-500">
-                Max file size is 5MB. Suitable files are .pdf
-                {fileError && <div className="text-red-500 mt-2">{fileError}</div>}
-              </div>
-
-              {isLoading && (
-                <div className="text-sm flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
-                  Processing your CV...
-                </div>
-              )}
-            </div>
+          <div className="uploadButton">
+            <input
+              className="uploadButton-input"
+              type="file"
+              accept=".pdf"
+              id="uploadCV"
+              onChange={handleCVFileChange}
+              disabled={isLoading}
+            />
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              asChild
+            >
+              <label htmlFor="uploadCV">
+                <Upload className="size-4" />
+                Upload CV
+              </label>
+            </Button>
           </div>
         </div>
+      </div>
 
-        {/* My CVs - Chỉ hiển thị CV tạo từ hệ thống */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold">My CVs</h1>
-          <p className="text-gray-500">CVs created in our system</p>
-        </div>
-        <div className="flex w-full grid-cols-2 flex-col gap-3 sm:grid md:grid-cols-3 lg:grid-cols-4">
-          {resumes.length > 0 ? (
-            resumes.map((resume) => (
-              <ResumeItem
-                key={resume?.cvid}
-                resume={resume}
-                onDelete={() => handleDeleteCV(resume.cvid)}
-                isFeatured={featuredCVs[resume.cvid]}
-                onSetAsFeatured={handleSetAsFeatured}
-                isDeleting={isDeleting}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-6 text-gray-500">
-              No CVs created yet. Click "New CV" to create one.
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Total CVs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-600">{totalCount}</div>
+            <p className="text-sm text-gray-500 mt-1">Your CVs</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">System CVs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-indigo-600">
+              {resumes.length}
             </div>
-          )}
-        </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Created with our system
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* CV UPLOAD - Chỉ hiển thị CV đã upload */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold">CV UPLOAD</h1>
-          <p className="text-gray-500">CVs uploaded to our system</p>
-        </div>
-        <div className="flex w-full grid-cols-2 flex-col gap-3 sm:grid md:grid-cols-3 lg:grid-cols-4">
-          {uploadedResumes.length > 0 ? (
-            uploadedResumes.map((resume) => (
-              <div key={resume.cvid} className="border rounded-md p-4 shadow-sm">
-                <h2 className="text-lg font-bold truncate mb-2">{resume.fileName || "Uploaded CV"}</h2>
-                
-                <div className="h-64 overflow-hidden mb-4 bg-gray-100 rounded">
-                  <iframe
-                    src={resume.filePath}
-                    title={`CV Preview ${resume.fileName}`}
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    className="pointer-events-none"
-                  ></iframe>
-                </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Uploaded CVs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-emerald-600">
+              {uploadedResumes.length}
+            </div>
+            <p className="text-sm text-gray-500 mt-1">PDF files uploaded</p>
+          </CardContent>
+        </Card>
+      </div>
 
-                <a
-                  href={resume.filePath}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline mt-2 block mb-4"
+      {/* File upload progress */}
+      {(fileName || isLoading || fileError) && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">
+              CV Upload Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {fileName && (
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="size-4 text-blue-600" />
+                <span className="text-sm font-medium">{fileName}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveFile}
+                  disabled={isLoading}
                 >
-                  Preview CV
-                </a>
-
-                <div className="flex justify-between gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSetAsFeatured(resume.cvid)}
-                    className={featuredCVs[resume.cvid] ? "bg-blue-100" : ""}
-                  >
-                    {featuredCVs[resume.cvid] ? "Featured" : "Set as Featured"}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteCV(resume.cvid, true)}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? "Deleting..." : "Remove"}
-                  </Button>
-                </div>
+                  Remove
+                </Button>
               </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-6 text-gray-500">
-              No uploaded CVs yet. Use the upload button to add your existing CV.
+            )}
+
+            {fileError && (
+              <div className="text-red-500 text-sm mt-2">{fileError}</div>
+            )}
+
+            {isLoading && (
+              <div className="text-sm flex items-center gap-2 mt-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                Processing your CV...
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500 mt-2">
+              Max file size is 5MB. Suitable files are .pdf
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          size={20}
+        />
+        <Input
+          type="text"
+          placeholder="Search by CV title..."
+          className="pl-10 pr-4 py-2"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {/* CV Tabs */}
+      <Tabs
+        defaultValue="all"
+        className="w-full"
+        onValueChange={() => {
+          setCurrentPage(1); // Reset to first page when changing tabs
+        }}
+      >
+        <TabsList className="grid grid-cols-3 mb-6 bg-gray-200">
+          <TabsTrigger value="all">
+            All CVs ({filteredAllCVs.length})
+          </TabsTrigger>
+          <TabsTrigger value="system">
+            System CVs ({filteredSystemCVs.length})
+          </TabsTrigger>
+          <TabsTrigger value="uploaded">
+            Uploaded CVs ({filteredUploadedCVs.length})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* All CVs Tab */}
+        <TabsContent value="all">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {paginatedAllCVs.length > 0 ? (
+              paginatedAllCVs.map((resume) => (
+                <CVCard
+                  key={`all-${resume.cvid}`}
+                  resume={resume}
+                  isFeatured={featuredCVs[resume.cvid]}
+                  onSetAsFeatured={handleSetAsFeatured}
+                  onDelete={() =>
+                    handleDeleteCV(resume.cvid, !!resume.filePath)
+                  }
+                  isDeleting={isDeleting}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
+                {searchQuery ? (
+                  <p className="mb-2">
+                    No CVs found matching your search criteria.
+                  </p>
+                ) : (
+                  <>
+                    <p className="mb-2">No CVs available yet</p>
+                    <div className="flex justify-center gap-3 mt-4">
+                      <Button
+                        onClick={handleCreateCV}
+                        size="sm"
+                        variant="default"
+                      >
+                        Create New CV
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <label htmlFor="uploadCV-empty">
+                          <Upload className="size-4 mr-2" />
+                          Upload CV
+                          <input
+                            id="uploadCV-empty"
+                            type="file"
+                            accept=".pdf"
+                            onChange={handleCVFileChange}
+                            disabled={isLoading}
+                            className="sr-only"
+                          />
+                        </label>
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination for All tab */}
+          {filteredAllCVs.length > 0 && totalAllPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalAllPages}
+              onPageChange={handlePageChange}
+            />
           )}
-        </div>
-      </main>
-    </>
+        </TabsContent>
+
+        {/* System CVs Tab */}
+        <TabsContent value="system">
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl font-bold">
+                My System CVs
+              </CardTitle>
+              <CardDescription className="text-gray-500">
+                CVs created directly in our system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {paginatedSystemCVs.length > 0 ? (
+                  paginatedSystemCVs.map((resume) => (
+                    <SystemCVCard
+                      key={resume?.cvid}
+                      resume={resume}
+                      isFeatured={featuredCVs[resume.cvid]}
+                      onSetAsFeatured={handleSetAsFeatured}
+                      onDelete={() => handleDeleteCV(resume.cvid)}
+                      isDeleting={isDeleting}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-6 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
+                    {searchQuery ? (
+                      <p className="mb-2">
+                        No system CVs found matching your search criteria.
+                      </p>
+                    ) : (
+                      <p className="mb-2">
+                        No system CVs created yet. Click &quot;New CV&quot; to
+                        create one.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination for System tab */}
+              {filteredSystemCVs.length > 0 && totalSystemPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalSystemPages}
+                  onPageChange={handlePageChange}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Uploaded CVs Tab */}
+        <TabsContent value="uploaded">
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl font-bold">Uploaded CVs</CardTitle>
+              <CardDescription className="text-gray-500">
+                CVs uploaded to our system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {paginatedUploadedCVs.length > 0 ? (
+                  paginatedUploadedCVs.map((resume) => (
+                    <CVCard
+                      key={`uploaded-${resume.cvid}`}
+                      resume={resume}
+                      isFeatured={featuredCVs[resume.cvid]}
+                      onSetAsFeatured={handleSetAsFeatured}
+                      onDelete={() => handleDeleteCV(resume.cvid, true)}
+                      isDeleting={isDeleting}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
+                    {searchQuery ? (
+                      <p className="mb-2">
+                        No uploaded CVs found matching your search criteria.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="mb-2">No uploaded CVs yet</p>
+                        <Button variant="outline" size="sm" asChild>
+                          <label htmlFor="uploadCV-empty2">
+                            <Upload className="size-4 mr-2" />
+                            Upload CV
+                            <input
+                              id="uploadCV-empty2"
+                              type="file"
+                              accept=".pdf"
+                              onChange={handleCVFileChange}
+                              disabled={isLoading}
+                              className="sr-only"
+                            />
+                          </label>
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination for Uploaded tab */}
+              {filteredUploadedCVs.length > 0 && totalUploadedPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalUploadedPages}
+                  onPageChange={handlePageChange}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </main>
   );
 };
+
+// System CV Card Component with fixed height
+const SystemCVCard = ({
+  resume,
+  isFeatured,
+  onSetAsFeatured,
+  onDelete,
+  isDeleting,
+}) => {
+  const navigate = useNavigate();
+  return (
+    <Card className="overflow-hidden h-full flex flex-col">
+      <div className="min-h-[10px] flex items-center">
+        {isFeatured ? (
+          <div className="bg-amber-100 py-1 px-2 w-full text-xs font-medium text-amber-800 flex items-center justify-center">
+            <Star className="size-3 mr-1 fill-amber-500" /> Featured CV
+          </div>
+        ) : (
+          <div className="h-[32px]"></div> // Spacer to maintain consistent height
+        )}
+      </div>
+
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-medium truncate">
+          {resume.title || `System CV ${resume.cvid}`}
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="pb-4 flex-1">
+        <NavLink
+          to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
+          className="relative inline-block w-full"
+        >
+          <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4 relative">
+            <ResumePreview
+              resumeData={mapToResumeValues(resume)}
+              contentRef={null}
+              className="overflow-hidden shadow-sm transition-shadow group-hover:shadow-lg"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
+          </div>
+        </NavLink>
+      </CardContent>
+
+      <CardFooter className="flex flex-col gap-2 mt-auto">
+        <div className="flex w-full gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() =>
+              navigate(`/candidate/my-cv/edit?cvId=${resume.cvid}`)
+            }
+          >
+            <FileCheck className="size-4 mr-1" /> Edit
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSetAsFeatured(resume.cvid)}
+            className={`flex-1 ${
+              isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
+            }`}
+          >
+            <Star
+              className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
+            />
+            {isFeatured ? "Featured" : "Feature"}
+          </Button>
+        </div>
+
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="w-full"
+        >
+          <Trash2 className="size-4 mr-1" />
+          {isDeleting ? "Deleting..." : "Delete"}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
+
+// CV Card Component for uploaded CVs with consistent structure
+const CVCard = ({
+  resume,
+  isFeatured,
+  onSetAsFeatured,
+  onDelete,
+  isDeleting,
+}) => {
+  const isUploaded = !!resume.filePath;
+
+  // If it's a system CV in the All tab, use SystemCVCard
+  if (!isUploaded) {
+    return (
+      <SystemCVCard
+        resume={resume}
+        isFeatured={isFeatured}
+        onSetAsFeatured={onSetAsFeatured}
+        onDelete={onDelete}
+        isDeleting={isDeleting}
+      />
+    );
+  }
+
+  // For uploaded CVs
+  return (
+    <Card className="overflow-hidden h-full flex flex-col">
+      <div className="min-h-[10px] flex items-center">
+        {isFeatured ? (
+          <div className="bg-amber-100 py-1 px-2 w-full text-xs font-medium text-amber-800 flex items-center justify-center">
+            <Star className="size-3 mr-1 fill-amber-500" /> Featured CV
+          </div>
+        ) : (
+          <div className="h-[32px]"></div> // Spacer to maintain consistent height
+        )}
+      </div>
+
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-medium truncate">
+          {resume.fileName || "Uploaded CV"}
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="pb-4 flex-1">
+        <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4">
+          <iframe
+            src={resume.filePath}
+            title={`CV Preview ${resume.fileName}`}
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            className="cv-preview-frame"
+          ></iframe>
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex flex-col gap-2 mt-auto">
+        <div className="flex w-full gap-2">
+          <a
+            href={resume.filePath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 text-sm flex-1 flex items-center justify-center py-1 px-2 border rounded"
+          >
+            <ExternalLink className="size-4 mr-1" /> View
+          </a>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSetAsFeatured(resume.cvid)}
+            className={`flex-1 ${
+              isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
+            }`}
+          >
+            <Star
+              className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
+            />
+            {isFeatured ? "Featured" : "Feature"}
+          </Button>
+        </div>
+
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="w-full"
+        >
+          <Trash2 className="size-4 mr-1" />
+          {isDeleting ? "Deleting..." : "Delete"}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default Index;

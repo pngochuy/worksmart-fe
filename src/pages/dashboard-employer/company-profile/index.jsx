@@ -14,6 +14,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Editor } from "@tinymce/tinymce-react";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
 
 const companySchema = z.object({
@@ -98,29 +99,36 @@ export const Index = () => {
   useEffect(() => {
     const loadCompanyProfile = async () => {
       try {
-        const data = await fetchCompanyProfile();
-        if (data) {
-          if (data.avatar) {
-            setAvatar(data.avatar);
-            console.log("Avatar cập nhật:", data.avatar);
-          } else {
-            console.warn("⚠ Avatar không tồn tại trong dữ liệu API");
-          }
+        const user = getUserLoginData();
 
-          setCompanyValue("email", data.email || "");
-          setCompanyValue("phoneNumber", data.phoneNumber || "");
-          setCompanyValue("companyName", data.companyName || "");
-          setCompanyValue("companyDescription", data.companyDescription || "");
-          setCompanyValue(
-            "createdAt",
-            data.createdAt ? data.createdAt.split("T")[0] : ""
-          );
+        if (user.role === "Employer") {
+          const data = await fetchCompanyProfile();
+          if (data) {
+            if (data.avatar) {
+              setAvatar(data.avatar);
+              console.log("Avatar cập nhật:", data.avatar);
+            } else {
+              console.warn("⚠ Avatar không tồn tại trong dữ liệu API");
+            }
 
-          setAddressValue("address", data.address || "");
+            setCompanyValue("email", data.email || "");
+            setCompanyValue("phoneNumber", data.phoneNumber || "");
+            setCompanyValue("companyName", data.companyName || "");
+            setCompanyValue(
+              "companyDescription",
+              data.companyDescription || ""
+            );
+            setCompanyValue(
+              "createdAt",
+              data.createdAt ? data.createdAt.split("T")[0] : ""
+            );
 
-          // Try to geocode the address if it exists
-          if (data.address) {
-            geocodeAddress(data.address);
+            setAddressValue("address", data.address || "");
+
+            // Try to geocode the address if it exists
+            if (data.address) {
+              geocodeAddress(data.address);
+            }
           }
         }
       } catch (error) {
