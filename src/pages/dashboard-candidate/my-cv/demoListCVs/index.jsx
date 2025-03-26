@@ -31,11 +31,13 @@ import {
   setFeatureCV,
   uploadCV,
   deleteCV,
+  hideCV,
 } from "@/services/cvServices";
 import { uploadFile } from "@/services/employerServices";
 import { ResumePreview } from "@/components/ResumePreview";
 import { mapToResumeValues } from "@/lib/utils";
 import { NavLink, useNavigate } from "react-router-dom";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
 
 // Pagination component
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -158,7 +160,8 @@ export const Index = () => {
     try {
       setIsDeleting(true);
 
-      await deleteCV(deletedCVId);
+      // await deleteCV(deletedCVId);
+      await hideCV(deletedCVId);
 
       if (isUploadedCV) {
         setUploadedResumes((prevResumes) =>
@@ -365,6 +368,7 @@ export const Index = () => {
               variant="outline"
               className="flex items-center gap-2"
               asChild
+              style={{ cursor: "pointer" }}
             >
               <label htmlFor="uploadCV">
                 <Upload className="size-4" />
@@ -683,80 +687,98 @@ const SystemCVCard = ({
   isDeleting,
 }) => {
   const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete();
+    setIsDeleteDialogOpen(false);
+  };
   return (
-    <Card className="overflow-hidden h-full flex flex-col">
-      <div className="min-h-[10px] flex items-center">
-        {isFeatured ? (
-          <div className="bg-amber-100 py-1 px-2 w-full text-xs font-medium text-amber-800 flex items-center justify-center">
-            <Star className="size-3 mr-1 fill-amber-500" /> Featured CV
-          </div>
-        ) : (
-          <div className="h-[32px]"></div> // Spacer to maintain consistent height
-        )}
-      </div>
-
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium truncate">
-          {resume.title || `System CV ${resume.cvid}`}
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="pb-4 flex-1">
-        <NavLink
-          to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
-          className="relative inline-block w-full"
-        >
-          <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4 relative">
-            <ResumePreview
-              resumeData={mapToResumeValues(resume)}
-              contentRef={null}
-              className="overflow-hidden shadow-sm transition-shadow group-hover:shadow-lg"
-            />
-            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
-          </div>
-        </NavLink>
-      </CardContent>
-
-      <CardFooter className="flex flex-col gap-2 mt-auto">
-        <div className="flex w-full gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() =>
-              navigate(`/candidate/my-cv/edit?cvId=${resume.cvid}`)
-            }
-          >
-            <FileCheck className="size-4 mr-1" /> Edit
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onSetAsFeatured(resume.cvid)}
-            className={`flex-1 ${
-              isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
-            }`}
-          >
-            <Star
-              className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
-            />
-            {isFeatured ? "Featured" : "Feature"}
-          </Button>
+    <>
+      <Card className="overflow-hidden h-full flex flex-col">
+        <div className="min-h-[10px] flex items-center">
+          {isFeatured ? (
+            <div className="bg-amber-100 py-1 px-2 w-full text-xs font-medium text-amber-800 flex items-center justify-center">
+              <Star className="size-3 mr-1 fill-amber-500" /> Featured CV
+            </div>
+          ) : (
+            <div className="h-[32px]"></div> // Spacer to maintain consistent height
+          )}
         </div>
 
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={onDelete}
-          disabled={isDeleting}
-          className="w-full"
-        >
-          <Trash2 className="size-4 mr-1" />
-          {isDeleting ? "Deleting..." : "Delete"}
-        </Button>
-      </CardFooter>
-    </Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-medium truncate">
+            {resume.title || `System CV ${resume.cvid}`}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="pb-4 flex-1">
+          <NavLink
+            to={`/candidate/my-cv/edit?cvId=${resume?.cvid}`}
+            className="relative inline-block w-full"
+          >
+            <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4 relative">
+              <ResumePreview
+                resumeData={mapToResumeValues(resume)}
+                contentRef={null}
+                className="overflow-hidden shadow-sm transition-shadow group-hover:shadow-lg"
+              />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
+            </div>
+          </NavLink>
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-2 mt-auto">
+          <div className="flex w-full gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() =>
+                navigate(`/candidate/my-cv/edit?cvId=${resume.cvid}`)
+              }
+            >
+              <FileCheck className="size-4 mr-1" /> Edit
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSetAsFeatured(resume.cvid)}
+              className={`flex-1 ${
+                isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
+              }`}
+            >
+              <Star
+                className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
+              />
+              {isFeatured ? "Featured" : "Feature"}
+            </Button>
+          </div>
+
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteClick}
+            className="w-full"
+          >
+            <Trash2 className="size-4 mr-1" />
+            Delete
+          </Button>
+        </CardFooter>
+      </Card>
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        setIsOpen={setIsDeleteDialogOpen}
+        onConfirmDelete={handleConfirmDelete}
+        isDeleting={isDeleting}
+        cvName={resume.title || `System CV ${resume.cvid}`}
+      />
+    </>
   );
 };
 
@@ -769,6 +791,16 @@ const CVCard = ({
   isDeleting,
 }) => {
   const isUploaded = !!resume.filePath;
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete();
+    setIsDeleteDialogOpen(false);
+  };
 
   // If it's a system CV in the All tab, use SystemCVCard
   if (!isUploaded) {
@@ -785,74 +817,82 @@ const CVCard = ({
 
   // For uploaded CVs
   return (
-    <Card className="overflow-hidden h-full flex flex-col">
-      <div className="min-h-[10px] flex items-center">
-        {isFeatured ? (
-          <div className="bg-amber-100 py-1 px-2 w-full text-xs font-medium text-amber-800 flex items-center justify-center">
-            <Star className="size-3 mr-1 fill-amber-500" /> Featured CV
-          </div>
-        ) : (
-          <div className="h-[32px]"></div> // Spacer to maintain consistent height
-        )}
-      </div>
-
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium truncate">
-          {resume.fileName || "Uploaded CV"}
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="pb-4 flex-1">
-        <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4">
-          <iframe
-            src={resume.filePath}
-            title={`CV Preview ${resume.fileName}`}
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            className="cv-preview-frame"
-          ></iframe>
+    <>
+      <Card className="overflow-hidden h-full flex flex-col">
+        <div className="min-h-[10px] flex items-center">
+          {isFeatured ? (
+            <div className="bg-amber-100 py-1 px-2 w-full text-xs font-medium text-amber-800 flex items-center justify-center">
+              <Star className="size-3 mr-1 fill-amber-500" /> Featured CV
+            </div>
+          ) : (
+            <div className="h-[32px]"></div> // Spacer to maintain consistent height
+          )}
         </div>
-      </CardContent>
 
-      <CardFooter className="flex flex-col gap-2 mt-auto">
-        <div className="flex w-full gap-2">
-          <a
-            href={resume.filePath}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 text-sm flex-1 flex items-center justify-center py-1 px-2 border rounded"
-          >
-            <ExternalLink className="size-4 mr-1" /> View
-          </a>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-medium truncate">
+            {resume.fileName || "Uploaded CV"}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="pb-4 flex-1">
+          <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4">
+            <iframe
+              src={resume.filePath}
+              title={`CV Preview ${resume.fileName}`}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              className="cv-preview-frame"
+            ></iframe>
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-2 mt-auto">
+          <div className="flex w-full gap-2">
+            <a
+              href={resume.filePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 text-sm flex-1 flex items-center justify-center py-1 px-2 border rounded"
+            >
+              <ExternalLink className="size-4 mr-1" /> View
+            </a>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSetAsFeatured(resume.cvid)}
+              className={`flex-1 ${
+                isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
+              }`}
+            >
+              <Star
+                className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
+              />
+              {isFeatured ? "Featured" : "Feature"}
+            </Button>
+          </div>
 
           <Button
-            variant="outline"
+            variant="destructive"
             size="sm"
-            onClick={() => onSetAsFeatured(resume.cvid)}
-            className={`flex-1 ${
-              isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
-            }`}
+            onClick={handleDeleteClick}
+            className="w-full"
           >
-            <Star
-              className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
-            />
-            {isFeatured ? "Featured" : "Feature"}
+            <Trash2 className="size-4 mr-1" />
+            Delete
           </Button>
-        </div>
-
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={onDelete}
-          disabled={isDeleting}
-          className="w-full"
-        >
-          <Trash2 className="size-4 mr-1" />
-          {isDeleting ? "Deleting..." : "Delete"}
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        setIsOpen={setIsDeleteDialogOpen}
+        onConfirmDelete={handleConfirmDelete}
+        isDeleting={isDeleting}
+        cvName={resume.fileName || "Uploaded CV"}
+      />
+    </>
   );
 };
 

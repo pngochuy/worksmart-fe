@@ -18,6 +18,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import EmptySimilarJobs from "./EmptySimilarJobs";
+import ReportJobButton from "./ReportJobButton";
 
 export const Index = () => {
   const [loading, setLoading] = useState(false);
@@ -179,6 +181,11 @@ export const Index = () => {
                   <div className="job-block-seven style-two at-jsv6">
                     <div className="tags d-flex align-items-center">
                       <a className="flaticon-bookmark" href=""></a>
+                      <ReportJobButton
+                        className="theme-btn btn-style-one"
+                        jobId={jobId}
+                        userId={userID}
+                      />
                     </div>
                     <div className="inner-box">
                       <div className="content">
@@ -293,7 +300,7 @@ export const Index = () => {
                           {formatDateTimeNotIncludeTime(job.deadline)}
                         </p>
                       </div>
-                      <div className="btn-box mb-0">
+                      <div className="btn-box mb-0 d-flex gap-2 flex-wrap">
                         <LoadingButton
                           className="theme-btn btn-style-one"
                           type="button"
@@ -334,8 +341,8 @@ export const Index = () => {
                   </div>
 
                   {/* Job Block */}
-                  {similarJobs.map((job) => (
-                    <>
+                  {similarJobs && similarJobs.length > 0 ? (
+                    similarJobs.map((job) => (
                       <div key={job.jobID} className="job-block at-jsv6">
                         <div className="inner-box">
                           <div className="tags d-flex align-items-center">
@@ -352,14 +359,15 @@ export const Index = () => {
                               </figure>
                               <div className="ms-0 ms-sm-3">
                                 <h4 className="fz20 mb-0">
-                                  <a href="#">{job.title}</a>
+                                  <a href={`/job-list/${job.jobID}`}>
+                                    {job.title}
+                                  </a>
                                 </h4>
                                 <p>
                                   by{" "}
                                   <span className="fw500 text">
                                     {job.companyName}
-                                  </span>{" "}
-                                  {/* in Design & Creative */}
+                                  </span>
                                 </p>
                               </div>
                             </div>
@@ -374,8 +382,10 @@ export const Index = () => {
                           </div>
                         </div>
                       </div>
-                    </>
-                  ))}
+                    ))
+                  ) : (
+                    <EmptySimilarJobs />
+                  )}
                 </div>
               </div>
 
@@ -387,7 +397,7 @@ export const Index = () => {
                       {formatDateTimeNotIncludeTime(job.deadline)}
                     </p>
                     {userRole === "Candidate" && (
-                      <div className="btn-box mb-0">
+                      <div className="btn-box mb-3 d-flex flex-column gap-2">
                         <LoadingButton
                           className="theme-btn btn-style-one"
                           type="button"
