@@ -209,6 +209,19 @@ export const unhideJob = async (id) => {
   }
 };
 
+// Hàm gọi API checkApplyStatus
+export const checkApplyStatus = async (userId, jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/CheckApplyStatus/${userId}/${jobId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error checking apply to job:", error);
+    throw error;
+  }
+};
+
 // Hàm gọi API ApplyToJob
 export const applyToJob = async (userId, jobId) => {
   try {

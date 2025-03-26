@@ -4,7 +4,11 @@ import {
   getTimeAgo,
 } from "@/helpers/formatDateTime";
 import { getCVsByUserId } from "@/services/cvServices";
-import { applyToJob, fetchJobDetails } from "@/services/jobServices";
+import {
+  applyToJob,
+  checkApplyStatus,
+  fetchJobDetails,
+} from "@/services/jobServices";
 import { FileEdit, MoveUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -20,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import EmptySimilarJobs from "./EmptySimilarJobs";
 import ReportJobButton from "./ReportJobButton";
+import ApplicationStatus from "./ApplicationStatus";
 
 export const Index = () => {
   const [loading, setLoading] = useState(false);
@@ -28,6 +33,7 @@ export const Index = () => {
   const [userCVs, setUserCVs] = useState([]);
   const [featuredCV, setFeaturedCV] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
@@ -41,20 +47,26 @@ export const Index = () => {
 
         if (data) {
           setJob(data.job);
-          // Giả sử API cũng trả về similarJobs
           if (data.similarJobs) {
             setSimilarJobs(data.similarJobs);
           }
         }
 
-        // Chỉ lấy thông tin CV nếu user là Candidate
+        // Check application status for Candidates
         if (userRole === "Candidate" && userID) {
-          const cvData = await getCVsByUserId(userID);
+          try {
+            const status = await checkApplyStatus(userID, jobId);
+            if (status !== "None") {
+              setApplicationStatus(status);
+            }
+          } catch (error) {
+            console.error("Error checking application status:", error);
+          }
 
+          // Get user CVs
+          const cvData = await getCVsByUserId(userID);
           if (cvData && cvData.length > 0) {
             setUserCVs(cvData);
-
-            // Tìm CV có isFeatured = true
             const featured = cvData.find((cv) => cv.isFeatured === true);
             if (featured) {
               setFeaturedCV(featured);
@@ -66,43 +78,61 @@ export const Index = () => {
       }
     };
 
-    fetchJobDetail(); // Call the fetch function
+    fetchJobDetail();
   }, [userID, jobId, userRole]);
 
-  const handleClickApply = () => {
-    // Kiểm tra xem có CV đại diện không
-    if (featuredCV) {
-      // Hiển thị dialog xác nhận
-      setShowConfirmDialog(true);
-    } else if (userCVs.length > 0) {
-      // Không có CV đại diện nhưng có CV, thông báo người dùng nên chọn CV đại diện
-      toast.info(
-        "You haven't set a featured CV. Please choose a featured CV before applying."
-      );
-    } else if (userCVs.length == 0) {
-      // Không có CV nào, thông báo người dùng tạo CV
-      toast.warning(
-        "You don't have any CVs yet. Please create a CV before applying for this job."
-      );
-    } else {
-      submitApplication();
+  const handleClickApply = async () => {
+    try {
+      // Check if already applied
+      const status = await checkApplyStatus(userID, jobId);
+
+      if (status !== "None") {
+        toast.info(`You have already applied to this job. Status: ${status}`);
+        setApplicationStatus(status);
+        return;
+      }
+
+      // Not applied yet, continue with application flow
+      if (featuredCV) {
+        setShowConfirmDialog(true);
+      } else if (userCVs.length > 0) {
+        toast.info(
+          "You haven't set a featured CV. Please choose a featured CV before applying."
+        );
+      } else if (userCVs.length === 0) {
+        toast.warning(
+          "You don't have any CVs yet. Please create a CV before applying for this job."
+        );
+      }
+    } catch (error) {
+      console.error("Error checking application status:", error);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
   const submitApplication = async () => {
     setLoading(true);
     try {
-      // Gọi hàm từ service để gửi yêu cầu đến API
-      await applyToJob(userID, jobId);
+      // Double-check status before submitting
+      const status = await checkApplyStatus(userID, jobId);
 
-      // Thông báo thành công
-      toast.success("Application submitted successfully.");
+      if (status !== "None") {
+        toast.info(`You have already applied to this job. Status: ${status}`);
+        setApplicationStatus(status);
+        setShowConfirmDialog(false);
+        return;
+      }
+
+      // Submit application
+      await applyToJob(userID, jobId);
+      toast.success("Application submitted successfully!");
+      setApplicationStatus("Pending");
     } catch (error) {
-      console.error(error);
+      console.error("Error applying to job:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
-      setShowConfirmDialog(false); // Đóng dialog nếu đang mở
+      setShowConfirmDialog(false);
     }
   };
 
@@ -160,12 +190,17 @@ export const Index = () => {
             <Button
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
+              disabled={loading}
             >
               Cancel
             </Button>
-            <Button onClick={submitApplication} disabled={loading}>
-              {loading ? "Submitting..." : "Confirm Application"}
-            </Button>
+            <LoadingButton
+              variant="default"
+              onClick={submitApplication}
+              loading={loading}
+            >
+              Confirm Application
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -300,16 +335,20 @@ export const Index = () => {
                           {formatDateTimeNotIncludeTime(job.deadline)}
                         </p>
                       </div>
-                      <div className="btn-box mb-0 d-flex gap-2 flex-wrap">
-                        <LoadingButton
-                          className="theme-btn btn-style-one"
-                          type="button"
-                          onClick={handleClickApply}
-                          loading={loading}
-                        >
-                          <MoveUpRight className="size-4 " />
-                          Apply For Job
-                        </LoadingButton>
+                      <div className="btn-box mb-0 d-flex flex-column gap-2 min-w-[250px]">
+                        {applicationStatus ? (
+                          <ApplicationStatus status={applicationStatus} />
+                        ) : (
+                          <LoadingButton
+                            className="theme-btn btn-style-one"
+                            type="button"
+                            onClick={handleClickApply}
+                            loading={loading}
+                          >
+                            <MoveUpRight className="size-4" />
+                            Apply For Job
+                          </LoadingButton>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -397,16 +436,24 @@ export const Index = () => {
                       {formatDateTimeNotIncludeTime(job.deadline)}
                     </p>
                     {userRole === "Candidate" && (
-                      <div className="btn-box mb-3 d-flex flex-column gap-2">
-                        <LoadingButton
-                          className="theme-btn btn-style-one"
-                          type="button"
-                          onClick={handleClickApply}
-                          loading={loading}
-                        >
-                          <MoveUpRight className="size-4 " />
-                          Apply For Job
-                        </LoadingButton>
+                      <div className="mb-3">
+                        {applicationStatus ? (
+                          <>
+                            <ApplicationStatus status={applicationStatus} />
+                          </>
+                        ) : (
+                          <div className="btn-box mb-3 d-flex flex-column gap-2">
+                            <LoadingButton
+                              className="theme-btn btn-style-one"
+                              type="button"
+                              onClick={handleClickApply}
+                              loading={loading}
+                            >
+                              <MoveUpRight className="size-4" />
+                              Apply For Job
+                            </LoadingButton>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -446,14 +493,14 @@ export const Index = () => {
                       userCVs.length > 0 &&
                       !featuredCV && (
                         <div className="mt-4 text-left p-3 border rounded bg-yellow-50">
-                          <p className="text-xs text-amber-800 mb-2">
-                            You haven&apos;t set a featured CV yet
+                          <p className="text-sm text-amber-800 mb-2">
+                            You haven&apos;t set a featured CV yet!
                           </p>
                           <a
                             href="/candidate/my-cv"
                             className="text-xs text-blue-600 hover:underline"
                           >
-                            Set a featured CV
+                            Set a featured CV here
                           </a>
                         </div>
                       )}
