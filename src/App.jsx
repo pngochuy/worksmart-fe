@@ -49,6 +49,9 @@ import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
 import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
 import UploadFileTest from "./pages/dashboard-employer/upload-file/UploadFileTest";
 import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
+import PackagePurchase from "./pages/dashboard-employer/package/PackagePurchase";
+import PaymentResult from "./pages/dashboard-employer/package/PaymentResult";
+import PaymentCancel from "./pages/dashboard-employer/package/PaymentCancel";
 
 // Admin Pages
 import { AdminLayout } from "./layouts/AdminLayout";
@@ -442,6 +445,33 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
                     <UploadFileTest />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="package-list"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <PackagePurchase />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="payment-return"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <PaymentResult />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="payment-cancel"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <PaymentCancel />
                   </ProtectedRoute>
                 }
               />
