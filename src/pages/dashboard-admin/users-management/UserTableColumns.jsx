@@ -22,7 +22,7 @@ import {
   Clock,
   Globe,
   Briefcase,
-  Users
+  Users,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -79,47 +79,6 @@ export const VERIFICATION_LEVEL = {
   FULLY_VERIFIED: 3,
 };
 
-// // Mock API functions
-// const banUser = async (userId) => {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
-//   console.log(`Ban user ${userId}`);
-//   return { success: true };
-// };
-
-// const unbanUser = async (userId) => {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
-//   console.log(`Unban user ${userId}`);
-//   return { success: true };
-// };
-
-// const approveTaxVerification = async (userId) => {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
-//   console.log(`Approve tax verification for user ${userId}`);
-//   return { success: true };
-// };
-
-// const rejectTaxVerification = async (userId, reason) => {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
-//   console.log(
-//     `Reject tax verification for user ${userId} with reason: ${reason}`
-//   );
-//   return { success: true };
-// };
-
-// const approveLicenseVerification = async (userId) => {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
-//   console.log(`Approve license verification for user ${userId}`);
-//   return { success: true };
-// };
-
-// const rejectLicenseVerification = async (userId, reason) => {
-//   await new Promise((resolve) => setTimeout(resolve, 500));
-//   console.log(
-//     `Reject license verification for user ${userId} with reason: ${reason}`
-//   );
-//   return { success: true };
-// };
-
 // Filter functions
 const filterByMultipleValues = (row, id, filterValues) => {
   if (!filterValues || !filterValues.length) return true;
@@ -154,8 +113,10 @@ const ActionCell = ({ row, onStatusChange }) => {
   const [showViewProfileDialog, setShowViewProfileDialog] = useState(false);
   const [showBanConfirmation, setShowBanConfirmation] = useState(false);
   const [showUnbanConfirmation, setShowUnbanConfirmation] = useState(false);
-  const [showTaxVerificationDialog, setShowTaxVerificationDialog] = useState(false);
-  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] = useState(false);
+  const [showTaxVerificationDialog, setShowTaxVerificationDialog] =
+    useState(false);
+  const [showLicenseVerificationDialog, setShowLicenseVerificationDialog] =
+    useState(false);
 
   // Get actions based on user status
   const getActions = () => {
@@ -304,10 +265,10 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
-      day: "numeric"
+      day: "numeric",
     });
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
@@ -323,7 +284,12 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            defaultValue="basic"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="grid grid-cols-3">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="verification">Verification</TabsTrigger>
@@ -337,7 +303,9 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
               <div className="space-y-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-2">User Information</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                      User Information
+                    </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-3">
@@ -387,7 +355,9 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                         <div className="flex items-center">
                           <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
                           <span className="font-medium mr-2">Address:</span>
-                          <span className="break-words">{user?.address || "N/A"}</span>
+                          <span className="break-words">
+                            {user?.address || "N/A"}
+                          </span>
                         </div>
 
                         <div className="flex items-center">
@@ -428,23 +398,31 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
             <TabsContent value="verification" className="py-4">
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Verification Status</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Verification Status
+                  </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center">
-                        <span className="font-medium mr-2">Verification Level:</span>
+                        <span className="font-medium mr-2">
+                          Verification Level:
+                        </span>
                         <UserVerificationBadge
                           verificationLevel={user?.verificationLevel}
                           taxVerificationStatus={user?.taxVerificationStatus}
-                          licenseVerificationStatus={user?.licenseVerificationStatus}
+                          licenseVerificationStatus={
+                            user?.licenseVerificationStatus
+                          }
                           role={user?.role}
                         />
                       </div>
 
                       <div className="flex items-center">
                         <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="font-medium mr-2">Email Verification:</span>
+                        <span className="font-medium mr-2">
+                          Email Verification:
+                        </span>
                         {user?.isEmailConfirmed ? (
                           <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
                             Verified
@@ -461,7 +439,9 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                       <div className="space-y-4">
                         <div className="flex items-center">
                           <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">Tax Verification:</span>
+                          <span className="font-medium mr-2">
+                            Tax Verification:
+                          </span>
                           {user?.taxVerificationStatus === "Approved" ? (
                             <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
                               Approved
@@ -483,13 +463,17 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
 
                         {user?.taxVerificationReason && (
                           <div className="ml-6">
-                            <span className="text-sm text-gray-500">Rejection Reason: {user.taxVerificationReason}</span>
+                            <span className="text-sm text-gray-500">
+                              Rejection Reason: {user.taxVerificationReason}
+                            </span>
                           </div>
                         )}
 
                         <div className="flex items-center">
                           <FileCheck className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">License Verification:</span>
+                          <span className="font-medium mr-2">
+                            License Verification:
+                          </span>
                           {user?.licenseVerificationStatus === "Approved" ? (
                             <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
                               Approved
@@ -511,7 +495,9 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
 
                         {user?.licenseVerificationReason && (
                           <div className="ml-6">
-                            <span className="text-sm text-gray-500">Rejection Reason: {user.licenseVerificationReason}</span>
+                            <span className="text-sm text-gray-500">
+                              Rejection Reason: {user.licenseVerificationReason}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -526,13 +512,17 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
               <TabsContent value="company" className="py-4">
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Company Information</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Company Information
+                    </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-3">
                         <div className="flex items-center">
                           <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">Company Name:</span>
+                          <span className="font-medium mr-2">
+                            Company Name:
+                          </span>
                           <span>{user?.companyName || "N/A"}</span>
                         </div>
 
@@ -552,7 +542,9 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                       <div className="space-y-3">
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">Company Size:</span>
+                          <span className="font-medium mr-2">
+                            Company Size:
+                          </span>
                           <span>{user?.companySize || "N/A"}</span>
                         </div>
 
@@ -562,7 +554,11 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                           <span>
                             {user?.companyWebsite ? (
                               <a
-                                href={user.companyWebsite.startsWith('http') ? user.companyWebsite : `https://${user.companyWebsite}`}
+                                href={
+                                  user.companyWebsite.startsWith("http")
+                                    ? user.companyWebsite
+                                    : `https://${user.companyWebsite}`
+                                }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline"
@@ -578,7 +574,9 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                         <div className="flex items-center">
                           <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
                           <span className="font-medium mr-2">Address:</span>
-                          <span className="break-words">{user?.address || "N/A"}</span>
+                          <span className="break-words">
+                            {user?.address || "N/A"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -746,7 +744,8 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
       });
       onOpenChange(false);
       toast.success(
-        `Tax information for ${user.companyName || user.userName
+        `Tax information for ${
+          user.companyName || user.userName
         } has been verified.`
       );
     } catch (error) {
@@ -781,7 +780,8 @@ function TaxVerificationDialog({ user, open, onOpenChange, onStatusChange }) {
 
       onOpenChange(false);
       toast.success(
-        `Tax verification for ${user.companyName || user.userName
+        `Tax verification for ${
+          user.companyName || user.userName
         } has been rejected.`
       );
     } catch (error) {
@@ -1108,7 +1108,8 @@ function LicenseVerificationDialog({
       });
       onOpenChange(false);
       toast.success(
-        `Business license for ${user.companyName || user.userName
+        `Business license for ${
+          user.companyName || user.userName
         } has been verified.`
       );
     } catch (error) {
@@ -1143,7 +1144,8 @@ function LicenseVerificationDialog({
 
       onOpenChange(false);
       toast.success(
-        `License verification for ${user.companyName || user.userName
+        `License verification for ${
+          user.companyName || user.userName
         } has been rejected.`
       );
     } catch (error) {
@@ -1231,7 +1233,7 @@ function LicenseVerificationDialog({
                         <Button
                           variant="outline"
                           onClick={() => setShowPdfViewer(!showPdfViewer)}
-                        // className="w-full"
+                          // className="w-full"
                         >
                           {showPdfViewer ? "Hide Document" : "Show Document"}
                         </Button>
