@@ -215,12 +215,14 @@ export const Index = () => {
                   {/* Job Block */}
                   <div className="job-block-seven style-two at-jsv6">
                     <div className="tags d-flex align-items-center">
-                      <a className="flaticon-bookmark" href=""></a>
-                      <ReportJobButton
-                        className="theme-btn btn-style-one"
-                        jobId={jobId}
-                        userId={userID}
-                      />
+                      <a className="flaticon-bookmark mr-2" href=""></a>
+                      {userRole === "Candidate" && (
+                        <ReportJobButton
+                          className="theme-btn btn-style-one"
+                          jobId={jobId}
+                          userId={userID}
+                        />
+                      )}
                     </div>
                     <div className="inner-box">
                       <div className="content">
