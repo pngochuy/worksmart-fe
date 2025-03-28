@@ -47,10 +47,19 @@ export const JobTable = ({
   }, [initialData, initialIsLoading]);
 
   // Callback function to handle manual data refresh
-  const handleRefreshData = useCallback((newData) => {
-    setData(newData || []);
-    setIsLoading(false);
-  }, []);
+  const handleRefreshData = useCallback(
+    (newData) => {
+      setData(newData || []);
+      setIsLoading(false);
+
+      // Notify parent component (Index.jsx) about the refreshed data
+      if (newData && newData.length > 0 && onStatusChange) {
+        // Pass a special flag to indicate this is a full refresh with new data
+        onStatusChange(newData[0].jobID, { refreshAll: true, newData });
+      }
+    },
+    [onStatusChange]
+  );
 
   // Callback function to update job status locally and pass to parent
   const handleJobStatusChange = useCallback(

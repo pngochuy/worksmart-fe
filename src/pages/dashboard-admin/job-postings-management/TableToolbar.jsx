@@ -69,7 +69,11 @@ export const TableToolbar = ({ table, onRefreshData }) => {
     setIsRefreshing(true);
     try {
       const response = await getAllJobs();
-      onRefreshData(response);
+
+      // Make sure onRefreshData is a function before calling it
+      if (onRefreshData && typeof onRefreshData === "function") {
+        onRefreshData(response);
+      }
     } catch (err) {
       console.error("Error refreshing job data:", err);
       // Optionally, you could add a toast or error notification here
@@ -159,6 +163,7 @@ export const TableToolbar = ({ table, onRefreshData }) => {
             ) : (
               <RefreshCcwIcon className="h-4 w-4" />
             )}
+            <span className="ml-1 hidden sm:inline">Refresh</span>
           </Button>
         </div>
         <div className="flex-none ml-auto">

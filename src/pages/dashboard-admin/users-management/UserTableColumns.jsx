@@ -259,16 +259,6 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
     }
   }, [open, user]);
 
-  // Format date function
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
@@ -332,7 +322,7 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                           <span className="font-medium mr-2">Email:</span>
                           <span>{user?.email}</span>
                           {user?.isEmailConfirmed && (
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">
                               Verified
                             </span>
                           )}
@@ -364,11 +354,11 @@ function ViewProfileDialog({ user, open, onOpenChange }) {
                           <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                           <span className="font-medium mr-2">Status:</span>
                           {user?.isBanned ? (
-                            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full">
+                            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded">
                               Banned
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                            <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">
                               Active
                             </span>
                           )}
@@ -1632,18 +1622,14 @@ export const createColumns = (onStatusChange) => [
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-center">
-        {new Date(row.getValue("createdAt")).toLocaleDateString()}
-      </div>
+      <div className="text-center">{formatDate(row.getValue("createdAt"))}</div>
     ),
     filterFn: filterByDateRange,
   },
   {
     accessorKey: "updatedAt",
     header: "Last Updated",
-    cell: ({ row }) => (
-      <div>{new Date(row.getValue("updatedAt")).toLocaleDateString()}</div>
-    ),
+    cell: ({ row }) => <div>{formatDate(row.getValue("updatedAt"))}</div>,
   },
   {
     id: "actions",
@@ -1654,5 +1640,6 @@ export const createColumns = (onStatusChange) => [
 
 // Import CheckIcon and XIcon từ Lucide
 import { CheckIcon, XIcon } from "lucide-react";
+import { formatDate } from "@/helpers/formatDateTime";
 
 export default createColumns;

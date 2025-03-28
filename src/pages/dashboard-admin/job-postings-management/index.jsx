@@ -34,60 +34,80 @@ export const Index = () => {
     return diffDays > 0 && diffDays <= 7;
   };
 
+  // Function to calculate stats from job data
+  const calculateStats = (data) => {
+    if (data && data.length > 0) {
+      const total = data.length;
+      const active = data.filter((job) => job.status === 3).length;
+      const pending = data.filter((job) => job.status === 0).length;
+      const rejected = data.filter((job) => job.status === 1).length;
+      const hidden = data.filter((job) => job.status === 2).length;
+      const priority = data.filter((job) => job.priority).length;
+
+      const fullTime = data.filter(
+        (job) => job.workType === "Full-Time"
+      ).length;
+      const partTime = data.filter(
+        (job) => job.workType === "Part-Time"
+      ).length;
+      const contract = data.filter((job) => job.workType === "Contract").length;
+      const internship = data.filter(
+        (job) => job.workType === "Internship"
+      ).length;
+      const remote = data.filter((job) => job.workType === "Remote").length;
+
+      const nearDeadline = data.filter(
+        (job) => job.status === 3 && isNearDeadline(job.deadline)
+      ).length;
+
+      return {
+        total,
+        active,
+        pending,
+        rejected,
+        hidden,
+        fullTime,
+        partTime,
+        contract,
+        internship,
+        remote,
+        priority,
+        nearDeadline,
+      };
+    }
+    return {
+      total: 0,
+      active: 0,
+      pending: 0,
+      rejected: 0,
+      hidden: 0,
+      fullTime: 0,
+      partTime: 0,
+      contract: 0,
+      internship: 0,
+      remote: 0,
+      priority: 0,
+      nearDeadline: 0,
+    };
+  };
+
   // Function to update job data and recalculate stats
-  const handleJobStatusUpdate = (jobId, newStatus) => {
-    // Update the job status in the jobData array
+  const handleJobStatusUpdate = (jobId, updatedData) => {
+    // Check if this is a full refresh from the toolbar
+    if (updatedData && updatedData.refreshAll && updatedData.newData) {
+      setJobData(updatedData.newData);
+      setStats(calculateStats(updatedData.newData));
+      return;
+    }
+
+    // Otherwise, handle normal status update for a single job
     setJobData((prevData) => {
       const updatedJobData = prevData.map((job) =>
-        job.jobID === jobId ? { ...job, status: newStatus } : job
+        job.jobID === jobId ? { ...job, status: updatedData } : job
       );
 
       // Recalculate stats with updated data
-      if (updatedJobData && updatedJobData.length > 0) {
-        const total = updatedJobData.length;
-        const active = updatedJobData.filter((job) => job.status === 3).length;
-        const pending = updatedJobData.filter((job) => job.status === 0).length;
-        const rejected = updatedJobData.filter(
-          (job) => job.status === 1
-        ).length;
-        const hidden = updatedJobData.filter((job) => job.status === 2).length;
-        const priority = updatedJobData.filter((job) => job.priority).length;
-
-        const fullTime = updatedJobData.filter(
-          (job) => job.workType === "Full-Time"
-        ).length;
-        const partTime = updatedJobData.filter(
-          (job) => job.workType === "Part-Time"
-        ).length;
-        const contract = updatedJobData.filter(
-          (job) => job.workType === "Contract"
-        ).length;
-        const internship = updatedJobData.filter(
-          (job) => job.workType === "Internship"
-        ).length;
-        const remote = updatedJobData.filter(
-          (job) => job.workType === "Remote"
-        ).length;
-
-        const nearDeadline = updatedJobData.filter(
-          (job) => job.status === 3 && isNearDeadline(job.deadline)
-        ).length;
-
-        setStats({
-          total,
-          active,
-          pending,
-          rejected,
-          hidden,
-          fullTime,
-          partTime,
-          contract,
-          internship,
-          remote,
-          priority,
-          nearDeadline,
-        });
-      }
+      setStats(calculateStats(updatedJobData));
 
       return updatedJobData;
     });
@@ -101,51 +121,7 @@ export const Index = () => {
         const response = await getAllJobs();
         console.log("response: ", response);
         setJobData(response);
-
-        // Calculate stats
-        if (response && response.length > 0) {
-          const total = response.length;
-          const active = response.filter((job) => job.status === 3).length;
-          const pending = response.filter((job) => job.status === 0).length;
-          const rejected = response.filter((job) => job.status === 1).length;
-          const hidden = response.filter((job) => job.status === 2).length;
-          const priority = response.filter((job) => job.priority).length;
-
-          const fullTime = response.filter(
-            (job) => job.workType === "Full-time"
-          ).length;
-          const partTime = response.filter(
-            (job) => job.workType === "Part-time"
-          ).length;
-          const contract = response.filter(
-            (job) => job.workType === "Contract"
-          ).length;
-          const internship = response.filter(
-            (job) => job.workType === "Internship"
-          ).length;
-          const remote = response.filter(
-            (job) => job.workType === "Remote"
-          ).length;
-
-          const nearDeadline = response.filter(
-            (job) => job.status === 3 && isNearDeadline(job.deadline)
-          ).length;
-
-          setStats({
-            total,
-            active,
-            pending,
-            rejected,
-            hidden,
-            fullTime,
-            partTime,
-            contract,
-            internship,
-            remote,
-            priority,
-            nearDeadline,
-          });
-        }
+        setStats(calculateStats(response));
       } catch (err) {
         console.error("Error fetching job data:", err);
       } finally {
@@ -305,6 +281,7 @@ export const Index = () => {
                               (job) => job.workType === "Contract"
                             )}
                             isLoading={isLoading}
+                            onStatusChange={handleJobStatusUpdate}
                           />
                         </TabsContent>
 
@@ -314,6 +291,7 @@ export const Index = () => {
                               (job) => job.workType === "Internship"
                             )}
                             isLoading={isLoading}
+                            onStatusChange={handleJobStatusUpdate}
                           />
                         </TabsContent>
 
@@ -323,6 +301,7 @@ export const Index = () => {
                               (job) => job.workType === "Remote"
                             )}
                             isLoading={isLoading}
+                            onStatusChange={handleJobStatusUpdate}
                           />
                         </TabsContent>
                       </Tabs>

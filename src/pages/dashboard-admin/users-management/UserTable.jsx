@@ -47,10 +47,19 @@ export const UserTable = ({
   }, [initialData, initialIsLoading]);
 
   // Callback function to handle manual data refresh
-  const handleRefreshData = useCallback((newData) => {
-    setData(newData || []);
-    setIsLoading(false);
-  }, []);
+  const handleRefreshData = useCallback(
+    (newData) => {
+      setData(newData || []);
+      setIsLoading(false);
+
+      // Notify parent component (Index.jsx) about the refreshed data
+      if (newData && newData.length > 0 && onStatusChange) {
+        // Pass a special flag to indicate this is a full refresh with new data
+        onStatusChange(newData[0].userID, { refreshAll: true, newData });
+      }
+    },
+    [onStatusChange]
+  );
 
   // Create columns with callback function
   const columns = createColumns(onStatusChange);
