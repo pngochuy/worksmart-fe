@@ -268,14 +268,16 @@ export const fetchCompanyDetails = async (companyName) => {
 export const createPaymentLink = async (userId, packageId) => {
   try {
     const response = await axios.post(
-      `${BACKEND_API_URL}/api/Payment/create-payment`, {
-      userId,
-      packageId
-    });
+      `${BACKEND_API_URL}/api/Payment/create-payment`,
+      {
+        userId,
+        packageId,
+      }
+    );
 
     return response.data;
   } catch (error) {
-    console.error('Error creating payment link:', error);
+    console.error("Error creating payment link:", error);
     throw error;
   }
 };
@@ -283,10 +285,11 @@ export const createPaymentLink = async (userId, packageId) => {
 export const checkPaymentStatus = async (orderCode) => {
   try {
     const response = await axios.get(
-      `${BACKEND_API_URL}/api/Payment/payment-status/${orderCode}`);
+      `${BACKEND_API_URL}/api/Payment/payment-status/${orderCode}`
+    );
     return response.data;
   } catch (error) {
-    console.error('Error checking payment status:', error);
+    console.error("Error checking payment status:", error);
     throw error;
   }
 };
@@ -308,26 +311,47 @@ export const cancelPayment = async (orderCode) => {
 
     return response.data;
   } catch (error) {
-    console.error('Payment Cancellation Error:', error);
+    console.error("Payment Cancellation Error:", error);
     throw error;
   }
 };
 
-export const processPaymentReturn = async (orderCode, status, code, id, cancel) => {
+export const processPaymentReturn = async (
+  orderCode,
+  status,
+  code,
+  id,
+  cancel
+) => {
   try {
     const response = await axios.get(
-      `${BACKEND_API_URL}/api/Payment/payment-return`, {
-      params: {
-        orderCode,
-        status,
-        code,
-        id,
-        cancel
+      `${BACKEND_API_URL}/api/Payment/payment-return`,
+      {
+        params: {
+          orderCode,
+          status,
+          code,
+          id,
+          cancel,
+        },
       }
-    });
+    );
     return response.data;
   } catch (error) {
-    console.error('Error processing payment return:', error);
+    console.error("Error processing payment return:", error);
+    throw error;
+  }
+};
+//
+
+export const fetchCompanyList = async (searchName, page, pageSize) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/employers/company-list?searchName=${searchName}&page=${page}&pageSize=${pageSize}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching company list:", error);
     throw error;
   }
 };

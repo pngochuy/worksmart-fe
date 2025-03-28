@@ -62,17 +62,57 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Select from "react-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import Cate from "../jsons/Category.json";
 // Custom Category Dropdown for the notification dialog
+// Update NotificationCategoryDropdown component
+
 const NotificationCategoryDropdown = ({
   selectedCategory,
   setSelectedCategory,
-  categories,
 }) => {
-  const categoryOptions = categories.map((category) => ({
-    value: category.category,
-    label: category.category,
-  }));
+  // Handle different JSON structures safely
+  const getCategoryOptions = () => {
+    try {
+      // If Cate is already an array
+      if (Array.isArray(Cate)) {
+        return Cate.map((category) => ({
+          value: category.label || category.category || category,
+          label: category.label || category.category || category,
+        }));
+      }
+      // If Cate is an object with a data or categories property
+      else if (Cate && typeof Cate === "object") {
+        // Check if it has a data property that's an array
+        if (Array.isArray(Cate.data)) {
+          return Cate.data.map((category) => ({
+            value: category.label || category.category || category,
+            label: category.label || category.category || category,
+          }));
+        }
+        // Check if it has a categories property that's an array
+        else if (Array.isArray(Cate.categories)) {
+          return Cate.categories.map((category) => ({
+            value: category.label || category.category || category,
+            label: category.label || category.category || category,
+          }));
+        }
+        // If it's an object with keys we can use as categories
+        else {
+          return Object.keys(Cate).map((key) => ({
+            value: key,
+            label: key,
+          }));
+        }
+      }
+      // Fallback to empty array
+      return [];
+    } catch (err) {
+      console.error("Error parsing category options:", err);
+      return [];
+    }
+  };
+
+  const categoryOptions = getCategoryOptions();
 
   const customStyles = {
     container: (provided) => ({
@@ -774,7 +814,6 @@ const CategoryTagsManager = () => {
                 <NotificationCategoryDropdown
                   selectedCategory={selectedCategory}
                   setSelectedCategory={setSelectedCategory}
-                  categories={categories}
                 />
               </div>
 
