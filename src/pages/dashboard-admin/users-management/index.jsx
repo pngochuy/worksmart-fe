@@ -26,43 +26,61 @@ export const Index = () => {
     pendingVerifications: 0,
   });
 
+  // Function to calculate stats from user data
+  const calculateStats = (data) => {
+    if (data && data.length > 0) {
+      const total = data.length;
+      const active = data.filter((user) => !user.isBanned).length;
+      const banned = data.filter((user) => user.isBanned).length;
+      const employers = data.filter((user) => user.role === "Employer").length;
+      const candidates = data.filter(
+        (user) => user.role === "Candidate"
+      ).length;
+
+      // Count pending verifications (tax or license) for employers
+      const pendingVerifications = data.filter(
+        (user) =>
+          user.role === "Employer" &&
+          (user.taxVerificationStatus === "Pending" ||
+            user.licenseVerificationStatus === "Pending")
+      ).length;
+
+      return {
+        total,
+        active,
+        banned,
+        employers,
+        candidates,
+        pendingVerifications,
+      };
+    }
+    return {
+      total: 0,
+      active: 0,
+      banned: 0,
+      employers: 0,
+      candidates: 0,
+      pendingVerifications: 0,
+    };
+  };
+
   // Function to update user data and recalculate stats
   const handleUserDataUpdate = (userId, updatedData) => {
-    // Update the user in the userData array
+    // Check if this is a full refresh from the toolbar
+    if (updatedData && updatedData.refreshAll && updatedData.newData) {
+      setUserData(updatedData.newData);
+      setStats(calculateStats(updatedData.newData));
+      return;
+    }
+
+    // Otherwise, handle normal status update for a single user
     setUserData((prevData) => {
       const updatedUserData = prevData.map((user) =>
         user.userID === userId ? { ...user, ...updatedData } : user
       );
 
       // Recalculate stats with updated data
-      if (updatedUserData && updatedUserData.length > 0) {
-        const total = updatedUserData.length;
-        const active = updatedUserData.filter((user) => !user.isBanned).length;
-        const banned = updatedUserData.filter((user) => user.isBanned).length;
-        const employers = updatedUserData.filter(
-          (user) => user.role === "Employer"
-        ).length;
-        const candidates = updatedUserData.filter(
-          (user) => user.role === "Candidate"
-        ).length;
-
-        // Count pending verifications (tax or license) for employers
-        const pendingVerifications = updatedUserData.filter(
-          (user) =>
-            user.role === "Employer" &&
-            (user.taxVerificationStatus === "Pending" ||
-              user.licenseVerificationStatus === "Pending")
-        ).length;
-
-        setStats({
-          total,
-          active,
-          banned,
-          employers,
-          candidates,
-          pendingVerifications,
-        });
-      }
+      setStats(calculateStats(updatedUserData));
 
       return updatedUserData;
     });
@@ -76,36 +94,7 @@ export const Index = () => {
         const response = await getAllUsers();
         console.log("response: ", response);
         setUserData(response);
-
-        // Calculate stats
-        if (response && response.length > 0) {
-          const total = response.length;
-          const active = response.filter((user) => !user.isBanned).length;
-          const banned = response.filter((user) => user.isBanned).length;
-          const employers = response.filter(
-            (user) => user.role === "Employer"
-          ).length;
-          const candidates = response.filter(
-            (user) => user.role === "Candidate"
-          ).length;
-
-          // Count pending verifications (tax or license) for employers
-          const pendingVerifications = response.filter(
-            (user) =>
-              user.role === "Employer" &&
-              (user.taxVerificationStatus === "Pending" ||
-                user.licenseVerificationStatus === "Pending")
-          ).length;
-
-          setStats({
-            total,
-            active,
-            banned,
-            employers,
-            candidates,
-            pendingVerifications,
-          });
-        }
+        setStats(calculateStats(response));
       } catch (err) {
         console.error("Error fetching user data:", err);
       } finally {

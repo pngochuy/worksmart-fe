@@ -17,9 +17,45 @@ export const Index = () => {
     rejected: 0,
   });
 
+  // Function to calculate stats from report data
+  const calculateStats = (data) => {
+    if (data && data.length > 0) {
+      const total = data.length;
+      const pending = data.filter(
+        (report) => report.reportStatus === "Pending"
+      ).length;
+      const completed = data.filter(
+        (report) => report.reportStatus === "Completed"
+      ).length;
+      const rejected = data.filter(
+        (report) => report.reportStatus === "Rejected"
+      ).length;
+
+      return {
+        total,
+        pending,
+        completed,
+        rejected,
+      };
+    }
+    return {
+      total: 0,
+      pending: 0,
+      completed: 0,
+      rejected: 0,
+    };
+  };
+
   // Function to update report data and recalculate stats
   const handleReportDataUpdate = (reportId, updatedData) => {
-    // Update the report in the reportData array
+    // Check if this is a full refresh from the toolbar
+    if (updatedData && updatedData.refreshAll && updatedData.newData) {
+      setReportData(updatedData.newData);
+      setStats(calculateStats(updatedData.newData));
+      return;
+    }
+
+    // Otherwise, handle normal status update for a single report
     setReportData((prevData) => {
       const updatedReportData = prevData.map((report) =>
         report.reportPostID === reportId
@@ -28,25 +64,7 @@ export const Index = () => {
       );
 
       // Recalculate stats with updated data
-      if (updatedReportData && updatedReportData.length > 0) {
-        const total = updatedReportData.length;
-        const pending = updatedReportData.filter(
-          (report) => report.reportStatus === "Pending"
-        ).length;
-        const completed = updatedReportData.filter(
-          (report) => report.reportStatus === "Completed"
-        ).length;
-        const rejected = updatedReportData.filter(
-          (report) => report.reportStatus === "Rejected"
-        ).length;
-
-        setStats({
-          total,
-          pending,
-          completed,
-          rejected,
-        });
-      }
+      setStats(calculateStats(updatedReportData));
 
       return updatedReportData;
     });
@@ -60,27 +78,7 @@ export const Index = () => {
         const response = await getAllReportPosts();
         console.log("Report data:", response);
         setReportData(response);
-
-        // Calculate stats
-        if (response && response.length > 0) {
-          const total = response.length;
-          const pending = response.filter(
-            (report) => report.reportStatus === "Pending"
-          ).length;
-          const completed = response.filter(
-            (report) => report.reportStatus === "Completed"
-          ).length;
-          const rejected = response.filter(
-            (report) => report.reportStatus === "Rejected"
-          ).length;
-
-          setStats({
-            total,
-            pending,
-            completed,
-            rejected,
-          });
-        }
+        setStats(calculateStats(response));
       } catch (err) {
         console.error("Error fetching report data:", err);
       } finally {

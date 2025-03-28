@@ -40,11 +40,19 @@ export const ReportPostTable = ({
     setIsLoading(initialIsLoading);
   }, [initialData, initialIsLoading]);
 
-  // Callback function to handle manual data refresh
+  // Handle refresh data from toolbar
   const handleRefreshData = useCallback((newData) => {
     setData(newData || []);
     setIsLoading(false);
-  }, []);
+
+    // Also update the parent component's data through the callback
+    if (newData && newData.length > 0) {
+      // Notify the parent (Index.jsx) component about the updated data
+      // This will trigger recalculation of stats and update the UI
+      const firstReport = newData[0];
+      onStatusChange(firstReport.reportPostID, { refreshAll: true, newData });
+    }
+  });
 
   // Create columns with callback function
   const columns = createColumns(onStatusChange);
