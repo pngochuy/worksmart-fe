@@ -14,7 +14,7 @@ export const getCVsByUserId = async (userId) => {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/CV/user/${userId}`
     );
-
+    console.log("CVs: ", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching CVs:", error);
@@ -123,5 +123,20 @@ export const uploadCV = async (uploadData) => {
   } catch (error) {
     console.error("Error uploading CV:", error);
     throw error;
+  }
+};
+
+// Function to hide CV (PUT request)
+export const hideCV = async (cvId) => {
+  try {
+    // Sending PUT request to update the CV
+    const response = await axios.put(
+      `${BACKEND_API_URL}/api/CV/hidecv/${cvId}`
+    );
+    // Return the response data (assuming it returns the updated CV)
+    return response.data;
+  } catch (error) {
+    console.error("Error set hide (delete) CV:", error);
+    return null;
   }
 };
