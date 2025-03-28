@@ -210,8 +210,13 @@ const ChatPopup = ({ isOpen, onClose }) => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.senderId === userID) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [messages, userID]);
 
   // Format time for display
   const formatMessageTime = (dateString) => {
@@ -378,11 +383,11 @@ const ChatPopup = ({ isOpen, onClose }) => {
                           <div className="img_cont_msg">
                             <img
                               src={
-                                msg.senderID === userID ||
-                                msg.senderID === userID
-                                  ? msg.senderAvatar
+                                msg.senderId === userID
+                                  ? getUserLoginData().avatar ||
+                                    "https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg"
                                   : selectedUser.avatar ||
-                                    "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
+                                    "https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg"
                               }
                               alt=""
                               className="rounded-circle user_img_msg"

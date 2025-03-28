@@ -6,7 +6,6 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
-import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import axios from "axios";
 
 export default function CandidatesPage() {
@@ -30,8 +29,6 @@ export default function CandidatesPage() {
     "Congratulations! We've reviewed your application and would like to schedule an interview with you. Please let us know your availability for the coming week."
   );
 
-  // Add connection state
-  const [connection, setConnection] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const user = JSON.parse(localStorage.getItem("userLoginData")); // Get logged in employer data
 
@@ -128,46 +125,7 @@ export default function CandidatesPage() {
     setShowMessageDialog(true);
   };
 
-  // Add useEffect to handle SignalR connection
-  useEffect(() => {
-    // Only establish connection when message dialog is open
-    if (!showMessageDialog || !selectedCandidate) return;
-
-    let hubConnection;
-
-    const createHubConnection = async () => {
-      hubConnection = new HubConnectionBuilder()
-        .withUrl(`${BACKEND_API_URL}/chatHub`)
-        .configureLogging(LogLevel.Information)
-        .withAutomaticReconnect()
-        .build();
-
-      try {
-        await hubConnection.start();
-        console.log("SignalR Connected from candidates page!");
-
-        // Register employer to chat hub
-        await hubConnection.invoke("RegisterUser", user.userID);
-
-        setConnection(hubConnection);
-      } catch (err) {
-        console.error("Error establishing SignalR connection:", err);
-      }
-    };
-
-    createHubConnection();
-
-    // Cleanup when dialog closes
-    return () => {
-      if (hubConnection) {
-        hubConnection.stop();
-        console.log("SignalR connection closed");
-        setConnection(null);
-      }
-    };
-  }, [showMessageDialog, selectedCandidate, user, BACKEND_API_URL]);
-
-  // Update handleSendMessage to use SignalR
+  // Update handleSendMessage
   const handleSendMessage = async () => {
     if (!messageText.trim()) {
       toast.error("Please enter a message");

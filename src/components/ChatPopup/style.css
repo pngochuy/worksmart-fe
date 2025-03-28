@@ -15,7 +15,7 @@
   background-color: white;
   width: 90%;
   max-width: 1200px;
-  height: 80vh;
+  height: 90vh;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -113,5 +113,79 @@
   .contacts_body,
   .msg_card_body {
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Add or update these CSS rules */
+
+/* Make sure the chat widget respects the container height */
+.chat-widget {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+.widget-content .row {
+  height: 100%;
+  margin: 0;
+}
+
+/* Ensure cards maintain proper height */
+.contacts_card,
+.message-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Update card body to take available space */
+.card-body {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Maintain message card structure */
+.message-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Keep footer at bottom */
+.card-footer {
+  border-top: 1px solid #e6e6e6;
+  padding: 10px;
+  background-color: white;
+}
+
+/* Make sure msg_card_body calculates height properly */
+.msg_card_body {
+  flex: 1;
+  height: auto;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+/* Make contacts body take available height */
+.contacts_body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Mobile optimization */
+@media (max-width: 767px) {
+  .chat-popup-container {
+    height: 90vh;
+    width: 95%;
+  }
+
+  .contacts_column {
+    height: 40vh;
   }
 }

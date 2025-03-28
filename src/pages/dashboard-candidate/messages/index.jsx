@@ -191,10 +191,14 @@ export const Index = () => {
     conversation.fullName?.toLowerCase().includes(searchTerm?.toLowerCase())
   );
 
-  // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.senderId === userID) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [messages, userID]);
 
   // Fetch initial data on component mount
   useEffect(() => {
