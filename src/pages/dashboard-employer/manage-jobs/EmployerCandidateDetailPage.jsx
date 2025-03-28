@@ -9,7 +9,7 @@ import {
 import { toast } from "react-toastify";
 import ConfirmDialog from "./ConfirmDialog";
 import { getCVById } from "../../../services/cvServices";
-
+import "../manage-jobs/styleApplicationPage.css";
 export default function EmployerCandidateDetailPage() {
   const { jobId, candidateId } = useParams();
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ export default function EmployerCandidateDetailPage() {
   const [candidate, setCandidate] = useState(null);
   const [jobTitle, setJobTitle] = useState("");
   const [cv, setCV] = useState(null);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
     getJobDetails();
@@ -59,23 +61,29 @@ export default function EmployerCandidateDetailPage() {
 
   const handleReject = async (rejectionReason) => {
     try {
+      setIsRejecting(true);
       await rejectCandidate(candidateId, jobId, rejectionReason);
       toast.success("Candidate rejected successfully!");
       getCandidateDetail();
     } catch (error) {
       toast.error("Failed to reject candidate.");
       console.error("Error rejecting candidate:", error);
+    } finally {
+      setIsRejecting(false);
     }
   };
 
   const handleAccept = async () => {
     try {
+      setIsAccepting(true);
       await acceptCandidate(candidateId, jobId);
       toast.success("Candidate accepted successfully!");
       getCandidateDetail();
     } catch (error) {
       toast.error("Failed to accept candidate.");
       console.error("Error accepting candidate:", error);
+    } finally {
+      setIsAccepting(false);
     }
   };
   const getStatusBadge = (status) => {
@@ -151,19 +159,18 @@ export default function EmployerCandidateDetailPage() {
         <i className="fas fa-exclamation-circle"></i>
         <span>Could not load candidate details. Please try again later.</span>
         <button className="back-button" onClick={handleBackToCandidates}>
-          Back to Candidates List
+          Back
         </button>
       </div>
     );
   }
-
   return (
     <section className="user-dashboard candidate-detail-page">
       <div className="dashboard-outer">
         <div className="upper-title-box">
           <div className="title-flex">
             <button className="back-button" onClick={handleBackToCandidates}>
-              <i className="fas fa-arrow-left mr-1"></i> Back to Candidates
+              <i className="fas fa-arrow-left mr-1"></i> Back 
             </button>
             <h3>
               Candidate Detail for:
@@ -236,14 +243,25 @@ export default function EmployerCandidateDetailPage() {
                           <ConfirmDialog
                             title="Accept Candidate"
                             description="Are you sure you want to accept this candidate?"
-                            confirmText="Accept"
+                            confirmText={isAccepting ? "Processing..." : "Accept"}
                             variant="primary"
                             onConfirm={handleAccept}
                             showReasonField={false}
+                            disabled={isAccepting || isRejecting}
                           >
-                            <button className="accept-btn">
-                              <i className="fas fa-check-circle"></i> Accept
-                              Candidate
+                            <button 
+                              className={`accept-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
+                              disabled={isAccepting || isRejecting}
+                            >
+                              {isAccepting ? (
+                                <>
+                                  <i className="fas fa-spinner fa-spin"></i> Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fas fa-check-circle"></i> Accept Candidate
+                                </>
+                              )}
                             </button>
                           </ConfirmDialog>
                         )}
@@ -253,14 +271,25 @@ export default function EmployerCandidateDetailPage() {
                           <ConfirmDialog
                             title="Reject Candidate"
                             description="Please provide a reason for rejecting this candidate. This reason will be included in the email sent to the candidate."
-                            confirmText="Reject"
+                            confirmText={isRejecting ? "Processing..." : "Reject"}
                             variant="destructive"
                             onConfirm={handleReject}
                             showReasonField={true}
+                            disabled={isAccepting || isRejecting}
                           >
-                            <button className="reject-btn">
-                              <i className="fas fa-times-circle"></i> Reject
-                              Candidate
+                            <button 
+                              className={`reject-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
+                              disabled={isAccepting || isRejecting}
+                            >
+                              {isRejecting ? (
+                                <>
+                                  <i className="fas fa-spinner fa-spin"></i> Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fas fa-times-circle"></i> Reject Candidate
+                                </>
+                              )}
                             </button>
                           </ConfirmDialog>
                         )}
@@ -521,443 +550,7 @@ export default function EmployerCandidateDetailPage() {
         </div>
       </div>
 
-      <style>{`
-        .candidate-detail-page {
-          padding: 30px 0;
-        }
-
-        .loading-container,
-        .error-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 300px;
-          gap: 15px;
-          text-align: center;
-        }
-
-        .loading-container i,
-        .error-container i {
-          font-size: 36px;
-          color: #3498db;
-        }
-
-        .error-container i {
-          color: #e74c3c;
-        }
-
-        .back-button {
-          display: inline-flex;
-          align-items: center;
-          background-color: #f8f9fa;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          padding: 8px 15px;
-          font-weight: 600;
-          color: #495057;
-          cursor: pointer;
-          transition: all 0.3s;
-          margin-top: 15px;
-        }
-
-        .back-button:hover {
-          background-color: #e9ecef;
-          color: #212529;
-        }
-
-        .upper-title-box {
-          margin-bottom: 30px;
-        }
-
-        .title-flex {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .upper-title-box h3 {
-          font-size: 24px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-        }
-
-        .text-primary {
-          color: #3498db;
-        }
-
-        .ls-widget {
-          background: #fff;
-          border-radius: 8px;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-          overflow: hidden;
-          margin-bottom: 30px;
-        }
-
-        .widget-title {
-          padding: 15px 20px;
-          background: #f8f9fa;
-        }
-
-        .widget-title h4 {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-          display: flex;
-          align-items: center;
-        }
-
-        .widget-content {
-          padding: 20px;
-        }
-
-        .candidate-info-container {
-          display: flex;
-          flex-direction: column;
-          gap: 30px;
-        }
-
-        .candidate-header {
-          display: flex;
-          gap: 20px;
-          flex-wrap: wrap;
-          padding-bottom: 20px;
-        }
-
-        .candidate-avatar-large {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background-color: #3498db;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 42px;
-          font-weight: bold;
-        }
-
-        .candidate-header-info {
-          flex: 1;
-          min-width: 200px;
-        }
-
-        .candidate-name {
-          font-size: 24px;
-          font-weight: 600;
-          margin: 0 0 5px 0;
-        }
-
-        .status-badge-container {
-          margin-bottom: 10px;
-        }
-
-        .status-badge {
-          padding: 5px 10px;
-          border-radius: 4px;
-          font-size: 0.85em;
-          font-weight: 600;
-          display: inline-block;
-        }
-
-        .status-badge.pending {
-          background-color: #fff3cd;
-          color: #856404;
-        }
-
-        .status-badge.accepted {
-          background-color: #d4edda;
-          color: #155724;
-        }
-
-        .status-badge.rejected {
-          background-color: #f8d7da;
-          color: #721c24;
-        }
-
-        .candidate-contact {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-          margin-top: 10px;
-        }
-
-        .contact-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .contact-item i {
-          color: #6c757d;
-          width: 20px;
-          text-align: center;
-        }
-
-        .contact-item a {
-          color: #3498db;
-          text-decoration: none;
-        }
-
-        .contact-item a:hover {
-          text-decoration: underline;
-        }
-
-        .candidate-actions {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          justify-content: center;
-        }
-
-        .accept-btn,
-        .reject-btn,
-        .view-cv-btn,
-        .download-cv-btn {
-          padding: 10px 15px;
-          border-radius: 4px;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          min-width: 180px;
-          text-decoration: none;
-        }
-
-        .accept-btn {
-          background-color: #28a745;
-          color: white;
-        }
-
-        .accept-btn:hover {
-          background-color: #218838;
-        }
-
-        .reject-btn {
-          background-color: #dc3545;
-          color: white;
-        }
-
-        .reject-btn:hover {
-          background-color: #c82333;
-        }
-
-        .view-cv-btn,
-        .download-cv-btn {
-          background-color: #3498db;
-          color: white;
-        }
-
-        .view-cv-btn:hover,
-        .download-cv-btn:hover {
-          background-color: #2980b9;
-        }
-
-        .view-cv-btn:disabled {
-          background-color: #6c757d;
-          cursor: not-allowed;
-          opacity: 0.7;
-        }
-
-        .candidate-detail-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 30px;
-        }
-
-        .detail-section {
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .section-title {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-          padding: 15px 20px;
-          background-color: #f8f9fa;
-          border-bottom: 1px solid #e9ecef;
-        }
-
-        .detail-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 20px;
-          padding: 20px;
-        }
-
-        .detail-item {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-
-        .detail-label {
-          font-weight: 600;
-          color: #6c757d;
-          font-size: 14px;
-        }
-
-        .detail-value {
-          font-size: 16px;
-        }
-
-        .skills-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 5px;
-        }
-
-        .skill-tag {
-          background-color: #e9ecef;
-          color: #495057;
-          padding: 5px 10px;
-          border-radius: 20px;
-          font-size: 0.85em;
-        }
-
-        .cv-section {
-          border: 1px solid #e9ecef;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .cv-preview {
-          padding: 20px;
-        }
-
-        .cv-actions {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-
-        .cv-preview-container {
-          height: 500px;
-          border: 1px solid #e9ecef;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-
-        .cv-preview-frame {
-          width: 100%;
-          height: 100%;
-        }
-
-        .no-cv-preview {
-          height: 300px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 15px;
-          background-color: #f8f9fa;
-          border-radius: 4px;
-          color: #6c757d;
-          text-align: center;
-          padding: 20px;
-        }
-
-        .no-cv-preview i {
-          font-size: 48px;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .candidate-header {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-          }
-
-          .candidate-header-info,
-          .candidate-contact {
-            align-items: center;
-          }
-
-          .detail-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        .sub-section {
-          padding: 0 20px 20px;
-          border-top: 1px solid #e9ecef;
-          margin-top: 20px;
-        }
-
-        .sub-section-title {
-          font-size: 17px;
-          font-weight: 600;
-          margin: 20px 0;
-          color: #495057;
-        }
-
-        .timeline-container {
-          margin-left: 20px;
-          position: relative;
-        }
-
-        .timeline-container:before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          height: 100%;
-          width: 2px;
-          background-color: #e9ecef;
-        }
-
-        .timeline-item {
-          position: relative;
-          padding-left: 30px;
-          margin-bottom: 30px;
-        }
-
-        .timeline-item:last-child {
-          margin-bottom: 0;
-        }
-
-        .timeline-marker {
-          position: absolute;
-          left: -5px;
-          top: 5px;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background-color: #3498db;
-          border: 2px solid white;
-        }
-
-        .timeline-content h5 {
-          font-size: 16px;
-          font-weight: 600;
-          margin: 0 0 5px;
-          color: #212529;
-        }
-
-        .timeline-content h6 {
-          font-size: 15px;
-          font-weight: 500;
-          margin: 0 0 5px;
-          color: #3498db;
-        }
-
-        .timeline-period {
-          font-size: 14px;
-          color: #6c757d;
-          margin-bottom: 10px;
-        }
-      `}</style>
+      {/* <style>{}</style> */}
     </section>
   );
 }

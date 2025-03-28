@@ -213,10 +213,10 @@ export default function CandidatesPage() {
         <div className="upper-title-box">
           <div className="title-flex">
             <button className="back-button" onClick={handleBackToJobs}>
-              <i className="fas fa-arrow-left mr-1"></i> Back to Job Manager
+              <i className="fas fa-arrow-left mr-1"></i> Back
             </button>
             <h3>
-              <i className="fas fa-users mr-2"></i>
+              {/* <i className="fas fa-users mr-2"></i> */}
               Candidates for: <span className="text-primary">{jobTitle}</span>
             </h3>
           </div>
@@ -690,7 +690,7 @@ export default function CandidatesPage() {
         }
 
         .back-button {
-          display: flex;
+          display: inline-flex;  /* Changed from flex to inline-flex */
           align-items: center;
           background-color: #f8f9fa;
           border: 1px solid #ddd;
@@ -701,6 +701,7 @@ export default function CandidatesPage() {
           cursor: pointer;
           transition: all 0.3s;
           margin-bottom: 10px;
+          width: fit-content;  /* Added to make width match content */
         }
 
         .back-button:hover {

@@ -27,7 +27,8 @@ export const fetchJobs = async (searchParams) => {
 export const fetchJobsForManagement = async (searchParams) => {
   try {
     const response = await axios.get(
-      `${BACKEND_API_URL}/api/Job/getAllJobManage`,
+        `${BACKEND_API_URL}/api/Job/getAllJobManage`,
+      //  `${BACKEND_API_URL}/api/Job/ByEmployer`,
       {
         params: searchParams,
         paramsSerializer: (params) =>
@@ -38,6 +39,7 @@ export const fetchJobsForManagement = async (searchParams) => {
           }),
       }
     );
+    console.log("dataaaaaaaaaaaaaaaaaaaaaaaaaa", response.data)
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs for management:", error);
@@ -67,7 +69,17 @@ export const fetchCandidateDetail = async (candidateId, jobId) => {
     throw error;
   }
 };
-
+export const fetchJobsByUserId = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/user/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jobs by user ID:", error);
+    throw error;
+  }
+};
 // Fetch chi tiết của công việc
 export const fetchJobDetails = async (jobId) => {
   try {
@@ -240,6 +252,30 @@ export const fetchJobTags = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching job tags:", error);
+    throw error;
+  }
+};
+
+
+export const checkLimitCreateJob = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error create to job limit:", error);
+    throw error;
+  }
+};
+export const toggleJobPriority = async (id) => {
+  try {
+    console.log(`Toggling priority for job ID: ${id}`);
+    const response = await axios.put(`${BACKEND_API_URL}/api/Job/toggle-priority/${id}`);
+    console.log("Toggle job priority response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error toggling job priority:", error);
     throw error;
   }
 };
