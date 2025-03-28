@@ -182,3 +182,49 @@ export const deleteImagesProfile = async (imageUrl) => {
     toast.error("Error deleting image!");
   }
 };
+export const checkReportStatus = async (jobId) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const response = await axios.get(
+      `${BACKEND_API_URL}/candidates/check-report-status`,
+      {
+        params: { jobId },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data.status;
+  } catch (error) {
+    console.error("Error checking report status:", error);
+    return "None"; // Default to "None" if there's an error
+  }
+};
+
+export const reportJob = async (jobData) => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+    console.log("Candidate data gửi đi:", jobData);
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/candidates/report-job`,
+      jobData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating address:", error);
+    toast.error("Error updating address!");
+    throw error;
+  }
+};

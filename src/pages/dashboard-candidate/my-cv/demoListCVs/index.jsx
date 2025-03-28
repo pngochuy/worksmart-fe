@@ -30,7 +30,7 @@ import {
   getCVsByUserId,
   setFeatureCV,
   uploadCV,
-  deleteCV,
+  // deleteCV,
   hideCV,
 } from "@/services/cvServices";
 import { uploadFile } from "@/services/employerServices";

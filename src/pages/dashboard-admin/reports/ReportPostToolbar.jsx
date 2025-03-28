@@ -7,32 +7,15 @@ import { DataTableViewOptions } from "./DataTableViewOptions";
 import { CalendarDatePicker } from "@/components/CalendarDatePicker";
 import { DataTableFacetedFilter } from "./DataTableFacetedFilter";
 import { RefreshCcwIcon } from "lucide-react";
-import { getAllJobs } from "@/services/adminServices";
+import { getAllReportPosts } from "@/services/adminServices";
 
-export const jobTypes = [
-  { value: "Full-Time", label: "Full-Time" },
-  { value: "Part-Time", label: "Part-Time" },
-  { value: "Contract", label: "Contract" },
-  { value: "Internship", label: "Internship" },
-  { value: "Remote", label: "Remote" },
+export const reportStatuses = [
+  { value: "Pending", label: "Pending" },
+  { value: "Completed", label: "Completed" },
+  { value: "Rejected", label: "Rejected" },
 ];
 
-export const jobLocations = [
-  { value: "Ho Chi Minh", label: "Ho Chi Minh" },
-  { value: "Ha Noi", label: "Ha Noi" },
-  { value: "Da Nang", label: "Da Nang" },
-  { value: "Can Tho", label: "Can Tho" },
-  { value: "Other", label: "Other" },
-];
-
-export const jobStatuses = [
-  { value: 0, label: "Pending" },
-  { value: 1, label: "Rejected" },
-  { value: 2, label: "Hidden" },
-  { value: 3, label: "Active" },
-];
-
-export const TableToolbar = ({ table, onRefreshData }) => {
+export const ReportPostToolbar = ({ table, onRefreshData }) => {
   const isFiltered = table.getState().columnFilters.length > 0;
 
   // Set date range from beginning of current year to today
@@ -68,14 +51,13 @@ export const TableToolbar = ({ table, onRefreshData }) => {
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
-      const response = await getAllJobs();
-
-      // Make sure onRefreshData is a function before calling it
+      const response = await getAllReportPosts();
       if (onRefreshData && typeof onRefreshData === "function") {
+        // Call the onRefreshData prop function with the new data
         onRefreshData(response);
       }
     } catch (err) {
-      console.error("Error refreshing job data:", err);
+      console.error("Error refreshing report data:", err);
       // Optionally, you could add a toast or error notification here
     } finally {
       setIsRefreshing(false);
@@ -97,36 +79,19 @@ export const TableToolbar = ({ table, onRefreshData }) => {
       <div className="flex flex-wrap justify-between items-start">
         <div className="flex-1 flex flex-wrap items-center gap-2 max-w-[85%] md:max-w-[90%] pr-2">
           <Input
-            placeholder="Filter titles..."
-            value={table.getColumn("title")?.getFilterValue() ?? ""}
+            placeholder="Search content..."
+            value={table.getColumn("content")?.getFilterValue() ?? ""}
             onChange={(event) => {
-              table.getColumn("title")?.setFilterValue(event.target.value);
+              table.getColumn("content")?.setFilterValue(event.target.value);
             }}
             className="h-8 w-[150px] lg:w-[250px]"
           />
-
-          {table.getColumn("workType") && (
-            <DataTableFacetedFilter
-              column={table.getColumn("workType")}
-              title="Job Type"
-              options={jobTypes}
-            />
-          )}
-
-          {table.getColumn("location") && (
-            <DataTableFacetedFilter
-              column={table.getColumn("location")}
-              title="Location"
-              options={jobLocations}
-              isMultiLocation={true}
-            />
-          )}
 
           {table.getColumn("status") && (
             <DataTableFacetedFilter
               column={table.getColumn("status")}
               title="Status"
-              options={jobStatuses}
+              options={reportStatuses}
             />
           )}
 
