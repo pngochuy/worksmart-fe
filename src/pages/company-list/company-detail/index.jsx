@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { fetchCompanyDetails } from "@/services/employerServices";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export const Index = () => {
   const [company, setCompany] = useState(null);
@@ -123,7 +124,7 @@ export const Index = () => {
       setShowMessageDialog(false);
 
       // Show success notification
-      alert("Message sent successfully!");
+      toast.success("Message sent successfully!");
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message. Please try again later.");

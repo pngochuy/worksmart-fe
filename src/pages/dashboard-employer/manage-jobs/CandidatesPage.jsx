@@ -6,8 +6,11 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import axios from "axios";
 
 export default function CandidatesPage() {
+  const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [jobTitle, setJobTitle] = useState("");
@@ -26,6 +29,11 @@ export default function CandidatesPage() {
   const [messageText, setMessageText] = useState(
     "Congratulations! We've reviewed your application and would like to schedule an interview with you. Please let us know your availability for the coming week."
   );
+
+  // Add connection state
+  const [connection, setConnection] = useState(null);
+  const [isSending, setIsSending] = useState(false);
+  const user = JSON.parse(localStorage.getItem("userLoginData")); // Get logged in employer data
 
   useEffect(() => {
     getJobDetails(jobId);
@@ -120,20 +128,83 @@ export default function CandidatesPage() {
     setShowMessageDialog(true);
   };
 
-  // New function to send message
-  const handleSendMessage = () => {
-    // Here you would implement the API call to send the message
-    // For example: sendMessage(selectedCandidate.id, messageText)
+  // Add useEffect to handle SignalR connection
+  useEffect(() => {
+    // Only establish connection when message dialog is open
+    if (!showMessageDialog || !selectedCandidate) return;
 
-    console.log("Sending message to:", selectedCandidate);
-    console.log("Message:", messageText);
+    let hubConnection;
 
-    // Close the dialog after sending
-    setShowMessageDialog(false);
-    setSelectedCandidate(null);
+    const createHubConnection = async () => {
+      hubConnection = new HubConnectionBuilder()
+        .withUrl(`${BACKEND_API_URL}/chatHub`)
+        .configureLogging(LogLevel.Information)
+        .withAutomaticReconnect()
+        .build();
 
-    // You might want to show a success toast here
-    toast.success("Message sent successfully!"); // Replace with your toast implementation
+      try {
+        await hubConnection.start();
+        console.log("SignalR Connected from candidates page!");
+
+        // Register employer to chat hub
+        await hubConnection.invoke("RegisterUser", user.userID);
+
+        setConnection(hubConnection);
+      } catch (err) {
+        console.error("Error establishing SignalR connection:", err);
+      }
+    };
+
+    createHubConnection();
+
+    // Cleanup when dialog closes
+    return () => {
+      if (hubConnection) {
+        hubConnection.stop();
+        console.log("SignalR connection closed");
+        setConnection(null);
+      }
+    };
+  }, [showMessageDialog, selectedCandidate, user, BACKEND_API_URL]);
+
+  // Update handleSendMessage to use SignalR
+  const handleSendMessage = async () => {
+    if (!messageText.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+
+    setIsSending(true);
+
+    try {
+      // Get sender (employer) and receiver (candidate) IDs
+      const senderId = user.userID;
+      const receiverId = selectedCandidate.userID; // Assuming this property exists
+
+      // Create message data
+      const messageData = {
+        senderId: senderId,
+        receiverId: receiverId,
+        content: messageText.trim(),
+      };
+
+      // Send message through API endpoint
+      await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
+
+      // Close dialog and reset state
+      setShowMessageDialog(false);
+      setSelectedCandidate(null);
+      setMessageText(
+        "Congratulations! We've reviewed your application and would like to schedule an interview with you. Please let us know your availability for the coming week."
+      );
+
+      toast.success("Message sent successfully!");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again later.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -398,8 +469,20 @@ export default function CandidatesPage() {
               >
                 Cancel
               </button>
-              <button className="send-btn" onClick={handleSendMessage}>
-                <i className="fas fa-paper-plane"></i> Send Message
+              <button
+                className="send-btn"
+                onClick={handleSendMessage}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane"></i> Send Message
+                  </>
+                )}
               </button>
             </div>
           </div>
