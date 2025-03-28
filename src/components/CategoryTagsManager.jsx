@@ -1,4 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  fetchNotificationTags,
+  deleteNotificationTagByCategory,
+  deleteNotificationTagByCategoryAndEmail,
+  deleteNotificationTagByCategoryAndEmailAndTag, // Add this import
+  GetTagByUserEmail,
+  addNotificationTag,
+} from "@/services/notificationJobTagServices";
+import { fetchTagsByCategory } from "@/services/tagServices";
 import {
   Card,
   CardContent,
@@ -13,15 +23,15 @@ import {
   Trash2,
   PlusCircle,
   Search,
-  Edit,
-  Tag,
   FolderPlus,
-  X,
-  Save,
   AlertCircle,
+  Mail,
+  Plus,
+  ArrowLeft,
+  Check,
+  Tag,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -50,84 +60,222 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Select from "react-select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Sample data - replace with your actual data
-const initialCategories = [
-  {
-    id: "1",
-    name: "Technology",
-    tags: [
-      { id: "101", name: "JavaScript" },
-      { id: "102", name: "Python" },
-      { id: "103", name: "React" },
-      { id: "104", name: "Node.js" },
-      { id: "105", name: "Data Science" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Marketing",
-    tags: [
-      { id: "201", name: "Digital Marketing" },
-      { id: "202", name: "Social Media" },
-      { id: "203", name: "SEO" },
-      { id: "204", name: "Content Strategy" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Design",
-    tags: [
-      { id: "301", name: "UI/UX" },
-      { id: "302", name: "Graphic Design" },
-      { id: "303", name: "Branding" },
-    ],
-  },
-  {
-    id: "4",
-    name: "Finance",
-    tags: [
-      { id: "401", name: "Accounting" },
-      { id: "402", name: "Investment" },
-      { id: "403", name: "Banking" },
-      { id: "404", name: "Financial Analysis" },
-    ],
-  },
-];
+// Custom Category Dropdown for the notification dialog
+const NotificationCategoryDropdown = ({
+  selectedCategory,
+  setSelectedCategory,
+  categories,
+}) => {
+  const categoryOptions = categories.map((category) => ({
+    value: category.category,
+    label: category.category,
+  }));
 
-// Utility function to generate unique IDs
-const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  const customStyles = {
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    control: (provided) => ({
+      ...provided,
+      minHeight: "40px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      border: "1px solid #e0e0e0",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+      borderRadius: "8px",
+      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+    }),
+  };
+
+  return (
+    <Select
+      placeholder="Select Category"
+      styles={customStyles}
+      options={categoryOptions}
+      onChange={(selected) => setSelectedCategory(selected)}
+      value={selectedCategory}
+      isSearchable
+      className="mb-4"
+    />
+  );
+};
+
+// Custom Tag Dropdown for the notification dialog
+const NotificationTagDropdown = ({
+  selectedCategory,
+  selectedTags,
+  setSelectedTags,
+  existingTagIds = [],
+}) => {
+  const [tagOptions, setTagOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      if (selectedCategory) {
+        setIsLoading(true);
+        try {
+          const data = await fetchTagsByCategory(selectedCategory.value);
+          const options = data.map((tag) => ({
+            value: tag.tagID,
+            label: tag.tagName,
+            isDisabled: existingTagIds.includes(tag.tagID),
+          }));
+          setTagOptions(options);
+        } catch (error) {
+          console.error("Error fetching tags:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setTagOptions([]);
+      }
+    };
+
+    fetchTags();
+  }, [selectedCategory, existingTagIds]);
+
+  const customStyles = {
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    control: (provided) => ({
+      ...provided,
+      minHeight: "40px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      border: "1px solid #e0e0e0",
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      display: "flex",
+      flexWrap: "wrap",
+      overflowX: "auto",
+      overflowY: "auto",
+      maxHeight: "100px",
+      scrollbarWidth: "thin",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+      borderRadius: "8px",
+      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "#f0f0f0",
+      borderRadius: "6px",
+      padding: "4px 6px",
+      margin: "2px 4px 2px 0",
+      alignItems: "center",
+      border: "1px solid #e0e0e0",
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      fontSize: "12px",
+      maxWidth: "200px",
+      whiteSpace: "nowrap",
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      cursor: "pointer",
+      marginLeft: "4px",
+      borderRadius: "4px",
+      ":hover": {
+        backgroundColor: "#ff4d4d",
+        color: "white",
+      },
+    }),
+    option: (provided, { isDisabled }) => ({
+      ...provided,
+      cursor: isDisabled ? "not-allowed" : "default",
+      opacity: isDisabled ? 0.5 : 1,
+      backgroundColor: isDisabled ? "#f9f9f9" : provided.backgroundColor,
+    }),
+  };
+
+  return (
+    <Select
+      options={tagOptions}
+      styles={customStyles}
+      value={selectedTags}
+      onChange={(selected) => setSelectedTags(selected || [])}
+      placeholder={
+        isLoading
+          ? "Loading tags..."
+          : !selectedCategory
+          ? "Select a category first"
+          : "Select Tags"
+      }
+      isMulti
+      isSearchable
+      isDisabled={!selectedCategory || isLoading}
+      noOptionsMessage={() =>
+        !selectedCategory
+          ? "Please select a category first"
+          : existingTagIds.length === tagOptions.length
+          ? "All tags in this category are already assigned to this email"
+          : "No tags available"
+      }
+    />
+  );
 };
 
 const CategoryTagsManager = () => {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [activeTab, setActiveTab] = useState("all-categories");
-
-  // State for adding new category
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [categoryNameError, setCategoryNameError] = useState("");
-
-  // State for editing category
-  const [editCategoryId, setEditCategoryId] = useState(null);
-  const [editCategoryName, setEditCategoryName] = useState("");
-
-  // State for adding/editing tag
-  const [isAddingTag, setIsAddingTag] = useState(false);
-  const [newTagName, setNewTagName] = useState("");
-  const [tagNameError, setTagNameError] = useState("");
-  const [editTagId, setEditTagId] = useState(null);
-  const [tagCategoryId, setTagCategoryId] = useState(null);
 
   // State for confirmation dialogs
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [deleteType, setDeleteType] = useState(null); // 'category' or 'tag'
+  const [deleteType, setDeleteType] = useState(null);
 
   // State for notification
   const [notification, setNotification] = useState(null);
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userId = user?.userID || null;
+
+  // New state for multi-step add tag dialog
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [existingTagIds, setExistingTagIds] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("all-categories");
+
+  // Fetch notification categories and tags from API
+  useEffect(() => {
+    const fetchCategoriesAndTags = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await fetchNotificationTags(userId);
+        setCategories(data || []);
+      } catch (err) {
+        console.error("Error fetching notification tags:", err);
+        setError("Failed to load notification categories and tags");
+        showNotification("Failed to load notification categories", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchCategoriesAndTags();
+    }
+  }, [userId]);
 
   // Show notification
   const showNotification = (message, type = "success") => {
@@ -138,319 +286,305 @@ const CategoryTagsManager = () => {
   };
 
   // Handle tag deletion
-  const handleDeleteTag = (categoryId, tagId) => {
-    setItemToDelete({ categoryId, tagId });
+  const handleDeleteTag = (categoryIndex, emailIndex, tagId) => {
+    setItemToDelete({ categoryIndex, emailIndex, tagId });
     setDeleteType("tag");
   };
 
   // Confirm tag deletion
-  const confirmDeleteTag = () => {
+  const confirmDeleteTag = async () => {
     if (!itemToDelete) return;
 
-    const { categoryId, tagId } = itemToDelete;
+    const { categoryIndex, emailIndex, tagId } = itemToDelete;
+    const category = categories[categoryIndex];
+    const email = category.emailTags[emailIndex].email;
+    const categoryId = category.id || category.category; // Use appropriate ID based on your data structure
 
-    setCategories((prevCategories) =>
-      prevCategories.map((category) => {
-        if (category.id === categoryId) {
-          return {
-            ...category,
-            tags: category.tags.filter((tag) => tag.id !== tagId),
-          };
-        }
-        return category;
-      })
-    );
+    setIsLoading(true);
+    try {
+      // Call the API to delete the tag
+      await deleteNotificationTagByCategoryAndEmailAndTag(
+        userId,
+        categoryId,
+        email,
+        tagId
+      );
 
-    showNotification("Tag deleted successfully");
-    setItemToDelete(null);
+      // Update local state after successful API call
+      setCategories((prevCategories) => {
+        const newCategories = [...prevCategories];
+        const emailTags = [...newCategories[categoryIndex].emailTags];
+        const tags = emailTags[emailIndex].tags.filter(
+          (tag) => tag.tagID !== tagId
+        );
+
+        emailTags[emailIndex] = {
+          ...emailTags[emailIndex],
+          tags,
+        };
+
+        // If no tags left, consider handling empty tags case
+        newCategories[categoryIndex] = {
+          ...newCategories[categoryIndex],
+          emailTags,
+        };
+
+        return newCategories;
+      });
+
+      showNotification("Tag deleted successfully");
+    } catch (err) {
+      console.error("Error deleting tag:", err);
+      showNotification(
+        `Failed to delete tag: ${err.message || "Unknown error"}`,
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+      setItemToDelete(null);
+    }
+  };
+
+  // Handle email deletion
+  const handleDeleteEmail = (categoryIndex, emailIndex) => {
+    const category = categories[categoryIndex];
+    const email = category.emailTags[emailIndex].email;
+    const categoryId = category.id || category.category; // Use category name if id doesn't exist
+    setItemToDelete({
+      categoryIndex,
+      emailIndex,
+      categoryId,
+      email,
+    });
+    setDeleteType("email");
+  };
+
+  // Confirm email deletion
+  const confirmDeleteEmail = async () => {
+    if (!itemToDelete) return;
+
+    const { categoryIndex, emailIndex, categoryId, email } = itemToDelete;
+
+    setIsLoading(true);
+    try {
+      await deleteNotificationTagByCategoryAndEmail(userId, categoryId, email);
+
+      // Update local state after successful API call
+      setCategories((prevCategories) => {
+        const newCategories = [...prevCategories];
+        const emailTags = newCategories[categoryIndex].emailTags.filter(
+          (_, idx) => idx !== emailIndex
+        );
+
+        newCategories[categoryIndex] = {
+          ...newCategories[categoryIndex],
+          emailTags,
+        };
+
+        return newCategories;
+      });
+
+      showNotification("Email deleted successfully");
+    } catch (err) {
+      console.error("Error deleting email:", err);
+      showNotification(
+        `Failed to delete email: ${err.message || "Unknown error"}`,
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+      setItemToDelete(null);
+    }
   };
 
   // Handle category deletion
-  const handleDeleteCategory = (categoryId) => {
-    setItemToDelete({ categoryId });
+  const handleDeleteCategory = (categoryIndex) => {
+    const category = categories[categoryIndex];
+    const categoryId = category.id || category.category; // Use category name if id doesn't exist
+    setItemToDelete({ categoryIndex, categoryId });
     setDeleteType("category");
   };
 
   // Confirm category deletion
-  const confirmDeleteCategory = () => {
+  const confirmDeleteCategory = async () => {
     if (!itemToDelete) return;
 
-    const { categoryId } = itemToDelete;
+    const { categoryIndex, categoryId } = itemToDelete;
 
-    setCategories((prevCategories) =>
-      prevCategories.filter((category) => category.id !== categoryId)
-    );
+    setIsLoading(true);
+    try {
+      console.log("Deleting category with ID:", categoryId); // Add logging
+      await deleteNotificationTagByCategory(userId, categoryId);
 
-    if (selectedCategory?.id === categoryId) {
-      setSelectedCategory(null);
-    }
-
-    showNotification("Category deleted successfully");
-    setItemToDelete(null);
-  };
-
-  // Handle category selection
-  const handleSelectCategory = (category) => {
-    setSelectedCategory(category);
-    setActiveTab("selected-category");
-  };
-
-  // Handle adding new category
-  const handleAddCategory = () => {
-    // Validate
-    if (!newCategoryName.trim()) {
-      setCategoryNameError("Category name is required");
-      return;
-    }
-
-    // Check if category name already exists
-    if (
-      categories.some(
-        (cat) => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase()
-      )
-    ) {
-      setCategoryNameError("A category with this name already exists");
-      return;
-    }
-
-    const newCategory = {
-      id: generateId(),
-      name: newCategoryName.trim(),
-      tags: [],
-    };
-
-    setCategories([...categories, newCategory]);
-    setNewCategoryName("");
-    setIsAddingCategory(false);
-    setCategoryNameError("");
-    showNotification("Category added successfully");
-  };
-
-  // Start editing category
-  const handleEditCategoryStart = (category) => {
-    setEditCategoryId(category.id);
-    setEditCategoryName(category.name);
-  };
-
-  // Save edited category
-  const handleEditCategorySave = () => {
-    // Validate
-    if (!editCategoryName.trim()) {
-      setCategoryNameError("Category name is required");
-      return;
-    }
-
-    // Check for duplicate but allow the same name for the same category
-    const isDuplicate = categories.some(
-      (cat) =>
-        cat.id !== editCategoryId &&
-        cat.name.toLowerCase() === editCategoryName.trim().toLowerCase()
-    );
-
-    if (isDuplicate) {
-      setCategoryNameError("A category with this name already exists");
-      return;
-    }
-
-    setCategories(
-      categories.map((cat) =>
-        cat.id === editCategoryId
-          ? { ...cat, name: editCategoryName.trim() }
-          : cat
-      )
-    );
-
-    // Update selectedCategory if it's the one being edited
-    if (selectedCategory?.id === editCategoryId) {
-      setSelectedCategory((prev) => ({
-        ...prev,
-        name: editCategoryName.trim(),
-      }));
-    }
-
-    setEditCategoryId(null);
-    setEditCategoryName("");
-    setCategoryNameError("");
-    showNotification("Category updated successfully");
-  };
-
-  // Cancel editing category
-  const handleEditCategoryCancel = () => {
-    setEditCategoryId(null);
-    setEditCategoryName("");
-    setCategoryNameError("");
-  };
-
-  // Start adding tag
-  const handleAddTagStart = (categoryId) => {
-    setIsAddingTag(true);
-    setNewTagName("");
-    setTagNameError("");
-    setTagCategoryId(categoryId);
-    setEditTagId(null);
-  };
-
-  // Start editing tag
-  const handleEditTagStart = (categoryId, tag) => {
-    setIsAddingTag(true);
-    setNewTagName(tag.name);
-    setTagCategoryId(categoryId);
-    setEditTagId(tag.id);
-    setTagNameError("");
-  };
-
-  // Save tag (add new or update existing)
-  const handleSaveTag = () => {
-    // Validate
-    if (!newTagName.trim()) {
-      setTagNameError("Tag name is required");
-      return;
-    }
-
-    const targetCategory = categories.find((cat) => cat.id === tagCategoryId);
-    if (!targetCategory) return;
-
-    // Check for duplicate but allow the same name for the same tag
-    const isDuplicate = targetCategory.tags.some(
-      (tag) =>
-        (editTagId ? tag.id !== editTagId : true) &&
-        tag.name.toLowerCase() === newTagName.trim().toLowerCase()
-    );
-
-    if (isDuplicate) {
-      setTagNameError("A tag with this name already exists in this category");
-      return;
-    }
-
-    if (editTagId) {
-      // Update existing tag
-      setCategories(
-        categories.map((cat) =>
-          cat.id === tagCategoryId
-            ? {
-                ...cat,
-                tags: cat.tags.map((tag) =>
-                  tag.id === editTagId
-                    ? { ...tag, name: newTagName.trim() }
-                    : tag
-                ),
-              }
-            : cat
-        )
+      // Update local state after successful API call
+      setCategories((prevCategories) =>
+        prevCategories.filter((_, idx) => idx !== categoryIndex)
       );
 
-      // Update selectedCategory if necessary
-      if (selectedCategory?.id === tagCategoryId) {
-        setSelectedCategory((prev) => ({
-          ...prev,
-          tags: prev.tags.map((tag) =>
-            tag.id === editTagId ? { ...tag, name: newTagName.trim() } : tag
-          ),
-        }));
-      }
-
-      showNotification("Tag updated successfully");
-    } else {
-      // Add new tag
-      const newTag = {
-        id: generateId(),
-        name: newTagName.trim(),
-      };
-
-      setCategories(
-        categories.map((cat) =>
-          cat.id === tagCategoryId
-            ? { ...cat, tags: [...cat.tags, newTag] }
-            : cat
-        )
+      showNotification("Category deleted successfully");
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      showNotification(
+        `Failed to delete category: ${err.message || "Unknown error"}`,
+        "error"
       );
-
-      // Update selectedCategory if necessary
-      if (selectedCategory?.id === tagCategoryId) {
-        setSelectedCategory((prev) => ({
-          ...prev,
-          tags: [...prev.tags, newTag],
-        }));
-      }
-
-      showNotification("Tag added successfully");
+    } finally {
+      setIsLoading(false);
+      setItemToDelete(null);
     }
-
-    setIsAddingTag(false);
-    setNewTagName("");
-    setTagCategoryId(null);
-    setEditTagId(null);
-    setTagNameError("");
   };
 
-  // Cancel adding/editing tag
-  const handleCancelTag = () => {
-    setIsAddingTag(false);
-    setNewTagName("");
-    setTagCategoryId(null);
-    setEditTagId(null);
-    setTagNameError("");
+  // Handle add tag dialog open
+  const handleOpenAddTagDialog = () => {
+    setIsAddingTag(true);
+    setCurrentStep(1);
+    setNewEmail("");
+    setEmailError("");
+    setSelectedCategory(null);
+    setSelectedTags([]);
+    setExistingTagIds([]);
+  };
+
+  // Validate and proceed to next step
+  const handleProceedToStep2 = async () => {
+    // Email validation
+    if (!newEmail.trim()) {
+      setEmailError("Email is required");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail.trim())) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Fetch existing tag IDs for this email
+      const existingTagsData = await GetTagByUserEmail(userId, newEmail.trim());
+      setExistingTagIds(existingTagsData || []);
+
+      // If all successful, proceed to next step
+      setCurrentStep(2);
+    } catch (err) {
+      console.error("Error checking existing tags:", err);
+      showNotification("Failed to check existing tags", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle back to email step
+  const handleBackToEmailStep = () => {
+    setCurrentStep(1);
+  };
+
+  // Handle save tags
+  const handleSaveTags = async () => {
+    if (!newEmail || selectedTags.length === 0) {
+      showNotification("Please select at least one tag", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Format data for API
+      const tagIds = selectedTags.map((tag) => tag.value);
+
+      await addNotificationTag(userId, tagIds, newEmail.trim());
+
+      // Refresh categories after adding
+      const updatedData = await fetchNotificationTags(userId);
+      setCategories(updatedData || []);
+
+      setIsAddingTag(false);
+      showNotification("Tags added successfully");
+    } catch (err) {
+      console.error("Error adding tags:", err);
+      showNotification(
+        `Failed to add tags: ${err.message || "Unknown error"}`,
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Filter categories based on search term
   const filteredCategories = categories.filter((category) => {
     if (!searchTerm) return true;
 
-    const matchesCategory = category.name
+    const matchesCategory = category.category
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const hasTags = category.tags.some((tag) =>
-      tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const hasMatchingEmails = category.emailTags.some(
+      (emailTag) =>
+        emailTag.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emailTag.tags.some((tag) =>
+          tag.tagName.toLowerCase().includes(searchTerm.toLowerCase())
+        )
     );
-    return matchesCategory || hasTags;
+
+    return matchesCategory || hasMatchingEmails;
   });
 
-  // Filter tags based on search term
+  // Get filtered emails for a category
+  const getFilteredEmails = (emailTags) => {
+    if (!searchTerm) return emailTags;
+    return emailTags.filter(
+      (emailTag) =>
+        emailTag.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emailTag.tags.some((tag) =>
+          tag.tagName.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
+  };
+
+  // Get filtered tags for an email
   const getFilteredTags = (tags) => {
     if (!searchTerm) return tags;
     return tags.filter((tag) =>
-      tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+      tag.tagName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   // Calculate total tags count
   const totalTags = categories.reduce(
-    (acc, category) => acc + category.tags.length,
+    (acc, category) =>
+      acc +
+      category.emailTags.reduce(
+        (emailAcc, emailTag) => emailAcc + emailTag.tags.length,
+        0
+      ),
     0
   );
 
-  // Set initial selected category if none is selected
-  useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      setSelectedCategory(categories[0]);
-    } else if (categories.length === 0) {
-      setSelectedCategory(null);
-    } else if (
-      selectedCategory &&
-      !categories.find((c) => c.id === selectedCategory.id)
-    ) {
-      // If the selected category was deleted, select the first available
-      setSelectedCategory(categories[0]);
-    }
-  }, [categories, selectedCategory]);
-
-  // Update selectedCategory when categories change
-  useEffect(() => {
-    if (selectedCategory) {
-      const updatedCategory = categories.find(
-        (c) => c.id === selectedCategory.id
-      );
-      if (
-        updatedCategory &&
-        JSON.stringify(updatedCategory) !== JSON.stringify(selectedCategory)
-      ) {
-        setSelectedCategory(updatedCategory);
-      }
-    }
-  }, [categories, selectedCategory]);
-
   return (
-    <Card className=" mx-auto shadow-md">
+    <Card className="mx-auto shadow-md">
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center rounded-lg">
+          <div className="flex flex-col items-center">
+            <div className="h-8 w-8 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
+            <p className="mt-2 text-sm text-gray-500">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error notification */}
+      {error && !notification && (
+        <div className="absolute top-4 right-4 z-50 max-w-md">
+          <Alert className="bg-red-50 border-red-300">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertDescription className="text-red-700">
+              {error}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {/* Notification */}
       {notification && (
         <div className="absolute top-4 right-4 z-50 max-w-md">
@@ -488,7 +622,7 @@ const CategoryTagsManager = () => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Tag</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete this tag.
             </AlertDialogDescription>
@@ -508,6 +642,50 @@ const CategoryTagsManager = () => {
       </AlertDialog>
 
       <AlertDialog
+        open={itemToDelete !== null && deleteType === "email"}
+        onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Email</AlertDialogTitle>
+            <AlertDialogDescription>
+              {itemToDelete &&
+                categories[itemToDelete.categoryIndex]?.emailTags[
+                  itemToDelete.emailIndex
+                ] && (
+                  <>
+                    This will permanently delete the email &quot;
+                    {
+                      categories[itemToDelete.categoryIndex].emailTags[
+                        itemToDelete.emailIndex
+                      ].email
+                    }
+                    &quot; and all of its{" "}
+                    {
+                      categories[itemToDelete.categoryIndex].emailTags[
+                        itemToDelete.emailIndex
+                      ].tags.length
+                    }{" "}
+                    tags.
+                  </>
+                )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setItemToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteEmail}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
         open={itemToDelete !== null && deleteType === "category"}
         onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}
       >
@@ -515,23 +693,14 @@ const CategoryTagsManager = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
             <AlertDialogDescription>
-              {itemToDelete &&
-              categories.find((c) => c.id === itemToDelete.categoryId) ? (
+              {itemToDelete && categories[itemToDelete.categoryIndex] && (
                 <>
                   This will permanently delete the category &quot;
-                  {
-                    categories.find((c) => c.id === itemToDelete.categoryId)
-                      .name
-                  }
+                  {categories[itemToDelete.categoryIndex].category}
                   &quot; and all of its{" "}
-                  {
-                    categories.find((c) => c.id === itemToDelete.categoryId)
-                      .tags.length
-                  }{" "}
-                  tags.
+                  {categories[itemToDelete.categoryIndex].emailTags.length}{" "}
+                  emails and associated tags.
                 </>
-              ) : (
-                "This will permanently delete this category and all of its tags."
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -549,593 +718,412 @@ const CategoryTagsManager = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* New Add Tag Dialog */}
+      <Dialog
+        open={isAddingTag}
+        onOpenChange={(open) => !open && setIsAddingTag(false)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {currentStep === 1
+                ? "Add Notification Email"
+                : "Subscribe to Job Tags"}
+            </DialogTitle>
+            <DialogDescription>
+              {currentStep === 1
+                ? "Enter an email address to receive job notifications"
+                : "Select job categories and tags you're interested in"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {currentStep === 1 ? (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="notification-email">Email Address</Label>
+                <Input
+                  id="notification-email"
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={newEmail}
+                  onChange={(e) => {
+                    setNewEmail(e.target.value);
+                    setEmailError("");
+                  }}
+                  className="w-full"
+                />
+                {emailError && (
+                  <p className="text-sm text-red-500">{emailError}</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="notification-email"
+                  className="flex items-center gap-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>Email: {newEmail}</span>
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category-select">Select Category</Label>
+                <NotificationCategoryDropdown
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  categories={categories}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tags-select">Select Tags</Label>
+                <NotificationTagDropdown
+                  selectedCategory={selectedCategory}
+                  selectedTags={selectedTags}
+                  setSelectedTags={setSelectedTags}
+                  existingTagIds={existingTagIds}
+                />
+                {existingTagIds.length > 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Note: Tags you've already subscribed to for this email are
+                    disabled.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex items-center justify-between sm:justify-between">
+            {currentStep === 1 ? (
+              <>
+                <Button variant="outline" onClick={() => setIsAddingTag(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleProceedToStep2} disabled={isLoading}>
+                  Next
+                  {isLoading && (
+                    <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleBackToEmailStep}
+                  className="flex items-center gap-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleSaveTags}
+                  disabled={
+                    !selectedCategory ||
+                    selectedTags.length === 0 ||
+                    isSubmitting
+                  }
+                  className="flex items-center gap-1"
+                >
+                  {isSubmitting ? (
+                    <>
+                      Saving...
+                      <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Save Tags
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <CardHeader className="border-b pb-3">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
             <CardTitle className="text-xl font-bold">
-              Categories & Tags
+              Manage Job Notification Subscriptions for Tags You're Interested
+              In
             </CardTitle>
             <CardDescription className="text-sm text-gray-500">
-              Manage job categories and associated tags
+              Manage notification categories, emails and associated tags
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Dialog open={isAddingCategory} onOpenChange={setIsAddingCategory}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-1">
-                  <FolderPlus className="h-4 w-4" />
-                  <span>New Category</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add New Category</DialogTitle>
-                  <DialogDescription>
-                    Create a new category to organize your tags.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-category-name">Category Name</Label>
-                    <Input
-                      id="new-category-name"
-                      placeholder="Enter category name"
-                      value={newCategoryName}
-                      onChange={(e) => {
-                        setNewCategoryName(e.target.value);
-                        setCategoryNameError("");
-                      }}
-                    />
-                    {categoryNameError && (
-                      <p className="text-sm text-red-500">
-                        {categoryNameError}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setNewCategoryName("");
-                        setCategoryNameError("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  <Button onClick={handleAddCategory}>Add Category</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={isAddingTag} onOpenChange={setIsAddingTag}>
-              <DialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="gap-1"
-                  onClick={() => {
-                    if (selectedCategory) {
-                      handleAddTagStart(selectedCategory.id);
-                    } else if (categories.length > 0) {
-                      handleAddTagStart(categories[0].id);
-                    } else {
-                      showNotification(
-                        "Please create a category first",
-                        "error"
-                      );
-                      return;
-                    }
-                  }}
-                >
-                  <Tag className="h-4 w-4" />
-                  <span>Add Tag</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editTagId ? "Edit Tag" : "Add New Tag"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editTagId
-                      ? "Update the tag name."
-                      : "Create a new tag for the selected category."}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-tag-name">Tag Name</Label>
-                    <Input
-                      id="new-tag-name"
-                      placeholder="Enter tag name"
-                      value={newTagName}
-                      onChange={(e) => {
-                        setNewTagName(e.target.value);
-                        setTagNameError("");
-                      }}
-                    />
-                    {tagNameError && (
-                      <p className="text-sm text-red-500">{tagNameError}</p>
-                    )}
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={handleCancelTag}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSaveTag}>
-                    {editTagId ? "Save Changes" : "Add Tag"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button
+              size="sm"
+              variant="default"
+              className="gap-1"
+              onClick={handleOpenAddTagDialog}
+            >
+              <Tag className="h-4 w-4" />
+              <span>Add Tag Subscription</span>
+            </Button>
           </div>
         </div>
       </CardHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-7">
-        {/* Left Panel - Categories List */}
-        <div className="lg:col-span-2 border-r">
-          <div className="p-4">
-            <div className="relative mb-4">
-              <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search categories or tags..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2 mb-2 text-sm text-gray-500">
-              <span>All Categories</span>
-              <Badge variant="default" className="text-xs font-normal">
-                {categories.length}
-              </Badge>
-            </div>
-            <ScrollArea className="h-[calc(100vh-280px)] min-h-[300px]">
-              {filteredCategories.length === 0 ? (
-                <div className="text-center py-4 text-gray-500 text-sm">
-                  {categories.length === 0
-                    ? "No categories added yet. Create your first category!"
-                    : "No categories found matching your search"}
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {filteredCategories.map((category) => {
-                    const filteredTags = getFilteredTags(category.tags);
-                    const isEditing = editCategoryId === category.id;
-
-                    return (
-                      <div key={category.id} className="group">
-                        <div
-                          className={`flex items-center justify-between rounded-md px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
-                            selectedCategory?.id === category.id && !isEditing
-                              ? "bg-blue-50 text-blue-700"
-                              : ""
-                          } ${isEditing ? "bg-gray-100" : ""}`}
-                          onClick={() =>
-                            !isEditing && handleSelectCategory(category)
-                          }
-                        >
-                          {isEditing ? (
-                            <div className="flex-1 flex items-center gap-2">
-                              <Input
-                                value={editCategoryName}
-                                onChange={(e) => {
-                                  setEditCategoryName(e.target.value);
-                                  setCategoryNameError("");
-                                }}
-                                placeholder="Category name"
-                                className="h-8 text-sm"
-                                onClick={(e) => e.stopPropagation()}
-                                autoFocus
-                              />
-                              {categoryNameError && (
-                                <div className="absolute mt-9 text-xs text-red-500 bg-white border p-1 rounded shadow-sm">
-                                  {categoryNameError}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium truncate">
-                                {category.name}
-                              </span>
-                              <Badge
-                                variant={
-                                  selectedCategory?.id === category.id
-                                    ? "default"
-                                    : "outline"
-                                }
-                                className="text-xs"
-                              >
-                                {category.tags.length}
-                              </Badge>
-                            </div>
-                          )}
-
-                          {isEditing ? (
-                            <div className="flex items-center gap-1">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditCategorySave();
-                                      }}
-                                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                    >
-                                      <Save className="h-4 w-4" />
-                                      <span className="sr-only">Save</span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Save changes</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditCategoryCancel();
-                                      }}
-                                      className="h-7 w-7 p-0 text-gray-500 hover:text-red-500 hover:bg-red-50"
-                                    >
-                                      <X className="h-4 w-4" />
-                                      <span className="sr-only">Cancel</span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Cancel</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditCategoryStart(category);
-                                      }}
-                                      className="h-7 w-7 p-0 text-gray-500 hover:text-blue-500 hover:bg-transparent"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                      <span className="sr-only">
-                                        Edit category
-                                      </span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Edit category</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteCategory(category.id);
-                                      }}
-                                      className="h-7 w-7 p-0 text-gray-500 hover:text-red-500 hover:bg-transparent"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                      <span className="sr-only">
-                                        Delete category
-                                      </span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Delete category</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Show matching tags if search is active */}
-                        {searchTerm &&
-                          filteredTags.length > 0 &&
-                          !isEditing && (
-                            <div className="ml-4 mt-1 mb-2">
-                              <div className="flex flex-wrap gap-1">
-                                {filteredTags.map((tag) => (
-                                  <Badge
-                                    key={tag.id}
-                                    variant="outline"
-                                    className="text-xs font-normal bg-gray-50"
-                                  >
-                                    {tag.name}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </ScrollArea>
+      <div className="p-6">
+        {/* Search input stays outside the Tabs component */}
+        <div className="relative mb-4">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+            <Search className="h-4 w-4" />
           </div>
+          <Input
+            type="text"
+            placeholder="Search categories, emails or tags..."
+            className="pl-12"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ textIndent: "20px" }}
+          />
         </div>
 
-        {/* Right Panel - Category Details and Tags */}
-        <div className="lg:col-span-5">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <div className="border-b">
-              <div className="px-4">
-                <TabsList className="h-11 mt-1">
-                  <TabsTrigger value="all-categories" className="text-sm">
-                    All Tags
-                    <Badge className="ml-2 text-xs" variant="default">
-                      {totalTags}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="selected-category"
-                    className="text-sm"
-                    disabled={!selectedCategory}
-                  >
-                    {selectedCategory ? selectedCategory.name : "Category"} Tags
-                    <Badge className="ml-2 text-xs" variant="default">
-                      {selectedCategory ? selectedCategory.tags.length : 0}
-                    </Badge>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+        {/* Wrap everything in Tabs component */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+          <TabsList className="grid w-full max-w-xs grid-cols-2">
+            <TabsTrigger value="all-categories" className="text-sm">
+              All Categories <Badge className="ml-2">{categories.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="all-tags" className="text-sm">
+              All Tags <Badge className="ml-2">{totalTags}</Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Loading and empty states */}
+          {isLoading && categories.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="mx-auto h-12 w-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin mb-4"></div>
+              <h3 className="text-lg font-medium mb-2">
+                Loading categories...
+              </h3>
             </div>
-
-            <TabsContent value="all-categories" className="p-0 m-0">
-              <div className="p-6">
-                {categories.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <FolderPlus className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">
-                      No Categories Yet
-                    </h3>
-                    <p className="mb-4">
-                      Start by creating your first category to organize your
-                      tags.
-                    </p>
-                    <Button onClick={() => setIsAddingCategory(true)}>
-                      <FolderPlus className="h-4 w-4 mr-2" />
-                      Create Category
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredCategories.map((category) => (
-                      <Card
-                        key={category.id}
-                        className="overflow-hidden shadow-sm"
-                      >
-                        <CardHeader className="p-4 pb-2 bg-gray-50">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-medium">
-                              {category.name}
-                            </CardTitle>
-                            <div className="flex items-center gap-1">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-gray-500 hover:text-blue-500"
-                                      onClick={() =>
-                                        handleSelectCategory(category)
-                                      }
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                      <span className="sr-only">
-                                        Manage tags
-                                      </span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Manage tags</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
-                                      onClick={() =>
-                                        handleDeleteCategory(category.id)
-                                      }
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                      <span className="sr-only">
-                                        Delete category
-                                      </span>
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Delete category</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-2">
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {getFilteredTags(category.tags).length > 0 ? (
-                              getFilteredTags(category.tags).map((tag) => (
-                                <div
-                                  key={tag.id}
-                                  className="group flex items-center bg-gray-100 text-gray-800 text-xs rounded pl-3 pr-2 py-1 max-w-fit hover:bg-gray-200 transition-colors"
-                                >
-                                  <span className="mr-1">{tag.name}</span>
-                                  <button
+          ) : categories.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Tag className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                No Tag Subscriptions Yet
+              </h3>
+              <p className="mb-4">
+                Add tag subscriptions to receive job notifications by email.
+              </p>
+              <Button onClick={handleOpenAddTagDialog}>
+                <Tag className="h-4 w-4 mr-2" />
+                Add Tag Subscription
+              </Button>
+            </div>
+          ) : (
+            /* Move both TabsContent components inside the Tabs component */
+            <>
+              <TabsContent value="all-categories" className="mt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredCategories.map((category, categoryIndex) => (
+                    <Card
+                      key={categoryIndex}
+                      className="overflow-hidden shadow-sm"
+                    >
+                      <CardHeader className="p-4 pb-2 bg-gray-50">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base font-medium">
+                            {category.category}
+                          </CardTitle>
+                          <div className="flex items-center gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
                                     onClick={() =>
-                                      handleDeleteTag(category.id, tag.id)
+                                      handleDeleteCategory(categoryIndex)
                                     }
-                                    className="text-gray-500 hover:text-red-500 transition-colors ml-1"
                                   >
-                                    <Trash2 className="h-3 w-3" />
-                                    <span className="sr-only">Remove tag</span>
-                                  </button>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="text-sm text-gray-500 py-1">
-                                {searchTerm
-                                  ? "No matching tags found"
-                                  : "No tags added yet"}
-                              </div>
-                            )}
-
-                            {!searchTerm && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  handleAddTagStart(category.id);
-                                }}
-                                className="rounded h-7 px-2 text-xs gap-1 text-blue-600 border border-dashed border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-                              >
-                                <PlusCircle className="h-3 w-3" />
-                                Add Tag
-                              </Button>
-                            )}
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">
+                                      Delete category
+                                    </span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delete category</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-2">
+                        {getFilteredEmails(category.emailTags).length > 0 ? (
+                          getFilteredEmails(category.emailTags).map(
+                            (emailTag, emailIndex) => (
+                              <div key={emailIndex} className="mb-3">
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                                    <Mail className="h-3.5 w-3.5 text-gray-500" />
+                                    <span>{emailTag.email}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleDeleteEmail(
+                                          categoryIndex,
+                                          emailIndex
+                                        )
+                                      }
+                                      className="h-6 px-2 text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                      <span className="sr-only">
+                                        Delete Email
+                                      </span>
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-1 pl-5">
+                                  {getFilteredTags(emailTag.tags).length > 0 ? (
+                                    getFilteredTags(emailTag.tags).map(
+                                      (tag) => (
+                                        <div
+                                          key={tag.tagID}
+                                          className="group flex items-center bg-gray-100 text-gray-800 text-xs rounded pl-3 pr-2 py-1 max-w-fit hover:bg-gray-200 transition-colors"
+                                        >
+                                          <span className="mr-1">
+                                            {tag.tagName}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              handleDeleteTag(
+                                                categoryIndex,
+                                                emailIndex,
+                                                tag.tagID
+                                              )
+                                            }
+                                            className="text-gray-500 hover:text-red-500 transition-colors ml-1"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                            <span className="sr-only">
+                                              Remove tag
+                                            </span>
+                                          </button>
+                                        </div>
+                                      )
+                                    )
+                                  ) : (
+                                    <div className="text-xs text-gray-500">
+                                      {searchTerm
+                                        ? "No matching tags found"
+                                        : "No tags found"}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )
+                        ) : (
+                          <div className="flex justify-between items-center mt-3">
+                            <div className="text-sm text-gray-500">
+                              No emails added yet
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleOpenAddTagDialog}
+                              className="h-7 px-2 text-xs gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <PlusCircle className="h-3 w-3" />
+                              Add Email
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="all-tags" className="mt-0">
+                <div className="bg-white p-4 rounded-lg border shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    All Tag Subscriptions
+                  </h3>
+                  <div className="space-y-6">
+                    {filteredCategories.map((category) => (
+                      <div key={category.category} className="space-y-4">
+                        <h4 className="text-md font-medium border-b pb-2">
+                          {category.category}
+                        </h4>
+                        <div className="pl-4 space-y-4">
+                          {getFilteredEmails(category.emailTags).map(
+                            (emailTag, i) => (
+                              <div key={i} className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm font-medium">
+                                  <Mail className="h-4 w-4 text-gray-500" />
+                                  {emailTag.email}
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-1 pl-5">
+                                  {getFilteredTags(emailTag.tags).length > 0 ? (
+                                    getFilteredTags(emailTag.tags).map(
+                                      (tag) => (
+                                        <div
+                                          key={tag.tagID}
+                                          className="group flex items-center bg-gray-100 text-gray-800 text-xs rounded pl-3 pr-2 py-1 max-w-fit hover:bg-gray-200 transition-colors"
+                                        >
+                                          <span className="mr-1">
+                                            {tag.tagName}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              handleDeleteTag(
+                                                filteredCategories.indexOf(
+                                                  category
+                                                ),
+                                                category.emailTags.indexOf(
+                                                  emailTag
+                                                ),
+                                                tag.tagID
+                                              )
+                                            }
+                                            className="text-gray-500 hover:text-red-500 transition-colors ml-1"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                            <span className="sr-only">
+                                              Remove tag
+                                            </span>
+                                          </button>
+                                        </div>
+                                      )
+                                    )
+                                  ) : (
+                                    <div className="text-xs text-gray-500">
+                                      {searchTerm
+                                        ? "No matching tags found"
+                                        : "No tags found"}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="selected-category" className="p-0 m-0">
-              {selectedCategory && (
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h2 className="text-xl font-semibold">
-                        {selectedCategory.name}
-                      </h2>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Manage tags for this category
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1 text-gray-700"
-                        onClick={() =>
-                          handleEditCategoryStart(selectedCategory)
-                        }
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span>Edit Category</span>
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => handleAddTagStart(selectedCategory.id)}
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                        <span>Add Tag</span>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <div className="flex flex-wrap gap-2">
-                      {getFilteredTags(selectedCategory.tags).length > 0 ? (
-                        getFilteredTags(selectedCategory.tags).map((tag) => (
-                          <div
-                            key={tag.id}
-                            className="group flex items-center bg-white border text-gray-800 text-sm rounded-lg pl-4 pr-2 py-2 hover:border-blue-200 hover:bg-blue-50 transition-colors"
-                          >
-                            <span className="mr-2">{tag.name}</span>
-                            <div className="flex items-center gap-1 ml-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-blue-500 hover:bg-transparent"
-                                onClick={() =>
-                                  handleEditTagStart(selectedCategory.id, tag)
-                                }
-                              >
-                                <Edit className="h-3 w-3" />
-                                <span className="sr-only">Edit tag</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleDeleteTag(selectedCategory.id, tag.id)
-                                }
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-red-500 hover:bg-transparent"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                <span className="sr-only">Remove tag</span>
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="w-full text-center py-8 text-gray-500">
-                          {searchTerm
-                            ? "No matching tags found"
-                            : "No tags added to this category yet"}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <h3 className="font-medium text-sm text-gray-700 mb-2">
-                      Recent Activity
-                    </h3>
-                    <div className="text-sm text-gray-500 border rounded-md p-4 bg-gray-50">
-                      No recent activity for this category
-                    </div>
-                  </div>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
       </div>
     </Card>
   );

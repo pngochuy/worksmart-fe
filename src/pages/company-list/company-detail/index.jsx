@@ -2,6 +2,8 @@ import LocationMap from "@/components/LocationMap";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchCompanyDetails } from "@/services/employerServices";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import axios from "axios";
 
 export const Index = () => {
   const [company, setCompany] = useState(null);
@@ -20,6 +22,9 @@ export const Index = () => {
 
   // Kiểm tra xem user có phải là Candidate hay không
   const isCandidate = userRole === "Candidate";
+
+  const [connection, setConnection] = useState(null);
+  const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
   useEffect(() => {
     const fetchCompanyDetail = async () => {
@@ -52,22 +57,44 @@ export const Index = () => {
     fetchCompanyDetail();
   }, [companyName]);
 
-  // Set message mẫu khi dialog mở
   useEffect(() => {
-    if (showMessageDialog && company) {
-      setMessageContent(
-        `Dear ${
-          company.companyName
-        },\n\nI am writing to express my interest in potential job opportunities at your company. I am impressed by your work in the ${
-          company.industry || "industry"
-        } field and would like to learn more about current or upcoming positions that might match my qualifications.\n\nI look forward to your response.\n\nBest regards,\n${
-          user?.fullName || "A potential candidate"
-        }`
-      );
-    }
-  }, [showMessageDialog, company, user]);
+    // Only establish connection when dialog is open and we have user data
+    if (!showMessageDialog || !user) return;
 
-  // Hàm xử lý gửi tin nhắn
+    const userID = user.userID;
+    let hubConnection;
+
+    const createHubConnection = async () => {
+      hubConnection = new HubConnectionBuilder()
+        .withUrl(`${BACKEND_API_URL}/chatHub`)
+        .configureLogging(LogLevel.Information)
+        .withAutomaticReconnect()
+        .build();
+
+      try {
+        await hubConnection.start();
+        console.log("SignalR Connected from company detail page!");
+
+        // Register user to hub
+        await hubConnection.invoke("RegisterUser", userID);
+
+        setConnection(hubConnection);
+      } catch (err) {
+        console.error("Error establishing SignalR connection:", err);
+      }
+    };
+
+    createHubConnection();
+
+    // Cleanup when dialog closes
+    return () => {
+      if (hubConnection) {
+        hubConnection.stop();
+        console.log("SignalR connection closed");
+      }
+    };
+  }, [showMessageDialog, user]);
+
   const handleSendMessage = async () => {
     if (!messageContent.trim()) {
       alert("Please enter a message");
@@ -77,19 +104,25 @@ export const Index = () => {
     setIsSendingMessage(true);
 
     try {
-      // Giả định hàm API gửi tin nhắn
-      // await sendMessageToEmployer({
-      //   employerId: company.userID,
-      //   senderId: userID,
-      //   content: messageContent,
-      // });
+      // Get IDs for message
+      const senderId = user.userID;
+      const receiverId = company.userID;
 
-      // Giả lập call API thành công
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Create message data
+      const messageData = {
+        senderId: senderId,
+        receiverId: receiverId,
+        content: messageContent.trim(),
+      };
 
-      // Đóng dialog và thông báo thành công
-      setShowMessageDialog(false);
+      // Send message through API endpoint
+      await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
+
+      // Clear input and close dialog
       setMessageContent("");
+      setShowMessageDialog(false);
+
+      // Show success notification
       alert("Message sent successfully!");
     } catch (error) {
       console.error("Error sending message:", error);
