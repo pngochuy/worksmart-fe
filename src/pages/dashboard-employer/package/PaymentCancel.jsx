@@ -10,14 +10,14 @@ const PaymentCancel = () => {
     navigate('/employer/package-list', {
       state: {
         paymentStatus: 'CANCELLED',
-        message: 'Bạn đã hủy thanh toán'
+        message: 'You have canceled the payment'
       }
     });
   }, [navigate]);
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div className="text-xl">Đang chuyển hướng...</div>
+      <div className="text-xl">Redirecting...</div>
     </div>
   );
 };
