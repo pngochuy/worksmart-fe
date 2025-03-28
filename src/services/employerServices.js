@@ -275,7 +275,7 @@ export const createPaymentLink = async (userId, packageId) => {
 
     return response.data;
   } catch (error) {
-    console.error('Lỗi tạo liên kết thanh toán:', error);
+    console.error('Error creating payment link:', error);
     throw error;
   }
 };
@@ -286,7 +286,7 @@ export const checkPaymentStatus = async (orderCode) => {
       `${BACKEND_API_URL}/api/Payment/payment-status/${orderCode}`);
     return response.data;
   } catch (error) {
-    console.error('Lỗi kiểm tra trạng thái thanh toán:', error);
+    console.error('Error checking payment status:', error);
     throw error;
   }
 };
@@ -308,7 +308,7 @@ export const cancelPayment = async (orderCode) => {
 
     return response.data;
   } catch (error) {
-    console.error('Lỗi hủy thanh toán:', error);
+    console.error('Payment Cancellation Error:', error);
     throw error;
   }
 };
