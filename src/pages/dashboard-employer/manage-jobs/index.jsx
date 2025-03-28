@@ -3,22 +3,23 @@ import {
   fetchCandidatesForJob,
   hideJob,
   unhideJob,
+  toggleJobPriority
 } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
-import ConfirmDialog from "./ConfirmDialog"; // Import component ConfirmDialog
+import ConfirmDialog from "./ConfirmDialog";
 import { fetchCompanyProfile } from "@/services/employerServices";
 import { fetchJobsForManagement } from "../../../services/jobServices";
 import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
 import { getUserLoginData } from "@/helpers/decodeJwt";
-
+import "../manage-jobs/styleManageJob.css";
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
   const [totalPage, setTotalPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [candidateCounts, setCandidateCounts] = useState({});
-  const [sortOrder, setSortOrder] = useState("desc"); // 'desc' cho giảm dần, 'asc' cho tăng dần
+  const [sortOrder, setSortOrder] = useState("desc");
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const navigate = useNavigate();
@@ -27,9 +28,11 @@ export default function ManageJobsPage() {
     PageSize: 5,
     title: "",
     IncludeHidden: true,
-    MostRecent: false, // MostRecent parameter with false value for sorting by updatedAt
+    MostRecent: false, 
   });
   const [verificationLevel, setVerificationLevel] = useState(null);
+  
+  const currentUser = getUserLoginData();
 
   useEffect(() => {
     const loadData = async () => {
@@ -64,7 +67,6 @@ export default function ManageJobsPage() {
     searchParams.MostRecent,
   ]);
 
-  // Check if job is expired
   const isJobExpired = (deadline) => {
     if (!deadline) return false;
     const deadlineDate = new Date(deadline);
@@ -75,40 +77,68 @@ export default function ManageJobsPage() {
   const getJobs = async () => {
     try {
       setLoading(true);
+      
+      const userInfo = getUserLoginData();
+      
+      if (!userInfo || !userInfo.userID) {
+        console.log("Thông tin người dùng chưa có sẵn, bỏ qua việc tải job");
+        setLoading(false);
+        return;
+      }
+      
+      // Nếu backend không hỗ trợ lọc theo userID, chúng ta cần lấy tất cả và lọc ở frontend
       const paramsToSend = {
         ...searchParams,
         IncludeHidden: true,
-        MostRecent: searchParams.MostRecent, // Ensure MostRecent parameter is sent
+        MostRecent: searchParams.MostRecent,
+        // Tạm thời không truyền PageIndex và PageSize để lấy tất cả dữ liệu
+        PageIndex: 1,
+        PageSize: 1000 // Số lớn để lấy tất cả dữ liệu
       };
-
+      
       const data = await fetchJobsForManagement(paramsToSend);
-      console.log("Jobs from API:", data.jobs);
-      setJobs(data.jobs);
-      setTotalPage(data.totalPage);
-
-      // Fetch candidate counts for each job
+      console.log("Jobs từ API:", data.jobs.length);
+      
+      // Lọc ở phía client
+      const filteredJobs = data.jobs.filter(job => job.userID == userInfo.userID);
+      const totalItems = filteredJobs.length;
+      const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / searchParams.PageSize));
+      const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
+      
+      if (startIndex >= totalItems && totalItems > 0) {
+        setSearchParams(prev => ({
+          ...prev,
+          PageIndex: 1
+        }));  
+        return;
+      }
+      
+      const endIndex = Math.min(startIndex + searchParams.PageSize, totalItems);
+      const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+      
+      setJobs(paginatedJobs);
+      setTotalPage(calculatedTotalPages);
+      
+      // Lấy số lượng ứng viên cho các job đã phân trang
       const counts = {};
-      for (const job of data.jobs) {
+      for (const job of paginatedJobs) {
         try {
           const candidates = await fetchCandidatesForJob(job.jobID);
           counts[job.jobID] = candidates.length;
         } catch (error) {
-          console.error(
-            `Failed to fetch candidates for job ${job.jobID}:`,
-            error
-          );
+          console.error(`Không thể lấy ứng viên cho job ${job.jobID}:`, error);
           counts[job.jobID] = 0;
         }
       }
       setCandidateCounts(counts);
-      setLoading(false);
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+      console.error("Không thể tải danh sách job:", error);
+      toast.error("Không thể tải danh sách job. Vui lòng thử lại.");
+    } finally {
       setLoading(false);
-      toast.error("Could not load jobs. Please try again.");
     }
   };
-
+  
   // Handle sort order change
   const handleSortOrderChange = (e) => {
     const newSortOrder = e.target.value;
@@ -119,6 +149,58 @@ export default function ManageJobsPage() {
       ...prevParams,
       MostRecent: newSortOrder === "createdAt", // true if sorting by creation date, false if by update date
     }));
+  };
+
+  // Toggle job priority with duration check
+  const handleTogglePriority = async (jobId) => {
+    try {
+      const job = jobs.find(j => j.jobID === jobId);
+      
+      // Do not allow toggling priority for expired or pending/rejected jobs
+      if (job && (isJobExpired(job.deadline) || job.status === 0 || job.status === 1)) {
+        let reason = isJobExpired(job.deadline) 
+          ? "expired jobs" 
+          : job.status === 0 
+            ? "pending jobs" 
+            : "rejected jobs";
+        toast.error(`Cannot change priority for ${reason}.`);
+        return;
+      }
+      
+      // Call the backend to toggle priority
+      const response = await toggleJobPriority(jobId);
+      
+      // If the backend returns false, it means either:
+      // 1. The job's high priority duration hasn't expired yet, or
+      // 2. The user has reached their featured job limit
+      if (response === false) {
+        if (job.priority) {
+          // If trying to change from high to low priority
+          toast.error("High priority status cannot be changed until your subscription duration expires.");
+        } else {
+          // If trying to change from low to high priority
+          toast.error("You have reached the maximum number of featured jobs allowed by your subscription.");
+        }
+        return;
+      }
+      
+      // If successful, update local state to reflect the new priority status
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.jobID === jobId ? { ...job, priority: !job.priority } : job
+        )
+      );
+      
+      const priorityStatus = jobs.find(job => job.jobID === jobId)?.priority ? 'Low' : 'High';
+      toast.success(`Job priority has been set to ${priorityStatus}!`);
+    } catch (error) {
+      console.error("Failed to update job priority:", error);
+      if (error.response && error.response.status === 400) {
+        toast.error(error.response.data.message || "Unable to update priority. You might have reached your limit.");
+      } else {
+        toast.error("Unable to update job priority.");
+      }
+    }
   };
 
   // Hide job - Updated to use status instead of isHidden
@@ -224,10 +306,10 @@ export default function ManageJobsPage() {
 
     if (priority) {
       badgeClass += " high";
-      return <span className={badgeClass}>High</span>;
+      return <span className={badgeClass}><i className="fas fa-star"></i> High Priority</span>;
     } else {
       badgeClass += " low";
-      return <span className={badgeClass}>Low</span>;
+      return <span className={badgeClass}><i className="fas fa-star-half-alt"></i> Low Priority</span>;
     }
   };
 
@@ -257,7 +339,10 @@ export default function ManageJobsPage() {
 
             <div className="job-detail-header">
               <div className="job-title-section">
-                <h2>{selectedJob.title}</h2>
+                <h2>
+                  {selectedJob.priority === true && <i className="fas fa-star text-warning mr-2"></i>}
+                  {selectedJob.title}
+                </h2>
                 <div className="job-meta">
                   {getStatusBadge(selectedJob.status, selectedJob.deadline)}
                   {getPriorityBadge(selectedJob.priority)}
@@ -273,6 +358,33 @@ export default function ManageJobsPage() {
                 >
                   <i className="fas fa-edit"></i> Edit
                 </button>
+                {isJobExpired(selectedJob.deadline) || selectedJob.status === 0 || selectedJob.status === 1 ? (
+                  <button 
+                    className="priority-btn disabled" 
+                    disabled
+                    title={
+                      isJobExpired(selectedJob.deadline) 
+                        ? "Cannot change priority for expired jobs" 
+                        : selectedJob.status === 0 
+                          ? "Cannot change priority for pending jobs" 
+                          : "Cannot change priority for rejected jobs"
+                    }
+                  >
+                    <i className="fas fa-star-half-alt"></i> 
+                    Priority Change Disabled
+                  </button>
+                ) : (
+                  <button
+                    className={`priority-btn ${selectedJob.priority ? 'high-priority' : 'low-priority'}`}
+                    onClick={() => {
+                      closeDetailModal();
+                      handleTogglePriority(selectedJob.jobID);
+                    }}
+                  >
+                    <i className={`fas ${selectedJob.priority ? 'fa-star' : 'fa-star-half-alt'}`}></i> 
+                    {selectedJob.priority ? 'Set Low Priority' : 'Set High Priority'}
+                  </button>
+                )}
                 <button
                   className={`view-candidates-btn ${
                     candidateCounts[selectedJob.jobID]
@@ -303,16 +415,17 @@ export default function ManageJobsPage() {
 
               <div className="detail-item">
                 <div className="detail-label">
-                  <i className="fas fa-dollar-sign"></i> Salary
+                  <i className="fas fa-solid fa-money-bill"></i> Salary (VND)
+                  
                 </div>
                 <div className="detail-value">
                   {selectedJob.minSalary && selectedJob.salary
                     ? `${selectedJob.minSalary.toLocaleString()} - ${selectedJob.salary.toLocaleString()}`
                     : selectedJob.salary
-                    ? `Up to ${selectedJob.salary.toLocaleString()}`
-                    : selectedJob.minSalary
-                    ? `From ${selectedJob.minSalary.toLocaleString()}`
-                    : "Negotiable"}
+                      ? `${selectedJob.salary.toLocaleString()}`
+                      : selectedJob.minSalary
+                        ? `From ${selectedJob.minSalary.toLocaleString()}`
+                        : "Negotiable"}
                 </div>
               </div>
 
@@ -351,15 +464,6 @@ export default function ManageJobsPage() {
                   {selectedJob.level || "Not Specified"}
                 </div>
               </div>
-
-              {/* <div className="detail-item">
-                <div className="detail-label">
-                  <i className="fas fa-id-badge"></i> Position
-                </div>
-                <div className="detail-value">
-                  {selectedJob.jobPosition || "Not Specified"}
-                </div>
-              </div> */}
 
               <div className="detail-item">
                 <div className="detail-label">
@@ -410,10 +514,10 @@ export default function ManageJobsPage() {
 
               <div className="detail-item">
                 <div className="detail-label">
-                  <i className="fas fa-eye-slash"></i> Visibility
+                  <i className="fas fa-flag"></i> Priority
                 </div>
                 <div className="detail-value">
-                  {selectedJob.status === 3 ? "Hidden" : "Visible"}
+                  {getPriorityBadge(selectedJob.priority)}
                 </div>
               </div>
             </div>
@@ -562,19 +666,14 @@ export default function ManageJobsPage() {
                             Location
                           </th>
                           <th>
-                            <i className="fas fa-dollar-sign mr-1"></i> Salary
+                          
+                            <i className="fas fa-solid fa-money-bill mr-1"></i> Salary(VND)
                           </th>
                           <th>
                             <i className="fas fa-info-circle mr-1"></i> Status
                           </th>
                           <th>
                             <i className="fas fa-briefcase mr-1"></i> Work Type
-                          </th>
-                          {/* <th>
-                            <i className="fas fa-id-badge mr-1"></i> Position
-                          </th> */}
-                          <th>
-                            <i className="fas fa-flag mr-1"></i> Priority
                           </th>
                           <th>
                             <i className="fas fa-calendar-plus mr-1"></i>{" "}
@@ -616,6 +715,7 @@ export default function ManageJobsPage() {
                                     job.status === 3 ? "text-danger" : ""
                                   }`}
                                 >
+                                  {job.priority === true && <i className="fas fa-star text-warning mr-2"></i>}
                                   <span
                                     className={`job-title ${
                                       isJobExpired(job.deadline)
@@ -653,18 +753,6 @@ export default function ManageJobsPage() {
                               >
                                 {job.workType || "Full-Time"}
                               </td>
-                              {/* <td
-                                className="clickable-cell"
-                                onClick={() => handleViewDetail(job)}
-                              >
-                                {job.jobPosition || "Not specified"}
-                              </td> */}
-                              <td
-                                className="clickable-cell"
-                                onClick={() => handleViewDetail(job)}
-                              >
-                                {getPriorityBadge(job.priority)}
-                              </td>
                               <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
@@ -697,6 +785,42 @@ export default function ManageJobsPage() {
                                   >
                                     <i className="fas fa-edit"></i> Edit
                                   </button>
+                                  
+                                  {/* Add the Priority toggle button with disabled state check */}
+                                  {isJobExpired(job.deadline) || job.status === 0 || job.status === 1 ? (
+                                    <button 
+                                      className="priority-btn disabled" 
+                                      disabled
+                                      title={
+                                        isJobExpired(job.deadline) 
+                                          ? "Cannot change priority for expired jobs" 
+                                          : job.status === 0 
+                                            ? "Cannot change priority for pending jobs" 
+                                            : "Cannot change priority for rejected jobs"
+                                      }
+                                    >
+                                      <i className="fas fa-star-half-alt"></i> 
+                                      {job.priority ? 'High Priority' : 'Low Priority'}
+                                    </button>
+                                  ) : (
+                                    <ConfirmDialog
+                                      title={job.priority ? "Change to Low Priority?" : "Change to High Priority?"}
+                                      description={
+                                        job.priority 
+                                          ? "Are you sure you want to set this job to Low Priority? Note: This may not be possible until your subscription duration expires." 
+                                          : "Are you sure you want to set this job to High Priority? This will count against your featured job limit and cannot be changed back until your subscription duration expires."
+                                      }
+                                      confirmText={job.priority ? "Set Low" : "Set High"}
+                                      variant={job.priority ? "warning" : "primary"}
+                                      onConfirm={() => handleTogglePriority(job.jobID)}
+                                    >
+                                      <button className={`priority-btn ${job.priority ? 'high-priority' : 'low-priority'}`}>
+                                        <i className={`fas ${job.priority ? 'fa-star' : 'fa-star-half-alt'}`}></i> 
+                                        {job.priority ? 'Low Priority' : 'High Priority'}
+                                      </button>
+                                    </ConfirmDialog>
+                                  )}
+                                  
                                   {job.status !== 2 ? (
                                     <ConfirmDialog
                                       title="Hide job?"
@@ -725,17 +849,6 @@ export default function ManageJobsPage() {
                                       </button>
                                     </ConfirmDialog>
                                   )}
-                                  {/* <ConfirmDialog
-                                    title="Delete job?"
-                                    description="Are you sure you want to delete this job? This action cannot be undone."
-                                    confirmText="Delete"
-                                    variant="destructive"
-                                    onConfirm={() => handleDelete(job.jobID)}
-                                  >
-                                    <button className="delete-btn">
-                                      <i className="fas fa-trash-alt"></i> Delete
-                                    </button>
-                                  </ConfirmDialog> */}
                                 </div>
                               </td>
                               <td className="text-center">
@@ -785,627 +898,7 @@ export default function ManageJobsPage() {
 
       {renderJobDetailModal()}
 
-      <style>{`
-        .upper-title-box {
-          margin-bottom: 30px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-        }
-
-        .title-flex {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .upper-title-box h3 {
-          font-size: 24px;
-          font-weight: 600;
-          margin-bottom: 5px;
-        }
-
-        .upper-title-box .text {
-          color: #6c757d;
-          font-size: 16px;
-        }
-
-        .search-box-container {
-          position: relative;
-          min-width: 250px;
-        }
-
-        .search-input-wrapper {
-          position: relative;
-        }
-
-        .search-input {
-          padding: 8px 15px;
-          padding-right: 35px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          width: 100%;
-        }
-
-        .search-icon {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #6c757d;
-        }
-
-        .ls-widget {
-          background: #fff;
-          border-radius: 8px;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-          overflow: hidden;
-          margin-bottom: 30px;
-        }
-
-        .widget-title {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 15px 20px;
-          background: #f8f9fa;
-          border-bottom: 1px solid #e9ecef;
-        }
-
-        .widget-title h4 {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0;
-        }
-
-        .widget-title-right {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-        }
-
-        .page-size-selector {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .page-size-selector label {
-          margin: 0;
-          font-weight: 500;
-        }
-
-        .page-size-selector select {
-          padding: 5px 10px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          background: white;
-        }
-
-        .btn-refresh {
-          background: #fff;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          padding: 5px 15px;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .btn-refresh:hover {
-          background: #f1f1f1;
-          border-color: #ccc;
-        }
-
-        .widget-content {
-          padding: 20px;
-        }
-
-        .loading-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 200px;
-          flex-direction: column;
-          gap: 10px;
-          color: #666;
-        }
-
-        .loading-container i {
-          font-size: 32px;
-          color: #3498db;
-        }
-
-        .table-responsive {
-          overflow-x: auto;
-        }
-
-        .default-table {
-          width: 100%;
-          border-collapse: separate;
-          border-spacing: 0;
-        }
-
-        .default-table th {
-          background: #f8f9fa;
-          padding: 12px 15px;
-          text-align: left;
-          font-weight: 600;
-          color: #495057;
-          border-bottom: 2px solid #dee2e6;
-          white-space: nowrap;
-        }
-
-        .default-table th.text-center {
-          text-align: center;
-        }
-
-        .default-table td {
-          padding: 12px 15px;
-          border-bottom: 1px solid #dee2e6;
-          vertical-align: middle;
-        }
-
-        .default-table td.text-center {
-          text-align: center;
-        }
-
-        .default-table tr:hover {
-          background-color: #f8f9fa;
-        }
-
-        .clickable-cell {
-          cursor: pointer;
-        }
-
-        .clickable-cell:hover {
-          background-color: #f1f1f1;
-        }
-
-        .job-title {
-          font-weight: 600;
-          color: #3498db;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .hidden-tag {
-          display: inline-block;
-          font-size: 0.7em;
-          background-color: #ffc107;
-          color: #212529;
-          padding: 2px 5px;
-          border-radius: 3px;
-          font-weight: 600;
-        }
-
-        .expired-tag {
-          display: inline-block;
-          font-size: 0.7em;
-          background-color: #6c757d;
-          color: white;
-          padding: 2px 5px;
-          border-radius: 3px;
-          font-weight: 600;
-        }
-
-        /* Style cho job bị ẩn */
-        .job-row.job-hidden {
-          opacity: 0.6;
-          background-color: #f8f9fa;
-        }
-
-        .job-row.job-hidden:hover {
-          opacity: 0.8;
-        }
-
-        /* Style cho job hết hạn */
-        .job-row.job-expired {
-          opacity: 0.7;
-          background-color: #f8f9fa;
-        }
-
-        .job-row.job-expired:hover {
-          opacity: 0.9;
-        }
-
-        .status-badge,
-        .priority-badge {
-          padding: 5px 10px;
-          border-radius: 4px;
-          font-size: 0.85em;
-          font-weight: 600;
-          display: inline-block;
-        }
-
-        .status-badge.accepted {
-          background-color: #d4edda;
-          color: #155724;
-        }
-
-        .status-badge.rejected {
-          background-color: #f8d7da;
-          color: #721c24;
-        }
-
-        .status-badge.hidden {
-          background-color: #ffc107;
-          color: #212529;
-        }
-
-        .status-badge.pending {
-          background-color: #fff3cd;
-          color: #856404;
-        }
-
-        .status-badge.expired {
-          background-color: #6c757d;
-          color: white;
-        }
-
-        .priority-badge.high {
-          background-color: #f8d7da;
-          color: #721c24;
-        }
-
-        .priority-badge.low {
-          background-color: #d1ecf1;
-          color: #0c5460;
-        }
-
-        .action-buttons {
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-        }
-
-        .edit-btn,
-        .delete-btn,
-        .view-candidates-btn,
-        .view-btn {
-          padding: 6px 12px;
-          border-radius: 4px;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          white-space: nowrap;
-        }
-
-        .view-btn {
-          background-color: #6c757d;
-          color: white;
-        }
-
-        .view-btn:hover {
-          background-color: #5a6268;
-        }
-
-        .edit-btn {
-          background-color: #17a2b8;
-          color: white;
-        }
-
-        .edit-btn:hover {
-          background-color: #138496;
-        }
-
-        .delete-btn {
-          background-color: #dc3545;
-          color: white;
-        }
-
-        .delete-btn:hover {
-          background-color: #c82333;
-        }
-
-        .hide-btn,
-        .unhide-btn {
-          padding: 6px 12px;
-          border-radius: 4px;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          white-space: nowrap;
-        }
-
-        .hide-btn {
-          background-color: #ffc107;
-          color: #212529;
-        }
-
-        .hide-btn:hover {
-          background-color: #e0a800;
-        }
-
-        .unhide-btn {
-          background-color: #28a745;
-          color: white;
-        }
-
-        .unhide-btn:hover {
-          background-color: #218838;
-        }
-
-        .view-candidates-btn {
-          background-color: #6c757d;
-          color: white;
-          width: 100%;
-          justify-content: center;
-        }
-
-        .view-candidates-btn.has-candidates {
-          background-color: #28a745;
-        }
-
-        .view-candidates-btn.has-candidates:hover {
-          background-color: #218838;
-        }
-
-        .view-candidates-btn.no-candidates {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .no-results td {
-          padding: 30px 15px;
-        }
-
-        .no-jobs {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          color: #6c757d;
-        }
-
-        .no-jobs i {
-          font-size: 48px;
-          margin-bottom: 15px;
-        }
-
-        .no-jobs p {
-          font-size: 16px;
-          margin: 0;
-        }
-
-        .mr-1 {
-          margin-right: 4px;
-        }
-
-        .mr-2 {
-          margin-right: 8px;
-        }
-
-        .ml-2 {
-          margin-left: 8px;
-        }
-
-        .job-row {
-          transition: transform 0.2s, opacity 0.3s, background-color 0.3s;
-        }
-
-        .job-row:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          z-index: 1;
-          position: relative;
-        }
-
-        /* Job Detail Modal Styles */
-        .job-detail-modal {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-          background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-          position: relative;
-          background-color: white;
-          border-radius: 8px;
-          width: 90%;
-          max-width: 900px;
-          max-height: 90vh;
-          overflow-y: auto;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-          animation: modalSlideIn 0.3s forwards;
-        }
-
-        @keyframes modalSlideIn {
-          from {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 15px 20px;
-          border-bottom: 1px solid #dee2e6;
-          background-color: #f8f9fa;
-        }
-
-        .modal-header h3 {
-          margin: 0;
-          font-weight: 600;
-          color: #343a40;
-        }
-
-        .close-btn {
-          background: none;
-          border: none;
-          font-size: 20px;
-          cursor: pointer;
-          color: #6c757d;
-          transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-          color: #343a40;
-        }
-
-        .modal-body {
-          padding: 20px;
-        }
-
-        .modal-footer {
-          padding: 15px 20px;
-          border-top: 1px solid #dee2e6;
-          text-align: right;
-        }
-
-        .close-modal-btn {
-          padding: 8px 16px;
-          background-color: #6c757d;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-
-        .close-modal-btn:hover {
-          background-color: #5a6268;
-        }
-
-        .job-detail-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 20px;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #dee2e6;
-        }
-
-        .job-title-section h2 {
-          margin: 0 0 10px 0;
-          color: #343a40;
-        }
-
-        .job-meta {
-          display: flex;
-          gap: 10px;
-        }
-
-        .job-actions {
-          display: flex;
-          gap: 10px;
-        }
-
-        .job-details-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 20px;
-          margin-bottom: 25px;
-        }
-
-        .detail-item {
-          background-color: #f8f9fa;
-          padding: 15px;
-          border-radius: 6px;
-          border-left: 3px solid #3498db;
-        }
-
-        .detail-label {
-          color: #6c757d;
-          font-weight: 600;
-          font-size: 14px;
-          margin-bottom: 5px;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-        }
-
-        .detail-value {
-          font-size: 16px;
-          color: #343a40;
-        }
-
-        .job-description,
-        .job-requirements,
-        .job-benefits {
-          margin-bottom: 20px;
-        }
-
-        .job-description h4,
-        .job-requirements h4,
-        .job-benefits h4 {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 18px;
-          margin-bottom: 10px;
-          color: #343a40;
-          padding-bottom: 8px;
-          border-bottom: 1px solid #dee2e6;
-        }
-
-        .description-content,
-        .requirements-content,
-        .benefits-content {
-          line-height: 1.6;
-          color: #495057;
-        }
-
-        /* For lists inside the job details */
-        .description-content ul,
-        .requirements-content ul,
-        .benefits-content ul {
-          padding-left: 20px;
-          margin-bottom: 15px;
-        }
-
-        .expired-job-notice {
-          background-color: #f8d7da;
-          color: #721c24;
-          padding: 10px 15px;
-          border-radius: 4px;
-          margin-bottom: 20px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-weight: 500;
-        }
-        .text-danger {
-          color: #dc3545 !important;
-          font-weight: 500;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-          .job-detail-header {
-            flex-direction: column;
-          }
-
-          .job-actions {
-            margin-top: 15px;
-          }
-
-          .job-details-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-    </section>
+      
+         </section>
   );
 }

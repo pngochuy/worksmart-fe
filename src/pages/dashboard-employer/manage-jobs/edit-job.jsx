@@ -61,7 +61,6 @@ const EditJobPage = () => {
       try {
         setIsLoading(true);
         const data = await getJobById(jobId);
-        console.log("Fetch job data:", data);
         // Format deadline
         const formattedDeadline = data.job.deadline
           ? new Date(data.job.deadline).toLocaleDateString("en-CA")
