@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { createJob } from "../../../services/jobServices";
+import { createJob, checkLimitCreateJob } from "../../../services/jobServices";
 import { toast } from "react-toastify";
 import { fetchTags } from "../../../services/tagServices";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +32,7 @@ export const JobForm = () => {
     categoryID: "",
   });
 
-  // Thêm state riêng cho min-max salary
+  // Add separate state for min-max salary
   const [salaryRange, setSalaryRange] = useState({
     minSalary: "",
     maxSalary: "",
@@ -40,24 +40,40 @@ export const JobForm = () => {
 
   const [tags, setTags] = useState([]);
   const [locations, setLocation] = useState([]);
+  const [canCreateJob, setCanCreateJob] = useState(true);
+  const [isCheckingLimit, setIsCheckingLimit] = useState(true);
   const navigate = useNavigate();
 
-  // Lấy danh sách tags từ API
+  // Check job creation limit and fetch tags
   useEffect(() => {
-    const getTags = async () => {
+    const initialize = async () => {
       try {
-        const data = await fetchTags();
-        setTags(data);
+        // Check job creation limit
+        setIsCheckingLimit(true);
+        if (userID) {
+          const limitCheckResult = await checkLimitCreateJob(userID);
+          setCanCreateJob(limitCheckResult);
+          // Removed the toast notification for reaching limit
+        }
+
+        // Fetch tags
+        const tagsData = await fetchTags();
+        setTags(tagsData);
+        
+        // Set locations
+        setLocation(vietnamProvinces);
       } catch (error) {
-        console.error("Error fetching tags:", error);
-        toast.error("Failed to load tags.");
+        console.error("Error initializing form:", error);
+        toast.error("An error occurred while loading data. Please try again later.");
+      } finally {
+        setIsCheckingLimit(false);
       }
     };
-    getTags();
-    setLocation(vietnamProvinces);
-  }, []);
 
-  // Xử lý thay đổi nội dung editor một cách riêng biệt
+    initialize();
+  }, [userID]);
+
+  // Handle editor content change
   const handleEditorChange = (content) => {
     setJobData((prevData) => ({
       ...prevData,
@@ -65,7 +81,7 @@ export const JobForm = () => {
     }));
   };
 
-  // Cập nhật thông tin trong form
+  // Update form information
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === "checkbox") {
@@ -81,11 +97,11 @@ export const JobForm = () => {
     }
   };
 
-  // Xử lý thay đổi giá trị lương min-max
+  // Handle salary range changes
   const handleSalaryChange = (e) => {
     const { name, value } = e.target;
 
-    // Loại bỏ các ký tự không phải số
+    // Remove non-numeric characters
     const numericValue = value.replace(/[^\d]/g, "");
 
     setSalaryRange((prev) => ({
@@ -95,7 +111,7 @@ export const JobForm = () => {
         : "",
     }));
 
-    // Cập nhật jobData.salary
+    // Update jobData.salary
     const updatedMinSalary =
       name === "minSalary"
         ? numericValue
@@ -117,11 +133,17 @@ export const JobForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Kiểm tra tính hợp lệ của dữ liệu lương
+    // Double-check job creation limit
+    if (!canCreateJob) {
+      // Removed toast notification here
+      return;
+    }
+
+    // Validate salary data
     const minSalary = parseInt(salaryRange.minSalary.replace(/,/g, ""), 10);
     const maxSalary = parseInt(salaryRange.maxSalary.replace(/,/g, ""), 10);
 
-    // Kiểm tra xem giá trị lương có hợp lệ không
+    // Check if salary values are valid
     if (isNaN(minSalary) || isNaN(maxSalary)) {
       toast.error("Please enter valid salary values");
       return;
@@ -146,14 +168,85 @@ export const JobForm = () => {
       };
       console.log("updatedJobData: ", updatedJobData);
       await createJob(updatedJobData);
-      console.log(updatedJobData);
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
     } catch (error) {
       console.error("Error creating job:", error);
-      toast.error("Failed to create job. Please try again!");
+      if (error.response && error.response.status === 403) {
+        // Removed toast notification for 403 error
+        setCanCreateJob(false);
+      } else {
+        toast.error("Failed to create job. Please try again!");
+      }
     }
   };
+
+  // Display loading message while checking limit
+  if (isCheckingLimit) {
+    return (
+      <section className="user-dashboard">
+        <div className="dashboard-outer">
+          <div className="upper-title-box">
+            <h3>Post a New Job</h3>
+            <div className="text">Checking job posting limit...</div>
+          </div>
+          <div className="row">
+            <div className="col-lg-12 text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+              <p className="mt-3">Please wait a moment...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Display message when user has reached limit
+  if (!canCreateJob) {
+    return (
+      <section className="user-dashboard">
+        <div className="dashboard-outer">
+          <div className="upper-title-box">
+            <h3>Post a New Job</h3>
+            
+          </div>
+          <div className="row">
+            <div className="col-lg-12">
+              <div className="ls-widget">
+                <div className="widget-content">
+                  <div className="alert alert-warning">
+                    <h4 className="alert-heading">Job Posting Limit Reached!</h4>
+                    <p>
+                      You have reached the maximum number of jobs you can create today.
+                      Please try again tomorrow or upgrade your subscription plan to post more jobs.
+                    </p>
+                    <hr />
+                    <div className="d-flex justify-content-between">
+                      <button 
+                        className="btn btn-primary" 
+                        onClick={() => navigate("/employer/manage-jobs")}
+                      >
+                        Back to Job Management
+                      </button>
+                      <button 
+                        className="btn btn-success" 
+                        onClick={() => navigate("/employer/subscription")}
+                      >
+                        Upgrade Subscription
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="user-dashboard">
       <div className="dashboard-outer">
@@ -335,7 +428,7 @@ export const JobForm = () => {
                         />
                       </div>
 
-                      <div className="form-group col-lg-12 col-md-12">
+                      {/* <div className="form-group col-lg-12 col-md-12">
                         <label>
                           <input
                             type="checkbox"
@@ -345,7 +438,7 @@ export const JobForm = () => {
                           />
                           &nbsp; High Priority Job
                         </label>
-                      </div>
+                      </div> */}
 
                       <div className="form-group col-lg-12 col-md-12 text-right">
                         <button
