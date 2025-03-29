@@ -7,15 +7,6 @@ const PackagePurchase = () => {
   const [purchaseStatus, setPurchaseStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (location.state?.paymentStatus === 'CANCELLED') {
-      setPurchaseStatus({
-        success: false,
-        message: location.state.message || 'Payment has been cancelled'
-      });
-    }
-  }, [location.state]);
-
   // Danh sách gói dịch vụ giả
   const packages = [
     {
@@ -71,12 +62,6 @@ const PackagePurchase = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {purchaseStatus && (
-        <div className={`mb-4 p-4 rounded ${purchaseStatus.success ? 'bg-green-100' : 'bg-red-100'}`}>
-          {purchaseStatus.message}
-        </div>
-      )}
-
       <h1 className="text-2xl font-bold mb-4">Select Service Package</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {packages.map((pkg) => (

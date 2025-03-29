@@ -17,7 +17,7 @@ const PaymentResult = () => {
                 const status = searchParams.get('status');
                 const code = searchParams.get('code');
                 const id = searchParams.get('id');
-                const cancel = searchParams.get('cancel') === 'false';
+                const cancel = searchParams.get('cancel') === 'true' || searchParams.get('cancel') === true;
 
                 // Log toàn bộ thông tin từ URL
                 console.log('URL Parameters:', {
@@ -38,7 +38,7 @@ const PaymentResult = () => {
                     status,
                     code,
                     id,
-                    cancel: cancel === 'false'
+                    cancel
                 });
 
                 const paymentReturnResult = await processPaymentReturn(
@@ -46,31 +46,36 @@ const PaymentResult = () => {
                     status,
                     code,
                     id,
-                    cancel === 'false'
+                    cancel
                 );
 
                 // Log kết quả trả về từ API xử lý thanh toán
                 console.log('Payment Return Result:', paymentReturnResult);
 
                 // Kiểm tra trạng thái thanh toán
-                console.log('Checking payment status for orderCode:', orderCode);
+                // console.log('Checking payment status for orderCode:', orderCode);
                 const paymentStatus = await checkPaymentStatus(orderCode);
-                console.log('Payment Status Result:', paymentStatus);
+                // console.log('Payment Status Result:', paymentStatus);
 
                 // Xác định trạng thái
-                const success = paymentReturnResult.status === 'SUCCESS' &&
+                const success = paymentStatus.status === 'SUCCESS' &&
                     (paymentStatus.status === 'SUCCESS' || paymentStatus.status === 'PAID');
 
-                console.log('Calculated Success Status:', success);
+                // console.log('Calculated Success Status:', success);
+
+                // const success = paymentReturnResult.status === 'PAID';
+                const canceled = paymentStatus.status === 'CANCELLED';
 
                 setStatus({
                     success: success,
+                    canceled: canceled,
                     message: success
                         ? 'Payment successful!'
-                        : 'Payment failed.',
+                        : canceled
+                            ? 'Payment canceled.'
+                            : 'Payment failed.',
                     details: {
-                        paymentReturnResult,
-                        paymentStatus
+                        paymentStatus,
                     }
                 });
             } catch (error) {
@@ -115,11 +120,11 @@ const PaymentResult = () => {
         <div className="flex justify-center items-center h-screen">
             <div className={`
         p-8 rounded-lg shadow-xl text-center w-96
-        ${status.success ? 'bg-green-100' : 'bg-red-100'}
+        ${status.success ? 'bg-green-100' : status.canceled ? 'bg-yellow-100' : 'bg-red-100'}
       `}>
                 <h1 className={`
           text-2xl font-bold mb-4
-          ${status.success ? 'text-green-800' : 'text-red-800'}
+          ${status.success ? 'text-green-800' : status.canceled ? 'text-yellow-800' : 'text-red-800'}
         `}>
                     {status.message}
                 </h1>
@@ -132,6 +137,18 @@ const PaymentResult = () => {
                         <p className="text-sm text-gray-600">
                             You will be redirected to the package selection page after 30 seconds...
                         </p>
+                    </>
+                ) : status.canceled ? (
+                    <>
+                        <p className="text-yellow-700 mb-4">
+                            Your payment has been canceled.
+                        </p>
+                        <button
+                            onClick={() => navigate('/employer/package-list')}
+                            className="bg-blue-500 text-white px-4 py-2 rounded"
+                        >
+                            Return to Packages
+                        </button>
                     </>
                 ) : (
                     <>

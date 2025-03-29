@@ -293,22 +293,11 @@ export const checkPaymentStatus = async (orderCode) => {
 
 export const cancelPayment = async (orderCode) => {
   try {
-    const token = getAccessToken();
-
-    const response = await axios.post(
-      `${BACKEND_API_URL}/api/Payment/cancel`,
-      { orderCode },
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const response = await axios.get(
+      `/${BACKEND_API_URL}api/Payment/payment-cancel?orderCode=${orderCode}`);
     return response.data;
   } catch (error) {
-    console.error('Payment Cancellation Error:', error);
+    console.error('Error canceling payment:', error);
     throw error;
   }
 };
