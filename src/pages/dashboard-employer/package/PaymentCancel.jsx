@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const PaymentCancel = () => {
   const location = useLocation();
@@ -7,11 +7,11 @@ const PaymentCancel = () => {
 
   useEffect(() => {
     // Tự động chuyển về trang chọn gói ngay lập tức
-    navigate('/employer/package-list', {
+    navigate("/employer/package-list", {
       state: {
-        paymentStatus: 'CANCELLED',
-        message: 'You have canceled the payment'
-      }
+        paymentStatus: "CANCELLED",
+        message: "You have canceled the payment",
+      },
     });
   }, [navigate]);
 
