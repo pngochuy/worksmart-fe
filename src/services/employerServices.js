@@ -355,3 +355,14 @@ export const fetchCompanyList = async (searchName, page, pageSize) => {
     throw error;
   }
 };
+// Thêm hàm mới để lấy danh sách gói dịch vụ
+export const getPackages = async () => {
+  try {
+    const response = await axios.get(`${BACKEND_API_URL}/api/Package/getAll`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching packages:", error);
+    throw new Error(error.response?.data?.message || "Error fetching packages");
+  }
+};
