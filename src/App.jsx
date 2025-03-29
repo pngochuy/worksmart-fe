@@ -39,7 +39,7 @@ import { Index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
 import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
-import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
+import { Index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
 import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
