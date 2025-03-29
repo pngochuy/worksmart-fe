@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { checkPaymentStatus, processPaymentReturn } from '@/services/employerServices';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  checkPaymentStatus,
+  processPaymentReturn,
+} from "@/services/employerServices";
 
 const PaymentResult = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [status, setStatus] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const processPayment = async () => {
@@ -19,18 +22,18 @@ const PaymentResult = () => {
                 const id = searchParams.get('id');
                 const cancel = searchParams.get('cancel') === 'true' || searchParams.get('cancel') === true;
 
-                // Log toàn bộ thông tin từ URL
-                console.log('URL Parameters:', {
-                    orderCode,
-                    status,
-                    code,
-                    id,
-                    cancel
-                });
+        // Log toàn bộ thông tin từ URL
+        console.log("URL Parameters:", {
+          orderCode,
+          status,
+          code,
+          id,
+          cancel,
+        });
 
-                if (!orderCode) {
-                    throw new Error('Transaction code not found');
-                }
+        if (!orderCode) {
+          throw new Error("Transaction code not found");
+        }
 
                 // Gọi API xử lý kết quả thanh toán
                 console.log('Calling processPaymentReturn with:', {
@@ -46,11 +49,11 @@ const PaymentResult = () => {
                     status,
                     code,
                     id,
-                    cancel
+                    cancel === 'false'
                 );
 
-                // Log kết quả trả về từ API xử lý thanh toán
-                console.log('Payment Return Result:', paymentReturnResult);
+        // Log kết quả trả về từ API xử lý thanh toán
+        console.log("Payment Return Result:", paymentReturnResult);
 
                 // Kiểm tra trạng thái thanh toán
                 // console.log('Checking payment status for orderCode:', orderCode);
@@ -86,39 +89,41 @@ const PaymentResult = () => {
                     responseError: error.response ? error.response.data : null
                 });
 
-                setStatus({
-                    success: false,
-                    message: error.message || 'An error occurred while processing the payment',
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+        setStatus({
+          success: false,
+          message:
+            error.message || "An error occurred while processing the payment",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        processPayment();
-    }, [location, navigate]);
+    processPayment();
+  }, [location, navigate]);
 
-    useEffect(() => {
-        let timer;
-        if (status?.success) {
-            timer = setTimeout(() => {
-                navigate('/employer/package-list');
-            }, 30000);
-        }
-        return () => clearTimeout(timer);
-    }, [status, navigate]);
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="text-xl">Confirming payment...</div>
-            </div>
-        );
+  useEffect(() => {
+    let timer;
+    if (status?.success) {
+      timer = setTimeout(() => {
+        navigate("/employer/package-list");
+      }, 30000);
     }
+    return () => clearTimeout(timer);
+  }, [status, navigate]);
 
+  if (loading) {
     return (
-        <div className="flex justify-center items-center h-screen">
-            <div className={`
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl">Confirming payment...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div
+        className={`
         p-8 rounded-lg shadow-xl text-center w-96
         ${status.success ? 'bg-green-100' : status.canceled ? 'bg-yellow-100' : 'bg-red-100'}
       `}>

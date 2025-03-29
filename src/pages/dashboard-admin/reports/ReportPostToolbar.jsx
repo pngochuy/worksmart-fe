@@ -52,7 +52,10 @@ export const ReportPostToolbar = ({ table, onRefreshData }) => {
     setIsRefreshing(true);
     try {
       const response = await getAllReportPosts();
-      onRefreshData(response);
+      if (onRefreshData && typeof onRefreshData === "function") {
+        // Call the onRefreshData prop function with the new data
+        onRefreshData(response);
+      }
     } catch (err) {
       console.error("Error refreshing report data:", err);
       // Optionally, you could add a toast or error notification here
@@ -125,6 +128,7 @@ export const ReportPostToolbar = ({ table, onRefreshData }) => {
             ) : (
               <RefreshCcwIcon className="h-4 w-4" />
             )}
+            <span className="ml-1 hidden sm:inline">Refresh</span>
           </Button>
         </div>
         <div className="flex-none ml-auto">

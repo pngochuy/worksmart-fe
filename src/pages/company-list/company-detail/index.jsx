@@ -2,6 +2,8 @@ import LocationMap from "@/components/LocationMap";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchCompanyDetails } from "@/services/employerServices";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export const Index = () => {
   const [company, setCompany] = useState(null);
@@ -20,6 +22,8 @@ export const Index = () => {
 
   // Kiểm tra xem user có phải là Candidate hay không
   const isCandidate = userRole === "Candidate";
+
+  const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
   useEffect(() => {
     const fetchCompanyDetail = async () => {
@@ -52,22 +56,6 @@ export const Index = () => {
     fetchCompanyDetail();
   }, [companyName]);
 
-  // Set message mẫu khi dialog mở
-  useEffect(() => {
-    if (showMessageDialog && company) {
-      setMessageContent(
-        `Dear ${
-          company.companyName
-        },\n\nI am writing to express my interest in potential job opportunities at your company. I am impressed by your work in the ${
-          company.industry || "industry"
-        } field and would like to learn more about current or upcoming positions that might match my qualifications.\n\nI look forward to your response.\n\nBest regards,\n${
-          user?.fullName || "A potential candidate"
-        }`
-      );
-    }
-  }, [showMessageDialog, company, user]);
-
-  // Hàm xử lý gửi tin nhắn
   const handleSendMessage = async () => {
     if (!messageContent.trim()) {
       alert("Please enter a message");
@@ -77,20 +65,26 @@ export const Index = () => {
     setIsSendingMessage(true);
 
     try {
-      // Giả định hàm API gửi tin nhắn
-      // await sendMessageToEmployer({
-      //   employerId: company.userID,
-      //   senderId: userID,
-      //   content: messageContent,
-      // });
+      // Get IDs for message
+      const senderId = user.userID;
+      const receiverId = company.userID;
 
-      // Giả lập call API thành công
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Create message data
+      const messageData = {
+        senderId: senderId,
+        receiverId: receiverId,
+        content: messageContent.trim(),
+      };
 
-      // Đóng dialog và thông báo thành công
-      setShowMessageDialog(false);
+      // Send message through API endpoint
+      await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
+
+      // Clear input and close dialog
       setMessageContent("");
-      alert("Message sent successfully!");
+      setShowMessageDialog(false);
+
+      // Show success notification
+      toast.success("Message sent successfully!");
     } catch (error) {
       console.error("Error sending message:", error);
       alert("Failed to send message. Please try again later.");
@@ -102,23 +96,23 @@ export const Index = () => {
   if (loading) {
     return (
       <div className="loading-overlay">
-        <div className="loading-spinner"></div>
-        <p>Loading company information...</p>
+        {/* <div className="loading-spinner"></div>
+        <p>Loading company information...</p> */}
       </div>
     );
   }
 
-  if (!company) {
-    return (
-      <div
-        className="error-message"
-        style={{ marginTop: "100px", textAlign: "center" }}
-      >
-        <h3>Company Not Found</h3>
-        <p>Sorry, we couldn&apos;t find information for this company.</p>
-      </div>
-    );
-  }
+  // if (!company) {
+  //   return (
+  //     <div
+  //       className="error-message"
+  //       style={{ marginTop: "100px", textAlign: "center" }}
+  //     >
+  //       <h3>Company Not Found</h3>
+  //       <p>Sorry, we couldn&apos;t find information for this company.</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -133,13 +127,13 @@ export const Index = () => {
                 <div className="content">
                   <span className="company-logo">
                     <img
-                      src={company.avatar || "https://via.placeholder.com/150"}
-                      alt={company.companyName}
+                      src={company?.avatar || "https://via.placeholder.com/150"}
+                      alt={company?.companyName}
                       style={{ maxWidth: "100px", maxHeight: "100px" }}
                     />
                   </span>
                   <h4>
-                    <a href="#">{company.companyName}</a>
+                    <a href="#">{company?.companyName}</a>
                   </h4>
                   <ul className="job-info">
                     <li>

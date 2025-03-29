@@ -207,23 +207,16 @@ export const getAllReportPosts = async () => {
 // Update report status (Complete/Reject)
 export const updateReportStatus = async (reportId, data) => {
   try {
-    // const response = await apiClient.put(
-    //   `/admin/reports/${reportId}/status`,
-    //   data
-    // );
-    // return response.data;
+    const response = await axios.put(
+      `${BACKEND_API_URL}/admins/reports/${reportId}/update-status`,
+      {
+        status: data.status,
+        reason: data.reason,
+      }
+    );
+    return response.data;
   } catch (error) {
     console.error("Error updating report status:", error);
-    throw error;
-  }
-};
-// Get report details by ID
-export const getReportDetails = async (reportId) => {
-  try {
-    // const response = await apiClient.get(`/admin/reports/${reportId}`);
-    // return response.data;
-  } catch (error) {
-    console.error("Error fetching report details:", error);
     throw error;
   }
 };

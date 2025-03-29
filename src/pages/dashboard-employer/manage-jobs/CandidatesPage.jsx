@@ -6,8 +6,10 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
+import axios from "axios";
 
 export default function CandidatesPage() {
+  const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [jobTitle, setJobTitle] = useState("");
@@ -26,6 +28,9 @@ export default function CandidatesPage() {
   const [messageText, setMessageText] = useState(
     "Congratulations! We've reviewed your application and would like to schedule an interview with you. Please let us know your availability for the coming week."
   );
+
+  const [isSending, setIsSending] = useState(false);
+  const user = JSON.parse(localStorage.getItem("userLoginData")); // Get logged in employer data
 
   useEffect(() => {
     getJobDetails(jobId);
@@ -120,20 +125,44 @@ export default function CandidatesPage() {
     setShowMessageDialog(true);
   };
 
-  // New function to send message
-  const handleSendMessage = () => {
-    // Here you would implement the API call to send the message
-    // For example: sendMessage(selectedCandidate.id, messageText)
+  // Update handleSendMessage
+  const handleSendMessage = async () => {
+    if (!messageText.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
 
-    console.log("Sending message to:", selectedCandidate);
-    console.log("Message:", messageText);
+    setIsSending(true);
 
-    // Close the dialog after sending
-    setShowMessageDialog(false);
-    setSelectedCandidate(null);
+    try {
+      // Get sender (employer) and receiver (candidate) IDs
+      const senderId = user.userID;
+      const receiverId = selectedCandidate.userID; // Assuming this property exists
 
-    // You might want to show a success toast here
-    toast.success("Message sent successfully!"); // Replace with your toast implementation
+      // Create message data
+      const messageData = {
+        senderId: senderId,
+        receiverId: receiverId,
+        content: messageText.trim(),
+      };
+
+      // Send message through API endpoint
+      await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
+
+      // Close dialog and reset state
+      setShowMessageDialog(false);
+      setSelectedCandidate(null);
+      setMessageText(
+        "Congratulations! We've reviewed your application and would like to schedule an interview with you. Please let us know your availability for the coming week."
+      );
+
+      toast.success("Message sent successfully!");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again later.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -142,10 +171,10 @@ export default function CandidatesPage() {
         <div className="upper-title-box">
           <div className="title-flex">
             <button className="back-button" onClick={handleBackToJobs}>
-              <i className="fas fa-arrow-left mr-1"></i> Back to Job Manager
+              <i className="fas fa-arrow-left mr-1"></i> Back
             </button>
             <h3>
-              <i className="fas fa-users mr-2"></i>
+              {/* <i className="fas fa-users mr-2"></i> */}
               Candidates for: <span className="text-primary">{jobTitle}</span>
             </h3>
           </div>
@@ -398,8 +427,20 @@ export default function CandidatesPage() {
               >
                 Cancel
               </button>
-              <button className="send-btn" onClick={handleSendMessage}>
-                <i className="fas fa-paper-plane"></i> Send Message
+              <button
+                className="send-btn"
+                onClick={handleSendMessage}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane"></i> Send Message
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -607,7 +648,7 @@ export default function CandidatesPage() {
         }
 
         .back-button {
-          display: flex;
+          display: inline-flex;  /* Changed from flex to inline-flex */
           align-items: center;
           background-color: #f8f9fa;
           border: 1px solid #ddd;
@@ -618,6 +659,7 @@ export default function CandidatesPage() {
           cursor: pointer;
           transition: all 0.3s;
           margin-bottom: 10px;
+          width: fit-content;  /* Added to make width match content */
         }
 
         .back-button:hover {
