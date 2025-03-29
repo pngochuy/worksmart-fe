@@ -96,23 +96,23 @@ export const Index = () => {
   if (loading) {
     return (
       <div className="loading-overlay">
-        <div className="loading-spinner"></div>
-        <p>Loading company information...</p>
+        {/* <div className="loading-spinner"></div>
+        <p>Loading company information...</p> */}
       </div>
     );
   }
 
-  if (!company) {
-    return (
-      <div
-        className="error-message"
-        style={{ marginTop: "100px", textAlign: "center" }}
-      >
-        <h3>Company Not Found</h3>
-        <p>Sorry, we couldn&apos;t find information for this company.</p>
-      </div>
-    );
-  }
+  // if (!company) {
+  //   return (
+  //     <div
+  //       className="error-message"
+  //       style={{ marginTop: "100px", textAlign: "center" }}
+  //     >
+  //       <h3>Company Not Found</h3>
+  //       <p>Sorry, we couldn&apos;t find information for this company.</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -127,13 +127,13 @@ export const Index = () => {
                 <div className="content">
                   <span className="company-logo">
                     <img
-                      src={company.avatar || "https://via.placeholder.com/150"}
-                      alt={company.companyName}
+                      src={company?.avatar || "https://via.placeholder.com/150"}
+                      alt={company?.companyName}
                       style={{ maxWidth: "100px", maxHeight: "100px" }}
                     />
                   </span>
                   <h4>
-                    <a href="#">{company.companyName}</a>
+                    <a href="#">{company?.companyName}</a>
                   </h4>
                   <ul className="job-info">
                     <li>
