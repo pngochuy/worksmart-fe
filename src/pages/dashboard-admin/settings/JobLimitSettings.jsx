@@ -24,7 +24,7 @@ const getStoredSettings = () => {
 
   // Giá trị mặc định nếu không có trong localStorage
   return {
-    maxJobsPerDay: 5,
+    maxJobsPerDay: 1,
     updatedAt: new Date().toISOString(),
   };
 };

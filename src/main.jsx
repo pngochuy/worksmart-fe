@@ -46,7 +46,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 const initializeLocalStorage = () => {
   if (!localStorage.getItem("jobLimitSettings")) {
     const defaultSettings = {
-      maxJobsPerDay: 5,
+      maxJobsPerDay: 1,
       updatedAt: new Date().toISOString(),
     };
     localStorage.setItem("jobLimitSettings", JSON.stringify(defaultSettings));
