@@ -9,7 +9,7 @@ import {
   checkApplyStatus,
   fetchJobDetails,
 } from "@/services/jobServices";
-import { FileEdit, MoveUpRight } from "lucide-react";
+import { Clock, FileEdit, Heart, MoveUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -214,8 +214,16 @@ export const Index = () => {
                 <div className="job-block-outer">
                   {/* Job Block */}
                   <div className="job-block-seven style-two at-jsv6">
-                    <div className="tags d-flex align-items-center">
-                      <a className="flaticon-bookmark mr-2" href=""></a>
+                    <div className="tags d-flex align-items-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 cursor-default"
+                      >
+                        <Heart className="h-4 w-4  text-blue-500" />
+                        <span className="hidden sm:inline text-blue-500">
+                          Save
+                        </span>
+                      </Button>
                       {userRole === "Candidate" && (
                         <ReportJobButton
                           className="theme-btn btn-style-one"
@@ -434,7 +442,8 @@ export const Index = () => {
                 <aside className="sidebar">
                   <div className="sidebar-widget at-jsv6 text-center">
                     <h4 className="fz20 fw500 mb10">Application ends</h4>
-                    <p className="text mb15">
+                    <p className="text mb15 flex items-center justify-center">
+                      <Clock className="h-5 w-5 mr-1" />
                       {formatDateTimeNotIncludeTime(job.deadline)}
                     </p>
                     {userRole === "Candidate" && (
@@ -572,15 +581,32 @@ export const Index = () => {
 
                   <div className="sidebar-widget bg-white p-0">
                     {/* Job Skills */}
-                    <h4 className="widget-title">Job Skills</h4>
+                    <h4 className="widget-title mb-0">Job Skills</h4>
                     <div className="widget-content">
                       <ul className="job-skills at-jsv6">
                         {job?.jobDetailTags?.map((tag) => (
-                          <>
-                            <li key={tag.tagID}>
-                              <a href="#">{tag.tagName}</a>
-                            </li>
-                          </>
+                          <li key={tag.tagID}>
+                            <a
+                              href="#"
+                              className=""
+                              style={{ backgroundColor: "#f1f1f1" }}
+                            >
+                              {tag.tagName}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <h4 className="widget-title mb-0">Job Locations</h4>
+                    <div className="widget-content">
+                      <ul className="job-skills at-jsv6">
+                        {job?.location?.split(",").map((location, index) => (
+                          <li key={index}>
+                            <a href="#" style={{ backgroundColor: "#f1f1f1" }}>
+                              {location.trim()}
+                            </a>
+                          </li>
                         ))}
                       </ul>
                     </div>

@@ -291,15 +291,6 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <Dialog
       open={open}
@@ -318,7 +309,7 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
 
         {loading ? (
           <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : jobDetails ? (
           <div className="py-4 space-y-6">
@@ -331,21 +322,39 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
                 Job ID: {jobDetails.jobID}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
                   {jobDetails.workType || "Not specified"}
                 </span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
+                <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
                   {jobDetails.location ||
                     jobDetails.workLocation ||
                     "Not specified"}
                 </span>
                 {jobDetails.priority && (
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-xs">
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
                     Priority
                   </span>
                 )}
               </div>
             </div>
+
+            {/* Job Status */}
+            {jobDetails.status !== undefined && (
+              <div className="mt-4">
+                <h4 className="text-md font-medium mb-2">Status</h4>
+                <span
+                  className={`px-3 py-1 rounded text-sm ${
+                    jobDetails.status === 1
+                      ? "bg-green-100 text-green-800"
+                      : jobDetails.status === 2
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {jobDetails.status === 1 ? "Active" : "Closed"}
+                </span>
+              </div>
+            )}
 
             {/* Job Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-b py-4">
@@ -411,7 +420,7 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
             {/* Job Description */}
             <div>
               <h4 className="text-md font-medium mb-2">Job Description</h4>
-              <div className="whitespace-pre-line bg-gray-50 p-4 rounded-md">
+              <div className="whitespace-pre-line bg-gray-50 p-4 rounded">
                 <div
                   dangerouslySetInnerHTML={{ __html: jobDetails.description }}
                 />
@@ -422,7 +431,7 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
             {jobDetails.companyDescription && (
               <div>
                 <h4 className="text-md font-medium mb-2">About the Company</h4>
-                <div className="whitespace-pre-line bg-gray-50 p-4 rounded-md">
+                <div className="whitespace-pre-line bg-gray-50 p-4 rounded">
                   <div
                     dangerouslySetInnerHTML={{
                       __html: jobDetails.companyDescription,
@@ -441,7 +450,7 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
                 <h4 className="text-md font-medium mb-2">
                   Contact Information
                 </h4>
-                <div className="bg-gray-50 p-4 rounded-md space-y-2">
+                <div className="bg-gray-50 p-4 rounded space-y-2">
                   {jobDetails.email && (
                     <p>
                       <span className="font-medium">Email:</span>{" "}
@@ -486,7 +495,7 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
                     {jobDetails.jobDetailTags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
+                        className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded text-sm"
                       >
                         {tag.tagName}
                       </span>
@@ -495,22 +504,30 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
                 </div>
               )}
 
-            {/* Job Status */}
-            {jobDetails.status !== undefined && (
-              <div className="mt-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    jobDetails.status === 1
-                      ? "bg-green-100 text-green-800"
-                      : jobDetails.status === 2
-                      ? "bg-red-100 text-red-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {jobDetails.status === 1 ? "Active" : "Closed"}
-                </span>
-              </div>
-            )}
+            {/* Additional Information */}
+            <div className="border-t pt-4">
+              <h4 className="text-md font-medium mb-2">
+                Additional Information
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex justify-between">
+                  <span className="text-gray-600">Job Created</span>
+                  <span className="font-medium">
+                    {jobDetails.createdAt
+                      ? formatDate(jobDetails.createdAt)
+                      : "N/A"}
+                  </span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-gray-600">Last Updated</span>
+                  <span className="font-medium">
+                    {jobDetails.updatedAt
+                      ? formatDate(jobDetails.updatedAt)
+                      : "N/A"}
+                  </span>
+                </li>
+              </ul>
+            </div>
           </div>
         ) : (
           <div className="py-4 text-center">No job information available</div>
@@ -570,7 +587,7 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
 
         {loading ? (
           <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : companyDetails ? (
           <div className="py-4 space-y-6">
@@ -580,10 +597,10 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
                 <img
                   src={companyDetails.avatar}
                   alt={`${companyDetails.companyName} logo`}
-                  className="w-20 h-20 object-contain border rounded-md"
+                  className="w-20 h-20 object-contain border rounded"
                 />
               ) : (
-                <div className="w-20 h-20 bg-gray-200 flex items-center justify-center rounded-md">
+                <div className="w-20 h-20 bg-gray-200 flex items-center justify-center rounded">
                   <span className="text-gray-500 text-xs">No logo</span>
                 </div>
               )}
@@ -646,7 +663,7 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
             {/* Company Description */}
             <div>
               <h4 className="text-md font-medium mb-2">About</h4>
-              <div className="whitespace-pre-line bg-gray-50 p-4 rounded-md">
+              <div className="whitespace-pre-line bg-gray-50 p-4 rounded">
                 <div
                   dangerouslySetInnerHTML={{
                     __html: companyDetails.companyDescription,
@@ -663,7 +680,7 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
                   {companyDetails.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-2 py-1 bg-gray-100 rounded-full text-sm"
+                      className="px-2 py-1 bg-gray-100 rounded text-sm"
                     >
                       {tag}
                     </span>
@@ -681,7 +698,7 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
                     {companyDetails.JobDetailTags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                        className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm"
                       >
                         {tag}
                       </span>
@@ -700,9 +717,7 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
                   <span className="text-gray-600">Account Created</span>
                   <span className="font-medium">
                     {companyDetails.createdAt
-                      ? new Date(companyDetails.createdAt).toLocaleDateString(
-                          "vi-VN"
-                        )
+                      ? formatDate(companyDetails.createdAt)
                       : "N/A"}
                   </span>
                 </li>
@@ -710,9 +725,7 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
                   <span className="text-gray-600">Last Updated</span>
                   <span className="font-medium">
                     {companyDetails.updatedAt
-                      ? new Date(companyDetails.updatedAt).toLocaleDateString(
-                          "vi-VN"
-                        )
+                      ? formatDate(companyDetails.updatedAt)
                       : "N/A"}
                   </span>
                 </li>
@@ -780,8 +793,6 @@ function ApproveConfirmationDialog({
             <div>{job.jobID}</div>
             <div className="font-medium">Title:</div>
             <div>{job.title}</div>
-            <div className="font-medium">Company:</div>
-            <div>{job.company || "N/A"}</div>
           </div>
         </div>
         <DialogFooter>
@@ -908,7 +919,7 @@ function RejectConfirmationDialog({
                 value={otherReasonText}
                 onChange={(e) => setOtherReasonText(e.target.value)}
                 placeholder="Enter rejection details..."
-                className="w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full min-h-[100px] p-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           )}

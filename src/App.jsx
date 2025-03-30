@@ -39,7 +39,7 @@ import { Index as PostJobPage } from "./pages/dashboard-employer/post-job";
 import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
 import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
-import { index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
+import { Index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
 import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
@@ -59,6 +59,7 @@ import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
 import { Index as UsersManagementPage } from "./pages/dashboard-admin/users-management";
 import { Index as JobPostingsManagementPage } from "./pages/dashboard-admin/job-postings-management";
 import { Index as ReportsPage } from "./pages/dashboard-admin/reports";
+import { JobLimitSettings } from "./pages/dashboard-admin/settings/JobLimitSettings";
 
 import EmployerCandidateDetailPage from "./pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
 function App() {
@@ -512,6 +513,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Admin">
                     <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="settings"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <JobLimitSettings />
                   </ProtectedRoute>
                 }
               />

@@ -16,6 +16,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import ChatPopup from "./ChatPopup";
 import axios from "axios";
 import notificationSound from "../assets/sounds/messageSound.mp3";
+import { Crown, LayoutDashboard } from "lucide-react";
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 export const Header = () => {
@@ -305,13 +306,24 @@ export const Header = () => {
             {userRole != null ? (
               <>
                 {userRole === "Employer" && (
-                  <a
-                    href="/employer/post-job"
-                    className="theme-btn btn-style-one"
-                    style={{ padding: "10px 25px" }}
-                  >
-                    Post a Job
-                  </a>
+                  <>
+                    <a
+                      href="/employer/package-list"
+                      className="theme-btn btn-style-four mr-2"
+                      style={{ padding: "10px 25px" }}
+                    >
+                      <Crown className="mr-2" size={16} />
+                      Upgrade Account
+                    </a>
+                    <a
+                      href="/employer/post-job"
+                      className="theme-btn btn-style-one"
+                      style={{ padding: "10px 25px" }}
+                    >
+                      <LayoutDashboard className="mr-2" size={16} />
+                      Post a Job
+                    </a>
+                  </>
                 )}
                 {userRole === "Candidate" && (
                   <a href="/candidate/job-alerts" className="menu-btn">
