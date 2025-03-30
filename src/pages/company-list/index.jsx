@@ -26,6 +26,7 @@ export const Index = () => {
           currentPage,
           pageSize
         );
+
         setCompanies(response.list);
         setTotalCompanies(response.total);
         // This line correctly calculates total pages from total records

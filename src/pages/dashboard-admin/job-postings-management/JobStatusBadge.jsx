@@ -35,7 +35,7 @@ export const JobStatusBadge = ({ statusCode, className }) => {
       variant="outline"
       className={cn(
         getVariant(),
-        "rounded-sm px-2 py-1 font-normal",
+        "rounded-sm px-2 py-1 font-bold",
         className
       )}
     >

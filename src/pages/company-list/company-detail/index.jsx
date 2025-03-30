@@ -39,11 +39,7 @@ export const Index = () => {
 
           // Nếu API trả về danh sách jobs
           if (data.postedJobs) {
-            // Lọc chỉ lấy các job có status là 3 (ACTIVE)
-            const activeJobs = data.postedJobs.filter(
-              (job) => job.status === 3
-            );
-            setCompanyJobs(activeJobs);
+            setCompanyJobs(data.postedJobs);
           }
         }
       } catch (error) {

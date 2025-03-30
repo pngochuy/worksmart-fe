@@ -27,7 +27,7 @@ export const fetchJobs = async (searchParams) => {
 export const fetchJobsForManagement = async (searchParams) => {
   try {
     const response = await axios.get(
-        `${BACKEND_API_URL}/api/Job/getAllJobManage`,
+      `${BACKEND_API_URL}/api/Job/getAllJobManage`,
       //  `${BACKEND_API_URL}/api/Job/ByEmployer`,
       {
         params: searchParams,
@@ -39,7 +39,7 @@ export const fetchJobsForManagement = async (searchParams) => {
           }),
       }
     );
-    console.log("dataaaaaaaaaaaaaaaaaaaaaaaaaa", response.data)
+    console.log("dataaaaaaaaaaaaaaaaaaaaaaaaaa", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs for management:", error);
@@ -256,7 +256,6 @@ export const fetchJobTags = async () => {
   }
 };
 
-
 export const checkLimitCreateJob = async (userId) => {
   try {
     const response = await axios.get(
@@ -271,7 +270,9 @@ export const checkLimitCreateJob = async (userId) => {
 export const toggleJobPriority = async (id) => {
   try {
     console.log(`Toggling priority for job ID: ${id}`);
-    const response = await axios.put(`${BACKEND_API_URL}/api/Job/toggle-priority/${id}`);
+    const response = await axios.put(
+      `${BACKEND_API_URL}/api/Job/toggle-priority/${id}`
+    );
     console.log("Toggle job priority response:", response.data);
     return response.data;
   } catch (error) {
