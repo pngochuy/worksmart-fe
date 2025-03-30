@@ -48,26 +48,28 @@ export const index = () => {
   }, [userInfo]);
 
   const calculateUsage = (subscription, package_) => {
-    // For job posting packages
     if (package_.jobPostLimitPerDay) {
-      return {
-        total: package_.jobPostLimitPerDay * package_.durationInDays || 0,
-        used: 0, // You might need another API call to get this
-        remaining: package_.jobPostLimitPerDay * package_.durationInDays || 0
-      };
+        // const totalPosts = (package_.jobPostLimitPerDay ?? 0) * (package_.durationInDays ?? 0);
+        const remainingDays = Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)));
+
+        return {
+            // total: totalPosts, // Tổng số bài đăng có thể sử dụng trong thời gian gói
+            // postRemaining: totalPosts, // Số bài đăng còn lại (có thể giảm nếu người dùng đã đăng)
+            remaining: remainingDays // Số ngày còn lại trước khi gói hết hạn
+        };
     }
-    
-    // For CV packages
+
+    // Nếu gói có giới hạn CV
     if (package_.cvLimit) {
-      return {
-        total: package_.cvLimit,
-        used: 0, // You might need another API call to get this
-        remaining: package_.cvLimit
-      };
+        return {
+            total: package_.cvLimit,
+            postRemaining: package_.cvLimit, // Số CV còn lại
+            remaining: Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)))
+        };
     }
-    
-    return { total: 0, used: 0, remaining: 0 };
-  };
+
+    return { total: 0, postRemaining: 0, remaining: 0 };
+};
 
   // Helper function to determine if a subscription is active
   const isActive = (expDate) => {
@@ -116,9 +118,10 @@ export const index = () => {
                               <th>#</th>
                               {/* <th>Transaction ID</th> */}
                               <th>Package</th>
+                              <th>Total Jobs Post</th>
+                              <th>Total Jobs Featured</th>
                               <th>Expiry</th>
-                              <th>Total Jobs/CVs</th>
-                              <th>Remaining</th>
+                              <th>Remaining Days</th>
                               <th>Status</th>
                             </tr>
                           </thead>
@@ -137,13 +140,14 @@ export const index = () => {
                                   <td className="package">
                                     <a href="#">{package_.name}</a>
                                   </td>
-                                  <td className="expiry">
-                                    {formatDate(subscription.expDate)}
-                                  </td>
                                   <td className="total-jobs">
                                     {package_.jobPostLimitPerDay ? 
                                       `${package_.jobPostLimitPerDay} per day` : 
                                       package_.cvLimit || 'N/A'}
+                                  </td>
+                                  <td className="post-remaining">{package_.featuredJobPostLimit}</td> {/* Số bài đăng còn lại */}
+                                  <td className="expiry">
+                                    {formatDate(subscription.expDate)}
                                   </td>
                                   <td className="remaining">{usage.remaining}</td>
                                   <td className="status">
