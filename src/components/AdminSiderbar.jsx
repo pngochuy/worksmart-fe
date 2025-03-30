@@ -72,6 +72,15 @@ export const AdminSidebar = () => {
             <i className="fa fa-gift"></i> Subscription Plans Management
           </NavLink>
         </li>
+        <li
+          className={
+            checkActive("/admin/settings") ? "active" : ""
+          }
+        >
+          <NavLink to="/admin/settings">
+            <i className="fa fa-cog"></i> Settings
+          </NavLink>
+        </li>
         <li onClick={logout}>
           <NavLink>
             <i className="la la-sign-out"></i> Logout
