@@ -282,6 +282,24 @@ export const createPaymentLink = async (userId, packageId) => {
   }
 };
 
+export const getUserSubscription = async (userId) => {
+  try {
+    const response = await fetch(
+      `/${BACKEND_API_URL}api/subscriptions/getByUserId/${userId}`);
+    if (response.status === 404) {
+      return null;
+    }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch subscription");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching subscription:", error);
+    throw error;
+  }
+};
+
 export const checkPaymentStatus = async (orderCode) => {
   try {
     const response = await axios.get(
@@ -355,3 +373,29 @@ export const getPackages = async () => {
     throw new Error(error.response?.data?.message || "Error fetching packages");
   }
 };
+
+export const getEmployerSubscriptions = async (userId) => {
+  try{
+    const response = await axios.get(
+      `${BACKEND_API_URL}/subscriptions/getByUserId/${userId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    throw error;
+  }
+}
+
+export const getUserTransactions = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/transactions/getByUserId/${userId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    throw error;
+  }
+}

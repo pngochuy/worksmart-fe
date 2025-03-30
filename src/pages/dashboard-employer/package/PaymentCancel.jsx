@@ -21,7 +21,7 @@ const PaymentCancel = () => {
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div className={`p-8 rounded-lg shadow-xl text-center w-96 ${status?.success ? 'bg-green-100' : 'bg-yellow-100'}`}>
+      {/* <div className={`p-8 rounded-lg shadow-xl text-center w-96 ${status?.success ? 'bg-green-100' : 'bg-yellow-100'}`}>
         <h1 className={`text-2xl font-bold mb-4 ${status?.success ? 'text-green-800' : 'text-yellow-800'}`}>
           {status?.success ? 'Payment Successful' : error ? 'Payment Processing Failed' : 'Payment Canceled'}
         </h1>
@@ -54,7 +54,7 @@ const PaymentCancel = () => {
         >
           {status?.success ? 'View Packages' : 'Return to Packages'}
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
