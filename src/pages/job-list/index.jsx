@@ -162,7 +162,7 @@ export const Index = () => {
           </div>
 
           <Card className="mb-8">
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 bg-blue-100 rounded-md">
               <form onSubmit={handleSearch}>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-5 relative gap-2">
