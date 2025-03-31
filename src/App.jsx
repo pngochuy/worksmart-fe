@@ -60,6 +60,7 @@ import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
 import { Index as UsersManagementPage } from "./pages/dashboard-admin/users-management";
 import { Index as JobPostingsManagementPage } from "./pages/dashboard-admin/job-postings-management";
 import { Index as ReportsPage } from "./pages/dashboard-admin/reports";
+import { JobLimitSettings } from "./pages/dashboard-admin/settings/JobLimitSettings";
 
 import EmployerCandidateDetailPage from "./pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
 function App() {
@@ -522,6 +523,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Admin">
                     <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="settings"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <JobLimitSettings />
                   </ProtectedRoute>
                 }
               />
