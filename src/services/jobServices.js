@@ -311,5 +311,27 @@ export const toggleJobPriority = async (id) => {
     throw error;
   }
 };
+export const fetchJobLimitSettings = async () => {
+  try {
+    const response = await axios.get(`${BACKEND_API_URL}/api/job/joblimit`);
 
+    console.log(response.data); // In ra thông tin jobLimitSettings
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job limit settings:", error);
+  }
+};
+export const updateJobLimitSettings = async (newSettings) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/job/joblimit`,
+      newSettings
+    );
 
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    throw error; // Re-throw to handle in component
+  }
+};
