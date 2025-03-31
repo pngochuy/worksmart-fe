@@ -8,70 +8,61 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Settings, Save, RefreshCw } from "lucide-react";
+import { Settings, Save, RefreshCw, Clock } from "lucide-react";
 import { toast } from "react-toastify";
-
-// Hàm lấy settings từ localStorage hoặc dùng giá trị mặc định
-const getStoredSettings = () => {
-  try {
-    const stored = localStorage.getItem("jobLimitSettings");
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error("Error reading from localStorage:", error);
-  }
-
-  // Giá trị mặc định nếu không có trong localStorage
-  return {
-    maxJobsPerDay: 1,
-    updatedAt: new Date().toISOString(),
-  };
-};
-
-// Hàm lưu settings vào localStorage
-const saveSettingsToStorage = (settings) => {
-  try {
-    localStorage.setItem(
-      "jobLimitSettings",
-      JSON.stringify({
-        ...settings,
-        updatedAt: new Date().toISOString(),
-      })
-    );
-    return true;
-  } catch (error) {
-    console.error("Error saving to localStorage:", error);
-    return false;
-  }
-};
+import {
+  fetchJobLimitSettings,
+  updateJobLimitSettings,
+} from "@/services/jobServices";
 
 export const JobLimitSettings = () => {
-  const [maxJobsPerDay, setMaxJobsPerDay] = useState(
-    () => getStoredSettings().maxJobsPerDay
-  );
+  const [maxJobsPerDay, setMaxJobsPerDay] = useState(1);
+  const [updatedAt, setUpdatedAt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load từ localStorage khi component mount
+  // Load từ backend khi component mount
   useEffect(() => {
-    const settings = getStoredSettings();
-    setMaxJobsPerDay(settings.maxJobsPerDay);
-  }, []);
+    const loadJobLimitSettings = async () => {
+      try {
+        const settings = await fetchJobLimitSettings(); // Gọi API để lấy dữ liệu từ backend
+        setMaxJobsPerDay(settings.maxJobsPerDay); // Cập nhật state với giá trị từ backend
 
-  // Handle save settings
+        // Set the updatedAt timestamp if available
+        if (settings.updatedAt) {
+          setUpdatedAt(settings.updatedAt);
+        }
+      } catch (err) {
+        console.error("Error loading job limit settings:", err);
+        toast.error("Failed to load job limit settings");
+      }
+    };
+
+    loadJobLimitSettings();
+  }, []); // Chỉ gọi API khi component mount lần đầu
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
       const parsedValue = parseInt(maxJobsPerDay);
-      const success = saveSettingsToStorage({ maxJobsPerDay: parsedValue });
+      // Don't include UpdatedAt here - let the backend handle it
+      const updatedSettings = { maxJobsPerDay: parsedValue };
 
-      if (success) {
-        toast.success("Job limit settings updated successfully");
-      } else {
-        toast.error("Failed to update job limit settings");
+      // Call API to update
+      const response = await updateJobLimitSettings(updatedSettings);
+
+      // Update local state with returned data (which includes the new timestamp)
+      if (response) {
+        if (response.maxJobsPerDay) {
+          setMaxJobsPerDay(response.maxJobsPerDay);
+        }
+        if (response.updatedAt) {
+          setUpdatedAt(response.updatedAt);
+        }
       }
+
+      toast.success("Job limit settings updated successfully");
     } catch (err) {
-      console.log("Error updating job limit settings:", err);
+      console.error("Error updating job limit settings:", err);
       toast.error("Failed to update job limit settings");
     } finally {
       setIsSaving(false);
@@ -99,9 +90,12 @@ export const JobLimitSettings = () => {
                                 <Settings className="mr-2 h-5 w-5" />
                                 Employer Job Creation Limits
                               </CardTitle>
-                              {/* {isLoading && (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                              )} */}
+                              {updatedAt && (
+                                <div className="flex items-center text-xs text-gray-500">
+                                  <Clock className="mr-1 h-3 w-3" />
+                                  Last updated: {updatedAt}
+                                </div>
+                              )}
                             </div>
                           </CardHeader>
                           <CardContent className="pt-4">

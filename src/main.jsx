@@ -42,21 +42,6 @@ import "wowjs";
 import "./assets/js/script.js";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-// Khởi tạo localStorage với giá trị mặc định nếu chưa có
-const initializeLocalStorage = () => {
-  if (!localStorage.getItem("jobLimitSettings")) {
-    const defaultSettings = {
-      maxJobsPerDay: 1,
-      updatedAt: new Date().toISOString(),
-    };
-    localStorage.setItem("jobLimitSettings", JSON.stringify(defaultSettings));
-    console.log("Default job limit settings initialized");
-  }
-};
-
-// Gọi hàm khởi tạo trước khi render ứng dụng
-initializeLocalStorage();
-
 createRoot(document.getElementById("root")).render(
   <GoogleOAuthProvider clientId="343167304228-2ner08mmv6jk0qpfposq74blmmrcope5.apps.googleusercontent.com">
     <StrictMode>
