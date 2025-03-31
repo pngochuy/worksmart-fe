@@ -348,85 +348,62 @@
     white-space: nowrap;
 }
 
-<<<<<<< Updated upstream
-/* Thay đổi style cho priority badge */
 .priority-badge.high {
-    background-color: #3498db; /* Màu nền xanh cho High Priority */
-    color: white; /* Chữ màu trắng */
+    background-color: #3498db; 
+    color: white; 
 }
 
 .priority-badge.high i {
-    color: white; /* Icon kim cương màu trắng */
-}
+    color: white; }
 
 .priority-badge.low {
-    background-color: transparent; /* Không có màu nền */
-    color: #3498db; /* Chữ màu xanh */
-    border: 1px solid #3498db; /* Viền xanh */
+    background-color: transparent; 
+    color: #3498db;
+    border: 1px solid #3498db; 
 }
 
 .priority-badge.low i {
-    color: #3498db; /* Icon kim cương màu xanh */
+    color: #3498db;
 }
 
-/* Thay đổi style cho priority button */
 .priority-btn.high-priority {
-    background-color: #3498db; /* Màu nền xanh cho High Priority */
-    color: white; /* Chữ màu trắng */
+    background-color: #3498db;
+    color: white; 
 }
 
 .priority-btn.high-priority:hover {
-    background-color: #2980b9; /* Màu xanh đậm hơn khi hover */
+    background-color: #2980b9; 
 }
 
 .priority-btn.high-priority i {
-    color: white; /* Icon kim cương màu trắng */
+    color: white; 
 }
 
 .priority-btn.low-priority {
-    background-color: transparent; /* Không có màu nền */
-    color: #3498db; /* Chữ màu xanh */
-    border: 1px solid #3498db; /* Viền xanh */
+    background-color: transparent; 
+    color: #3498db;
+    border: 1px solid #3498db;
 }
 
 .priority-btn.low-priority:hover {
-    background-color: #f8f9fa; /* Màu nền nhạt khi hover */
+    background-color: #f8f9fa; 
 }
 
 .priority-btn.low-priority i {
-    color: #3498db; /* Icon kim cương màu xanh */
+    color: #3498db; 
 }
 
-/* Thay đổi hiển thị các nút ưu tiên bị vô hiệu hóa */
+
 .priority-btn.disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-/* Cập nhật style cho kim cương trong tiêu đề job */
+
 .job-title .fas.fa-gem.text-primary {
-    color: #3498db !important; /* Đảm bảo màu kim cương là xanh */
-}
-=======
-.priority-btn.high-priority {
-    background-color: #ffc107;
-    color: #212529;
+    color: #3498db !important; 
 }
 
-.priority-btn.high-priority:hover {
-    background-color: #e0a800;
-}
-
-.priority-btn.low-priority {
-    background-color: #6c757d;
-    color: white;
-}
-
-.priority-btn.low-priority:hover {
-    background-color: #5a6268;
-}
-
->>>>>>> Stashed changes
 .hide-btn,
 .unhide-btn {
     padding: 6px 12px;

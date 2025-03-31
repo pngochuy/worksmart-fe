@@ -13,6 +13,24 @@ export const JobForm = () => {
   const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
+  
+  // Hàm lấy settings từ localStorage
+  const getStoredSettings = () => {
+    try {
+      const stored = localStorage.getItem("jobLimitSettings");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Error reading from localStorage:", error);
+    }
+    // Giá trị mặc định
+    return {
+      maxJobsPerDay: 1,
+      updatedAt: new Date().toISOString(),
+    };
+  };
+
   const [jobData, setJobData] = useState({
     userID: userID,
     jobTagID: [],
@@ -30,6 +48,8 @@ export const JobForm = () => {
     deadline: "",
     jobPosition: "",
     categoryID: "",
+    // Thêm maxJobsPerDay từ localStorage
+    maxJobsPerDay: getStoredSettings().maxJobsPerDay
   });
 
   // Add separate state for min-max salary
@@ -51,9 +71,23 @@ export const JobForm = () => {
         // Check job creation limit
         setIsCheckingLimit(true);
         if (userID) {
+<<<<<<< Updated upstream
+          // Lấy giá trị maxJobsPerDay từ localStorage
+          const settings = getStoredSettings();
+          // Cập nhật vào jobData
+          setJobData(prev => ({
+            ...prev,
+            maxJobsPerDay: settings.maxJobsPerDay
+          }));
+          
+          // Gọi API kiểm tra với giá trị maxJobsPerDay từ localStorage
+          const limitCheckResult = await checkLimitCreateJob(userID);
+          setCanCreateJob(limitCheckResult);
+=======
           const limitCheckResult = await checkLimitCreateJob(userID);
           setCanCreateJob(limitCheckResult);
           // Removed the toast notification for reaching limit
+>>>>>>> Stashed changes
         }
 
         // Fetch tags
@@ -135,7 +169,10 @@ export const JobForm = () => {
 
     // Double-check job creation limit
     if (!canCreateJob) {
+<<<<<<< Updated upstream
+=======
       // Removed toast notification here
+>>>>>>> Stashed changes
       return;
     }
 
@@ -160,12 +197,15 @@ export const JobForm = () => {
     }
 
     try {
+      // Đảm bảo maxJobsPerDay được gửi lên API
       const updatedJobData = {
         ...jobData,
         salary: `${minSalary.toLocaleString(
           "en-US"
         )} - ${maxSalary.toLocaleString("en-US")}`,
+        maxJobsPerDay: getStoredSettings().maxJobsPerDay // Đảm bảo lấy giá trị mới nhất
       };
+      
       console.log("updatedJobData: ", updatedJobData);
       await createJob(updatedJobData);
       toast.success("Job created successfully!");
@@ -173,7 +213,10 @@ export const JobForm = () => {
     } catch (error) {
       console.error("Error creating job:", error);
       if (error.response && error.response.status === 403) {
+<<<<<<< Updated upstream
+=======
         // Removed toast notification for 403 error
+>>>>>>> Stashed changes
         setCanCreateJob(false);
       } else {
         toast.error("Failed to create job. Please try again!");
@@ -210,7 +253,10 @@ export const JobForm = () => {
         <div className="dashboard-outer">
           <div className="upper-title-box">
             <h3>Post a New Job</h3>
+<<<<<<< Updated upstream
+=======
             
+>>>>>>> Stashed changes
           </div>
           <div className="row">
             <div className="col-lg-12">

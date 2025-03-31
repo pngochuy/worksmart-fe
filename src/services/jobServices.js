@@ -92,21 +92,62 @@ export const fetchJobDetails = async (jobId) => {
   }
 };
 
-// Hàm tạo công việc mới
+const getStoredSettings = () => {
+  try {
+    const stored = localStorage.getItem("jobLimitSettings");
+    console.log("jobLimitSettings",stored)
+    if (stored) {
+      console.log("jobLimitSettings            tessssssssssssssssssssst",stored)
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error("Error reading from localStorage:", error);
+  }
+
+  // Giá trị mặc định nếu không có trong localStorage
+  return {
+    maxJobsPerDay: 1,
+    updatedAt: new Date().toISOString(),
+  };
+};
+
+// Trong hàm checkLimitCreateJob, đảm bảo luôn đọc giá trị mới nhất từ localStorage
+export const checkLimitCreateJob = async (userID) => {
+  try {
+    // Luôn đọc giá trị mới nhất
+    const settings = getStoredSettings();
+    console.log("Current maxJobsPerDay:", settings.maxJobsPerDay); 
+    
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userID}`, {
+      params: { maxJobsPerDay: settings.maxJobsPerDay }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error checking job creation limit:", error);
+    return false;
+  }
+};
+
+// Tạo công việc mới
 export const createJob = async (jobData) => {
   try {
-    const response = await axios.post(
-      `${BACKEND_API_URL}/api/Job/create`,
-      jobData
-    );
-    console.log(jobData);
+    // Lấy giá trị maxJobsPerDay từ localStorage
+    const settings = getStoredSettings();
+    
+    // Thêm giá trị maxJobsPerDay vào dữ liệu công việc
+    const updatedJobData = {
+      ...jobData,
+      maxJobsPerDay: settings.maxJobsPerDay
+    };
+    
+    const response = await axios.post(`${BACKEND_API_URL}/api/Job/create`, updatedJobData);
     return response.data;
   } catch (error) {
     console.error("Error creating job:", error);
     throw error;
   }
 };
-
 // Hàm lấy danh sách ứng viên cho công việc theo ID
 export const fetchCandidatesForJob = async (jobId) => {
   try {
@@ -256,17 +297,7 @@ export const fetchJobTags = async () => {
   }
 };
 
-export const checkLimitCreateJob = async (userId) => {
-  try {
-    const response = await axios.get(
-      `${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userId}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error create to job limit:", error);
-    throw error;
-  }
-};
+
 export const toggleJobPriority = async (id) => {
   try {
     console.log(`Toggling priority for job ID: ${id}`);
@@ -280,3 +311,5 @@ export const toggleJobPriority = async (id) => {
     throw error;
   }
 };
+
+
