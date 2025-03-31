@@ -71,23 +71,9 @@ export const JobForm = () => {
         // Check job creation limit
         setIsCheckingLimit(true);
         if (userID) {
-<<<<<<< Updated upstream
-          // Lấy giá trị maxJobsPerDay từ localStorage
-          const settings = getStoredSettings();
-          // Cập nhật vào jobData
-          setJobData(prev => ({
-            ...prev,
-            maxJobsPerDay: settings.maxJobsPerDay
-          }));
-          
-          // Gọi API kiểm tra với giá trị maxJobsPerDay từ localStorage
-          const limitCheckResult = await checkLimitCreateJob(userID);
-          setCanCreateJob(limitCheckResult);
-=======
           const limitCheckResult = await checkLimitCreateJob(userID);
           setCanCreateJob(limitCheckResult);
           // Removed the toast notification for reaching limit
->>>>>>> Stashed changes
         }
 
         // Fetch tags
@@ -169,10 +155,6 @@ export const JobForm = () => {
 
     // Double-check job creation limit
     if (!canCreateJob) {
-<<<<<<< Updated upstream
-=======
-      // Removed toast notification here
->>>>>>> Stashed changes
       return;
     }
 
@@ -213,10 +195,6 @@ export const JobForm = () => {
     } catch (error) {
       console.error("Error creating job:", error);
       if (error.response && error.response.status === 403) {
-<<<<<<< Updated upstream
-=======
-        // Removed toast notification for 403 error
->>>>>>> Stashed changes
         setCanCreateJob(false);
       } else {
         toast.error("Failed to create job. Please try again!");
@@ -253,10 +231,6 @@ export const JobForm = () => {
         <div className="dashboard-outer">
           <div className="upper-title-box">
             <h3>Post a New Job</h3>
-<<<<<<< Updated upstream
-=======
-            
->>>>>>> Stashed changes
           </div>
           <div className="row">
             <div className="col-lg-12">
