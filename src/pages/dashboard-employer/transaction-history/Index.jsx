@@ -28,11 +28,24 @@ export const Index = () => {
         setLoading(true);
         
         const userId = getUserId();
-        const data = await getUserTransactions(userId);
-        setTransactions(Array.isArray(data) ? data : []);
+        
+        try {
+          const data = await getUserTransactions(userId);
+          setTransactions(Array.isArray(data) ? data : []);
+          setError(null); // Clear any previous errors
+        } catch (apiError) {
+          console.error("API Error:", apiError);
+          
+          if (apiError.response && apiError.response.status === 404) {
+            setTransactions([]);
+            setError(null);
+          } else {
+            setError(apiError.message || "Failed to load transaction data");
+          }
+        }
       } catch (err) {
-        setError(err.message || "Failed to load transaction data");
-        console.error(err);
+        setError(err.message || "Failed to load user data");
+        console.error("User ID Error:", err);
       } finally {
         setLoading(false);
       }
@@ -90,7 +103,7 @@ export const Index = () => {
                   ) : error ? (
                     <div className="text-center py-4 text-danger">{error}</div>
                   ) : transactions.length === 0 ? (
-                    <div className="text-center py-4">No transactions found</div>
+                    <div className="text-center py-4">No Transaction To Display</div>
                   ) : (
                     <div className="table-outer">
                       <table className="default-table manage-job-table">

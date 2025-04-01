@@ -31,14 +31,25 @@ export const index = () => {
     const fetchSubscriptionData = async () => {
       try {
         setLoading(true);
-        
-        // Use the getUserId function to retrieve the userId
         const userId = getUserId();
-        const data = await getEmployerSubscriptions(userId);
-        setSubscriptionsData(Array.isArray(data) ? data : []);
+        
+        try {
+          const data = await getEmployerSubscriptions(userId);
+          setSubscriptionsData(Array.isArray(data) ? data : []);
+          setError(null); // Clear any previous errors
+        } catch (apiError) {
+          console.error("API Error:", apiError);
+          
+          if (apiError.response && apiError.response.status === 404) {
+            setSubscriptionsData([]);
+            setError(null);
+          } else {
+            setError(apiError.message || "Failed to load subscription data");
+          }
+        }
       } catch (err) {
-        setError(err.message || "Failed to load subscription data");
-        console.error(err);
+        setError(err.message || "Failed to load user data");
+        console.error("User ID Error:", err);
       } finally {
         setLoading(false);
       }
@@ -49,27 +60,23 @@ export const index = () => {
 
   const calculateUsage = (subscription, package_) => {
     if (package_.jobPostLimitPerDay) {
-        // const totalPosts = (package_.jobPostLimitPerDay ?? 0) * (package_.durationInDays ?? 0);
         const remainingDays = Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)));
 
         return {
-            // total: totalPosts, // Tổng số bài đăng có thể sử dụng trong thời gian gói
-            // postRemaining: totalPosts, // Số bài đăng còn lại (có thể giảm nếu người dùng đã đăng)
-            remaining: remainingDays // Số ngày còn lại trước khi gói hết hạn
+            remaining: remainingDays
         };
     }
 
-    // Nếu gói có giới hạn CV
     if (package_.cvLimit) {
         return {
             total: package_.cvLimit,
-            postRemaining: package_.cvLimit, // Số CV còn lại
+            postRemaining: package_.cvLimit,
             remaining: Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)))
         };
     }
 
     return { total: 0, postRemaining: 0, remaining: 0 };
-};
+  };
 
   // Helper function to determine if a subscription is active
   const isActive = (expDate) => {
@@ -109,14 +116,13 @@ export const index = () => {
                     ) : error ? (
                       <div className="text-center py-4 text-danger">{error}</div>
                     ) : subscriptionsData.length === 0 ? (
-                      <div className="text-center py-4">No subscriptions found</div>
+                      <div className="text-center py-4">No Subscription To Display</div>
                     ) : (
                       <div className="table-outer">
                         <table className="default-table manage-job-table">
                           <thead>
                             <tr>
                               <th>#</th>
-                              {/* <th>Transaction ID</th> */}
                               <th>Package</th>
                               <th>Total Jobs Post</th>
                               <th>Total Jobs Featured</th>
@@ -128,7 +134,6 @@ export const index = () => {
 
                           <tbody>
                             {subscriptionsData.map((item, index) => {
-                              // Kiểm tra cấu trúc dữ liệu
                               const subscription = item.subscription || {};
                               const package_ = item.package || {};
                               const usage = calculateUsage(subscription, package_);
@@ -136,7 +141,6 @@ export const index = () => {
                               return (
                                 <tr key={index}>
                                   <td>{index + 1}</td>
-                                  {/* <td className="trans-id">#{subscription.packageID}</td> */}
                                   <td className="package">
                                     <a href="#">{package_.name}</a>
                                   </td>
@@ -145,7 +149,7 @@ export const index = () => {
                                       `${package_.jobPostLimitPerDay} per day` : 
                                       package_.cvLimit || 'N/A'}
                                   </td>
-                                  <td className="post-remaining">{package_.featuredJobPostLimit}</td> {/* Số bài đăng còn lại */}
+                                  <td className="post-remaining">{package_.featuredJobPostLimit}</td>
                                   <td className="expiry">
                                     {formatDate(subscription.expDate)}
                                   </td>

@@ -382,7 +382,10 @@ export const getEmployerSubscriptions = async (userId) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching subscriptions:", error);
+    if (error.response && error.response.status === 404) {
+      console.log("No subscriptions found for user");
+      return [];
+    }
     throw error;
   }
 }
@@ -395,7 +398,10 @@ export const getUserTransactions = async (userId) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching transactions:", error);
+    if (error.response && error.response.status === 404) {
+      console.log("No transactions found for user");
+      return [];
+    }
     throw error;
   }
 }
