@@ -282,6 +282,24 @@ export const createPaymentLink = async (userId, packageId) => {
   }
 };
 
+export const getUserSubscription = async (userId) => {
+  try {
+    const response = await fetch(
+      `/${BACKEND_API_URL}api/subscriptions/getByUserId/${userId}`);
+    if (response.status === 404) {
+      return null;
+    }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch subscription");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching subscription:", error);
+    throw error;
+  }
+};
+
 export const checkPaymentStatus = async (orderCode) => {
   try {
     const response = await axios.get(
@@ -296,22 +314,11 @@ export const checkPaymentStatus = async (orderCode) => {
 
 export const cancelPayment = async (orderCode) => {
   try {
-    const token = getAccessToken();
-
-    const response = await axios.post(
-      `${BACKEND_API_URL}/api/Payment/cancel`,
-      { orderCode },
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
+    const response = await axios.get(
+      `/${BACKEND_API_URL}api/Payment/payment-cancel?orderCode=${orderCode}`);
     return response.data;
   } catch (error) {
-    console.error("Payment Cancellation Error:", error);
+    console.error('Error canceling payment:', error);
     throw error;
   }
 };
@@ -366,3 +373,35 @@ export const getPackages = async () => {
     throw new Error(error.response?.data?.message || "Error fetching packages");
   }
 };
+
+export const getEmployerSubscriptions = async (userId) => {
+  try{
+    const response = await axios.get(
+      `${BACKEND_API_URL}/subscriptions/getByUserId/${userId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      console.log("No subscriptions found for user");
+      return [];
+    }
+    throw error;
+  }
+}
+
+export const getUserTransactions = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/transactions/getByUserId/${userId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      console.log("No transactions found for user");
+      return [];
+    }
+    throw error;
+  }
+}

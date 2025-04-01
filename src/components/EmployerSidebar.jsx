@@ -53,6 +53,15 @@ export const EmployerSidebar = () => {
             <i className="la la-box"></i>Subscription Plans
           </NavLink>
         </li>
+        <li
+          className={
+            checkActive("/employer/transaction-history") ? "active" : ""
+          }
+        >
+          <NavLink to="/employer/transaction-history">
+            <i className="la la-credit-card"></i>Transaction History
+          </NavLink>
+        </li>
         <li className={checkActive("/employer/messages") ? "active" : ""}>
           <NavLink to="/employer/messages">
             <i className="la la-comment-o"></i>Messages
