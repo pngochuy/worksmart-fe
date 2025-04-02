@@ -1,0 +1,90 @@
+/* CSS cho form validation */
+
+/* Dấu * cho các trường bắt buộc */
+.required-mark {
+    color: #ff0000;
+    margin-left: 3px;
+  }
+  
+  /* Style cho thông báo lỗi */
+  .error-message {
+    color: #ff0000;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    margin-bottom: 0;
+  }
+  
+  /* Style cho input lỗi */
+  .error-input {
+    border-color: #ff0000 !important;
+    background-color: rgba(255, 0, 0, 0.03) !important;
+  }
+  
+  /* Style cho dropdown lỗi */
+  .dropdown-error .select__control {
+    border-color: #ff0000 !important;
+    background-color: rgba(255, 0, 0, 0.03) !important;
+  }
+  
+  /* Style cho editor lỗi */
+  .error-editor .tox-tinymce {
+    border-color: #ff0000 !important;
+  }
+  
+  /* Thêm một số style tổng quát cho form */
+  .default-form .form-group {
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .default-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .default-form input,
+  .default-form select,
+  .default-form textarea {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+  
+  .default-form input:focus,
+  .default-form select:focus,
+  .default-form textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+    outline: none;
+  }
+  
+  /* Style cho nút submit */
+  .theme-btn.btn-style-one {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .theme-btn.btn-style-one:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .default-form .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .default-form input,
+    .default-form select,
+    .default-form textarea {
+      padding: 8px 12px;
+    }
+  }
