@@ -495,7 +495,13 @@ export const Index = () => {
                         </Accordion>
                       </CardContent>
                       <CardFooter className="bg-gray-50 flex justify-end align-items-center py-2">
-                        <Button variant="outline" className="text-sm">
+                        <Button
+                          variant="outline"
+                          className="text-sm"
+                          onClick={() =>
+                            (window.location.href = `/company-list/${company.companyName}`)
+                          }
+                        >
                           View Company Profile
                         </Button>
                       </CardFooter>
@@ -527,8 +533,8 @@ export const Index = () => {
                       No Jobs Found
                     </h3>
                     <p className="text-gray-500 mb-6 text-center max-w-md">
-                      We couldn't find any jobs matching your search criteria.
-                      Try adjusting your filters or search terms.
+                      We couldn&apos;t find any jobs matching your search
+                      criteria. Try adjusting your filters or search terms.
                     </p>
                     <Button
                       onClick={() => {

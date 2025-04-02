@@ -53,6 +53,15 @@ export const EmployerSidebar = () => {
             <i className="la la-box"></i>Subscription Plans
           </NavLink>
         </li>
+        <li
+          className={
+            checkActive("/employer/transaction-history") ? "active" : ""
+          }
+        >
+          <NavLink to="/employer/transaction-history">
+            <i className="la la-credit-card"></i>Transaction History
+          </NavLink>
+        </li>
         <li className={checkActive("/employer/messages") ? "active" : ""}>
           <NavLink to="/employer/messages">
             <i className="la la-comment-o"></i>Messages
@@ -68,6 +77,11 @@ export const EmployerSidebar = () => {
         >
           <NavLink to="/employer/change-password">
             <i className="la la-lock"></i>Change Password
+          </NavLink>
+        </li>
+        <li className={checkActive("/employer/settings") ? "active" : ""}>
+          <NavLink to="/employer/settings">
+            <i className="la la-cog"></i>Settings
           </NavLink>
         </li>
         <li>
