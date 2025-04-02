@@ -32,6 +32,8 @@ import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candi
 import { Index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
 import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
 import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
+import { Index as CandidateSettingPage } from "./pages/dashboard-candidate/settings";
+
 // Employer Pages
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
 import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
@@ -53,6 +55,7 @@ import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPag
 import PackagePurchase from "./pages/dashboard-employer/package/PackagePurchase";
 import PaymentResult from "./pages/dashboard-employer/package/PaymentResult";
 import PaymentCancel from "./pages/dashboard-employer/package/PaymentCancel";
+import { Index as EmployerSettingPage } from "./pages/dashboard-employer/settings";
 
 // Admin Pages
 import { AdminLayout } from "./layouts/AdminLayout";
@@ -289,6 +292,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                index
+                path="settings"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CandidateSettingPage />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
             {/* Employer */}
             <Route path="/employer" element={<UserLayout />}>
@@ -484,6 +496,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
                     <PaymentCancel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="settings"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <EmployerSettingPage />
                   </ProtectedRoute>
                 }
               />
