@@ -92,56 +92,22 @@ export const fetchJobDetails = async (jobId) => {
   }
 };
 
-const getStoredSettings = () => {
-  try {
-    const stored = localStorage.getItem("jobLimitSettings");
-    console.log("jobLimitSettings",stored)
-    if (stored) {
-      console.log("jobLimitSettings            tessssssssssssssssssssst",stored)
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error("Error reading from localStorage:", error);
-  }
-
-  // Giá trị mặc định nếu không có trong localStorage
-  return {
-    maxJobsPerDay: 1,
-    updatedAt: new Date().toISOString(),
-  };
-};
-
-// Trong hàm checkLimitCreateJob, đảm bảo luôn đọc giá trị mới nhất từ localStorage
 export const checkLimitCreateJob = async (userID) => {
   try {
-    // Luôn đọc giá trị mới nhất
-    const settings = getStoredSettings();
-    console.log("Current maxJobsPerDay:", settings.maxJobsPerDay); 
-    
-    const response = await axios.get(`${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userID}`, {
-      params: { maxJobsPerDay: settings.maxJobsPerDay }
-    });
-    
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userID}`);
+    console.log("Jobssssssssssssssssssssssssssssssssss", response.data)
     return response.data;
   } catch (error) {
     console.error("Error checking job creation limit:", error);
     return false;
   }
 };
-
 // Tạo công việc mới
 export const createJob = async (jobData) => {
   try {
-    // Lấy giá trị maxJobsPerDay từ localStorage
-    const settings = getStoredSettings();
-    
-    // Thêm giá trị maxJobsPerDay vào dữ liệu công việc
-    const updatedJobData = {
-      ...jobData,
-      maxJobsPerDay: settings.maxJobsPerDay
-    };
-    
-    const response = await axios.post(`${BACKEND_API_URL}/api/Job/create`, updatedJobData);
+    // Không cần thêm maxJobsPerDay vào dữ liệu công việc nữa
+    // Server sẽ tự đọc từ file cấu hình
+    const response = await axios.post(`${BACKEND_API_URL}/api/Job/create`, jobData);
     return response.data;
   } catch (error) {
     console.error("Error creating job:", error);

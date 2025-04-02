@@ -14,23 +14,6 @@ export const JobForm = () => {
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
   
-  // Hàm lấy settings từ localStorage
-  const getStoredSettings = () => {
-    try {
-      const stored = localStorage.getItem("jobLimitSettings");
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (error) {
-      console.error("Error reading from localStorage:", error);
-    }
-    // Giá trị mặc định
-    return {
-      maxJobsPerDay: 1,
-      updatedAt: new Date().toISOString(),
-    };
-  };
-
   const [jobData, setJobData] = useState({
     userID: userID,
     jobTagID: [],
@@ -47,9 +30,7 @@ export const JobForm = () => {
     priority: false,
     deadline: "",
     jobPosition: "",
-    categoryID: "",
-    // Thêm maxJobsPerDay từ localStorage
-    maxJobsPerDay: getStoredSettings().maxJobsPerDay
+    categoryID: ""
   });
 
   // Add separate state for min-max salary
@@ -62,9 +43,10 @@ export const JobForm = () => {
   const [locations, setLocation] = useState([]);
   const [canCreateJob, setCanCreateJob] = useState(true);
   const [isCheckingLimit, setIsCheckingLimit] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state to prevent multiple submissions
   const navigate = useNavigate();
 
-  // Check job creation limit and fetch tags
+  // Check job creation limit and fetch tags - only run once on component mount
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -73,7 +55,6 @@ export const JobForm = () => {
         if (userID) {
           const limitCheckResult = await checkLimitCreateJob(userID);
           setCanCreateJob(limitCheckResult);
-          // Removed the toast notification for reaching limit
         }
 
         // Fetch tags
@@ -91,7 +72,7 @@ export const JobForm = () => {
     };
 
     initialize();
-  }, [userID]);
+  }, [userID]); // Only depend on userID
 
   // Handle editor content change
   const handleEditorChange = (content) => {
@@ -149,12 +130,12 @@ export const JobForm = () => {
     }
   };
 
-  // Submit form
+  // Submit form with protection against multiple submissions
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Double-check job creation limit
-    if (!canCreateJob) {
+    // Prevent submission if already submitting or if user can't create jobs
+    if (isSubmitting || !canCreateJob) {
       return;
     }
 
@@ -178,14 +159,15 @@ export const JobForm = () => {
       return;
     }
 
+    // Set submitting state to true to prevent multiple submissions
+    setIsSubmitting(true);
+
     try {
-      // Đảm bảo maxJobsPerDay được gửi lên API
       const updatedJobData = {
         ...jobData,
         salary: `${minSalary.toLocaleString(
           "en-US"
-        )} - ${maxSalary.toLocaleString("en-US")}`,
-        maxJobsPerDay: getStoredSettings().maxJobsPerDay // Đảm bảo lấy giá trị mới nhất
+        )} - ${maxSalary.toLocaleString("en-US")}`
       };
       
       console.log("updatedJobData: ", updatedJobData);
@@ -199,6 +181,8 @@ export const JobForm = () => {
       } else {
         toast.error("Failed to create job. Please try again!");
       }
+      // Reset submitting state to allow retry
+      setIsSubmitting(false);
     }
   };
 
@@ -448,24 +432,13 @@ export const JobForm = () => {
                         />
                       </div>
 
-                      {/* <div className="form-group col-lg-12 col-md-12">
-                        <label>
-                          <input
-                            type="checkbox"
-                            name="priority"
-                            checked={jobData.priority}
-                            onChange={handleChange}
-                          />
-                          &nbsp; High Priority Job
-                        </label>
-                      </div> */}
-
                       <div className="form-group col-lg-12 col-md-12 text-right">
                         <button
                           type="submit"
                           className="theme-btn btn-style-one"
+                          disabled={isSubmitting}
                         >
-                          Create Job
+                          {isSubmitting ? "Creating..." : "Create Job"}
                         </button>
                       </div>
                     </div>

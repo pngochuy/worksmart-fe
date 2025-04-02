@@ -14,6 +14,7 @@ import { fetchJobsForManagement } from "../../../services/jobServices";
 import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
 import { getUserLoginData } from "@/helpers/decodeJwt";
 import "../manage-jobs/styleManageJob.css";
+
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
   const [totalPage, setTotalPage] = useState(1);
@@ -66,6 +67,16 @@ export default function ManageJobsPage() {
     searchParams.MostRecent,
   ]);
 
+  // Thêm useEffect để kiểm tra kiểu dữ liệu của priority
+  useEffect(() => {
+    if (jobs.length > 0) {
+      console.log("Job priority types:");
+      jobs.forEach(job => {
+        console.log(`Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${job.priority}, Type: ${typeof job.priority}`);
+      });
+    }
+  }, [jobs]);
+
   const isJobExpired = (deadline) => {
     if (!deadline) return false;
     const deadlineDate = new Date(deadline);
@@ -112,12 +123,18 @@ export default function ManageJobsPage() {
       const endIndex = Math.min(startIndex + searchParams.PageSize, totalItems);
       const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
 
-      setJobs(paginatedJobs);
+      // Chuyển đổi priority thành kiểu boolean nếu cần
+      const processedJobs = paginatedJobs.map(job => ({
+        ...job,
+        priority: Boolean(job.priority)
+      }));
+
+      setJobs(processedJobs);
       setTotalPage(calculatedTotalPages);
 
       // Lấy số lượng ứng viên cho các job đã phân trang
       const counts = {};
-      for (const job of paginatedJobs) {
+      for (const job of processedJobs) {
         try {
           const candidates = await fetchCandidatesForJob(job.jobID);
           counts[job.jobID] = candidates.length;
@@ -277,9 +294,6 @@ export default function ManageJobsPage() {
       case 0: // Pending
         badgeClass += " pending";
         return <span className={badgeClass}>Pending</span>;
-      // case 1: // Approved
-      //   badgeClass += " accepted";
-      //   return <span className={badgeClass}>Active</span>;
       case 1: // Rejected
         badgeClass += " rejected";
         return <span className={badgeClass}>Rejected</span>;
@@ -295,6 +309,7 @@ export default function ManageJobsPage() {
     }
   };
 
+  // Đã cập nhật hàm này để nhất quán
   const getPriorityBadge = (priority) => {
     let badgeClass = "priority-badge";
 
@@ -303,7 +318,7 @@ export default function ManageJobsPage() {
       return <span className={badgeClass}><i className="fas fa-gem"></i> High Priority</span>;
     } else {
       badgeClass += " low";
-      return <span className={badgeClass}><i className="fas fa-gem text-secondary"></i> Low Priority</span>;
+      return <span className={badgeClass}><i className="fas fa-gem"></i> Low Priority</span>;
     }
   };
 
@@ -364,7 +379,7 @@ export default function ManageJobsPage() {
                           : "Cannot change priority for rejected jobs"
                     }
                   >
-                    <i className={`fas fa-gem ${selectedJob.priority ? 'text-primary' : 'text-secondary'}`}></i>
+                    <i className={`fas fa-gem ${selectedJob.priority ? '' : 'text-secondary'}`}></i>
                     Priority
                   </button>
                 ) : (
@@ -375,7 +390,7 @@ export default function ManageJobsPage() {
                       handleTogglePriority(selectedJob.jobID);
                     }}
                   >
-                    <i className={`fas fa-gem ${selectedJob.priority ? 'text-primary' : 'text-secondary'}`}></i>
+                    <i className={`fas fa-gem ${selectedJob.priority ? '' : 'text-secondary'}`}></i>
                     {selectedJob.priority ? 'Set Low Priority' : 'Set High Priority'}
                   </button>
                 )}
@@ -693,19 +708,17 @@ export default function ManageJobsPage() {
                               key={job.jobID}
                               className={`job-row ${job.status === 2 ? "job-hidden" : ""
                                 } ${isJobExpired(job.deadline) ? "job-expired" : ""
+                                } ${job.priority ? "job-priority" : ""
                                 }`}
                             >
                               <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
                               >
-                                <div
-                                  className={`job-title ${job.status === 3 ? "text-danger" : ""
-                                    }`}
-                                >
+                                <div className="job-title">
                                   {job.priority === true && <i className="fas fa-gem text-primary mr-2"></i>}
                                   <span
-                                    className={`job-title ${isJobExpired(job.deadline)
+                                    className={`job-title-text ${isJobExpired(job.deadline)
                                         ? "text-danger"
                                         : ""
                                       }`}
@@ -788,7 +801,7 @@ export default function ManageJobsPage() {
                                             : "Cannot change priority for rejected jobs"
                                       }
                                     >
-                                      <i className={`fas fa-gem ${job.priority ? 'text-primary' : 'text-secondary'}`}></i>
+                                      <i className={`fas fa-gem ${job.priority ? '' : 'text-secondary'}`}></i>
                                       {job.priority ? 'High Priority' : 'Low Priority'}
                                     </button>
                                   ) : (
@@ -804,8 +817,8 @@ export default function ManageJobsPage() {
                                       onConfirm={() => handleTogglePriority(job.jobID)}
                                     >
                                       <button className={`priority-btn ${job.priority ? 'high-priority' : 'low-priority'}`}>
-                                        <i className={`fas fa-gem ${job.priority ? 'text-primary' : 'text-secondary'}`}></i>
-                                        {job.priority ? 'Low Priority' : 'High Priority'}
+                                        <i className={`fas fa-gem ${job.priority ? '' : 'text-secondary'}`}></i>
+                                        {job.priority ? 'Set Low Priority' : 'Set High Priority'}
                                       </button>
                                     </ConfirmDialog>
                                   )}
