@@ -30,7 +30,7 @@ export const ForgotPassword = ({ onSuccess }) => {
         if (error.response?.status === 500) {
             toast.error(error.response.data?.error || "Server error, please try again.");
         } else {
-            setError("email", { type: "manual", message: error.data || "Error sending OTP" });
+            setError("email", { type: "manual", message: error.data || "Email is not register" });
         }
     } finally {
       setLoading(false);

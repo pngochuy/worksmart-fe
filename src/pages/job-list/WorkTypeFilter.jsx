@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 const WorkTypeFilter = ({ searchParams, setSearchParams }) => {
-  const allTypes = ["Freelance", "Full Time", "Internship", "Part-Time"];
+  const allTypes = ["Freelance", "Full-Time", "Internship", "Part-Time"];
   const workTypes = searchParams.WorkTypes || [];
 
   const handleCheckboxChange = (event) => {

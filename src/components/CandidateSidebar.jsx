@@ -75,6 +75,11 @@ export const CandidateSidebar = () => {
             <i className="la la-lock"></i>Change Password
           </NavLink>
         </li>
+        <li className={checkActive("/candidate/settings") ? "active" : ""}>
+          <NavLink to="/candidate/settings">
+            <i className="la la-cog"></i>Settings
+          </NavLink>
+        </li>
         <li>
           <NavLink to="index.html">
             <i className="la la-sign-out"></i>Logout
