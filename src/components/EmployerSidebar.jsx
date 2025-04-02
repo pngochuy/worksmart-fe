@@ -79,6 +79,11 @@ export const EmployerSidebar = () => {
             <i className="la la-lock"></i>Change Password
           </NavLink>
         </li>
+        <li className={checkActive("/employer/settings") ? "active" : ""}>
+          <NavLink to="/employer/settings">
+            <i className="la la-cog"></i>Settings
+          </NavLink>
+        </li>
         <li>
           <NavLink to="index.html">
             <i className="la la-sign-out"></i>Logout
