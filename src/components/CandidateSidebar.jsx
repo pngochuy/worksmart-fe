@@ -89,15 +89,13 @@ export const CandidateSidebar = () => {
         </li>
       </ul>
 
-      <div className="skills-percentage">
+      {/* <div className="skills-percentage">
         <h4>Skills Percentage</h4>
         <p>
           Put value for &qout;Cover Image&qout; field to increase your skill up
           to &qout;85%&qout;
         </p>
-
-        {/* Pie Graph */}
-      </div>
+      </div> */}
     </>
   );
 };

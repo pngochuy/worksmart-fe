@@ -58,7 +58,7 @@ export const Index = () => {
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return format(date, "dd/MM/yyyy HH:mm");
+      return format(date, "dd/MM/yyyy");
     } catch (error) {
       return dateString;
     }
@@ -124,7 +124,7 @@ export const Index = () => {
                               <td>{index + 1}</td>
                               <td className="order-code">#{transaction.orderCode}</td>
                               <td className="transaction-content">{transaction.content}</td>
-                              <td className="amount">{transaction.price.toLocaleString('vi-VN')} VNĐ</td>
+                              <td className="amount">{transaction.price.toLocaleString('vi-VN')} VND</td>
                               <td className="status">
                                 <span className={`badge ${getStatusBadgeColor(transaction.status)}`}>
                                   {transaction.status}
