@@ -1,4 +1,4 @@
-import { useState } from "react";
+/* eslint-disable react/prop-types */
 
 const WorkTypeFilter = ({ searchParams, setSearchParams }) => {
   const allTypes = ["Freelance", "Full-Time", "Internship", "Part-Time"];
