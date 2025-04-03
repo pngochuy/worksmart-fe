@@ -220,3 +220,47 @@ export const updateReportStatus = async (reportId, data) => {
     throw error;
   }
 };
+
+// Fetch combined settings
+export const fetchFreePlanSettings = async () => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/job/FreePLanSettings`
+    );
+    console.log("Free plan settings:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching free plan settings:", error);
+    throw error;
+  }
+};
+
+// Update employer settings
+export const updateEmployerFreePlan = async (employerSettings) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/job/employerBasicPlan`,
+      employerSettings
+    );
+    console.log("Updated employer settings:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating employer settings:", error);
+    throw error;
+  }
+};
+
+// Update candidate settings
+export const updateCandidateFreePlan = async (candidateSettings) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/job/candidateBasicPlan`,
+      candidateSettings
+    );
+    console.log("Updated candidate settings:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating candidate settings:", error);
+    throw error;
+  }
+};

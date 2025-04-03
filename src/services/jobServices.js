@@ -92,21 +92,33 @@ export const fetchJobDetails = async (jobId) => {
   }
 };
 
-// Hàm tạo công việc mới
+export const checkLimitCreateJob = async (userID) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userID}`
+    );
+    console.log("Jobssssssssssssssssssssssssssssssssss", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking job creation limit:", error);
+    return false;
+  }
+};
+// Tạo công việc mới
 export const createJob = async (jobData) => {
   try {
+    // Không cần thêm maxJobsPerDay vào dữ liệu công việc nữa
+    // Server sẽ tự đọc từ file cấu hình
     const response = await axios.post(
       `${BACKEND_API_URL}/api/Job/create`,
       jobData
     );
-    console.log(jobData);
     return response.data;
   } catch (error) {
     console.error("Error creating job:", error);
     throw error;
   }
 };
-
 // Hàm lấy danh sách ứng viên cho công việc theo ID
 export const fetchCandidatesForJob = async (jobId) => {
   try {
@@ -256,17 +268,6 @@ export const fetchJobTags = async () => {
   }
 };
 
-export const checkLimitCreateJob = async (userId) => {
-  try {
-    const response = await axios.get(
-      `${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userId}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error create to job limit:", error);
-    throw error;
-  }
-};
 export const toggleJobPriority = async (id) => {
   try {
     console.log(`Toggling priority for job ID: ${id}`);
@@ -278,29 +279,5 @@ export const toggleJobPriority = async (id) => {
   } catch (error) {
     console.error("Error toggling job priority:", error);
     throw error;
-  }
-};
-export const fetchJobLimitSettings = async () => {
-  try {
-    const response = await axios.get(`${BACKEND_API_URL}/api/job/joblimit`);
-
-    console.log(response.data); // In ra thông tin jobLimitSettings
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching job limit settings:", error);
-  }
-};
-export const updateJobLimitSettings = async (newSettings) => {
-  try {
-    const response = await axios.post(
-      `${BACKEND_API_URL}/api/job/joblimit`,
-      newSettings
-    );
-
-    console.log(response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error updating settings:", error);
-    throw error; // Re-throw to handle in component
   }
 };
