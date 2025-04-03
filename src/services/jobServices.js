@@ -94,8 +94,10 @@ export const fetchJobDetails = async (jobId) => {
 
 export const checkLimitCreateJob = async (userID) => {
   try {
-    const response = await axios.get(`${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userID}`);
-    console.log("Jobssssssssssssssssssssssssssssssssss", response.data)
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/checkLimitCreateJobPerDay/${userID}`
+    );
+    console.log("Jobssssssssssssssssssssssssssssssssss", response.data);
     return response.data;
   } catch (error) {
     console.error("Error checking job creation limit:", error);
@@ -107,7 +109,10 @@ export const createJob = async (jobData) => {
   try {
     // Không cần thêm maxJobsPerDay vào dữ liệu công việc nữa
     // Server sẽ tự đọc từ file cấu hình
-    const response = await axios.post(`${BACKEND_API_URL}/api/Job/create`, jobData);
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Job/create`,
+      jobData
+    );
     return response.data;
   } catch (error) {
     console.error("Error creating job:", error);
@@ -263,7 +268,6 @@ export const fetchJobTags = async () => {
   }
 };
 
-
 export const toggleJobPriority = async (id) => {
   try {
     console.log(`Toggling priority for job ID: ${id}`);
@@ -275,29 +279,5 @@ export const toggleJobPriority = async (id) => {
   } catch (error) {
     console.error("Error toggling job priority:", error);
     throw error;
-  }
-};
-export const fetchJobLimitSettings = async () => {
-  try {
-    const response = await axios.get(`${BACKEND_API_URL}/api/job/joblimit`);
-
-    console.log(response.data); // In ra thông tin jobLimitSettings
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching job limit settings:", error);
-  }
-};
-export const updateJobLimitSettings = async (newSettings) => {
-  try {
-    const response = await axios.post(
-      `${BACKEND_API_URL}/api/job/joblimit`,
-      newSettings
-    );
-
-    console.log(response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error updating settings:", error);
-    throw error; // Re-throw to handle in component
   }
 };
