@@ -141,8 +141,8 @@ export const index = () => {
                               return (
                                 <tr key={index}>
                                   <td>{index + 1}</td>
-                                  <td className="package">
-                                    <a href="#">{package_.name}</a>
+                                  <td className="package" style={{ textDecoration: "none", color: "black" }}>
+                                    <div className="font-weight-bold">{package_.name}</div>
                                   </td>
                                   <td className="total-jobs">
                                     {package_.jobPostLimitPerDay ? 

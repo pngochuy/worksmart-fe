@@ -8,6 +8,26 @@ const getAccessToken = () => {
   return token ? token.replace(/^"(.*)"$/, "$1") : null;
 };
 
+export const checkActiveSubscription = async (userId) => {
+  try {
+    const token = getAccessToken();
+    
+    const response = await axios.get(`${BACKEND_API_URL}/subscriptions/has-active-subscription/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    const data = response.data;
+    console.log("Subscription data:", data);
+    
+    return data;
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+    throw error;
+  }
+};
+
 export const fetchCompanyProfile = async () => {
   try {
     const token = getAccessToken();
@@ -265,13 +285,14 @@ export const fetchCompanyDetails = async (companyName) => {
   }
 };
 
-export const createPaymentLink = async (userId, packageId) => {
+export const createPaymentLink = async (userId, packageId, role) => {
   try {
     const response = await axios.post(
       `${BACKEND_API_URL}/api/Payment/create-payment`,
       {
         userId,
         packageId,
+        role,
       }
     );
 
@@ -312,10 +333,15 @@ export const checkPaymentStatus = async (orderCode) => {
   }
 };
 
-export const cancelPayment = async (orderCode) => {
+export const cancelPayment = async ({ orderCode, code, id, cancel, status }) => {
   try {
+    console.log('Query Params:', { orderCode, code, id, cancel, status }); 
+
     const response = await axios.get(
-      `/${BACKEND_API_URL}api/Payment/payment-cancel?orderCode=${orderCode}`);
+      `${BACKEND_API_URL}/api/Payment/payment-cancel`, {
+        params: { orderCode, code, id, cancel, status },
+      });
+      console.log("DATA SENDING:", response);
     return response.data;
   } catch (error) {
     console.error('Error canceling payment:', error);
