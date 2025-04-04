@@ -29,10 +29,14 @@ import { Index as CategoryTagsManagerPage } from "./pages/dashboard-candidate/ca
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
+import { Index as CandidateTransactionHistoryPage } from "./pages/dashboard-candidate/transaction-history"
 import { Index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
 import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
 import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
 import { Index as CandidateSettingPage } from "./pages/dashboard-candidate/settings";
+import CandidatePackagePurchase from "./pages/dashboard-candidate/package/PackagePurchase";
+import CandidatePaymentResult from "./pages/dashboard-candidate/package/PackageResult";
+import CandidatePaymentCancel from "./pages/dashboard-candidate/package/PackageCancel";
 
 // Employer Pages
 import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
@@ -52,9 +56,9 @@ import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
 import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
 import UploadFileTest from "./pages/dashboard-employer/upload-file/UploadFileTest";
 import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
-import PackagePurchase from "./pages/dashboard-employer/package/PackagePurchase";
-import PaymentResult from "./pages/dashboard-employer/package/PaymentResult";
-import PaymentCancel from "./pages/dashboard-employer/package/PaymentCancel";
+import EmployerPackagePurchase from "./pages/dashboard-employer/package/PackagePurchase";
+import EmployerPaymentResult from "./pages/dashboard-employer/package/PaymentResult";
+import EmployerPaymentCancel from "./pages/dashboard-employer/package/PaymentCancel";
 import { Index as EmployerSettingPage } from "./pages/dashboard-employer/settings";
 
 // Admin Pages
@@ -301,6 +305,42 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                index
+                path="transaction-history"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CandidateTransactionHistoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="package-list"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CandidatePackagePurchase />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="payment-return"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CandidatePaymentResult  />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="payment-cancel"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <CandidatePaymentCancel  />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
             {/* Employer */}
             <Route path="/employer" element={<UserLayout />}>
@@ -477,7 +517,7 @@ function App() {
                 path="package-list"
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
-                    <PackagePurchase />
+                    <EmployerPackagePurchase />
                   </ProtectedRoute>
                 }
               />
@@ -486,7 +526,7 @@ function App() {
                 path="payment-return"
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
-                    <PaymentResult />
+                    <EmployerPaymentResult />
                   </ProtectedRoute>
                 }
               />
@@ -495,7 +535,7 @@ function App() {
                 path="payment-cancel"
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
-                    <PaymentCancel />
+                    <EmployerPaymentCancel />
                   </ProtectedRoute>
                 }
               />

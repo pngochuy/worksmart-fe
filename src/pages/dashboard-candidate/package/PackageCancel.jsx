@@ -154,7 +154,7 @@ const PaymentCancel = () => {
               </div>
               <div className="mt-4">
                 <button 
-                  onClick={() => navigate('/employer/package-list')} 
+                  onClick={() => navigate('/candidate/package-list')} 
                   className="btn btn-warning btn-lg px-4"
                 >
                   Return to Packages

@@ -58,6 +58,15 @@ export const CandidateSidebar = () => {
             <i className="la la-box"></i>Subscription Plans
           </NavLink>
         </li>
+        <li
+          className={
+            checkActive("/candidate/transaction-history") ? "active" : ""
+          }
+        >
+          <NavLink to="/candidate/transaction-history">
+            <i className="la la-credit-card"></i>Transaction History
+          </NavLink>
+        </li>
         <li className={checkActive("/candidate/messages") ? "active" : ""}>
           <NavLink to="/candidate/messages">
             <i className="la la-comment-o"></i>Messages
@@ -94,15 +103,13 @@ export const CandidateSidebar = () => {
         </li>
       </ul>
 
-      <div className="skills-percentage">
+      {/* <div className="skills-percentage">
         <h4>Skills Percentage</h4>
         <p>
           Put value for &qout;Cover Image&qout; field to increase your skill up
           to &qout;85%&qout;
         </p>
-
-        {/* Pie Graph */}
-      </div>
+      </div> */}
     </>
   );
 };

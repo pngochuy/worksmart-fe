@@ -6,6 +6,7 @@ import { getUserLoginData } from "@/helpers/decodeJwt";
 import { Tooltip } from "primereact/tooltip";
 import { AdminSidebar } from "./AdminSiderbar";
 import { fetchCompanyProfile } from "@/services/employerServices";
+import { checkActiveSubscription } from "@/services/employerServices";
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ export const Sidebar = () => {
   const isAdmin = location.pathname.startsWith("/admin");
   const [verificationLevel, setVerificationLevel] = useState("");
   const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
+  const [subscriptionData, setSubscriptionData] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -24,14 +26,26 @@ export const Sidebar = () => {
         console.log("user: ", user);
         setUserDataLogin(user);
 
-        if (user.role === "Employer") {
-          const companyData = await fetchCompanyProfile();
+        if (user) {
+          // Check for subscription status
+          if (user.userID) {
+            try {
+              const subData = await checkActiveSubscription(user.userID);
+              console.log("Subscription Data: ", subData);
+              setSubscriptionData(subData);
+            } catch (error) {
+              console.error("Error fetching subscription data:", error);
+            }
+          }
 
-          setVerificationLevel(companyData.verificationLevel);
-          console.log("Verification Level:", companyData.verificationLevel);
+          if (user.role === "Employer") {
+            const companyData = await fetchCompanyProfile();
+            setVerificationLevel(companyData.verificationLevel);
+            console.log("Verification Level:", companyData.verificationLevel);
+          }
         }
       } catch (error) {
-        console.error("Error loading verification data:", error);
+        console.error("Error loading user data:", error);
       }
     };
     loadData();
@@ -55,7 +69,7 @@ export const Sidebar = () => {
                     ? userDataLogin.avatar
                     : "https://www.topcv.vn/images/avatar-default.jpg"
                 }
-                // alt={userDataLogin.avatar}
+                alt="User avatar"
                 className="thumb"
               />
             </div>
@@ -84,6 +98,31 @@ export const Sidebar = () => {
             </div>
           </div>
 
+          {/* Subscription Info */}
+          {subscriptionData?.hasActiveSubscription && (
+            <div
+              className="px-3 py-2 text-gray-600"
+              style={{ fontSize: "0.85rem" }}
+            >
+              <Tooltip
+                target=".subscription-info"
+                className="custom-tooltip"
+              />
+              <span>Package: </span>
+              <span className="text-blue-500 font-medium">
+                {subscriptionData.package.name}
+                <i
+                  className="fa-solid fa-info-circle ml-2 subscription-info"
+                  data-pr-tooltip={`Expires on: ${new Date(subscriptionData.expireDate).toLocaleDateString()}`}
+                  data-pr-position="right"
+                  data-pr-at="right+9 top"
+                  data-pr-my="left center-2"
+                  style={{ cursor: "pointer" }}
+                ></i>
+              </span>
+            </div>
+          )}
+
           {/* Account Verification */}
           {userDataLogin?.role === "Employer" && (
             <>
@@ -94,7 +133,6 @@ export const Sidebar = () => {
                 <Tooltip
                   target=".fa-circle-question"
                   className="custom-tooltip"
-                  // style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
                 />
                 <span>Account Verification: </span>
                 <a
@@ -135,13 +173,13 @@ export const Sidebar = () => {
             </>
           )}
           {/* End Employer Sidebar */}
-          {/* Employer Sidebar */}
+          {/* Admin Sidebar */}
           {isAdmin && (
             <>
               <AdminSidebar />
             </>
           )}
-          {/* End Employer Sidebar */}
+          {/* End Admin Sidebar */}
         </div>
       </div>
     </>
