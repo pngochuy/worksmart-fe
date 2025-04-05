@@ -104,16 +104,15 @@ export const Sidebar = () => {
               className="px-3 py-2 text-gray-600"
               style={{ fontSize: "0.85rem" }}
             >
-              <Tooltip
-                target=".subscription-info"
-                className="custom-tooltip"
-              />
-              <span>Package: </span>
+              <Tooltip target=".subscription-info" className="custom-tooltip" />
+              <span>Plan: </span>
               <span className="text-blue-500 font-medium">
-                {subscriptionData.package.name}
+                {subscriptionData.package.name.split(" ")[1]}
                 <i
                   className="fa-solid fa-info-circle ml-2 subscription-info"
-                  data-pr-tooltip={`Expires on: ${new Date(subscriptionData.expireDate).toLocaleDateString()}`}
+                  data-pr-tooltip={`Expires on: ${new Date(
+                    subscriptionData.expireDate
+                  ).toLocaleDateString()}`}
                   data-pr-position="right"
                   data-pr-at="right+9 top"
                   data-pr-my="left center-2"

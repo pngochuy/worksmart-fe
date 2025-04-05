@@ -161,14 +161,14 @@ export const FreePlanSettings = () => {
                             className="flex items-center"
                           >
                             <Briefcase className="mr-2 h-4 w-4" />
-                            Employer Settings
+                            Employer
                           </TabsTrigger>
                           <TabsTrigger
                             value="candidate"
                             className="flex items-center"
                           >
                             <User className="mr-2 h-4 w-4" />
-                            Candidate Settings
+                            Candidate
                           </TabsTrigger>
                         </TabsList>
 
@@ -277,7 +277,7 @@ export const FreePlanSettings = () => {
                                 ) : (
                                   <>
                                     <Save className="mr-2 h-4 w-4" />
-                                    Save Employer Settings
+                                    Save Settings
                                   </>
                                 )}
                               </Button>
@@ -354,7 +354,7 @@ export const FreePlanSettings = () => {
                                 ) : (
                                   <>
                                     <Save className="mr-2 h-4 w-4" />
-                                    Save Candidate Settings
+                                    Save Settings
                                   </>
                                 )}
                               </Button>

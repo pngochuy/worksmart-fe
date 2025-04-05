@@ -38,6 +38,8 @@ import { ResumePreview } from "@/components/ResumePreview";
 import { mapToResumeValues } from "@/lib/utils";
 import { NavLink, useNavigate } from "react-router-dom";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import { fetchFreePlanSettings } from "@/services/adminServices";
+import { hasActiveSubscription } from "@/services/subscriptionServices";
 
 // Pagination component
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -136,9 +138,58 @@ export const Index = () => {
 
   const handleCreateCV = async () => {
     try {
-      if (resumes.length >= 3) {
-        toast.warning("You can only create a maximum of 3 CVs.");
-        return;
+      const userActiveSubscription = await hasActiveSubscription();
+      console.log(userActiveSubscription);
+      if (userActiveSubscription.hasActiveSubscription === true) {
+        if (resumes.length >= userActiveSubscription.package.cvLimit) {
+          toast.warning(
+            <div>
+              You have reached your limit of{" "}
+              {userActiveSubscription.package.cvLimit} CVs.
+              <br />
+              <a
+                href="/package-list"
+                className="font-bold text-blue-600 hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/package-list");
+                }}
+              >
+                Upgrade your subscription
+              </a>{" "}
+              to create more CVs and access premium features.
+            </div>,
+            { autoClose: 8000 } // Give users more time to click the link
+          );
+          return;
+        }
+      } else {
+        const freePlanSettings = await fetchFreePlanSettings();
+        if (resumes.length >= freePlanSettings.candidateFreePlan.maxCVsPerDay) {
+          toast.warning(
+            <div>
+              You have reached your free plan limit of{" "}
+              {freePlanSettings.candidateFreePlan.maxCVsPerDay} CVs.
+              <br />
+              <a
+                href="/package-list"
+                className="font-bold text-blue-600 hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/package-list");
+                }}
+              >
+                Upgrade to a premium plan
+              </a>{" "}
+              to create unlimited CVs and unlock advanced features!
+            </div>,
+            {
+              autoClose: 8000,
+              className: "toast-with-link", // Add a custom class for styling
+            }
+          );
+          return;
+        }
       }
 
       const newCV = await createCV({ userID });

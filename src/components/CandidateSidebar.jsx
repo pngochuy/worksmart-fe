@@ -1,12 +1,15 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useNotifications } from "@/layouts/NotificationProvider";
 
 export const CandidateSidebar = () => {
   const location = useLocation();
+  const { unreadCount } = useNotifications();
 
   const checkActive = (path) => {
     // Kiểm tra nếu path truyền vào trùng với pathname hiện tại
     return location.pathname === path;
   };
+
   return (
     <>
       <ul className="navigation">
@@ -75,6 +78,9 @@ export const CandidateSidebar = () => {
         <li className={checkActive("/candidate/notifications") ? "active" : ""}>
           <NavLink to="/candidate/notifications">
             <i className="la la-bell"></i>Notifications
+            {unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount}</span>
+            )}
           </NavLink>
         </li>
         <li
@@ -106,10 +112,44 @@ export const CandidateSidebar = () => {
       {/* <div className="skills-percentage">
         <h4>Skills Percentage</h4>
         <p>
-          Put value for &qout;Cover Image&qout; field to increase your skill up
-          to &qout;85%&qout;
+          Put value for &quot;Cover Image&quot; field to increase your skill up
+          to &quot;85%&quot;
         </p>
-      </div> */}
+
+        {/* Pie Graph */}
+      {/* </div> */}
+
+      <style>
+        {`
+        .navigation li {
+          position: relative;
+        }
+        
+        .notification-badge {
+          position: absolute;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #FF3366;
+          color: white;
+          border-radius: 50%;
+          height: 20px;
+          min-width: 20px;
+          font-size: 11px;
+          font-weight: bold;
+          padding: 0 4px;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Nếu số lượng thông báo lớn (2 chữ số trở lên) */
+        .notification-badge:not([data-count="1"]) {
+          border-radius: 10px;
+        }
+        `}
+      </style>
     </>
   );
 };
