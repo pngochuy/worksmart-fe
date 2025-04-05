@@ -1,23 +1,19 @@
+/* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import {
   Check,
   X,
   Award,
   Briefcase,
-  Users,
   Star,
-  Zap,
   Loader,
   Clock,
   TrendingUp,
-  CheckCircle,
   AlertCircle,
   CreditCard,
-  XCircle,
 } from "lucide-react";
-import { getUserRoleFromToken, getUserLoginData } from "@/helpers/decodeJwt";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 import { createPaymentLink, getPackages } from "@/services/employerServices";
-import { toast } from "react-toastify";
 
 const PackagePurchase = () => {
   const [loading, setLoading] = useState(false);
@@ -152,7 +148,11 @@ const PackagePurchase = () => {
         throw new Error("Please login to make a transaction");
       }
 
-      const paymentData = await createPaymentLink(userId, selectedPackage.id, role);
+      const paymentData = await createPaymentLink(
+        userId,
+        selectedPackage.id,
+        role
+      );
 
       window.location.href = paymentData.checkoutUrl;
     } catch (error) {
@@ -686,8 +686,8 @@ const PackagePurchase = () => {
                     </h4>
                     <p className="text-gray-600 ml-7">
                       Simply select the package you want and click on the
-                      "Select Package" button. You'll be directed to our secure
-                      payment gateway to complete your purchase.
+                      &quot;Select Package&quot; button. You&apos;ll be directed
+                      to our secure payment gateway to complete your purchase.
                     </p>
                   </div>
 

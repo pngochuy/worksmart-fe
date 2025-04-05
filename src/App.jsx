@@ -29,9 +29,9 @@ import { Index as CategoryTagsManagerPage } from "./pages/dashboard-candidate/ca
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
 import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
-import { Index as CandidateTransactionHistoryPage } from "./pages/dashboard-candidate/transaction-history"
+import { Index as CandidateTransactionHistoryPage } from "./pages/dashboard-candidate/transaction-history";
 import { Index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
-import { index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
+import { Index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
 import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
 import { Index as CandidateSettingPage } from "./pages/dashboard-candidate/settings";
 import CandidatePackagePurchase from "./pages/dashboard-candidate/package/PackagePurchase";
@@ -47,7 +47,7 @@ import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
 import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
 import { Index as EmployerTransactionHistoryPage } from "./pages/dashboard-employer/transaction-history";
 import { Index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
-import { index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
+import { Index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
@@ -328,7 +328,7 @@ function App() {
                 path="payment-return"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    <CandidatePaymentResult  />
+                    <CandidatePaymentResult />
                   </ProtectedRoute>
                 }
               />
@@ -337,7 +337,7 @@ function App() {
                 path="payment-cancel"
                 element={
                   <ProtectedRoute requiredRoleId="Candidate">
-                    <CandidatePaymentCancel  />
+                    <CandidatePaymentCancel />
                   </ProtectedRoute>
                 }
               />
