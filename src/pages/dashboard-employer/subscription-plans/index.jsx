@@ -7,7 +7,6 @@ export const index = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
-  // Thêm các state phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -15,7 +14,7 @@ export const index = () => {
     if (userInfo && userInfo.userID) {
       return userInfo.userID;
     }
-    
+
     const userDataString = localStorage.getItem("userLoginData");
     if (userDataString) {
       try {
@@ -26,56 +25,60 @@ export const index = () => {
         throw new Error("Unable to get user information");
       }
     }
-    
+
     throw new Error("Please login to view your packages");
   };
 
-  useEffect(() => {
-    const fetchSubscriptionData = async () => {
-      try {
-        setLoading(true);
-        const userId = getUserId();
-        
-        try {
-          const data = await getEmployerSubscriptions(userId);
-          setSubscriptionsData(Array.isArray(data) ? data : []);
-          setError(null); // Clear any previous errors
-        } catch (apiError) {
-          console.error("API Error:", apiError);
-          
-          if (apiError.response && apiError.response.status === 404) {
-            setSubscriptionsData([]);
-            setError(null);
-          } else {
-            setError(apiError.message || "Failed to load subscription data");
-          }
-        }
-      } catch (err) {
-        setError(err.message || "Failed to load user data");
-        console.error("User ID Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleRefresh = () => {
+    fetchSubscriptionData(); // Tải lại dữ liệu subscription
+  }
 
+  const fetchSubscriptionData = async () => {
+    try {
+      setLoading(true);
+      const userId = getUserId();
+  
+      try {
+        const data = await getEmployerSubscriptions(userId);
+        setSubscriptionsData(Array.isArray(data) ? data : []);
+        setError(null); // Clear any previous errors
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+  
+        if (apiError.response && apiError.response.status === 404) {
+          setSubscriptionsData([]);
+          setError(null);
+        } else {
+          setError(apiError.message || "Failed to load subscription data");
+        }
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load user data");
+      console.error("User ID Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSubscriptionData();
-  }, [userInfo]);
+  }, []);
 
   const calculateUsage = (subscription, package_) => {
     if (package_.jobPostLimitPerDay) {
-        const remainingDays = Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)));
+      const remainingDays = Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)));
 
-        return {
-            remaining: remainingDays
-        };
+      return {
+        remaining: remainingDays
+      };
     }
 
     if (package_.cvLimit) {
-        return {
-            total: package_.cvLimit,
-            postRemaining: package_.cvLimit,
-            remaining: Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)))
-        };
+      return {
+        total: package_.cvLimit,
+        postRemaining: package_.cvLimit,
+        remaining: Math.max(0, Math.ceil((new Date(subscription.expDate) - new Date()) / (1000 * 60 * 60 * 24)))
+      };
     }
 
     return { total: 0, postRemaining: 0, remaining: 0 };
@@ -132,6 +135,14 @@ export const index = () => {
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>My Packages</h4>
+                    {!loading && subscriptionsData.length > 0 && (
+                      <button
+                        className="theme-btn btn-style-one btn-small px-2 py-2"
+                        onClick={handleRefresh}
+                      >
+                        <i className="la la-refresh mr-1"></i> Refresh
+                      </button>
+                    )}
                   </div>
 
                   <div className="widget-content">
@@ -171,7 +182,7 @@ export const index = () => {
                               const subscription = item.subscription || {};
                               const package_ = item.package || {};
                               const usage = calculateUsage(subscription, package_);
-                              
+
                               return (
                                 <tr key={index}>
                                   <td>{indexOfFirstItem + index + 1}</td>
@@ -179,8 +190,8 @@ export const index = () => {
                                     <div className="font-weight-bold">{package_.name}</div>
                                   </td>
                                   <td className="total-jobs">
-                                    {package_.jobPostLimitPerDay ? 
-                                      `${package_.jobPostLimitPerDay} per day` : 
+                                    {package_.jobPostLimitPerDay ?
+                                      `${package_.jobPostLimitPerDay} per day` :
                                       package_.cvLimit || 'N/A'}
                                   </td>
                                   <td className="post-remaining">{package_.featuredJobPostLimit}</td>
@@ -198,7 +209,7 @@ export const index = () => {
                             })}
                           </tbody>
                         </table>
-                        
+
                         {/* Phân trang */}
                         {subscriptionsData.length > 0 && (
                           <div className="pagination-container mt-4 d-flex justify-content-center">

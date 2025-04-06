@@ -6,10 +6,15 @@ export const Index = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
+  const [userInfo, setUserInfo] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const getUserId = () => {
+    if (userInfo && userInfo.userID) {
+      return userInfo.userID;
+    }
+
     const userDataString = localStorage.getItem("userLoginData");
     if (userDataString) {
       try {
@@ -20,40 +25,43 @@ export const Index = () => {
         throw new Error("Unable to get user information");
       }
     }
-    
+
     throw new Error("Please login to view your transactions");
   };
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-        
-        const userId = getUserId();
-        
-        try {
-          const data = await getUserTransactions(userId);
-          setTransactions(Array.isArray(data) ? data : []);
-          console.log("Transaction data:", data);
-          setError(null); // Clear any previous errors
-        } catch (apiError) {
-          console.error("API Error:", apiError);
-          
-          if (apiError.response && apiError.response.status === 404) {
-            setTransactions([]);
-            setError(null);
-          } else {
-            setError(apiError.message || "Failed to load transaction data");
-          }
-        }
-      } catch (err) {
-        setError(err.message || "Failed to load user data");
-        console.error("User ID Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleRefresh = () => {
+    fetchTransactions(); // Tải lại dữ liệu giao dịch
+  }
+  
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
 
+      const userId = getUserId();
+
+      try {
+        const data = await getUserTransactions(userId);
+        setTransactions(Array.isArray(data) ? data : []);
+        setError(null); // Clear any previous errors
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+
+        if (apiError.response && apiError.response.status === 404) {
+          setTransactions([]);
+          setError(null);
+        } else {
+          setError(apiError.message || "Failed to load transaction data");
+        }
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load user data");
+      console.error("User ID Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTransactions();
   }, []);
 
@@ -117,6 +125,14 @@ export const Index = () => {
               <div className="tabs-box">
                 <div className="widget-title">
                   <h4>My Transactions</h4>
+                  {!loading && transactions.length > 0 && (
+                    <button
+                      className="theme-btn btn-style-one btn-small px-2 py-2"
+                      onClick={handleRefresh}
+                    >
+                      <i className="la la-refresh mr-1"></i> Refresh
+                    </button>
+                  )}
                 </div>
 
                 <div className="widget-content">
@@ -167,7 +183,7 @@ export const Index = () => {
                           ))}
                         </tbody>
                       </table>
-                      
+
                       {/* Thêm phân trang */}
                       {transactions.length > 0 && (
                         <div className="pagination-container mt-4 d-flex justify-content-center">
