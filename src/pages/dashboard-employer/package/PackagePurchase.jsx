@@ -225,7 +225,7 @@ const PackagePurchase = () => {
           <p className="text-sm opacity-90 mb-3 text-white">{pkg.tagline}</p>
           <div className="flex items-center justify-center">
             <span className="text-3xl font-bold">
-              {pkg.price.toLocaleString()}
+              {pkg.price.toLocaleString('en-US')}
             </span>
             <span className="ml-1 text-white opacity-80">VND</span>
           </div>
