@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   Mail,
@@ -22,9 +22,13 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "react-toastify";
+import {
+  getNotificationSettingById,
+  updateNotificationSetting,
+} from "../../../services/notificationSettingService";
+import { getUserLoginData } from "../../../helpers/decodeJwt";
 
 export const Index = () => {
-  // Initialize state for notification preferences
   const [notificationPreferences, setNotificationPreferences] = useState({
     realTime: {
       // Job Opportunities
@@ -68,6 +72,72 @@ export const Index = () => {
     },
   });
 
+  const [loading, setLoading] = useState(false);
+  const [settingId, setSettingId] = useState(null);
+  const userId = getUserLoginData().userID;
+
+  // Fetch notification settings on component mount
+  useEffect(() => {
+    const fetchNotificationSettings = async () => {
+      try {
+        setLoading(true);
+        const data = await getNotificationSettingById(userId);
+        console.log("Notification settings data:", data);
+        setSettingId(data.notificationSettingID);
+
+        // Map API data to our state structure
+        setNotificationPreferences({
+          realTime: {
+            // Job Opportunities
+            newJobMatches: data.newJobMatches ?? true,
+            savedJobsUpdates: data.savedJobsUpdates ?? true,
+            recommendedJobs: data.recommendedJobs ?? true,
+
+            // Application Status
+            applicationReviewed: data.applicationReviewed ?? true,
+            interviewInvitation: data.interviewInvitation ?? true,
+            applicationRejected: data.applicationRejected ?? true,
+
+            // Communication
+            messageReceived: data.messagesReceived ?? true,
+            employerViewedProfile: data.profileViews ?? true,
+
+            // Events & Reminders
+            upcomingInterviews: data.upcomingInterviews ?? true,
+            applicationDeadlines: data.applicationDeadlines ?? true,
+            careerEvents: data.careerEvents ?? true,
+          },
+          email: {
+            // Fixed property names to match the UI state structure
+            newJobMatches: data.emailNewJobMatches ?? true,
+            savedJobsUpdates: data.emailSavedJobsUpdates ?? true,
+            recommendedJobs: data.emailRecommendedJobs ?? true,
+
+            applicationReviewed: data.emailApplicationReviewed ?? true,
+            interviewInvitation: data.emailInterviewInvitation ?? true,
+            applicationRejected: data.emailApplicationRejected ?? true,
+
+            messageReceived: data.emailMessagesReceived ?? true,
+            employerViewedProfile: data.emailProfileViews ?? true,
+
+            upcomingInterviews: data.emailUpcomingInterviews ?? true,
+            applicationDeadlines: data.emailApplicationDeadlines ?? true,
+            careerEvents: data.emailCareerEvents ?? true,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to fetch notification settings:", error);
+        toast.error(
+          "Failed to load notification settings. Using default values."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotificationSettings();
+  }, [userId]);
+
   // Handle toggle changes
   const handleToggleChange = (category, setting) => {
     setNotificationPreferences((prev) => ({
@@ -79,25 +149,65 @@ export const Index = () => {
     }));
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    // This function would be replaced with your API call
-    saveNotificationPreferences(notificationPreferences);
+  // Handle form submission - map our state back to API format
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
 
-    // Show success toast
-    toast.success(
-      "Your notification preferences have been updated successfully."
-    );
+      // Transform our UI state back to API format
+      const apiData = {
+        notificationSettingID: settingId,
+        userID: userId,
 
-    return notificationPreferences;
-  };
+        // Real-time Notifications
+        newJobMatches: notificationPreferences.realTime.newJobMatches,
+        savedJobsUpdates: notificationPreferences.realTime.savedJobsUpdates,
+        recommendedJobs: notificationPreferences.realTime.recommendedJobs,
+        applicationReviewed:
+          notificationPreferences.realTime.applicationReviewed,
+        interviewInvitation:
+          notificationPreferences.realTime.interviewInvitation,
+        applicationRejected:
+          notificationPreferences.realTime.applicationRejected,
+        messagesReceived: notificationPreferences.realTime.messageReceived,
+        profileViews: notificationPreferences.realTime.employerViewedProfile,
+        upcomingInterviews: notificationPreferences.realTime.upcomingInterviews,
+        applicationDeadlines:
+          notificationPreferences.realTime.applicationDeadlines,
+        careerEvents: notificationPreferences.realTime.careerEvents,
 
-  // This is a placeholder for your API function
-  const saveNotificationPreferences = (preferences) => {
-    // Return the current notification preferences
-    console.log("Submitting notification preferences:", preferences);
-    // Replace this with your API call
-    // Example: await axios.post('/candidate/preferences/notifications', preferences);
+        // Email Notifications
+        emailNewJobMatches: notificationPreferences.email.newJobMatches,
+        emailSavedJobsUpdates: notificationPreferences.email.savedJobsUpdates,
+        emailRecommendedJobs: notificationPreferences.email.recommendedJobs,
+        emailApplicationReviewed:
+          notificationPreferences.email.applicationReviewed,
+        emailInterviewInvitation:
+          notificationPreferences.email.interviewInvitation,
+        emailApplicationRejected:
+          notificationPreferences.email.applicationRejected,
+        emailMessagesReceived: notificationPreferences.email.messageReceived,
+        emailProfileViews: notificationPreferences.email.employerViewedProfile,
+        emailUpcomingInterviews:
+          notificationPreferences.email.upcomingInterviews,
+        emailApplicationDeadlines:
+          notificationPreferences.email.applicationDeadlines,
+        emailCareerEvents: notificationPreferences.email.careerEvents,
+      };
+
+      // Send data to API
+      await updateNotificationSetting(userId, apiData);
+      toast.success(
+        "Your notification preferences have been updated successfully."
+      );
+    } catch (error) {
+      console.error("Failed to update notification settings:", error);
+      toast.error(
+        "Failed to update notification preferences. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Notification settings configuration for rendering
@@ -216,128 +326,149 @@ export const Index = () => {
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-6">
-                  <div className="grid gap-8">
-                    {/* Real-time notifications section */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Bell className="h-5 w-5 text-indigo-600" />
-                        <h4 className="text-lg font-medium">
-                          Real-time Notifications
-                        </h4>
-                      </div>
+                {loading ? (
+                  <CardContent className="pt-6 text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-2">
+                      Loading your notification preferences...
+                    </p>
+                  </CardContent>
+                ) : (
+                  <>
+                    <CardContent className="pt-6">
+                      <div className="grid gap-8">
+                        {/* Real-time notifications section */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Bell className="h-5 w-5 text-indigo-600" />
+                            <h4 className="text-lg font-medium">
+                              Real-time Notifications
+                            </h4>
+                          </div>
 
-                      <div className="space-y-6">
-                        {notificationCategories.map((category) => (
-                          <div
-                            key={`realtime-category-${category.id}`}
-                            className="space-y-4"
-                          >
-                            <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                              {category.title}
-                            </h5>
-                            {category.settings.map((setting) => (
+                          <div className="space-y-6">
+                            {notificationCategories.map((category) => (
                               <div
-                                key={`realtime-${setting.id}`}
-                                className="flex items-center justify-between py-2"
+                                key={`realtime-category-${category.id}`}
+                                className="space-y-4"
                               >
-                                <div className="flex items-center gap-3">
-                                  {setting.icon}
-                                  <div>
-                                    <p className="font-medium">
-                                      {setting.title}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      {setting.description}
-                                    </p>
+                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                  {category.title}
+                                </h5>
+                                {category.settings.map((setting) => (
+                                  <div
+                                    key={`realtime-${setting.id}`}
+                                    className="flex items-center justify-between py-2"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {setting.icon}
+                                      <div>
+                                        <p className="font-medium">
+                                          {setting.title}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                          {setting.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Switch
+                                      checked={
+                                        notificationPreferences.realTime[
+                                          setting.id
+                                        ]
+                                      }
+                                      onCheckedChange={() =>
+                                        handleToggleChange(
+                                          "realTime",
+                                          setting.id
+                                        )
+                                      }
+                                      className="rounded-xl"
+                                    />
                                   </div>
-                                </div>
-                                <Switch
-                                  checked={
-                                    notificationPreferences.realTime[setting.id]
-                                  }
-                                  onCheckedChange={() =>
-                                    handleToggleChange("realTime", setting.id)
-                                  }
-                                  className="rounded-xl"
-                                />
+                                ))}
+                                {category.id !==
+                                  notificationCategories[
+                                    notificationCategories.length - 1
+                                  ].id && <Separator className="my-2" />}
                               </div>
                             ))}
-                            {category.id !==
-                              notificationCategories[
-                                notificationCategories.length - 1
-                              ].id && <Separator className="my-2" />}
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
 
-                    <Separator />
+                        <Separator />
 
-                    {/* Email notifications section */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Mail className="h-5 w-5 text-indigo-600" />
-                        <h4 className="text-lg font-medium">
-                          Email Notifications
-                        </h4>
-                      </div>
+                        {/* Email notifications section */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Mail className="h-5 w-5 text-indigo-600" />
+                            <h4 className="text-lg font-medium">
+                              Email Notifications
+                            </h4>
+                          </div>
 
-                      <div className="space-y-6">
-                        {notificationCategories.map((category) => (
-                          <div
-                            key={`email-category-${category.id}`}
-                            className="space-y-4"
-                          >
-                            <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                              {category.title}
-                            </h5>
-                            {category.settings.map((setting) => (
+                          <div className="space-y-6">
+                            {notificationCategories.map((category) => (
                               <div
-                                key={`email-${setting.id}`}
-                                className="flex items-center justify-between py-2"
+                                key={`email-category-${category.id}`}
+                                className="space-y-4"
                               >
-                                <div className="flex items-center gap-3">
-                                  {setting.icon}
-                                  <div>
-                                    <p className="font-medium">
-                                      {setting.title}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      {setting.description}
-                                    </p>
+                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                  {category.title}
+                                </h5>
+                                {category.settings.map((setting) => (
+                                  <div
+                                    key={`email-${setting.id}`}
+                                    className="flex items-center justify-between py-2"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {setting.icon}
+                                      <div>
+                                        <p className="font-medium">
+                                          {setting.title}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                          {setting.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Switch
+                                      checked={
+                                        notificationPreferences.email[
+                                          setting.id
+                                        ]
+                                      }
+                                      onCheckedChange={() =>
+                                        handleToggleChange("email", setting.id)
+                                      }
+                                      className="rounded-xl"
+                                    />
                                   </div>
-                                </div>
-                                <Switch
-                                  checked={
-                                    notificationPreferences.email[setting.id]
-                                  }
-                                  onCheckedChange={() =>
-                                    handleToggleChange("email", setting.id)
-                                  }
-                                  className="rounded-xl"
-                                />
+                                ))}
+                                {category.id !==
+                                  notificationCategories[
+                                    notificationCategories.length - 1
+                                  ].id && <Separator className="my-2" />}
                               </div>
                             ))}
-                            {category.id !==
-                              notificationCategories[
-                                notificationCategories.length - 1
-                              ].id && <Separator className="my-2" />}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
+                    </CardContent>
 
-                <CardFooter className="border-t pt-4 mt-6 flex justify-end">
-                  <Button
-                    onClick={handleSubmit}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Save Preferences
-                  </Button>
-                </CardFooter>
+                    <CardFooter className="border-t pt-4 mt-6 flex justify-end">
+                      <Button
+                        onClick={handleSubmit}
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                        disabled={loading}
+                      >
+                        {loading ? "Saving..." : "Save Preferences"}
+                      </Button>
+                    </CardFooter>
+                  </>
+                )}
               </Card>
             </div>
           </div>
