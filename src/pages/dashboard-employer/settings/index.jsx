@@ -4,11 +4,9 @@ import {
   Mail,
   Briefcase,
   Users,
-  MessageSquare,
   CheckCircle,
   BarChart2,
   TrendingUp,
-  Eye,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -29,26 +27,33 @@ import {
 import { getUserLoginData } from "../../../helpers/decodeJwt";
 
 export const Index = () => {
+  // State cho notification preferences - cập nhật theo DTO mới
   const [notificationPreferences, setNotificationPreferences] = useState({
     realTime: {
+      // Applications
       newApplications: true,
       applicationStatusUpdates: true,
+
+      // Job Management
       jobSubmission: true,
       jobApproved: true,
       jobRejected: true,
-      messagesReceived: true,
-      profileViews: false,
+
+      // Analytics
       weeklyReports: true,
       performanceAlerts: true,
     },
     email: {
+      // Applications
       newApplications: true,
       applicationStatusUpdates: true,
+
+      // Job Management
       jobSubmission: false,
       jobApproved: true,
       jobRejected: true,
-      messagesReceived: false,
-      profileViews: false,
+
+      // Analytics
       weeklyReports: true,
       performanceAlerts: true,
     },
@@ -58,6 +63,7 @@ export const Index = () => {
   const [settingId, setSettingId] = useState(null);
   const userId = getUserLoginData().userID;
 
+  // Lấy notification settings khi component được mount
   useEffect(() => {
     const fetchNotificationSettings = async () => {
       try {
@@ -66,27 +72,34 @@ export const Index = () => {
         console.log("Notification settings data:", data);
         setSettingId(data.notificationSettingID);
 
+        // Map dữ liệu API sang cấu trúc state - cập nhật theo DTO mới
         setNotificationPreferences({
           realTime: {
+            // Applications
             newApplications: data.newApplications ?? true,
             applicationStatusUpdates: data.applicationStatusUpdates ?? true,
+
+            // Job Management
             jobSubmission: data.jobSubmission ?? true,
             jobApproved: data.jobApproved ?? true,
             jobRejected: data.jobRejected ?? true,
-            messagesReceived: data.messagesReceived ?? true,
-            profileViews: data.profileViews ?? false,
+
+            // Analytics
             weeklyReports: data.weeklyReports ?? true,
             performanceAlerts: data.performanceAlerts ?? true,
           },
           email: {
+            // Applications
             newApplications: data.emailNewApplications ?? true,
             applicationStatusUpdates:
               data.emailApplicationStatusUpdates ?? true,
+
+            // Job Management
             jobSubmission: data.emailJobSubmission ?? false,
             jobApproved: data.emailJobApproved ?? true,
             jobRejected: data.emailJobRejected ?? true,
-            messagesReceived: data.emailMessagesReceived ?? false,
-            profileViews: data.emailProfileViews ?? false,
+
+            // Analytics
             weeklyReports: data.emailWeeklyReports ?? true,
             performanceAlerts: data.emailPerformanceAlerts ?? true,
           },
@@ -104,6 +117,7 @@ export const Index = () => {
     fetchNotificationSettings();
   }, [userId]);
 
+  // Xử lý sự kiện toggle thay đổi
   const handleToggleChange = (category, setting) => {
     setNotificationPreferences((prev) => ({
       ...prev,
@@ -114,35 +128,38 @@ export const Index = () => {
     }));
   };
 
+  // Xử lý submit form - chuyển đổi state UI sang định dạng API
   const handleSubmit = async () => {
     try {
       setLoading(true);
 
+      // Chuyển đổi dữ liệu UI sang định dạng API - cập nhật theo DTO mới
       const apiData = {
         notificationSettingID: settingId,
         userID: userId,
+
+        // Real-time Notifications
         newApplications: notificationPreferences.realTime.newApplications,
         applicationStatusUpdates:
           notificationPreferences.realTime.applicationStatusUpdates,
         jobSubmission: notificationPreferences.realTime.jobSubmission,
         jobApproved: notificationPreferences.realTime.jobApproved,
         jobRejected: notificationPreferences.realTime.jobRejected,
-        messagesReceived: notificationPreferences.realTime.messagesReceived,
-        profileViews: notificationPreferences.realTime.profileViews,
         weeklyReports: notificationPreferences.realTime.weeklyReports,
         performanceAlerts: notificationPreferences.realTime.performanceAlerts,
+
+        // Email Notifications
         emailNewApplications: notificationPreferences.email.newApplications,
         emailApplicationStatusUpdates:
           notificationPreferences.email.applicationStatusUpdates,
         emailJobSubmission: notificationPreferences.email.jobSubmission,
         emailJobApproved: notificationPreferences.email.jobApproved,
         emailJobRejected: notificationPreferences.email.jobRejected,
-        emailMessagesReceived: notificationPreferences.email.messagesReceived,
-        emailProfileViews: notificationPreferences.email.profileViews,
         emailWeeklyReports: notificationPreferences.email.weeklyReports,
         emailPerformanceAlerts: notificationPreferences.email.performanceAlerts,
       };
 
+      // Gửi dữ liệu đến API
       await updateNotificationSetting(userId, apiData);
       toast.success(
         "Your notification preferences have been updated successfully."
@@ -157,6 +174,7 @@ export const Index = () => {
     }
   };
 
+  // Cấu hình các danh mục thông báo để hiển thị - đã cập nhật theo DTO mới
   const notificationCategories = [
     {
       id: "applications",
@@ -197,24 +215,6 @@ export const Index = () => {
           icon: <CheckCircle className="h-5 w-5 text-red-500" />,
           title: "Job Rejected",
           description: "When admin rejects your job posting",
-        },
-      ],
-    },
-    {
-      id: "communication",
-      title: "Communication",
-      settings: [
-        {
-          id: "messagesReceived",
-          icon: <MessageSquare className="h-5 w-5 text-green-500" />,
-          title: "Messages Received",
-          description: "When you receive new messages from candidates",
-        },
-        {
-          id: "profileViews",
-          icon: <Eye className="h-5 w-5 text-orange-500" />,
-          title: "Profile Views",
-          description: "When candidates view your company profile",
         },
       ],
     },
@@ -274,6 +274,7 @@ export const Index = () => {
                   <>
                     <CardContent className="pt-6">
                       <div className="grid gap-8">
+                        {/* Real-time notifications section */}
                         <div>
                           <div className="flex items-center gap-2 mb-4">
                             <Bell className="h-5 w-5 text-indigo-600" />
@@ -334,6 +335,7 @@ export const Index = () => {
 
                         <Separator />
 
+                        {/* Email notifications section */}
                         <div>
                           <div className="flex items-center gap-2 mb-4">
                             <Mail className="h-5 w-5 text-indigo-600" />

@@ -3,12 +3,11 @@ import {
   Bell,
   Mail,
   Briefcase,
-  Building,
-  MessageSquare,
-  CheckCircle,
   Star,
+  CheckCircle,
   Calendar,
   FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -32,43 +31,29 @@ export const Index = () => {
   const [notificationPreferences, setNotificationPreferences] = useState({
     realTime: {
       // Job Opportunities
-      newJobMatches: true,
       savedJobsUpdates: true,
       recommendedJobs: true,
 
       // Application Status
-      applicationReviewed: true,
-      interviewInvitation: true,
+      applicationApproved: true,
+      applicationApply: true,
       applicationRejected: true,
 
-      // Communication
-      messageReceived: true,
-      employerViewedProfile: true,
-
-      // Events & Reminders
-      upcomingInterviews: true,
-      applicationDeadlines: false,
-      careerEvents: true,
+      // Deadlines
+      applicationDeadlines: true,
     },
     email: {
       // Job Opportunities
-      newJobMatches: true,
-      savedJobsUpdates: false,
+      savedJobsUpdates: true,
       recommendedJobs: true,
 
       // Application Status
-      applicationReviewed: true,
-      interviewInvitation: true,
+      applicationApproved: true,
+      applicationApply: true,
       applicationRejected: true,
 
-      // Communication
-      messageReceived: true,
-      employerViewedProfile: false,
-
-      // Events & Reminders
-      upcomingInterviews: true,
+      // Deadlines
       applicationDeadlines: true,
-      careerEvents: true,
     },
   });
 
@@ -85,44 +70,32 @@ export const Index = () => {
         console.log("Notification settings data:", data);
         setSettingId(data.notificationSettingID);
 
-        // Map API data to our state structure
         setNotificationPreferences({
           realTime: {
             // Job Opportunities
-            newJobMatches: data.newJobMatches ?? true,
             savedJobsUpdates: data.savedJobsUpdates ?? true,
             recommendedJobs: data.recommendedJobs ?? true,
 
             // Application Status
-            applicationReviewed: data.applicationReviewed ?? true,
-            interviewInvitation: data.interviewInvitation ?? true,
+            applicationApproved: data.applicationApproved ?? true,
+            applicationApply: data.applicationApply ?? true,
             applicationRejected: data.applicationRejected ?? true,
 
-            // Communication
-            messageReceived: data.messagesReceived ?? true,
-            employerViewedProfile: data.profileViews ?? true,
-
-            // Events & Reminders
-            upcomingInterviews: data.upcomingInterviews ?? true,
+            // Deadlines
             applicationDeadlines: data.applicationDeadlines ?? true,
-            careerEvents: data.careerEvents ?? true,
           },
           email: {
-            // Fixed property names to match the UI state structure
-            newJobMatches: data.emailNewJobMatches ?? true,
+            // Job Opportunities
             savedJobsUpdates: data.emailSavedJobsUpdates ?? true,
             recommendedJobs: data.emailRecommendedJobs ?? true,
 
-            applicationReviewed: data.emailApplicationReviewed ?? true,
-            interviewInvitation: data.emailInterviewInvitation ?? true,
+            // Application Status
+            applicationApproved: data.emailApplicationApproved ?? true,
+            applicationApply: data.emailApplicationApply ?? true,
             applicationRejected: data.emailApplicationRejected ?? true,
 
-            messageReceived: data.emailMessagesReceived ?? true,
-            employerViewedProfile: data.emailProfileViews ?? true,
-
-            upcomingInterviews: data.emailUpcomingInterviews ?? true,
+            // Deadlines
             applicationDeadlines: data.emailApplicationDeadlines ?? true,
-            careerEvents: data.emailCareerEvents ?? true,
           },
         });
       } catch (error) {
@@ -154,48 +127,33 @@ export const Index = () => {
     try {
       setLoading(true);
 
-      // Transform our UI state back to API format
       const apiData = {
         notificationSettingID: settingId,
         userID: userId,
 
         // Real-time Notifications
-        newJobMatches: notificationPreferences.realTime.newJobMatches,
         savedJobsUpdates: notificationPreferences.realTime.savedJobsUpdates,
         recommendedJobs: notificationPreferences.realTime.recommendedJobs,
-        applicationReviewed:
-          notificationPreferences.realTime.applicationReviewed,
-        interviewInvitation:
-          notificationPreferences.realTime.interviewInvitation,
+        applicationApproved:
+          notificationPreferences.realTime.applicationApproved,
+        applicationApply: notificationPreferences.realTime.applicationApply,
         applicationRejected:
           notificationPreferences.realTime.applicationRejected,
-        messagesReceived: notificationPreferences.realTime.messageReceived,
-        profileViews: notificationPreferences.realTime.employerViewedProfile,
-        upcomingInterviews: notificationPreferences.realTime.upcomingInterviews,
         applicationDeadlines:
           notificationPreferences.realTime.applicationDeadlines,
-        careerEvents: notificationPreferences.realTime.careerEvents,
 
         // Email Notifications
-        emailNewJobMatches: notificationPreferences.email.newJobMatches,
         emailSavedJobsUpdates: notificationPreferences.email.savedJobsUpdates,
         emailRecommendedJobs: notificationPreferences.email.recommendedJobs,
-        emailApplicationReviewed:
-          notificationPreferences.email.applicationReviewed,
-        emailInterviewInvitation:
-          notificationPreferences.email.interviewInvitation,
+        emailApplicationApproved:
+          notificationPreferences.email.applicationApproved,
+        emailApplicationApply: notificationPreferences.email.applicationApply,
         emailApplicationRejected:
           notificationPreferences.email.applicationRejected,
-        emailMessagesReceived: notificationPreferences.email.messageReceived,
-        emailProfileViews: notificationPreferences.email.employerViewedProfile,
-        emailUpcomingInterviews:
-          notificationPreferences.email.upcomingInterviews,
         emailApplicationDeadlines:
           notificationPreferences.email.applicationDeadlines,
-        emailCareerEvents: notificationPreferences.email.careerEvents,
       };
 
-      // Send data to API
       await updateNotificationSetting(userId, apiData);
       toast.success(
         "Your notification preferences have been updated successfully."
@@ -210,18 +168,11 @@ export const Index = () => {
     }
   };
 
-  // Notification settings configuration for rendering
   const notificationCategories = [
     {
       id: "jobOpportunities",
       title: "Job Opportunities",
       settings: [
-        {
-          id: "newJobMatches",
-          icon: <Briefcase className="h-5 w-5 text-blue-500" />,
-          title: "New Job Matches",
-          description: "When new jobs matching your profile are posted",
-        },
         {
           id: "savedJobsUpdates",
           icon: <Star className="h-5 w-5 text-yellow-500" />,
@@ -241,64 +192,34 @@ export const Index = () => {
       title: "Application Status",
       settings: [
         {
-          id: "applicationReviewed",
-          icon: <FileText className="h-5 w-5 text-purple-500" />,
-          title: "Application Reviewed",
-          description: "When an employer reviews your application",
+          id: "applicationApply",
+          icon: <FileText className="h-5 w-5 text-blue-500" />,
+          title: "Application Apply",
+          description: "When you apply for a new job",
         },
         {
-          id: "interviewInvitation",
+          id: "applicationApproved",
           icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          title: "Interview Invitation",
-          description: "When you're invited for an interview",
+          title: "Application Approved",
+          description: "When your application is approved by an employer",
         },
         {
           id: "applicationRejected",
-          icon: <CheckCircle className="h-5 w-5 text-red-500" />,
+          icon: <AlertTriangle className="h-5 w-5 text-red-500" />,
           title: "Application Rejected",
           description: "When your application is not selected",
         },
       ],
     },
     {
-      id: "communication",
-      title: "Communication",
+      id: "deadlines",
+      title: "Deadlines",
       settings: [
-        {
-          id: "messageReceived",
-          icon: <MessageSquare className="h-5 w-5 text-green-500" />,
-          title: "Messages Received",
-          description: "When you receive messages from employers",
-        },
-        {
-          id: "employerViewedProfile",
-          icon: <Building className="h-5 w-5 text-orange-500" />,
-          title: "Profile Views",
-          description: "When employers view your profile",
-        },
-      ],
-    },
-    {
-      id: "eventsReminders",
-      title: "Events & Reminders",
-      settings: [
-        {
-          id: "upcomingInterviews",
-          icon: <Calendar className="h-5 w-5 text-blue-500" />,
-          title: "Upcoming Interviews",
-          description: "Reminders for scheduled interviews",
-        },
         {
           id: "applicationDeadlines",
           icon: <Calendar className="h-5 w-5 text-red-500" />,
           title: "Application Deadlines",
           description: "Reminders for jobs with approaching deadlines",
-        },
-        {
-          id: "careerEvents",
-          icon: <Calendar className="h-5 w-5 text-purple-500" />,
-          title: "Career Events",
-          description: "Updates on career fairs, workshops, and webinars",
         },
       ],
     },
