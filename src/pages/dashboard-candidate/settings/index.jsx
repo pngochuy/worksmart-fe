@@ -1,14 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   Mail,
   Briefcase,
-  Building,
-  MessageSquare,
-  CheckCircle,
   Star,
+  CheckCircle,
   Calendar,
   FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -22,51 +21,95 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "react-toastify";
+import {
+  getNotificationSettingById,
+  updateNotificationSetting,
+} from "../../../services/notificationSettingService";
+import { getUserLoginData } from "../../../helpers/decodeJwt";
 
 export const Index = () => {
-  // Initialize state for notification preferences
   const [notificationPreferences, setNotificationPreferences] = useState({
     realTime: {
       // Job Opportunities
-      newJobMatches: true,
       savedJobsUpdates: true,
       recommendedJobs: true,
 
       // Application Status
-      applicationReviewed: true,
-      interviewInvitation: true,
+      applicationApproved: true,
+      applicationApply: true,
       applicationRejected: true,
 
-      // Communication
-      messageReceived: true,
-      employerViewedProfile: true,
-
-      // Events & Reminders
-      upcomingInterviews: true,
-      applicationDeadlines: false,
-      careerEvents: true,
+      // Deadlines
+      applicationDeadlines: true,
     },
     email: {
       // Job Opportunities
-      newJobMatches: true,
-      savedJobsUpdates: false,
+      savedJobsUpdates: true,
       recommendedJobs: true,
 
       // Application Status
-      applicationReviewed: true,
-      interviewInvitation: true,
+      applicationApproved: true,
+      applicationApply: true,
       applicationRejected: true,
 
-      // Communication
-      messageReceived: true,
-      employerViewedProfile: false,
-
-      // Events & Reminders
-      upcomingInterviews: true,
+      // Deadlines
       applicationDeadlines: true,
-      careerEvents: true,
     },
   });
+
+  const [loading, setLoading] = useState(false);
+  const [settingId, setSettingId] = useState(null);
+  const userId = getUserLoginData().userID;
+
+  // Fetch notification settings on component mount
+  useEffect(() => {
+    const fetchNotificationSettings = async () => {
+      try {
+        setLoading(true);
+        const data = await getNotificationSettingById(userId);
+        console.log("Notification settings data:", data);
+        setSettingId(data.notificationSettingID);
+
+        setNotificationPreferences({
+          realTime: {
+            // Job Opportunities
+            savedJobsUpdates: data.savedJobsUpdates ?? true,
+            recommendedJobs: data.recommendedJobs ?? true,
+
+            // Application Status
+            applicationApproved: data.applicationApproved ?? true,
+            applicationApply: data.applicationApply ?? true,
+            applicationRejected: data.applicationRejected ?? true,
+
+            // Deadlines
+            applicationDeadlines: data.applicationDeadlines ?? true,
+          },
+          email: {
+            // Job Opportunities
+            savedJobsUpdates: data.emailSavedJobsUpdates ?? true,
+            recommendedJobs: data.emailRecommendedJobs ?? true,
+
+            // Application Status
+            applicationApproved: data.emailApplicationApproved ?? true,
+            applicationApply: data.emailApplicationApply ?? true,
+            applicationRejected: data.emailApplicationRejected ?? true,
+
+            // Deadlines
+            applicationDeadlines: data.emailApplicationDeadlines ?? true,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to fetch notification settings:", error);
+        toast.error(
+          "Failed to load notification settings. Using default values."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotificationSettings();
+  }, [userId]);
 
   // Handle toggle changes
   const handleToggleChange = (category, setting) => {
@@ -79,39 +122,57 @@ export const Index = () => {
     }));
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    // This function would be replaced with your API call
-    saveNotificationPreferences(notificationPreferences);
+  // Handle form submission - map our state back to API format
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
 
-    // Show success toast
-    toast.success(
-      "Your notification preferences have been updated successfully."
-    );
+      const apiData = {
+        notificationSettingID: settingId,
+        userID: userId,
 
-    return notificationPreferences;
+        // Real-time Notifications
+        savedJobsUpdates: notificationPreferences.realTime.savedJobsUpdates,
+        recommendedJobs: notificationPreferences.realTime.recommendedJobs,
+        applicationApproved:
+          notificationPreferences.realTime.applicationApproved,
+        applicationApply: notificationPreferences.realTime.applicationApply,
+        applicationRejected:
+          notificationPreferences.realTime.applicationRejected,
+        applicationDeadlines:
+          notificationPreferences.realTime.applicationDeadlines,
+
+        // Email Notifications
+        emailSavedJobsUpdates: notificationPreferences.email.savedJobsUpdates,
+        emailRecommendedJobs: notificationPreferences.email.recommendedJobs,
+        emailApplicationApproved:
+          notificationPreferences.email.applicationApproved,
+        emailApplicationApply: notificationPreferences.email.applicationApply,
+        emailApplicationRejected:
+          notificationPreferences.email.applicationRejected,
+        emailApplicationDeadlines:
+          notificationPreferences.email.applicationDeadlines,
+      };
+
+      await updateNotificationSetting(userId, apiData);
+      toast.success(
+        "Your notification preferences have been updated successfully."
+      );
+    } catch (error) {
+      console.error("Failed to update notification settings:", error);
+      toast.error(
+        "Failed to update notification preferences. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // This is a placeholder for your API function
-  const saveNotificationPreferences = (preferences) => {
-    // Return the current notification preferences
-    console.log("Submitting notification preferences:", preferences);
-    // Replace this with your API call
-    // Example: await axios.post('/candidate/preferences/notifications', preferences);
-  };
-
-  // Notification settings configuration for rendering
   const notificationCategories = [
     {
       id: "jobOpportunities",
       title: "Job Opportunities",
       settings: [
-        {
-          id: "newJobMatches",
-          icon: <Briefcase className="h-5 w-5 text-blue-500" />,
-          title: "New Job Matches",
-          description: "When new jobs matching your profile are posted",
-        },
         {
           id: "savedJobsUpdates",
           icon: <Star className="h-5 w-5 text-yellow-500" />,
@@ -131,64 +192,34 @@ export const Index = () => {
       title: "Application Status",
       settings: [
         {
-          id: "applicationReviewed",
-          icon: <FileText className="h-5 w-5 text-purple-500" />,
-          title: "Application Reviewed",
-          description: "When an employer reviews your application",
+          id: "applicationApply",
+          icon: <FileText className="h-5 w-5 text-blue-500" />,
+          title: "Application Apply",
+          description: "When you apply for a new job",
         },
         {
-          id: "interviewInvitation",
+          id: "applicationApproved",
           icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-          title: "Interview Invitation",
-          description: "When you're invited for an interview",
+          title: "Application Approved",
+          description: "When your application is approved by an employer",
         },
         {
           id: "applicationRejected",
-          icon: <CheckCircle className="h-5 w-5 text-red-500" />,
+          icon: <AlertTriangle className="h-5 w-5 text-red-500" />,
           title: "Application Rejected",
           description: "When your application is not selected",
         },
       ],
     },
     {
-      id: "communication",
-      title: "Communication",
+      id: "deadlines",
+      title: "Deadlines",
       settings: [
-        {
-          id: "messageReceived",
-          icon: <MessageSquare className="h-5 w-5 text-green-500" />,
-          title: "Messages Received",
-          description: "When you receive messages from employers",
-        },
-        {
-          id: "employerViewedProfile",
-          icon: <Building className="h-5 w-5 text-orange-500" />,
-          title: "Profile Views",
-          description: "When employers view your profile",
-        },
-      ],
-    },
-    {
-      id: "eventsReminders",
-      title: "Events & Reminders",
-      settings: [
-        {
-          id: "upcomingInterviews",
-          icon: <Calendar className="h-5 w-5 text-blue-500" />,
-          title: "Upcoming Interviews",
-          description: "Reminders for scheduled interviews",
-        },
         {
           id: "applicationDeadlines",
           icon: <Calendar className="h-5 w-5 text-red-500" />,
           title: "Application Deadlines",
           description: "Reminders for jobs with approaching deadlines",
-        },
-        {
-          id: "careerEvents",
-          icon: <Calendar className="h-5 w-5 text-purple-500" />,
-          title: "Career Events",
-          description: "Updates on career fairs, workshops, and webinars",
         },
       ],
     },
@@ -216,128 +247,149 @@ export const Index = () => {
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-6">
-                  <div className="grid gap-8">
-                    {/* Real-time notifications section */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Bell className="h-5 w-5 text-indigo-600" />
-                        <h4 className="text-lg font-medium">
-                          Real-time Notifications
-                        </h4>
-                      </div>
+                {loading ? (
+                  <CardContent className="pt-6 text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-2">
+                      Loading your notification preferences...
+                    </p>
+                  </CardContent>
+                ) : (
+                  <>
+                    <CardContent className="pt-6">
+                      <div className="grid gap-8">
+                        {/* Real-time notifications section */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Bell className="h-5 w-5 text-indigo-600" />
+                            <h4 className="text-lg font-medium">
+                              Real-time Notifications
+                            </h4>
+                          </div>
 
-                      <div className="space-y-6">
-                        {notificationCategories.map((category) => (
-                          <div
-                            key={`realtime-category-${category.id}`}
-                            className="space-y-4"
-                          >
-                            <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                              {category.title}
-                            </h5>
-                            {category.settings.map((setting) => (
+                          <div className="space-y-6">
+                            {notificationCategories.map((category) => (
                               <div
-                                key={`realtime-${setting.id}`}
-                                className="flex items-center justify-between py-2"
+                                key={`realtime-category-${category.id}`}
+                                className="space-y-4"
                               >
-                                <div className="flex items-center gap-3">
-                                  {setting.icon}
-                                  <div>
-                                    <p className="font-medium">
-                                      {setting.title}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      {setting.description}
-                                    </p>
+                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                  {category.title}
+                                </h5>
+                                {category.settings.map((setting) => (
+                                  <div
+                                    key={`realtime-${setting.id}`}
+                                    className="flex items-center justify-between py-2"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {setting.icon}
+                                      <div>
+                                        <p className="font-medium">
+                                          {setting.title}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                          {setting.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Switch
+                                      checked={
+                                        notificationPreferences.realTime[
+                                          setting.id
+                                        ]
+                                      }
+                                      onCheckedChange={() =>
+                                        handleToggleChange(
+                                          "realTime",
+                                          setting.id
+                                        )
+                                      }
+                                      className="rounded-xl"
+                                    />
                                   </div>
-                                </div>
-                                <Switch
-                                  checked={
-                                    notificationPreferences.realTime[setting.id]
-                                  }
-                                  onCheckedChange={() =>
-                                    handleToggleChange("realTime", setting.id)
-                                  }
-                                  className="rounded-xl"
-                                />
+                                ))}
+                                {category.id !==
+                                  notificationCategories[
+                                    notificationCategories.length - 1
+                                  ].id && <Separator className="my-2" />}
                               </div>
                             ))}
-                            {category.id !==
-                              notificationCategories[
-                                notificationCategories.length - 1
-                              ].id && <Separator className="my-2" />}
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
 
-                    <Separator />
+                        <Separator />
 
-                    {/* Email notifications section */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Mail className="h-5 w-5 text-indigo-600" />
-                        <h4 className="text-lg font-medium">
-                          Email Notifications
-                        </h4>
-                      </div>
+                        {/* Email notifications section */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Mail className="h-5 w-5 text-indigo-600" />
+                            <h4 className="text-lg font-medium">
+                              Email Notifications
+                            </h4>
+                          </div>
 
-                      <div className="space-y-6">
-                        {notificationCategories.map((category) => (
-                          <div
-                            key={`email-category-${category.id}`}
-                            className="space-y-4"
-                          >
-                            <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                              {category.title}
-                            </h5>
-                            {category.settings.map((setting) => (
+                          <div className="space-y-6">
+                            {notificationCategories.map((category) => (
                               <div
-                                key={`email-${setting.id}`}
-                                className="flex items-center justify-between py-2"
+                                key={`email-category-${category.id}`}
+                                className="space-y-4"
                               >
-                                <div className="flex items-center gap-3">
-                                  {setting.icon}
-                                  <div>
-                                    <p className="font-medium">
-                                      {setting.title}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      {setting.description}
-                                    </p>
+                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                  {category.title}
+                                </h5>
+                                {category.settings.map((setting) => (
+                                  <div
+                                    key={`email-${setting.id}`}
+                                    className="flex items-center justify-between py-2"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {setting.icon}
+                                      <div>
+                                        <p className="font-medium">
+                                          {setting.title}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                          {setting.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Switch
+                                      checked={
+                                        notificationPreferences.email[
+                                          setting.id
+                                        ]
+                                      }
+                                      onCheckedChange={() =>
+                                        handleToggleChange("email", setting.id)
+                                      }
+                                      className="rounded-xl"
+                                    />
                                   </div>
-                                </div>
-                                <Switch
-                                  checked={
-                                    notificationPreferences.email[setting.id]
-                                  }
-                                  onCheckedChange={() =>
-                                    handleToggleChange("email", setting.id)
-                                  }
-                                  className="rounded-xl"
-                                />
+                                ))}
+                                {category.id !==
+                                  notificationCategories[
+                                    notificationCategories.length - 1
+                                  ].id && <Separator className="my-2" />}
                               </div>
                             ))}
-                            {category.id !==
-                              notificationCategories[
-                                notificationCategories.length - 1
-                              ].id && <Separator className="my-2" />}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
+                    </CardContent>
 
-                <CardFooter className="border-t pt-4 mt-6 flex justify-end">
-                  <Button
-                    onClick={handleSubmit}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Save Preferences
-                  </Button>
-                </CardFooter>
+                    <CardFooter className="border-t pt-4 mt-6 flex justify-end">
+                      <Button
+                        onClick={handleSubmit}
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                        disabled={loading}
+                      >
+                        {loading ? "Saving..." : "Save Preferences"}
+                      </Button>
+                    </CardFooter>
+                  </>
+                )}
               </Card>
             </div>
           </div>
