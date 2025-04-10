@@ -320,13 +320,20 @@ export const JobForm = () => {
 
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Education</label>
-                        <input
-                          type="text"
+                        <select
                           name="education"
                           value={jobData.education}
                           onChange={handleChange}
-                          placeholder="Required education level"
-                        />
+                        >
+                          <option value="">Select</option>
+                          <option value="High School">High School</option>
+                          <option value="Associate's Degree">Associate's Degree</option>
+                          <option value="Bachelor's Degree">Bachelor's Degree</option>
+                          <option value="Master's Degree">Master's Degree</option>
+                          <option value="Doctorate">Doctorate</option>
+                          <option value="Professional Certification">Professional Certification</option>
+                          <option value="No Requirement">No Requirement</option>
+                        </select>
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
                         <label>Number Of Recruitment</label>

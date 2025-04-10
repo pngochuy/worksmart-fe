@@ -1,82 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { fetchJobDetails } from '../../../api/jobService';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { fetchJobDetails } from '../../../services/jobService';
 
 const SavedJobsPage = () => {
   const [favoriteJobs, setFavoriteJobs] = useState([]);
   const [timeFilter, setTimeFilter] = useState('Last 6 Months');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const navigate = useNavigate();
+
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
   
-  // Lấy userId từ localStorage - Sửa đổi để xử lý nhiều trường hợp lưu trữ user
+  // Lấy userId từ localStorage hoặc context/redux state
   const getUserId = () => {
-    try {
-      // Kiểm tra các cách lưu trữ khác nhau
-      const userString = localStorage.getItem('user');
-      if (!userString) {
-        console.log('No user found in localStorage');
-        return null;
-      }
-      
-      // Parse dữ liệu user
-      const user = JSON.parse(userString);
-      console.log('User from localStorage:', user);
-      
-      // Xác định id từ các cấu trúc khác nhau
-      if (user.id) return user.id;
-      if (user.userId) return user.userId;
-      if (user.userID) return user.userID;
-      
-      console.log('User object does not contain id field');
-      return null;
-    } catch (e) {
-      console.error('Error parsing user data:', e);
-      return null;
-    }
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user?.id;
   };
 
-  // Kiểm tra xác thực
-  const checkAuth = () => {
-    const token = localStorage.getItem('token');
-    const userId = getUserId();
-    
-    console.log('Auth check - Token:', token ? 'Exists' : 'Missing', 'UserId:', userId);
-    
-    if (!token || !userId) {
-      console.log('Authentication failed, redirecting to login');
-      return false;
-    }
-    
-    return true;
-  };
+  const userId = getUserId();
 
-  // Fetch favorite jobs - Đã sửa để xử lý lỗi xác thực
+  // Fetch favorite jobs
   const fetchFavoriteJobs = async () => {
-    const userId = getUserId();
     if (!userId) {
-      console.log('No userId available for fetching favorite jobs');
       setIsLoading(false);
       return;
     }
     
     try {
       setIsLoading(true);
-      console.log(`Fetching favorite jobs for user ${userId}`);
-      
-      // Thêm token vào header request
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const response = await axios.get(
-        `${BACKEND_API_URL}/api/FavoriteJob/user/${userId}`,
-        { headers }
-      );
-      console.log("Favorite jobs API response:", response.data);
+      const response = await axios.get(`${BACKEND_API_URL}/api/FavoriteJob/user/${userId}`);
       
       // Get job details for each favorite job
       const favoriteJobsWithDetails = await Promise.all(
@@ -101,18 +52,7 @@ const SavedJobsPage = () => {
       setError(null);
     } catch (err) {
       console.error('Error fetching favorite jobs:', err);
-      
-      // Kiểm tra lỗi xác thực
-      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-        console.log('Authentication error, redirecting to login');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        navigate('/login');
-        return;
-      }
-      
       setError('Failed to load saved jobs. Please try again later.');
-      toast.error("Failed to load saved jobs");
     } finally {
       setIsLoading(false);
     }
@@ -121,20 +61,12 @@ const SavedJobsPage = () => {
   // Delete a favorite job
   const deleteFavoriteJob = async (favoriteJobId) => {
     try {
-      // Thêm token vào header request
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.delete(
-        `${BACKEND_API_URL}/api/FavoriteJob/${favoriteJobId}`,
-        { headers }
-      );
+      await axios.delete(`${BACKEND_API_URL}/api/FavoriteJob/${favoriteJobId}`);
       // After successful deletion, update the local state
       setFavoriteJobs(favoriteJobs.filter(job => job.favoriteJobID !== favoriteJobId));
-      toast.success("Job removed from saved list");
     } catch (err) {
       console.error('Error deleting favorite job:', err);
-      toast.error("Failed to remove job from saved list");
+      setError('Failed to delete job. Please try again later.');
     }
   };
 
@@ -176,20 +108,9 @@ const SavedJobsPage = () => {
     fetchFavoriteJobs(); // You might want to add filter parameters to the API call instead
   };
 
-  // View job details
-  const viewJobDetails = (jobId) => {
-    navigate(`/job/${jobId}`);
-  };
-
   // Load favorite jobs on component mount
   useEffect(() => {
-    // Kiểm tra xác thực trước khi fetch dữ liệu
-    if (checkAuth()) {
-      fetchFavoriteJobs();
-    } else {
-      // Chuyển hướng đến trang đăng nhập nếu không có thông tin xác thực
-      navigate('/login');
-    }
+    fetchFavoriteJobs();
   }, []);
 
   // Format date for display
@@ -304,7 +225,7 @@ const SavedJobsPage = () => {
                                       <li>
                                         <button 
                                           data-text="View Job"
-                                          onClick={() => viewJobDetails(favoriteJob.jobID)}
+                                          onClick={() => window.location.href = `/job/${favoriteJob.jobID}`}
                                         >
                                           <span className="la la-eye"></span>
                                         </button>
