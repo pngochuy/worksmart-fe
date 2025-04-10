@@ -7,7 +7,7 @@ const PaymentCancel = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [seconds, setSeconds] = useState(30);
+  const [seconds, setSeconds] = useState(20);
 
   useEffect(() => {
     const processCancellation = async () => {
@@ -100,10 +100,10 @@ const PaymentCancel = () => {
         });
       }, 1000);
       
-      // Redirect after 30 seconds
+      // Redirect after 20 seconds
       timer = setTimeout(() => {
         navigate("/candidate/package-list");
-      }, 30000);
+      }, 20000);
       
       return () => {
         clearTimeout(timer);

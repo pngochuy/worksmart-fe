@@ -10,7 +10,7 @@ const PaymentResult = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [seconds, setSeconds] = useState(30);
+  const [seconds, setSeconds] = useState(20);
 
   useEffect(() => {
     const processPayment = async () => {
@@ -116,7 +116,7 @@ const PaymentResult = () => {
       // Chuyển hướng sau 30 giây
       timer = setTimeout(() => {
         navigate("/employer/package-list");
-      }, 30000);
+      }, 20000);
       
       return () => {
         clearTimeout(timer);

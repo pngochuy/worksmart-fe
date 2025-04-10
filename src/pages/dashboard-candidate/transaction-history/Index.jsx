@@ -167,7 +167,7 @@ export const Index = () => {
                               <td>{indexOfFirstItem + index + 1}</td>
                               <td className="order-code">#{transaction.orderCode}</td>
                               <td className="transaction-content">{transaction.content}</td>
-                              <td className="amount">{transaction.price.toLocaleString('vi-VN')} VND</td>
+                              <td className="amount">{transaction.price.toLocaleString('en-US')} VND</td>
                               <td className="status">
                                 <span className={`badge ${getStatusBadgeColor(transaction.status)}`}>
                                   {transaction.status}
