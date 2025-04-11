@@ -19,6 +19,7 @@ import { Index as CandidateListPage } from "./pages/candidate-list";
 import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-detail";
 import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
+import SavedJobsPage from '/src/pages/dashboard-candidate/saved-jobs/index.jsx'
 // Candidate Pages
 import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
 import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
@@ -27,7 +28,7 @@ import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-
 import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
 import { Index as CategoryTagsManagerPage } from "./pages/dashboard-candidate/category-tag-management";
 import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
-import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
+// import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
 import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
 import { Index as CandidateTransactionHistoryPage } from "./pages/dashboard-candidate/transaction-history";
 import { Index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
@@ -224,6 +225,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                  index
+                  path="saved-jobs"
+                  element={
+                    <ProtectedRoute requiredRoleId="Candidate">
+                      <SavedJobsPage />
+                    </ProtectedRoute>
+                  }
+                />
               <Route
                 index
                 path="applied-jobs"
