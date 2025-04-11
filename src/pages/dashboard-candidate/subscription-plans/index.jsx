@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { getEmployerSubscriptions } from "@/services/employerServices";
 import { format } from "date-fns";
+import { Search } from "lucide-react";
 
 export const index = () => {
-  const [subscriptionsData, setSubscriptionsData] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [filteredSubscriptions, setFilteredSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 10;
 
   const getUserId = () => {
@@ -40,13 +43,16 @@ export const index = () => {
 
       try {
         const data = await getEmployerSubscriptions(userId);
-        setSubscriptionsData(Array.isArray(data) ? data : []);
+        const subscriptionsData = Array.isArray(data) ? data : [];
+        setSubscriptions(subscriptionsData);
+        setFilteredSubscriptions(subscriptionsData);
         setError(null); // Clear any previous errors
       } catch (apiError) {
         console.error("API Error:", apiError);
 
         if (apiError.response && apiError.response.status === 404) {
-          setSubscriptionsData([]);
+          setSubscriptions([]);
+          setFilteredSubscriptions([]);
           setError(null);
         } else {
           setError(apiError.message || "Failed to load subscription data");
@@ -63,6 +69,27 @@ export const index = () => {
   useEffect(() => {
     fetchSubscriptionData();
   }, []);
+
+  useEffect(() => {
+    // Filter transactions when search term changes
+    if (searchTerm.trim() === "") {
+      setFilteredSubscriptions(subscriptions);
+    } else {
+      const filtered = subscriptions.filter(item =>
+        String(item.package.name).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      console.log("Data:", subscriptions);
+      setFilteredSubscriptions(filtered);
+    }
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchTerm, subscriptions]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    console.log("Search term:", value);
+    setSearchTerm(e.target.value);
+  };
 
   const calculateUsage = (subscription, package_) => {
     if (package_.jobPostLimitPerDay) {
@@ -102,8 +129,8 @@ export const index = () => {
   // Tính toán phân trang
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentSubscriptions = subscriptionsData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(subscriptionsData.length / itemsPerPage);
+  const currentSubscriptions = filteredSubscriptions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSubscriptions.length / itemsPerPage);
 
   // Hàm điều hướng phân trang
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -135,14 +162,28 @@ export const index = () => {
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>My Packages</h4>
-                    {!loading && subscriptionsData.length > 0 && (
+                    {!loading && subscriptions.length > 0 && (
                       <button
-                        className="theme-btn btn-style-one btn-small px-2 py-2"
+                        className="theme-btn btn-style-one btn-medium px-2 py-2"
                         onClick={handleRefresh}
                       >
-                        <i className="la la-refresh mr-1"></i> Refresh
+                        <i className="la la-refresh mr-2 text-xl"></i> Refresh
                       </button>
                     )}
+                  </div>
+
+                  {/* Full width search box with border */}
+                  <div className="search-box-outer w-full border border-gray-300 rounded-md p-3 mb-4 bg-white shadow-sm">
+                    <div className="relative w-full">
+                      <input
+                        type="text"
+                        placeholder="Search by content or order code..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="form-control w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
                   </div>
 
                   <div className="widget-content">
@@ -155,11 +196,15 @@ export const index = () => {
                       </div>
                     ) : error ? (
                       <div className="text-center py-4 text-danger">{error}</div>
-                    ) : subscriptionsData.length === 0 ? (
+                    ) : filteredSubscriptions.length === 0 ? (
                       <div className="text-center py-4">
                         <div className="empty-state">
                           <i className="la la-box-open la-3x text-muted mb-3"></i>
-                          <p>No Subscription To Display</p>
+                          {searchTerm ? (
+                            <p>No subscriptions matching "{searchTerm}"</p>
+                          ) : (
+                            <p>No subscriptions to display</p>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -178,7 +223,7 @@ export const index = () => {
                           </thead>
 
                           <tbody>
-                            {subscriptionsData.map((item, index) => {
+                            {currentSubscriptions.map((item, index) => {
                               const subscription = item.subscription || {};
                               const package_ = item.package || {};
                               const usage = calculateUsage(subscription, package_);
@@ -213,7 +258,7 @@ export const index = () => {
                         </table>
 
                         {/* Phân trang */}
-                        {subscriptionsData.length > 0 && (
+                        {filteredSubscriptions.length > 0 && (
                           <div className="pagination-container mt-4 d-flex justify-content-center">
                             <nav aria-label="Subscription pagination">
                               <ul className="pagination">

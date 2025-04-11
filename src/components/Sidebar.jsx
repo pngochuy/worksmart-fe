@@ -23,7 +23,6 @@ export const Sidebar = () => {
     const loadData = async () => {
       try {
         const user = getUserLoginData();
-        console.log("user: ", user);
         setUserDataLogin(user);
 
         if (user) {
