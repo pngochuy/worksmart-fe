@@ -31,7 +31,6 @@ export const Sidebar = () => {
           if (user.userID) {
             try {
               const subData = await checkActiveSubscription(user.userID);
-              console.log("Subscription Data: ", subData);
               setSubscriptionData(subData);
             } catch (error) {
               console.error("Error fetching subscription data:", error);

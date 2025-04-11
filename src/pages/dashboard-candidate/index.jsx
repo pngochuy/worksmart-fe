@@ -1,15 +1,81 @@
 import { getUserLoginData } from "@/helpers/decodeJwt";
 import { useEffect, useState } from "react";
+import { useNotifications } from "@/layouts/NotificationProvider";
+import { fetchUserNotifications } from "@/services/notificationServices";
+import { fetchAppliedJobs } from "@/services/jobServices";
 
 export const Index = () => {
-  const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
+  const [userDataLogin, setUserDataLogin] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]); // State mới để lưu các job đã apply
+  const [loading, setLoading] = useState(true);
+  const [loadingJobs, setLoadingJobs] = useState(true); // State loading cho jobs
+  const [error, setError] = useState(null);
+  const [jobError, setJobError] = useState(null);
+  
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const user = getUserLoginData();
     setUserDataLogin(user);
   }, []);
 
-  return (
+  useEffect(() => {
+    loadNotifications();
+    if (userDataLogin) {
+      loadAppliedJobs();
+    }
+  }, [userDataLogin]);
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchUserNotifications();
+      setNotifications(data);
+    } catch (err) {
+      setError("Failed to load notifications");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAppliedJobs = async () => {
+    try {
+      setLoadingJobs(true);
+      const userId = userDataLogin.userID;
+      const data = await fetchAppliedJobs(userId);
+      console.log("Job Data:", data);
+      console.log("Job Data:", userId);
+      setAppliedJobs(data);
+    } catch (err) {
+      setJobError("Failed to load applied jobs");
+      console.error(err);
+    } finally {
+      setLoadingJobs(false);
+    }
+  }
+
+  const formatSalary = (salary) => {
+    if (!salary) return "Negotiable";
+    return salary;
+  };
+
+  const getTimeAgo = (dateString) => {
+    const postDate = new Date(dateString);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - postDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 1) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+  };
+
+   return (
     <>
       {/* Dashboard */}
       <section className="user-dashboard">
@@ -25,7 +91,7 @@ export const Index = () => {
                   <i className="icon flaticon-briefcase"></i>
                 </div>
                 <div className="right">
-                  <h4>22</h4>
+                  <h4>{appliedJobs.length || 0}</h4>
                   <p>Applied Jobs</p>
                 </div>
               </div>
@@ -36,7 +102,7 @@ export const Index = () => {
                   <i className="icon la la-file-invoice"></i>
                 </div>
                 <div className="right">
-                  <h4>9382</h4>
+                  <h4>{unreadCount}</h4>
                   <p>Job Alerts</p>
                 </div>
               </div>
@@ -98,38 +164,28 @@ export const Index = () => {
                   <h4>Notifications</h4>
                 </div>
                 <div className="widget-content">
-                  <ul className="notification-list">
-                    <li>
-                      <span className="icon flaticon-briefcase"></span>{" "}
-                      <strong>Huy A</strong> applied for a job{" "}
-                      <span className="colored">Web Developer</span>
-                    </li>
-                    <li>
-                      <span className="icon flaticon-briefcase"></span>{" "}
-                      <strong>Huy </strong> applied for a job{" "}
-                      <span className="colored">Senior Product Designer</span>
-                    </li>
-                    <li className="success">
-                      <span className="icon flaticon-briefcase"></span>{" "}
-                      <strong>Raul Costa</strong> applied for a job{" "}
-                      <span className="colored">Product Manager, Risk</span>
-                    </li>
-                    <li>
-                      <span className="icon flaticon-briefcase"></span>{" "}
-                      <strong>Jack Milk</strong> applied for a job{" "}
-                      <span className="colored">Technical Architect</span>
-                    </li>
-                    <li className="success">
-                      <span className="icon flaticon-briefcase"></span>{" "}
-                      <strong>Michel Arian</strong> applied for a job{" "}
-                      <span className="colored">Software Engineer</span>
-                    </li>
-                    <li>
-                      <span className="icon flaticon-briefcase"></span>{" "}
-                      <strong>Ali Tufan</strong> applied for a job{" "}
-                      <span className="colored">UI Designer</span>
-                    </li>
-                  </ul>
+                  {loading ? (
+                    <p>Loading notifications...</p>
+                  ) : error ? (
+                    <p>{error}</p>
+                  ) : (
+                    <ul className="notification-list">
+                      {notifications.length > 0 ? (
+                        notifications.map((notification) => (
+                          <li 
+                            key={notification.notificationID} 
+                            className={notification.isRead ? "" : "success"}
+                          >
+                            <span className="icon flaticon-briefcase"></span>{" "}
+                            <strong>{notification.title}</strong>{" "}
+                            <span className="colored">{notification.message}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <li>No notifications available</li>
+                      )}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>
@@ -142,269 +198,66 @@ export const Index = () => {
                 </div>
                 <div className="widget-content">
                   <div className="row">
-                    {/* Job Block */}
-                    <div className="job-block col-lg-6 col-md-12 col-sm-12">
-                      <div className="inner-box">
-                        <div className="content">
-                          <span className="company-logo">
-                            <img
-                              src="images/resource/company-logo/1-1.png"
-                              alt=""
-                            />
-                          </span>
-                          <h4>
-                            <a href="#">
-                              Software Engineer (Android), Libraries
-                            </a>
-                          </h4>
-                          <ul className="job-info">
-                            <li>
-                              <span className="icon flaticon-briefcase"></span>{" "}
-                              Segment
-                            </li>
-                            <li>
-                              <span className="icon flaticon-map-locator"></span>{" "}
-                              London, UK
-                            </li>
-                            <li>
-                              <span className="icon flaticon-clock-3"></span> 11
-                              hours ago
-                            </li>
-                            <li>
-                              <span className="icon flaticon-money"></span> $35k
-                              - $45k
-                            </li>
-                          </ul>
-                          <ul className="job-other-info">
-                            <li className="time">Full Time</li>
-                            <li className="privacy">Private</li>
-                            <li className="required">Urgent</li>
-                          </ul>
-                          <button className="bookmark-btn">
-                            <span className="flaticon-bookmark"></span>
-                          </button>
-                        </div>
+                    {loadingJobs ? (
+                      <div className="col-12 text-center py-4">
+                        <p>Loading applied jobs...</p>
                       </div>
-                    </div>
-
-                    {/* Job Block */}
-                    <div className="job-block col-lg-6 col-md-12 col-sm-12">
-                      <div className="inner-box">
-                        <div className="content">
-                          <span className="company-logo">
-                            <img
-                              src="images/resource/company-logo/1-2.png"
-                              alt=""
-                            />
-                          </span>
-                          <h4>
-                            <a href="#">Recruiting Coordinator</a>
-                          </h4>
-                          <ul className="job-info">
-                            <li>
-                              <span className="icon flaticon-briefcase"></span>{" "}
-                              Segment
-                            </li>
-                            <li>
-                              <span className="icon flaticon-map-locator"></span>{" "}
-                              London, UK
-                            </li>
-                            <li>
-                              <span className="icon flaticon-clock-3"></span> 11
-                              hours ago
-                            </li>
-                            <li>
-                              <span className="icon flaticon-money"></span> $35k
-                              - $45k
-                            </li>
-                          </ul>
-                          <ul className="job-other-info">
-                            <li className="time">Full Time</li>
-                            <li className="privacy">Private</li>
-                            <li className="required">Urgent</li>
-                          </ul>
-                          <button className="bookmark-btn">
-                            <span className="flaticon-bookmark"></span>
-                          </button>
-                        </div>
+                    ) : jobError ? (
+                      <div className="col-12 text-center py-4">
+                        <p>{jobError}</p>
                       </div>
-                    </div>
-
-                    {/* Job Block */}
-                    <div className="job-block col-lg-6 col-md-12 col-sm-12">
-                      <div className="inner-box">
-                        <div className="content">
-                          <span className="company-logo">
-                            <img
-                              src="images/resource/company-logo/1-3.png"
-                              alt=""
-                            />
-                          </span>
-                          <h4>
-                            <a href="#">Product Manager, Studio</a>
-                          </h4>
-                          <ul className="job-info">
-                            <li>
-                              <span className="icon flaticon-briefcase"></span>{" "}
-                              Segment
-                            </li>
-                            <li>
-                              <span className="icon flaticon-map-locator"></span>{" "}
-                              London, UK
-                            </li>
-                            <li>
-                              <span className="icon flaticon-clock-3"></span> 11
-                              hours ago
-                            </li>
-                            <li>
-                              <span className="icon flaticon-money"></span> $35k
-                              - $45k
-                            </li>
-                          </ul>
-                          <ul className="job-other-info">
-                            <li className="time">Full Time</li>
-                            <li className="privacy">Private</li>
-                            <li className="required">Urgent</li>
-                          </ul>
-                          <button className="bookmark-btn">
-                            <span className="flaticon-bookmark"></span>
-                          </button>
+                    ) : appliedJobs.length > 0 ? (
+                      appliedJobs.map((job) => (
+                        <div key={job.jobID} className="job-block col-lg-6 col-md-12 col-sm-12">
+                          <div className="inner-box">
+                            <div className="content">
+                              <span className="company-logo">
+                                <img
+                                  src={job.avatar || "https://via.placeholder.com/80"}
+                                  alt={job.companyName}
+                                />
+                              </span>
+                              <h4>
+                                <a href={`/job-list/${job.jobID}`}>{job.title}</a>
+                              </h4>
+                              <ul className="job-info">
+                                <li>
+                                  <span className="icon flaticon-briefcase"></span>{" "}
+                                  {job.companyName}
+                                </li>
+                                <li>
+                                  <span className="icon flaticon-map-locator"></span>{" "}
+                                  {job.location}
+                                </li>
+                                <li>
+                                  <span className="icon flaticon-clock-3"></span>{" "}
+                                  {getTimeAgo(job.createdAt)}
+                                </li>
+                                <li>
+                                  <span className="icon flaticon-money"></span>{" "}
+                                  {formatSalary(job.salary)}
+                                </li>
+                              </ul>
+                              <ul className="job-other-info">
+                                <li className="time">{job.workType}</li>
+                                {job.level && <li className="privacy">{job.level}</li>}
+                                {job.priority && <li className="required">Urgent</li>}
+                              </ul>
+                              <button className="bookmark-btn">
+                                <span className="flaticon-bookmark"></span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="col-12 text-center py-4">
+                        <p>You haven't applied to any jobs yet.</p>
+                        <a href="/job-list" className="btn btn-primary mt-3">
+                          Browse Jobs
+                        </a>
                       </div>
-                    </div>
-
-                    {/* Job Block */}
-                    <div className="job-block col-lg-6 col-md-12 col-sm-12">
-                      <div className="inner-box">
-                        <div className="content">
-                          <span className="company-logo">
-                            <img
-                              src="images/resource/company-logo/1-4.png"
-                              alt=""
-                            />
-                          </span>
-                          <h4>
-                            <a href="#">Senior Product Designer</a>
-                          </h4>
-                          <ul className="job-info">
-                            <li>
-                              <span className="icon flaticon-briefcase"></span>{" "}
-                              Segment
-                            </li>
-                            <li>
-                              <span className="icon flaticon-map-locator"></span>{" "}
-                              London, UK
-                            </li>
-                            <li>
-                              <span className="icon flaticon-clock-3"></span> 11
-                              hours ago
-                            </li>
-                            <li>
-                              <span className="icon flaticon-money"></span> $35k
-                              - $45k
-                            </li>
-                          </ul>
-                          <ul className="job-other-info">
-                            <li className="time">Full Time</li>
-                            <li className="privacy">Private</li>
-                            <li className="required">Urgent</li>
-                          </ul>
-                          <button className="bookmark-btn">
-                            <span className="flaticon-bookmark"></span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Job Block */}
-                    <div className="job-block col-lg-6 col-md-12 col-sm-12">
-                      <div className="inner-box">
-                        <div className="content">
-                          <span className="company-logo">
-                            <img
-                              src="images/resource/company-logo/1-5.png"
-                              alt=""
-                            />
-                          </span>
-                          <h4>
-                            <a href="#">
-                              Senior Full Stack Engineer, Creator Success
-                            </a>
-                          </h4>
-                          <ul className="job-info">
-                            <li>
-                              <span className="icon flaticon-briefcase"></span>{" "}
-                              Segment
-                            </li>
-                            <li>
-                              <span className="icon flaticon-map-locator"></span>{" "}
-                              London, UK
-                            </li>
-                            <li>
-                              <span className="icon flaticon-clock-3"></span> 11
-                              hours ago
-                            </li>
-                            <li>
-                              <span className="icon flaticon-money"></span> $35k
-                              - $45k
-                            </li>
-                          </ul>
-                          <ul className="job-other-info">
-                            <li className="time">Full Time</li>
-                            <li className="privacy">Private</li>
-                            <li className="required">Urgent</li>
-                          </ul>
-                          <button className="bookmark-btn">
-                            <span className="flaticon-bookmark"></span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Job Block */}
-                    <div className="job-block col-lg-6 col-md-12 col-sm-12">
-                      <div className="inner-box">
-                        <div className="content">
-                          <span className="company-logo">
-                            <img
-                              src="images/resource/company-logo/1-6.png"
-                              alt=""
-                            />
-                          </span>
-                          <h4>
-                            <a href="#">
-                              Software Engineer (Android), Libraries
-                            </a>
-                          </h4>
-                          <ul className="job-info">
-                            <li>
-                              <span className="icon flaticon-briefcase"></span>{" "}
-                              Segment
-                            </li>
-                            <li>
-                              <span className="icon flaticon-map-locator"></span>{" "}
-                              London, UK
-                            </li>
-                            <li>
-                              <span className="icon flaticon-clock-3"></span> 11
-                              hours ago
-                            </li>
-                            <li>
-                              <span className="icon flaticon-money"></span> $35k
-                              - $45k
-                            </li>
-                          </ul>
-                          <ul className="job-other-info">
-                            <li className="time">Full Time</li>
-                            <li className="privacy">Private</li>
-                            <li className="required">Urgent</li>
-                          </ul>
-                          <button className="bookmark-btn">
-                            <span className="flaticon-bookmark"></span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>

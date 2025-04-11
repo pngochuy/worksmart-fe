@@ -24,6 +24,25 @@ export const fetchJobs = async (searchParams) => {
     return { jobs: [], totalPage: 0 };
   }
 };
+
+export const fetchAppliedJobs = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/candidate/applied-jobs`,
+      {
+        params: {userId}
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching applied jobs:", error);
+    if (error.response && error.response.status === 404) {
+      return [];
+    }
+    throw error;
+  }
+};
+
 export const fetchJobsForManagement = async (searchParams) => {
   try {
     const response = await axios.get(

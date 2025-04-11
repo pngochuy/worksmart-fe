@@ -148,7 +148,7 @@ export const Index = () => {
               {userActiveSubscription.package.cvLimit} CVs.
               <br />
               <a
-                href="/package-list"
+                href="/candidate/package-list"
                 className="font-bold text-blue-600 hover:underline"
                 onClick={(e) => {
                   e.stopPropagation();

@@ -236,7 +236,7 @@ export const JobForm = () => {
                       </button>
                       <button 
                         className="btn btn-success" 
-                        onClick={() => navigate("/employer/subscription")}
+                        onClick={() => navigate("/employer/package-list")}
                       >
                         Upgrade Subscription
                       </button>
