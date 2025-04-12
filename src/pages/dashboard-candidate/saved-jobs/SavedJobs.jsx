@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { fetchJobDetails } from '../../../services/jobService';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { fetchJobDetails } from "../../../services/jobServices"; // Adjust the import path as necessary
 
 const SavedJobsPage = () => {
   const [favoriteJobs, setFavoriteJobs] = useState([]);
-  const [timeFilter, setTimeFilter] = useState('Last 6 Months');
+  const [timeFilter, setTimeFilter] = useState("Last 6 Months");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
-  
+
   // Lấy userId từ localStorage hoặc context/redux state
   const getUserId = () => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
     return user?.id;
   };
 
@@ -24,11 +24,13 @@ const SavedJobsPage = () => {
       setIsLoading(false);
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BACKEND_API_URL}/api/FavoriteJob/user/${userId}`);
-      
+      const response = await axios.get(
+        `${BACKEND_API_URL}/api/FavoriteJob/user/${userId}`
+      );
+
       // Get job details for each favorite job
       const favoriteJobsWithDetails = await Promise.all(
         response.data.map(async (favorite) => {
@@ -36,23 +38,29 @@ const SavedJobsPage = () => {
             const jobDetails = await fetchJobDetails(favorite.jobID);
             return {
               ...favorite,
-              job: jobDetails
+              job: jobDetails,
             };
           } catch (err) {
-            console.error(`Error fetching job details for job ${favorite.jobID}:`, err);
+            console.error(
+              `Error fetching job details for job ${favorite.jobID}:`,
+              err
+            );
             return {
               ...favorite,
-              job: { title: 'Job information unavailable', companyName: 'Unknown' }
+              job: {
+                title: "Job information unavailable",
+                companyName: "Unknown",
+              },
             };
           }
         })
       );
-      
+
       setFavoriteJobs(favoriteJobsWithDetails);
       setError(null);
     } catch (err) {
-      console.error('Error fetching favorite jobs:', err);
-      setError('Failed to load saved jobs. Please try again later.');
+      console.error("Error fetching favorite jobs:", err);
+      setError("Failed to load saved jobs. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -63,10 +71,12 @@ const SavedJobsPage = () => {
     try {
       await axios.delete(`${BACKEND_API_URL}/api/FavoriteJob/${favoriteJobId}`);
       // After successful deletion, update the local state
-      setFavoriteJobs(favoriteJobs.filter(job => job.favoriteJobID !== favoriteJobId));
+      setFavoriteJobs(
+        favoriteJobs.filter((job) => job.favoriteJobID !== favoriteJobId)
+      );
     } catch (err) {
-      console.error('Error deleting favorite job:', err);
-      setError('Failed to delete job. Please try again later.');
+      console.error("Error deleting favorite job:", err);
+      setError("Failed to delete job. Please try again later.");
     }
   };
 
@@ -80,30 +90,30 @@ const SavedJobsPage = () => {
   // Filter jobs based on time range
   const filterJobsByTime = (timeRange) => {
     setIsLoading(true);
-    
+
     const currentDate = new Date();
     let filterDate = new Date();
-    
-    switch(timeRange) {
-      case 'Last 6 Months':
+
+    switch (timeRange) {
+      case "Last 6 Months":
         filterDate.setMonth(currentDate.getMonth() - 6);
         break;
-      case 'Last 12 Months':
+      case "Last 12 Months":
         filterDate.setMonth(currentDate.getMonth() - 12);
         break;
-      case 'Last 16 Months':
+      case "Last 16 Months":
         filterDate.setMonth(currentDate.getMonth() - 16);
         break;
-      case 'Last 24 Months':
+      case "Last 24 Months":
         filterDate.setMonth(currentDate.getMonth() - 24);
         break;
-      case 'Last 5 year':
+      case "Last 5 year":
         filterDate.setFullYear(currentDate.getFullYear() - 5);
         break;
       default:
         filterDate.setMonth(currentDate.getMonth() - 6);
     }
-    
+
     // Re-fetch from API or filter the existing data
     fetchFavoriteJobs(); // You might want to add filter parameters to the API call instead
   };
@@ -116,10 +126,10 @@ const SavedJobsPage = () => {
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -143,7 +153,7 @@ const SavedJobsPage = () => {
 
                     <div className="chosen-outer">
                       {/*Tabs Box*/}
-                      <select 
+                      <select
                         className="chosen-select"
                         value={timeFilter}
                         onChange={handleFilterChange}
@@ -161,7 +171,10 @@ const SavedJobsPage = () => {
                     <div className="table-outer">
                       {isLoading ? (
                         <div className="text-center py-5">
-                          <div className="spinner-border text-primary" role="status">
+                          <div
+                            className="spinner-border text-primary"
+                            role="status"
+                          >
                             <span className="visually-hidden">Loading...</span>
                           </div>
                         </div>
@@ -194,23 +207,32 @@ const SavedJobsPage = () => {
                                       <div className="content">
                                         <span className="company-logo">
                                           <img
-                                            src={favoriteJob.job?.logo || "images/resource/company-logo/1-1.png"}
-                                            alt={favoriteJob.job?.companyName || "Company"}
+                                            src={
+                                              favoriteJob.job?.logo ||
+                                              "images/resource/company-logo/1-1.png"
+                                            }
+                                            alt={
+                                              favoriteJob.job?.companyName ||
+                                              "Company"
+                                            }
                                           />
                                         </span>
                                         <h4>
                                           <a href={`/job/${favoriteJob.jobID}`}>
-                                            {favoriteJob.job?.title || "Job Title"}
+                                            {favoriteJob.job?.title ||
+                                              "Job Title"}
                                           </a>
                                         </h4>
                                         <ul className="job-info">
                                           <li>
                                             <span className="icon flaticon-briefcase"></span>{" "}
-                                            {favoriteJob.job?.companyName || "Company Name"}
+                                            {favoriteJob.job?.companyName ||
+                                              "Company Name"}
                                           </li>
                                           <li>
                                             <span className="icon flaticon-map-locator"></span>{" "}
-                                            {favoriteJob.job?.location || "Location"}
+                                            {favoriteJob.job?.location ||
+                                              "Location"}
                                           </li>
                                         </ul>
                                       </div>
@@ -218,22 +240,30 @@ const SavedJobsPage = () => {
                                   </div>
                                 </td>
                                 <td>{formatDate(favoriteJob.createAt)}</td>
-                                <td className="status">{favoriteJob.job?.status || "Active"}</td>
+                                <td className="status">
+                                  {favoriteJob.job?.status || "Active"}
+                                </td>
                                 <td>
                                   <div className="option-box">
                                     <ul className="option-list">
                                       <li>
-                                        <button 
+                                        <button
                                           data-text="View Job"
-                                          onClick={() => window.location.href = `/job/${favoriteJob.jobID}`}
+                                          onClick={() =>
+                                            (window.location.href = `/job/${favoriteJob.jobID}`)
+                                          }
                                         >
                                           <span className="la la-eye"></span>
                                         </button>
                                       </li>
                                       <li>
-                                        <button 
+                                        <button
                                           data-text="Remove from Saved"
-                                          onClick={() => deleteFavoriteJob(favoriteJob.favoriteJobID)}
+                                          onClick={() =>
+                                            deleteFavoriteJob(
+                                              favoriteJob.favoriteJobID
+                                            )
+                                          }
                                         >
                                           <span className="la la-trash"></span>
                                         </button>

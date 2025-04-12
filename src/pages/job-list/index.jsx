@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchJobs } from "../../services/jobServices";
+import { expandSearchTerms } from "./action";
 import WorkTypeFilter from "./WorkTypeFilter";
 import JobPositionDropdown from "./JobPositionDropdown";
 import SalaryRangeDropdown from "./SalaryRangeDropdown";
@@ -17,6 +18,9 @@ import {
   Heart,
   CalendarDays,
   Sparkle,
+  Loader2,
+  Tags,
+  Search,
 } from "lucide-react";
 import {
   Select,
@@ -62,10 +66,30 @@ export const Index = () => {
     Tags: [],
     MostRecent: null,
   });
+  const [isExpanding, setIsExpanding] = useState(false);
+  const [relatedKeywords, setRelatedKeywords] = useState([]);
+  const [originalKeyword, setOriginalKeyword] = useState("");
+  const [displayTitle, setDisplayTitle] = useState("");
+  const [expandKeywords, setExpandKeywords] = useState(false); // State để theo dõi trạng thái mở rộng
+
+  // Ref để theo dõi trạng thái search params mới nhất
+  const searchParamsRef = useRef(searchParams);
+
+  // Cập nhật ref khi searchParams thay đổi
+  useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
+
+  // Đồng bộ hóa displayTitle với searchParams.Title ban đầu
+  useEffect(() => {
+    setDisplayTitle(searchParams.Title);
+  }, []);
 
   const getJobs = async () => {
     try {
-      const data = await fetchJobs(searchParams);
+      // Sử dụng searchParamsRef.current thay vì searchParams
+      console.log("Fetching jobs with params:", searchParamsRef.current);
+      const data = await fetchJobs(searchParamsRef.current);
       setJobs(data.jobs || []);
       setTotalPage(data.totalPage || 1);
       setTotalJob(data.totalJob || 0);
@@ -88,9 +112,17 @@ export const Index = () => {
     }
   };
 
-  // Hàm cập nhật searchParams khi nhập liệu
+  // Cập nhật handleInputChange để sử dụng displayTitle thay vì searchParams.Title
   const handleInputChange = (e) => {
-    setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "Title") {
+      // Cập nhật displayTitle khi người dùng nhập vào ô tìm kiếm
+      setDisplayTitle(value);
+    } else {
+      // Các trường khác vẫn cập nhật searchParams bình thường
+      setSearchParams({ ...searchParams, [name]: value });
+    }
   };
 
   const handleOrderChange = (value) => {
@@ -110,9 +142,94 @@ export const Index = () => {
     }));
   };
 
-  const handleSearch = (e) => {
+  // Cập nhật handleSearch để sử dụng searchParamsRef
+  const handleSearch = async (e) => {
     e.preventDefault();
-    getJobs();
+
+    const searchTerm = displayTitle; // Sử dụng displayTitle
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      try {
+        setIsExpanding(true);
+
+        // Lưu từ khóa gốc
+        setOriginalKeyword(searchTerm);
+
+        // Gọi AI để mở rộng từ khóa
+        const keywordsList = await expandSearchTerms(searchTerm);
+
+        // Loại bỏ từ khóa gốc từ danh sách các từ khóa liên quan
+        const filteredKeywords = keywordsList.filter(
+          (keyword) => keyword.toLowerCase() !== searchTerm.toLowerCase()
+        );
+
+        // Đặt danh sách các từ khóa liên quan để hiển thị
+        setRelatedKeywords(filteredKeywords);
+
+        // Tạo chuỗi tất cả các từ khóa để tìm kiếm
+        const allKeywords = keywordsList.join(", ");
+
+        // Cập nhật searchParams và searchParamsRef.current cùng lúc
+        const newParams = {
+          ...searchParams,
+          Title: allKeywords,
+          PageIndex: 1,
+        };
+
+        // Cập nhật searchParamsRef trước khi gọi API
+        searchParamsRef.current = newParams;
+
+        // Cập nhật state React (không cần đợi cập nhật xong)
+        setSearchParams(newParams);
+
+        // Gọi getJobs ngay lập tức với searchParamsRef.current đã cập nhật
+        getJobs();
+      } catch (error) {
+        console.error("Error expanding search terms:", error);
+
+        // Xử lý lỗi tương tự
+        const newParams = {
+          ...searchParams,
+          Title: searchTerm,
+          PageIndex: 1,
+        };
+        searchParamsRef.current = newParams;
+        setSearchParams(newParams);
+        getJobs();
+      } finally {
+        setIsExpanding(false);
+      }
+    } else {
+      // Nếu không có từ khóa, thực hiện tìm kiếm bình thường
+      setRelatedKeywords([]);
+      setOriginalKeyword("");
+      const newParams = {
+        ...searchParams,
+        Title: "",
+      };
+      searchParamsRef.current = newParams;
+      setSearchParams(newParams);
+      getJobs();
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearchParams({
+      PageIndex: 1,
+      PageSize: 5,
+      Category: "",
+      Title: "",
+      JobPosition: "",
+      WorkTypes: [],
+      Location: "",
+      MinSalary: null,
+      MaxSalary: null,
+      Tags: [],
+      MostRecent: null,
+    });
+    setDisplayTitle(""); // Đảm bảo xóa cả displayTitle
+    setRelatedKeywords([]);
+    setOriginalKeyword("");
   };
 
   useEffect(() => {
@@ -122,6 +239,12 @@ export const Index = () => {
     searchParams.PageIndex,
     searchParams.MostRecent,
     searchParams.Category,
+    searchParams.Location,
+    searchParams.JobPosition,
+    searchParams.WorkTypes,
+    searchParams.Tags,
+    searchParams.MinSalary,
+    searchParams.MaxSalary,
   ]);
 
   // Format salary display
@@ -145,10 +268,71 @@ export const Index = () => {
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
+  // Cập nhật RelatedKeywordsSection để chỉ hiển thị giới hạn từ khóa
+  const RelatedKeywordsSection = () => {
+    if (relatedKeywords.length === 0) return null;
+
+    // Số lượng từ khóa hiển thị khi thu gọn
+    const initialDisplayCount = 15;
+
+    // Danh sách từ khóa hiển thị dựa vào trạng thái mở rộng
+    const displayedKeywords = expandKeywords
+      ? relatedKeywords
+      : relatedKeywords.slice(0, initialDisplayCount);
+
+    // Kiểm tra có nút "Show more" hay không
+    const hasMoreKeywords = relatedKeywords.length > initialDisplayCount;
+
+    return (
+      <section className="bg-gray-50 py-3 border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 mr-1 text-gray-600" />
+              <span className="text-sm font-medium">
+                Related to "{originalKeyword}":
+              </span>
+              {hasMoreKeywords && (
+                <button
+                  onClick={() => setExpandKeywords(!expandKeywords)}
+                  className="ml-auto text-blue-600 text-sm hover:text-blue-800 transition-colors focus:outline-none"
+                >
+                  {expandKeywords
+                    ? "Show less"
+                    : `Show all (${relatedKeywords.length})`}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {displayedKeywords.map((keyword, index) => (
+                <div
+                  key={index}
+                  className="text-sm bg-white text-blue-700 px-3 py-1.5 border border-gray-300 rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  {keyword}
+                </div>
+              ))}
+
+              {!expandKeywords && hasMoreKeywords && (
+                <div
+                  className="text-sm bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-200 transition-colors"
+                  onClick={() => setExpandKeywords(true)}
+                >
+                  +{relatedKeywords.length - initialDisplayCount} more
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   return (
     <>
-      {/*Page Title*/}
-      <section className="bg-white py-12" style={{ marginTop: "111px" }}>
+      {/*Page Title - sửa padding-bottom thành 0*/}
+      <section className="bg-white py-12 pb-0" style={{ marginTop: "111px" }}>
         <div className="container mx-auto px-4">
           {/* Job Search Form */}
           <div className="text-center mb-8">
@@ -170,7 +354,7 @@ export const Index = () => {
                       type="text"
                       name="Title"
                       placeholder="Job title, keywords or company"
-                      value={searchParams.Title}
+                      value={displayTitle} // Sử dụng displayTitle thay vì searchParams.Title
                       onChange={handleInputChange}
                       className="pl-14"
                     />
@@ -193,8 +377,16 @@ export const Index = () => {
                     <Button
                       type="submit"
                       className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isExpanding}
                     >
-                      Search
+                      {isExpanding ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Searching...</span>
+                        </>
+                      ) : (
+                        "Search"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -203,6 +395,9 @@ export const Index = () => {
           </Card>
         </div>
       </section>
+
+      {/* Hiển thị từ khóa liên quan */}
+      <RelatedKeywordsSection />
 
       {/* Filters Section */}
       <section className="bg-gray-50 py-4 border-y border-gray-200">
@@ -536,25 +731,7 @@ export const Index = () => {
                       We couldn&apos;t find any jobs matching your search
                       criteria. Try adjusting your filters or search terms.
                     </p>
-                    <Button
-                      onClick={() => {
-                        setSearchParams({
-                          PageIndex: 1,
-                          PageSize: 5,
-                          Category: "",
-                          Title: "",
-                          JobPosition: "",
-                          WorkTypes: [],
-                          Location: "",
-                          MinSalary: null,
-                          MaxSalary: null,
-                          Tags: [],
-                          MostRecent: null,
-                        });
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
+                    <Button onClick={handleClearFilters}>Clear Filters</Button>
                   </CardContent>
                 </Card>
               )}
