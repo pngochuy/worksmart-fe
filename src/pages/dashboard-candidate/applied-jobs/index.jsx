@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNotifications } from "@/layouts/NotificationProvider";
 import { fetchUserNotifications } from "@/services/notificationServices";
 import { fetchAppliedJobs } from "@/services/jobServices";
-import { Clock, FileEdit, Heart, MoveUpRight, Search } from "lucide-react";
+import { Clock, FileEdit, Heart, MoveUpRight, Search, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const index = () => {
@@ -97,12 +97,14 @@ export const index = () => {
                   <div className="widget-title">
                     <h4>My Applied Jobs</h4>
                     {!loadingJobs && filteredJobs.length > 0 && (
-                      <button
-                        className="theme-btn btn-style-one btn-small px-2 py-2"
+                      <Button
+                        className="h-8 px-2 lg:px-3"
+                        variant="outline"
                         onClick={handleRefresh}
                       >
-                        <i className="la la-refresh mr-2 text-xl"></i> Refresh
-                      </button>
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        <span className="ml-1 hidden sm:inline">Refresh</span>
+                      </Button>
                     )}
                   </div>
 

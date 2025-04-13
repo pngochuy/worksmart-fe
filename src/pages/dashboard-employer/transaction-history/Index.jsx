@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { getUserTransactions } from "@/services/employerServices";
 import { format } from "date-fns";
+import { Search, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Index = () => {
   const [transactions, setTransactions] = useState([]);
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userInfo, setUserInfo] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 10;
 
   const getUserId = () => {
-    if (userInfo && userInfo.userID) {
-      return userInfo.userID;
-    }
-
     const userDataString = localStorage.getItem("userLoginData");
     if (userDataString) {
       try {
@@ -41,13 +40,16 @@ export const Index = () => {
 
       try {
         const data = await getUserTransactions(userId);
-        setTransactions(Array.isArray(data) ? data : []);
+        const transactionsData = Array.isArray(data) ? data : [];
+        setTransactions(transactionsData);
+        setFilteredTransactions(transactionsData);
         setError(null); // Clear any previous errors
       } catch (apiError) {
         console.error("API Error:", apiError);
 
         if (apiError.response && apiError.response.status === 404) {
           setTransactions([]);
+          setFilteredTransactions([]);
           setError(null);
         } else {
           setError(apiError.message || "Failed to load transaction data");
@@ -64,6 +66,23 @@ export const Index = () => {
   useEffect(() => {
     fetchTransactions();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredTransactions(transactions);
+    } else {
+      const filtered = transactions.filter(transaction =>
+        String(transaction.content).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(transaction.orderCode).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredTransactions(filtered);
+    }
+    setCurrentPage(1);
+  }, [searchTerm, transactions]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   // Format date function
   const formatDate = (dateString) => {
@@ -94,8 +113,8 @@ export const Index = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = transactions.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const currentTransactions = filteredTransactions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -126,13 +145,29 @@ export const Index = () => {
                 <div className="widget-title">
                   <h4>My Transactions</h4>
                   {!loading && transactions.length > 0 && (
-                    <button
-                      className="theme-btn btn-style-one btn-small px-2 py-2"
+                    <Button
+                      className="h-8 px-2 lg:px-3"
+                      variant="outline"
                       onClick={handleRefresh}
                     >
-                      <i className="la la-refresh mr-1"></i> Refresh
-                    </button>
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                      <span className="ml-1 hidden sm:inline">Refresh</span>
+                    </Button>
                   )}
+                </div>
+
+                {/* Full width search box with border */}
+                <div className="search-box-outer w-full border border-gray-300 rounded-md p-3 mb-4 bg-white shadow-sm">
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      placeholder="Search by content or order code..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      className="form-control w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
                 </div>
 
                 <div className="widget-content">

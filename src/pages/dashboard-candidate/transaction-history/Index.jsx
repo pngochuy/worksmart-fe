@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { getUserTransactions } from "@/services/employerServices";
 import { format } from "date-fns";
-import { Search } from "lucide-react";
+import { Search, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Index = () => {
   const [transactions, setTransactions] = useState([]);
@@ -67,7 +68,6 @@ export const Index = () => {
   }, []);
 
   useEffect(() => {
-    // Filter transactions when search term changes
     if (searchTerm.trim() === "") {
       setFilteredTransactions(transactions);
     } else {
@@ -77,7 +77,6 @@ export const Index = () => {
       );
       setFilteredTransactions(filtered);
     }
-    // Reset to first page when search changes
     setCurrentPage(1);
   }, [searchTerm, transactions]);
 
@@ -146,12 +145,14 @@ export const Index = () => {
                 <div className="widget-title">
                   <h4>My Transactions</h4>
                   {!loading && transactions.length > 0 && (
-                    <button
-                      className="theme-btn btn-style-one btn-small px-2 py-2"
+                    <Button
+                      className="h-8 px-2 lg:px-3"
+                      variant="outline"
                       onClick={handleRefresh}
                     >
-                      <i className="la la-refresh mr-2 text-xl"></i> Refresh
-                    </button>
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                      <span className="ml-1 hidden sm:inline">Refresh</span>
+                    </Button>
                   )}
                 </div>
 

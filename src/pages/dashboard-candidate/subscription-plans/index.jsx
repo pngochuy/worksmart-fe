@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { getEmployerSubscriptions } from "@/services/employerServices";
 import { format } from "date-fns";
-import { Search } from "lucide-react";
+import { Search, RefreshCcw, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const index = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -11,6 +20,7 @@ export const index = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const itemsPerPage = 10;
 
   const getUserId = () => {
@@ -162,14 +172,55 @@ export const index = () => {
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>My Packages</h4>
-                    {!loading && subscriptions.length > 0 && (
-                      <button
-                        className="theme-btn btn-style-one btn-medium px-2 py-2"
+                    <div className="d-flex gap-2">
+                      {/* Info Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="h-8 px-2 lg:px-3"
+                            variant="outline"
+                          >
+                            <Info className="h-4 w-4 mr-2" />
+                            <span className="ml-1 hidden sm:inline">Package Info</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Package Upgrade Information</DialogTitle>
+                          </DialogHeader>
+                          <DialogDescription>
+                            <div className="mt-2 space-y-4">
+                              <div>
+                                <h5 className="font-semibold">Package Upgrade Policy:</h5>
+                                <ul className="list-disc pl-5 mt-2 space-y-2">
+                                  <li>
+                                    <strong>Same package upgrade:</strong> If you purchase the same package again, the system will add the additional time to your current subscription (extending the expiration date).
+                                  </li>
+                                  <li>
+                                    <strong>Higher package upgrade:</strong> If you already own a lower-tier package and upgrade to a higher-tier package, the system will activate the higher package. Both packages will run simultaneously until their respective expiration dates.
+                                  </li>
+                                  <li>
+                                    <strong>Automatic downgrade:</strong> When a higher-tier package expires, the system will automatically revert to any remaining lower-tier package that is still active.
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Refresh Button */}
+                      {!loading && subscriptions.length > 0 && (
+                      <Button
+                        className="h-8 px-2 lg:px-3"
+                        variant="outline"
                         onClick={handleRefresh}
                       >
-                        <i className="la la-refresh mr-2 text-xl"></i> Refresh
-                      </button>
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        <span className="ml-1 hidden sm:inline">Refresh</span>
+                      </Button>
                     )}
+                    </div>
                   </div>
 
                   {/* Full width search box with border */}
@@ -216,7 +267,7 @@ export const index = () => {
                               <th>Package</th>
                               <th>Total CV</th>
                               <th>Hightlight Profile</th>
-                              <th>Expiry</th>
+                              <th>Date Buy</th>
                               <th>Remaining Days</th>
                               <th>Status</th>
                             </tr>

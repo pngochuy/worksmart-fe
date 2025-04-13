@@ -3,21 +3,29 @@ import { useEffect, useState } from "react";
 import { useNotifications } from "@/layouts/NotificationProvider";
 import { fetchUserNotifications } from "@/services/notificationServices";
 import { fetchAppliedJobs } from "@/services/jobServices";
-import { Clock, FileEdit, Heart, MoveUpRight } from "lucide-react";
+import { getUserFavoriteJobsList } from "@/services/candidateServices";
+import { Clock, FileEdit, Heart, MoveUpRight, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export const Index = () => {
   const [userDataLogin, setUserDataLogin] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const [appliedJobs, setAppliedJobs] = useState([]); // State mới để lưu các job đã apply
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [favouriteJobs, setFavouriteJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingJobs, setLoadingJobs] = useState(true); // State loading cho jobs
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [loadingFavourites, setLoadingFavourites] = useState(true);
+  const [isRefreshingNotifications, setIsRefreshingNotifications] = useState(false);
+  const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
+  const [isRefreshingFavourites, setIsRefreshingFavourites] = useState(false);
+  const [isRefreshingChart, setIsRefreshingChart] = useState(false);
   const [error, setError] = useState(null);
   const [jobError, setJobError] = useState(null);
+  const [favouriteJobError, setFavouriteJobError] = useState(null);
   const [chartData, setChartData] = useState([]);
-  const [chartPeriod, setChartPeriod] = useState('30'); // Default: last 30 days
-  const [chartGroupBy, setChartGroupBy] = useState('day'); // Default: group by day
+  const [chartPeriod, setChartPeriod] = useState('30');
+  const [chartGroupBy, setChartGroupBy] = useState('day');
 
   const { unreadCount } = useNotifications();
 
@@ -28,6 +36,7 @@ export const Index = () => {
 
   useEffect(() => {
     loadNotifications();
+    loadFavouriteJobs();
     if (userDataLogin) {
       loadAppliedJobs();
     }
@@ -41,6 +50,72 @@ export const Index = () => {
       generateEmptyData(chartPeriod, chartGroupBy);
     }
   }, [appliedJobs, chartPeriod, chartGroupBy]);
+
+  // Handle refresh for notifications
+  const handleRefreshNotifications = async () => {
+    setIsRefreshingNotifications(true);
+    try {
+      const data = await fetchUserNotifications();
+      setNotifications(data);
+    } catch (err) {
+      setError("Failed to load notifications");
+      console.error(err);
+    } finally {
+      setIsRefreshingNotifications(false);
+    }
+  };
+
+  // Handle refresh for applied jobs
+  const handleRefreshJobs = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingJobs(true);
+    try {
+      const userId = userDataLogin.userID;
+      const data = await fetchAppliedJobs(userId);
+      setAppliedJobs(data);
+    } catch (err) {
+      setJobError("Failed to load applied jobs");
+      console.error(err);
+    } finally {
+      setIsRefreshingJobs(false);
+    }
+  };
+
+  // Handle refresh for favourite jobs
+  const handleRefreshFavourites = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingFavourites(true);
+    try {
+      const userId = userDataLogin.userID;
+      const data = await getUserFavoriteJobsList(userId);
+      setFavouriteJobs(data);
+    } catch (err) {
+      setFavouriteJobError("Failed to load favourite jobs");
+      console.error(err);
+    } finally {
+      setIsRefreshingFavourites(false);
+    }
+  };
+
+  // Handle refresh for chart data
+  const handleRefreshChart = async () => {
+    setIsRefreshingChart(true);
+    try {
+      // Refresh the jobs data first
+      if (userDataLogin) {
+        const userId = userDataLogin.userID;
+        const data = await fetchAppliedJobs(userId);
+        setAppliedJobs(data);
+        // Chart will be updated automatically via useEffect when appliedJobs changes
+      }
+    } catch (err) {
+      console.error("Failed to refresh chart data:", err);
+    } finally {
+      setIsRefreshingChart(false);
+    }
+  };
 
   const loadNotifications = async () => {
     try {
@@ -68,6 +143,20 @@ export const Index = () => {
       console.error(err);
     } finally {
       setLoadingJobs(false);
+    }
+  };
+
+  const loadFavouriteJobs = async () => {
+    try {
+      setLoadingFavourites(true);
+      const userId = userDataLogin.userID;
+      const data = await getUserFavoriteJobsList(userId);
+      setFavouriteJobs(data);
+    } catch (err) {
+      setFavouriteJobError("Failed to load favourite jobs");
+      console.error(err);
+    } finally {
+      setLoadingFavourites(false);
     }
   };
 
@@ -110,49 +199,6 @@ export const Index = () => {
           }
         });
         break;
-
-      // case 'week':
-      //   // Create date range - weekly
-      //   const weekMap = {};
-      //   let weekCounter = 0;
-
-      //   for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
-      //     const weekOfYear = getWeekNumber(d);
-      //     const year = d.getFullYear();
-      //     const weekKey = `${year}-W${weekOfYear}`;
-
-      //     if (weekMap[weekKey] === undefined) {
-      //       weekMap[weekKey] = {
-      //         startDate: new Date(d),
-      //         count: 0,
-      //         index: weekCounter++
-      //       };
-
-      //       const weekEndDate = new Date(d);
-      //       weekEndDate.setDate(d.getDate() + 6);
-
-      //       dateRange.push({
-      //         date: new Date(d),
-      //         key: weekKey,
-      //         name: formatChartLabel(d, 'week'),
-      //         applications: 0
-      //       });
-      //     }
-
-      //     dataPoints[weekKey] = 0;
-      // //   }
-
-      //   // Count applications per week
-      //   formattedJobs.forEach(job => {
-      //     const weekOfYear = getWeekNumber(job.date);
-      //     const year = job.date.getFullYear();
-      //     const weekKey = `${year}-W${weekOfYear}`;
-
-      //     if (dataPoints[weekKey] !== undefined) {
-      //       dataPoints[weekKey]++;
-      //     }
-      //   });
-      //   break;
 
       case 'month':
         // Create date range - monthly
@@ -268,8 +314,6 @@ export const Index = () => {
     switch (groupBy) {
       case 'day':
         return `${date.getDate()}/${date.getMonth() + 1}`;
-      // case 'week':
-      //   return `W${getWeekNumber(date)}`;
       case 'month':
         return date.toLocaleString('en-US', { month: 'short' });
       case 'year':
@@ -299,25 +343,6 @@ export const Index = () => {
           });
         }
         break;
-
-      // case 'week':
-      //   // Create weekly empty data
-      //   const weekMap = {};
-
-      //   for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
-      //     const weekOfYear = getWeekNumber(d);
-      //     const weekKey = `W${weekOfYear}`;
-
-      //     if (!weekMap[weekKey]) {
-      //       weekMap[weekKey] = true;
-      //       emptyData.push({
-      //         name: weekKey,
-      //         applications: 0,
-      //         formattedDate: `Week ${weekOfYear}, ${d.getFullYear()}`
-      //       });
-      //     }
-      //   }
-      //   break;
 
       case 'month':
         // Create monthly empty data
@@ -413,6 +438,27 @@ export const Index = () => {
             <h3>Hello, {userDataLogin?.fullName}!!</h3>
             <div className="text">Ready to jump back in?</div>
           </div>
+
+          <div className="col-12 text-right mt-2" style={{paddingBottom: 5}}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleRefreshJobs();
+                handleRefreshNotifications();
+                handleRefreshFavourites();
+              }}
+              disabled={isRefreshingJobs || isRefreshingNotifications || isRefreshingFavourites}
+              className="h-8 px-3"
+            >
+              {(isRefreshingJobs || isRefreshingNotifications || isRefreshingFavourites) ? (
+                <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCcw className="h-4 w-4 mr-2" />
+              )}
+              Refresh
+            </Button>
+          </div>
+
           <div className="row">
             <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12">
               <div className="ui-item">
@@ -436,69 +482,75 @@ export const Index = () => {
                 </div>
               </div>
             </div>
-            {/* <div className="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item ui-yellow">
-                <div className="left">
-                  <i className="icon la la-comment-o"></i>
-                </div>
-                <div className="right">
-                  <h4>74</h4>
-                  <p>Messages</p>
-                </div>
-              </div>
-            </div> */}
             <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12">
               <div className="ui-item ui-green">
                 <div className="left">
                   <i className="icon la la-bookmark-o"></i>
                 </div>
                 <div className="right">
-                  <h4>32</h4>
+                  <h4>{favouriteJobs?.length || 0}</h4>
                   <p>Favourite Jobs</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="row">
+          <div className="row mt-4">
+          <div className="col-12 text-right mt-2" style={{paddingBottom: 5}}> 
+              <Button
+                variant="outline"
+                onClick={() => {
+                  handleRefreshChart();
+                  handleRefreshNotifications();
+                }}
+                disabled={isRefreshingChart || isRefreshingNotifications}
+                className="h-8 px-3"
+              >
+                {(isRefreshingChart || isRefreshingNotifications) ? (
+                  <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                )}
+                Refresh
+              </Button>
+            </div>
             <div className="col-lg-7">
-              {/* Graph widget - UPDATED with cleaner chart visualization */}
+              {/* Graph widget */}
               <div className="graph-widget ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>Your Application Activity</h4>
-                    <div className="chosen-outer d-flex">
-                      {/* Group By Selector */}
-                      <select
-                        className="chosen-select mr-2"
-                        value={chartGroupBy}
-                        onChange={handleChartGroupByChange}
-                        style={{ marginRight: '10px' }}
-                      >
-                        <option value="day">Daily</option>
-                        {/* <option value="week">Weekly</option> */}
-                        <option value="month">Monthly</option>
-                        <option value="year">Yearly</option>
-                      </select>
+                    <div className="d-flex align-items-center">
+                      <div className="chosen-outer d-flex">
+                        <select
+                          className="chosen-select mr-2"
+                          value={chartGroupBy}
+                          onChange={handleChartGroupByChange}
+                          style={{ marginRight: '10px' }}
+                        >
+                          <option value="day">Daily</option>
+                          <option value="month">Monthly</option>
+                          <option value="year">Yearly</option>
+                        </select>
 
-                      {/* Time Period Selector */}
-                      <select
-                        className="chosen-select"
-                        value={chartPeriod}
-                        onChange={handleChartPeriodChange}
-                      >
-                        <option value="7">Last 7 Days</option>
-                        <option value="14">Last 14 Days</option>
-                        <option value="30">Last 30 Days</option>
-                        <option value="90">Last 3 Months</option>
-                        <option value="180">Last 6 Months</option>
-                        <option value="365">Last 12 Months</option>
-                      </select>
+                        <select
+                          className="chosen-select"
+                          value={chartPeriod}
+                          onChange={handleChartPeriodChange}
+                        >
+                          <option value="7">Last 7 Days</option>
+                          <option value="14">Last 14 Days</option>
+                          <option value="30">Last 30 Days</option>
+                          <option value="90">Last 3 Months</option>
+                          <option value="180">Last 6 Months</option>
+                          <option value="365">Last 12 Months</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
                   <div className="widget-content">
-                    {loadingJobs ? (
+                    {loadingJobs || isRefreshingChart ? (
                       <div className="d-flex justify-content-center align-items-center" style={{ height: "300px" }}>
                         <p>Loading chart data...</p>
                       </div>
@@ -529,7 +581,6 @@ export const Index = () => {
                             stroke="#1967d2"
                             activeDot={{ r: 8 }}
                             strokeWidth={2}
-                            // Only show dots for non-zero values
                             dot={(props) => {
                               const { cx, cy, payload } = props;
                               if (payload.applications > 0) {
@@ -562,7 +613,7 @@ export const Index = () => {
                   <h4>Notifications</h4>
                 </div>
                 <div className="widget-content">
-                  {loading ? (
+                  {loading || isRefreshingNotifications ? (
                     <p>Loading notifications...</p>
                   ) : error ? (
                     <p>{error}</p>
@@ -591,16 +642,34 @@ export const Index = () => {
                 </div>
               </div>
             </div>
+          </div>
 
+          <div className="row mt-4">
+            
+            <div className="col-12 text-right mt-2" style={{paddingBottom: 5}}>
+              <Button
+                variant="outline"
+                onClick={handleRefreshJobs}
+                disabled={isRefreshingJobs}
+                className="h-8 px-3"
+              >
+                {isRefreshingJobs ? (
+                  <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                )}
+                Refresh
+              </Button>
+            </div>
             <div className="col-lg-12">
-              {/* applicants Widget */}
+              {/* Applied Jobs Widget */}
               <div className="applicants-widget ls-widget">
                 <div className="widget-title">
                   <h4>Jobs Applied Recently</h4>
                 </div>
                 <div className="widget-content">
                   <div className="row">
-                    {loadingJobs ? (
+                    {loadingJobs || isRefreshingJobs ? (
                       <div className="col-12 text-center py-4">
                         <p>Loading applied jobs...</p>
                       </div>
@@ -673,7 +742,7 @@ export const Index = () => {
 
                   {/* Thêm nút "View All" khi có nhiều hơn 4 công việc */}
                   {appliedJobs.length > 4 && (
-                    <div className="row mt-1" style={{paddingBottom: 20}}>
+                    <div className="row mt-1" style={{ paddingBottom: 20 }}>
                       <div className="col-12 text-center">
                         <a href="/candidate/applied-jobs" className="theme-btn btn-style-one">
                           View All Applications
