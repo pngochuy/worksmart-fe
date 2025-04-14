@@ -16,28 +16,21 @@ export const Index = () => {
   const [loading, setLoading] = useState(true);
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
-
-  // Separate refresh state for each data type
   const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
   const [isRefreshingApplications, setIsRefreshingApplications] = useState(false);
   const [isRefreshingNotifications, setIsRefreshingNotifications] = useState(false);
   const [isRefreshingChart, setIsRefreshingChart] = useState(false);
-
-  // Row-specific refresh states
   const [isRefreshingRow1, setIsRefreshingRow1] = useState(false);
   const [isRefreshingRow2, setIsRefreshingRow2] = useState(false);
   const [isRefreshingRow3, setIsRefreshingRow3] = useState(false);
-
   const [error, setError] = useState(null);
   const [notificationError, setNotificationError] = useState(null);
   const [applicationError, setApplicationError] = useState(null);
-
-  // Chart state
   const [chartData, setChartData] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('30');
   const [chartGroupBy, setChartGroupBy] = useState('day');
 
-  const { unreadCount } = useNotifications();
+  const { unreadCount, refreshNotifications } = useNotifications();
 
   useEffect(() => {
     const user = getUserLoginData();
@@ -90,6 +83,7 @@ export const Index = () => {
       setLoadingNotifications(true);
       const data = await fetchUserNotifications();
       setNotifications(data);
+      refreshNotifications();
     } catch (err) {
       setNotificationError("Failed to load notifications");
       console.error(err);
@@ -188,6 +182,7 @@ export const Index = () => {
 
         fetchUserNotifications().then(data => {
           setNotifications(data);
+          refreshNotifications();
           setNotificationError(null);
         }).catch(err => {
           setNotificationError("Failed to refresh notifications");
@@ -221,6 +216,7 @@ export const Index = () => {
 
         fetchUserNotifications().then(data => {
           setNotifications(data);
+          refreshNotifications();
           setNotificationError(null);
         }).catch(err => {
           setNotificationError("Failed to refresh notifications");

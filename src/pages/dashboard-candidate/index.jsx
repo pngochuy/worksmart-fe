@@ -16,7 +16,8 @@ export const Index = () => {
   const [loading, setLoading] = useState(true);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [loadingFavourites, setLoadingFavourites] = useState(true);
-  const [isRefreshingNotifications, setIsRefreshingNotifications] = useState(false);
+  const [isRefreshing1stNotifications, setIsRefreshing1stNotifications] = useState(false);
+  const [isRefreshing2ndNotifications, setIsRefreshing2ndNotifications] = useState(false);
   const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
   const [isRefreshingFavourites, setIsRefreshingFavourites] = useState(false);
   const [isRefreshingChart, setIsRefreshingChart] = useState(false);
@@ -26,8 +27,7 @@ export const Index = () => {
   const [chartData, setChartData] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('30');
   const [chartGroupBy, setChartGroupBy] = useState('day');
-
-  const { unreadCount } = useNotifications();
+  const {unreadCount, refreshNotifications } = useNotifications();
 
   useEffect(() => {
     const user = getUserLoginData();
@@ -52,16 +52,31 @@ export const Index = () => {
   }, [appliedJobs, chartPeriod, chartGroupBy]);
 
   // Handle refresh for notifications
-  const handleRefreshNotifications = async () => {
-    setIsRefreshingNotifications(true);
+  const handleRefresh1stNotifications = async () => {
+    setIsRefreshing1stNotifications(true);
     try {
       const data = await fetchUserNotifications();
-      setNotifications(data);
+      setNotifications(data);   
+      refreshNotifications();
     } catch (err) {
       setError("Failed to load notifications");
       console.error(err);
     } finally {
-      setIsRefreshingNotifications(false);
+      setIsRefreshing1stNotifications(false);
+    }
+  };
+
+  const handleRefresh2ndNotifications = async () => {
+    setIsRefreshing2ndNotifications(true);
+    try {
+      const data = await fetchUserNotifications();
+      setNotifications(data);
+      refreshNotifications();
+    } catch (err) {
+      setError("Failed to load notifications");
+      console.error(err);
+    } finally {
+      setIsRefreshing2ndNotifications(false);
     }
   };
 
@@ -122,6 +137,7 @@ export const Index = () => {
       setLoading(true);
       const data = await fetchUserNotifications();
       setNotifications(data);
+      refreshNotifications();
     } catch (err) {
       setError("Failed to load notifications");
       console.error(err);
@@ -439,18 +455,18 @@ export const Index = () => {
             <div className="text">Ready to jump back in?</div>
           </div>
 
-          <div className="col-12 text-right mt-2" style={{paddingBottom: 5}}>
+          <div className="col-12 text-right mt-2" style={{ paddingBottom: 5 }}>
             <Button
               variant="outline"
               onClick={() => {
                 handleRefreshJobs();
-                handleRefreshNotifications();
+                handleRefresh1stNotifications();
                 handleRefreshFavourites();
               }}
-              disabled={isRefreshingJobs || isRefreshingNotifications || isRefreshingFavourites}
+              disabled={isRefreshingJobs || isRefreshing1stNotifications || isRefreshingFavourites}
               className="h-8 px-3"
             >
-              {(isRefreshingJobs || isRefreshingNotifications || isRefreshingFavourites) ? (
+              {(isRefreshingJobs || isRefreshing1stNotifications || isRefreshingFavourites) ? (
                 <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <RefreshCcw className="h-4 w-4 mr-2" />
@@ -496,17 +512,17 @@ export const Index = () => {
           </div>
 
           <div className="row mt-4">
-          <div className="col-12 text-right mt-2" style={{paddingBottom: 5}}> 
+            <div className="col-12 text-right mt-2" style={{ paddingBottom: 5 }}>
               <Button
                 variant="outline"
                 onClick={() => {
                   handleRefreshChart();
-                  handleRefreshNotifications();
+                  handleRefresh2ndNotifications();
                 }}
-                disabled={isRefreshingChart || isRefreshingNotifications}
+                disabled={isRefreshingChart || isRefreshing2ndNotifications}
                 className="h-8 px-3"
               >
-                {(isRefreshingChart || isRefreshingNotifications) ? (
+                {(isRefreshingChart || isRefreshing2ndNotifications) ? (
                   <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
                 ) : (
                   <RefreshCcw className="h-4 w-4 mr-2" />
@@ -613,7 +629,7 @@ export const Index = () => {
                   <h4>Notifications</h4>
                 </div>
                 <div className="widget-content">
-                  {loading || isRefreshingNotifications ? (
+                  {loading || isRefreshing2ndNotifications ? (
                     <p>Loading notifications...</p>
                   ) : error ? (
                     <p>{error}</p>
@@ -645,8 +661,8 @@ export const Index = () => {
           </div>
 
           <div className="row mt-4">
-            
-            <div className="col-12 text-right mt-2" style={{paddingBottom: 5}}>
+
+            <div className="col-12 text-right mt-2" style={{ paddingBottom: 5 }}>
               <Button
                 variant="outline"
                 onClick={handleRefreshJobs}
