@@ -294,7 +294,7 @@ export const index = () => {
                                     {package_.hightlightProfile ? "Yes" : "No"}
                                   </td>
                                   <td className="expiry">
-                                    {formatDate(subscription.expDate)}
+                                    {formatDate(subscription.createdAt)}
                                   </td>
                                   <td className="remaining">{usage.remaining}</td>
                                   <td className="status">

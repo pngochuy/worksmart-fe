@@ -291,7 +291,7 @@ export const index = () => {
                                   </td>
                                   <td className="post-remaining">{package_.featuredJobPostLimit}</td>
                                   <td className="expiry">
-                                    {formatDate(subscription.expDate)}
+                                    {formatDate(subscription.createdAt)}
                                   </td>
                                   <td className="remaining">{usage.remaining}</td>
                                   <td className="status">
