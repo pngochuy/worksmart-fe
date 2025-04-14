@@ -228,3 +228,27 @@ export const reportJob = async (jobData) => {
     throw error;
   }
 };
+
+export const getUserFavoriteJobsList = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/favoriteJob/user/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching favorite jobs:", error);
+    throw error;
+  }
+};
+
+export const getApplicationByUserOwnJob = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/User/${userId}/applications/count`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching application by job:", error)
+    throw error;
+  }
+}

@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { getEmployerSubscriptions } from "@/services/employerServices";
 import { format } from "date-fns";
+import { Search, RefreshCcw, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const index = () => {
   const [subscriptionsData, setSubscriptionsData] = useState([]);
+  const [filteredSubscriptionDatas, setFilteredSubscriptionDatas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const itemsPerPage = 10;
 
   const getUserId = () => {
@@ -37,16 +50,19 @@ export const index = () => {
     try {
       setLoading(true);
       const userId = getUserId();
-  
+
       try {
         const data = await getEmployerSubscriptions(userId);
-        setSubscriptionsData(Array.isArray(data) ? data : []);
+        const subscriptionsData = Array.isArray(data) ? data : [];
+        setSubscriptionsData(subscriptionsData);
+        setFilteredSubscriptionDatas(subscriptionsData)
         setError(null); // Clear any previous errors
       } catch (apiError) {
         console.error("API Error:", apiError);
-  
+
         if (apiError.response && apiError.response.status === 404) {
           setSubscriptionsData([]);
+          setFilteredSubscriptionDatas([]);
           setError(null);
         } else {
           setError(apiError.message || "Failed to load subscription data");
@@ -63,6 +79,26 @@ export const index = () => {
   useEffect(() => {
     fetchSubscriptionData();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredSubscriptionDatas(subscriptionsData);
+    } else {
+      const filtered = subscriptionsData.filter(item =>
+        String(item.package.name).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      console.log("Data:", subscriptionsData);
+      setFilteredSubscriptionDatas(filtered);
+    }
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchTerm, subscriptionsData]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    console.log("Search term:", value);
+    setSearchTerm(e.target.value);
+  };
 
   const calculateUsage = (subscription, package_) => {
     if (package_.jobPostLimitPerDay) {
@@ -102,8 +138,8 @@ export const index = () => {
   // Tính toán phân trang
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentSubscriptions = subscriptionsData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(subscriptionsData.length / itemsPerPage);
+  const currentSubscriptions = filteredSubscriptionDatas.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSubscriptionDatas.length / itemsPerPage);
 
   // Hàm điều hướng phân trang
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -135,14 +171,69 @@ export const index = () => {
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>My Packages</h4>
-                    {!loading && subscriptionsData.length > 0 && (
-                      <button
-                        className="theme-btn btn-style-one btn-small px-2 py-2"
-                        onClick={handleRefresh}
-                      >
-                        <i className="la la-refresh mr-1"></i> Refresh
-                      </button>
-                    )}
+                    <div className="d-flex gap-2">
+                      {/* Info Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="h-8 px-2 lg:px-3"
+                            variant="outline"
+                          >
+                            <Info className="h-4 w-4 mr-2" />
+                            <span className="ml-1 hidden sm:inline">Package Info</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Package Upgrade Information</DialogTitle>
+                          </DialogHeader>
+                          <DialogDescription>
+                            <div className="mt-2 space-y-4">
+                              <div>
+                                <h5 className="font-semibold">Package Upgrade Policy:</h5>
+                                <ul className="list-disc pl-5 mt-2 space-y-2">
+                                  <li>
+                                    <strong>Same package upgrade:</strong> If you purchase the same package again, the system will add the additional time to your current subscription (extending the expiration date).
+                                  </li>
+                                  <li>
+                                    <strong>Higher package upgrade:</strong> If you already own a lower-tier package and upgrade to a higher-tier package, the system will activate the higher package. Both packages will run simultaneously until their respective expiration dates.
+                                  </li>
+                                  <li>
+                                    <strong>Automatic downgrade:</strong> When a higher-tier package expires, the system will automatically revert to any remaining lower-tier package that is still active.
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Refresh Button */}
+                      {!loading && subscriptionsData.length > 0 && (
+                        <Button
+                          className="h-8 px-2 lg:px-3"
+                          variant="outline"
+                          onClick={handleRefresh}
+                        >
+                          <RefreshCcw className="h-4 w-4 mr-2" />
+                          <span className="ml-1 hidden sm:inline">Refresh</span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Full width search box with border */}
+                  <div className="search-box-outer w-full border border-gray-300 rounded-md p-3 mb-4 bg-white shadow-sm">
+                    <div className="relative w-full">
+                      <input
+                        type="text"
+                        placeholder="Search by content or order code..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="form-control w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
                   </div>
 
                   <div className="widget-content">
@@ -159,7 +250,11 @@ export const index = () => {
                       <div className="text-center py-4">
                         <div className="empty-state">
                           <i className="la la-box-open la-3x text-muted mb-3"></i>
-                          <p>No Subscription To Display</p>
+                          {searchTerm ? (
+                            <p>No subscriptions matching "{searchTerm}"</p>
+                          ) : (
+                            <p>No subscriptions to display</p>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -171,7 +266,7 @@ export const index = () => {
                               <th>Package</th>
                               <th>Total Jobs Post</th>
                               <th>Total Jobs Featured</th>
-                              <th>Expiry</th>
+                              <th>Date Buy</th>
                               <th>Remaining Days</th>
                               <th>Status</th>
                             </tr>

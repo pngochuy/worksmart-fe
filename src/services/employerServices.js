@@ -19,8 +19,6 @@ export const checkActiveSubscription = async (userId) => {
     });
     
     const data = response.data;
-    console.log("Subscription data:", data);
-    
     return data;
   } catch (error) {
     console.error("Error checking subscription status:", error);

@@ -7,7 +7,7 @@ const PaymentCancel = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [seconds, setSeconds] = useState(20);
+  const [seconds, setSeconds] = useState(5);
 
   useEffect(() => {
     const processCancellation = async () => {
@@ -100,10 +100,10 @@ const PaymentCancel = () => {
         });
       }, 1000);
       
-      // Redirect after 30 seconds
+      // Redirect after 5 seconds
       timer = setTimeout(() => {
         navigate("/candidate/package-list");
-      }, 20000);
+      }, 5000);
       
       return () => {
         clearTimeout(timer);
@@ -115,7 +115,7 @@ const PaymentCancel = () => {
 
   if (loading) {
     return (
-      <div className="container d-flex justify-content-center align-items-center vh-45">
+      <div className="container d-flex justify-content-center align-items-center vh-45" style={{marginTop: 30}}>
         <div className="text-center">
           <div className="spinner-border text-primary mb-3" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -129,7 +129,7 @@ const PaymentCancel = () => {
 
   return (
     <div className="container d-flex justify-content-center align-items-center vh-45">
-      <div className="col-md-8 col-lg-6">
+      <div className="col-md-8 col-lg-6" style={{marginTop: 30}}>
         <div className="card border-0 shadow border-warning">
           <div className="card-header text-white bg-warning">
             <h4 className="mb-0 text-center">
