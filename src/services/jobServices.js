@@ -310,3 +310,16 @@ export const toggleJobPriority = async (id) => {
     throw error;
   }
 };
+// Fetch chi tiết của công việc (v2)
+export const fetchJobDetailsV2 = async (jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/detail/${jobId}`
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job details:", error);
+    throw error;
+  }
+};

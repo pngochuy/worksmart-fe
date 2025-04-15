@@ -1,5 +1,4 @@
 import axios from "axios";
-import qs from "qs";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 

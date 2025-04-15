@@ -2,17 +2,15 @@ import { NavLink, useLocation } from "react-router-dom";
 
 export const AdminSidebar = () => {
   const location = useLocation();
-
   const checkActive = (path) => {
-    // Kiểm tra nếu path truyền vào trùng với pathname hiện tại
     return location.pathname === path;
   };
 
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userLoginData");
+    localStorage.clear();
     window.location.href = "/login";
   };
+
   return (
     <>
       <ul className="navigation">
@@ -32,46 +30,49 @@ export const AdminSidebar = () => {
           }
         >
           <NavLink to="/admin/job-postings-management">
-            <i className="fa-solid fa-briefcase"></i> Job Postings Management
+            <i className="fa-solid fa-briefcase"></i> Jobs Management
           </NavLink>
         </li>
-        <li
+        {/* <li
           className={
             checkActive("/admin/notifications-management") ? "active" : ""
           }
         >
           <NavLink to="/admin/notifications-management">
-            <i className="fa fa-bell"></i> Notifications Management
+            <i className="fa fa-bell"></i> Notifications
+            {notificationCount > 0 && (
+              <span className="notification-badge">{notificationCount}</span>
+            )}
           </NavLink>
-        </li>
+        </li> */}
         <li className={checkActive("/admin/reports") ? "active" : ""}>
           <NavLink to="/admin/reports">
             <i className="fa fa-chart-line"></i> Reports
           </NavLink>
         </li>
-        <li
+        {/* <li
           className={checkActive("/admin/payments-management") ? "active" : ""}
         >
           <NavLink to="/admin/payments-management">
             <i className="fa fa-credit-card"></i> Payments Management
           </NavLink>
-        </li>
-        <li
+        </li> */}
+        {/* <li
           className={checkActive("/admin/feedbackmanagement") ? "active" : ""}
         >
           <NavLink to="/admin/feedback-management">
             <i className="fa fa-comment-dots"></i> Feedback Management
           </NavLink>
-        </li>
-        <li
+        </li> */}
+        {/* <li
           className={
             checkActive("/admin/subscription-plans-management") ? "active" : ""
           }
         >
           <NavLink to="/admin/subscription-plans-management">
-            <i className="fa fa-gift"></i> Subscription Plans Management
+            <i className="fa fa-gift"></i> Plans Management
           </NavLink>
-        </li>
+        </li> */}
         <li className={checkActive("/admin/settings") ? "active" : ""}>
           <NavLink to="/admin/settings">
             <i className="fa fa-cog"></i> Settings
@@ -83,6 +84,26 @@ export const AdminSidebar = () => {
           </NavLink>
         </li>
       </ul>
+
+      <style>
+        {`
+        .notification-badge {
+  display: inline-block;
+  background-color: #ff4757;
+  color: white;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 12px;
+  text-align: center;
+  line-height: 18px;
+  margin-left: 5px;
+  font-weight: bold;
+}
+
+        `}
+      </style>
     </>
   );
 };

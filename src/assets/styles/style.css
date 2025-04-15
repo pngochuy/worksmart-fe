@@ -23308,3 +23308,29 @@ Work Section
   size: A4;
   margin: 0.6cm;
 }
+
+/* Thêm vào file CSS của bạn */
+.top-candidates-swiper .swiper-slide {
+  height: auto;
+}
+
+.top-candidates-swiper .swiper-pagination-bullet-active {
+  background-color: #2563eb;
+}
+
+.top-candidates-swiper .swiper-button-next,
+.top-candidates-swiper .swiper-button-prev {
+  color: #2563eb;
+}
+
+.top-candidates-swiper .swiper-button-next::after,
+.top-candidates-swiper .swiper-button-prev::after {
+  font-size: 24px;
+}
+
+@media (max-width: 640px) {
+  .top-candidates-swiper .swiper-button-next,
+  .top-candidates-swiper .swiper-button-prev {
+    display: none;
+  }
+}

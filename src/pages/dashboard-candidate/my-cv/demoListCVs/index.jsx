@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +14,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +41,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { fetchFreePlanSettings } from "@/services/adminServices";
 import { hasActiveSubscription } from "@/services/subscriptionServices";
+import { downloadCVAsHTML, downloadCVFromURL } from "@/helpers/downloadHelpers";
 
 // Pagination component
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -739,6 +741,8 @@ const SystemCVCard = ({
 }) => {
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Thêm ref cho nội dung CV
+  const cvContentRef = useRef(null);
 
   const handleDeleteClick = () => {
     setIsDeleteDialogOpen(true);
@@ -748,6 +752,15 @@ const SystemCVCard = ({
     onDelete();
     setIsDeleteDialogOpen(false);
   };
+
+  // Thêm hàm download CV
+  const handleDownloadCV = () => {
+    downloadCVAsHTML(
+      cvContentRef,
+      resume.title || `System-CV-${resume.cvid}.pdf`
+    );
+  };
+
   return (
     <>
       <Card className="overflow-hidden h-full flex flex-col">
@@ -775,7 +788,7 @@ const SystemCVCard = ({
             <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4 relative">
               <ResumePreview
                 resumeData={mapToResumeValues(resume)}
-                contentRef={null}
+                contentRef={cvContentRef}
                 className="overflow-hidden shadow-sm transition-shadow group-hover:shadow-lg"
               />
               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
@@ -784,9 +797,10 @@ const SystemCVCard = ({
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2 mt-auto">
+          {/* Nhóm các hành động chính */}
           <div className="flex w-full gap-2">
             <Button
-              variant="outline"
+              variant="default" // Đổi thành variant default cho hành động chính
               size="sm"
               className="flex-1"
               onClick={() =>
@@ -796,6 +810,18 @@ const SystemCVCard = ({
               <FileCheck className="size-4 mr-1" /> Edit
             </Button>
 
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={handleDownloadCV}
+            >
+              <Download className="size-4 mr-1" /> Download
+            </Button>
+          </div>
+
+          {/* Nhóm các hành động thứ cấp và nguy hiểm */}
+          <div className="flex w-full gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -809,17 +835,16 @@ const SystemCVCard = ({
               />
               {isFeatured ? "Featured" : "Feature"}
             </Button>
-          </div>
 
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteClick}
-            className="w-full"
-          >
-            <Trash2 className="size-4 mr-1" />
-            Delete
-          </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteClick}
+              className="flex-1"
+            >
+              <Trash2 className="size-4 mr-1" /> Delete
+            </Button>
+          </div>
         </CardFooter>
       </Card>
       <DeleteConfirmDialog
@@ -900,16 +925,41 @@ const CVCard = ({
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2 mt-auto">
+          {/* Nhóm các hành động chính */}
           <div className="flex w-full gap-2">
-            <a
-              href={resume.filePath}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 text-sm flex-1 flex items-center justify-center py-1 px-2 border rounded"
+            <Button
+              variant="default" // Đổi thành variant default cho hành động chính
+              size="sm"
+              className="flex-1 hover:text-white"
+              asChild
             >
-              <ExternalLink className="size-4 mr-1" /> View
-            </a>
+              <a
+                href={resume.filePath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center"
+              >
+                <ExternalLink className="size-4 mr-1" /> View
+              </a>
+            </Button>
 
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() =>
+                downloadCVFromURL(
+                  resume.filePath,
+                  resume.fileName || "downloaded-cv.pdf"
+                )
+              }
+            >
+              <Download className="size-4 mr-1" /> Download
+            </Button>
+          </div>
+
+          {/* Nhóm các hành động thứ cấp và nguy hiểm */}
+          <div className="flex w-full gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -923,17 +973,16 @@ const CVCard = ({
               />
               {isFeatured ? "Featured" : "Feature"}
             </Button>
-          </div>
 
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteClick}
-            className="w-full"
-          >
-            <Trash2 className="size-4 mr-1" />
-            Delete
-          </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteClick}
+              className="flex-1"
+            >
+              <Trash2 className="size-4 mr-1" /> Delete
+            </Button>
+          </div>
         </CardFooter>
       </Card>
       <DeleteConfirmDialog

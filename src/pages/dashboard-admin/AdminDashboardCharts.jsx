@@ -150,7 +150,7 @@ const AdminDashboardCharts = () => {
   // Format count values based on title
   const formatCountValue = (title, count) => {
     if (title.toLowerCase() === "revenue") {
-      return `$${count.toLocaleString()}`;
+      return `${count.toLocaleString()}`;
     }
     return count.toLocaleString();
   };

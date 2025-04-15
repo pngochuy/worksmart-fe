@@ -197,8 +197,7 @@ export const Header = () => {
         );
     }
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userLoginData");
+    localStorage.clear();
     window.location.href = "/login";
   };
 
@@ -230,9 +229,8 @@ export const Header = () => {
             <nav className="nav main-menu">
               <ul className="navigation" id="navbar">
                 <li
-                  className={`dropdown ${
-                    activeDropdown?.innerText.includes("Jobs") ? "current" : ""
-                  }`}
+                  className={`dropdown ${activeDropdown?.innerText.includes("Jobs") ? "current" : ""
+                    }`}
                 >
                   <span>Jobs</span>
                   <ul>
@@ -240,7 +238,7 @@ export const Header = () => {
                       <a href="/job-list">Job List</a>
                     </li>
                     <li>
-                      <a href="/suitable-job">Suitable Jobs</a>
+                      <a href="/suitable-jobs">Suitable Jobs</a>
                     </li>
                     <li>
                       <a href="#">IT Jobs</a>
@@ -248,11 +246,10 @@ export const Header = () => {
                   </ul>
                 </li>
                 <li
-                  className={`dropdown ${
-                    activeDropdown?.innerText.includes("Company")
+                  className={`dropdown ${activeDropdown?.innerText.includes("Company")
                       ? "current"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span>Company</span>
                   <ul>
@@ -265,11 +262,10 @@ export const Header = () => {
                   </ul>
                 </li>
                 <li
-                  className={`dropdown ${
-                    activeDropdown?.innerText.includes("Profile & CV")
+                  className={`dropdown ${activeDropdown?.innerText.includes("Profile & CV")
                       ? "current"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span>Profile & CV</span>
                   <ul>
@@ -283,11 +279,10 @@ export const Header = () => {
                 </li>
                 {userRole === "Employer" && (
                   <li
-                    className={`dropdown ${
-                      activeDropdown?.innerText.includes("Candidates")
+                    className={`dropdown ${activeDropdown?.innerText.includes("Candidates")
                         ? "current"
                         : ""
-                    }`}
+                      }`}
                   >
                     <span>Candidates</span>
                     <ul>

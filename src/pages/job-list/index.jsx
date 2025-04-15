@@ -19,7 +19,6 @@ import {
   CalendarDays,
   Sparkle,
   Loader2,
-  Tags,
   Search,
 } from "lucide-react";
 import {
@@ -290,7 +289,7 @@ export const Index = () => {
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5 mr-1 text-gray-600" />
               <span className="text-sm font-medium">
-                Related to "{originalKeyword}":
+                Related to &quot;{originalKeyword}&quot;:
               </span>
               {hasMoreKeywords && (
                 <button

@@ -18,9 +18,10 @@ import { Index as CompanyListPage } from "./pages/company-list";
 import { Index as CompanyDetailPage } from "./pages/company-list/company-detail";
 import { Index as CandidateListPage } from "./pages/candidate-list";
 import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-detail";
+import { Index as SuitableJobsPage } from "./pages/suitable-jobs";
 import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
-import SavedJobsPage from '/src/pages/dashboard-candidate/saved-jobs/index.jsx'
+import SavedJobsPage from "/src/pages/dashboard-candidate/saved-jobs/index.jsx";
 // Candidate Pages
 import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
 import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
@@ -52,6 +53,7 @@ import { Index as EmployerMessagesPage } from "./pages/dashboard-employer/messag
 import { Index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
+import { Index as ProposedCVsPage } from "./pages/dashboard-employer/proposed-cvs";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
 import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
 import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
@@ -72,6 +74,8 @@ import { Index as ReportsPage } from "./pages/dashboard-admin/reports";
 import { FreePlanSettings } from "./pages/dashboard-admin/settings/FreePlanSettings";
 
 import EmployerCandidateDetailPage from "./pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
+// import ProposedCandidates from "./pages/dashboard-employer/proposed-cvs/job";
+import CandidateMatchingPage from "./pages/dashboard-employer/proposed-cvs/job";
 function App() {
   return (
     <>
@@ -162,6 +166,18 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* Suitable Jobs */}
+            <Route
+              path="/suitable-jobs"
+              element={
+                <ProtectedRoute requiredRoleId="Candidate">
+                  <MainLayout>
+                    <SuitableJobsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Contact */}
             <Route
               path="/contact"
               element={
@@ -432,6 +448,24 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
                     <ManageJobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="proposed-cvs"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <ProposedCVsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="proposed-cvs/jobs/:jobId/candidates"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <CandidateMatchingPage />
                   </ProtectedRoute>
                 }
               />
