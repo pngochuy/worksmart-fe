@@ -240,7 +240,7 @@ export const Header = () => {
                       <a href="/job-list">Job List</a>
                     </li>
                     <li>
-                      <a href="#">Suitable Jobs</a>
+                      <a href="/suitable-job">Suitable Jobs</a>
                     </li>
                     <li>
                       <a href="#">IT Jobs</a>

@@ -13,6 +13,7 @@ import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
 import { Index as JobListPage } from "./pages/job-list";
 import { Index as JobDetailPage } from "./pages/job-list/job-detail";
+import { Index as SuitableJobPage} from "./pages/suitable-jobs";
 import { Index as CompanyListPage } from "./pages/company-list";
 import { Index as CompanyDetailPage } from "./pages/company-list/company-detail";
 import { Index as CandidateListPage } from "./pages/candidate-list";
@@ -112,6 +113,14 @@ function App() {
               element={
                 <MainLayout>
                   <JobDetailPage />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/suitable-job"
+              element={
+                <MainLayout>
+                  <SuitableJobPage />
                 </MainLayout>
               }
             />

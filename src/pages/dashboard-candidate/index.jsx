@@ -36,9 +36,9 @@ export const Index = () => {
 
   useEffect(() => {
     loadNotifications();
-    loadFavouriteJobs();
     if (userDataLogin) {
       loadAppliedJobs();
+      loadFavouriteJobs();
     }
   }, [userDataLogin]);
 
