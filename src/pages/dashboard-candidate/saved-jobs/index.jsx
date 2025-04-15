@@ -269,7 +269,7 @@ const SavedJobsPage = () => {
                         </div>
                       ) : favoriteJobs.length === 0 ? (
                         <div className="text-center py-5">
-                          <p>You don't have any saved jobs yet.</p>
+                          <p>You don&apos;t have any saved jobs yet.</p>
                         </div>
                       ) : (
                         <table className="default-table manage-job-table">

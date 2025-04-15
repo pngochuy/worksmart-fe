@@ -51,6 +51,7 @@ import { Index as EmployerMessagesPage } from "./pages/dashboard-employer/messag
 import { Index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
 import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
 import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
+import { Index as ProposedCVsPage } from "./pages/dashboard-employer/proposed-cvs";
 import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
 import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
 import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
@@ -71,6 +72,8 @@ import { Index as ReportsPage } from "./pages/dashboard-admin/reports";
 import { FreePlanSettings } from "./pages/dashboard-admin/settings/FreePlanSettings";
 
 import EmployerCandidateDetailPage from "./pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
+// import ProposedCandidates from "./pages/dashboard-employer/proposed-cvs/job";
+import CandidateMatchingPage from "./pages/dashboard-employer/proposed-cvs/job";
 function App() {
   return (
     <>
@@ -423,6 +426,24 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Employer">
                     <ManageJobsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="proposed-cvs"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <ProposedCVsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="proposed-cvs/jobs/:jobId/candidates"
+                element={
+                  <ProtectedRoute requiredRoleId="Employer">
+                    <CandidateMatchingPage />
                   </ProtectedRoute>
                 }
               />

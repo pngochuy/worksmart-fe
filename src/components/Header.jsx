@@ -197,8 +197,7 @@ export const Header = () => {
         );
     }
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userLoginData");
+    localStorage.clear();
     window.location.href = "/login";
   };
 

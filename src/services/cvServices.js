@@ -140,3 +140,36 @@ export const hideCV = async (cvId) => {
     return null;
   }
 };
+
+export const fetchCandidatesWithFeaturedCVForJob = async () => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/admins/users-with-featured-cv`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    return null;
+  }
+};
+
+export const uploadCVToScan = async (uploadData) => {
+  try {
+    const dataToSend = {
+      cvid: uploadData.cvid,
+      userId: uploadData.userID, // Note the case change from userID to userId
+      fileName: uploadData.fileName,
+      filePath: uploadData.filePath,
+    };
+    
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/CV/upload-read-cv`,
+      dataToSend
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading CV to scan:", error);
+    throw error;
+  }
+};
