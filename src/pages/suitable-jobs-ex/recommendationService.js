@@ -1,6 +1,6 @@
 import openai from "@/lib/openai";
 import { getCVsByUserId } from "@/services/cvServices";
-import { getAllJobs } from "@/services/jobServices";
+import { getJobsActive } from "@/services/jobServices";
 
 export const recommendJobsForUser = async (userId) => {
   try {
@@ -11,7 +11,7 @@ export const recommendJobsForUser = async (userId) => {
     }
 
     // Lấy danh sách công việc
-    const availableJobs = await getAllJobs();
+    const availableJobs = await getJobsActive();
     
     // Gộp thông tin từ tất cả các CV của người dùng
     const consolidatedCV = consolidateCVs(userCVs);
@@ -30,7 +30,7 @@ export const recommendJobsForUser = async (userId) => {
 
     const systemMessage = `
       Bạn là AI chuyên gia về tuyển dụng và phân tích CV. Nhiệm vụ của bạn là phân tích thông tin được tổng hợp từ tất cả CV của ứng viên 
-      và đề xuất 5 công việc phù hợp nhất từ danh sách công việc được cung cấp.
+      và đề xuất 10 công việc phù hợp nhất từ danh sách công việc được cung cấp.
       
       Lưu ý rằng ứng viên có thể có nhiều CV với thông tin bổ sung cho nhau. Hãy tận dụng tất cả thông tin có sẵn để đưa ra đề xuất tốt nhất.
       

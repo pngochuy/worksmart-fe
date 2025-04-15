@@ -13,7 +13,7 @@ import { index as ContactPage } from "./pages/contact";
 import { index as ConfirmEmailPage } from "./pages/confirm-email";
 import { Index as JobListPage } from "./pages/job-list";
 import { Index as JobDetailPage } from "./pages/job-list/job-detail";
-import { Index as SuitableJobPage} from "./pages/suitable-jobs";
+import { Index as SuitableJobPage } from "./pages/suitable-jobs-ex";
 import { Index as CompanyListPage } from "./pages/company-list";
 import { Index as CompanyDetailPage } from "./pages/company-list/company-detail";
 import { Index as CandidateListPage } from "./pages/candidate-list";
@@ -117,7 +117,7 @@ function App() {
               }
             />
             <Route
-              path="/suitable-job"
+              path="/suitable-job-ex"
               element={
                 <MainLayout>
                   <SuitableJobPage />
@@ -235,14 +235,14 @@ function App() {
                 }
               />
               <Route
-                  index
-                  path="saved-jobs"
-                  element={
-                    <ProtectedRoute requiredRoleId="Candidate">
-                      <SavedJobsPage />
-                    </ProtectedRoute>
-                  }
-                />
+                index
+                path="saved-jobs"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <SavedJobsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 index
                 path="applied-jobs"
