@@ -17,9 +17,10 @@ import { Index as CompanyListPage } from "./pages/company-list";
 import { Index as CompanyDetailPage } from "./pages/company-list/company-detail";
 import { Index as CandidateListPage } from "./pages/candidate-list";
 import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-detail";
+import { Index as SuitableJobsPage } from "./pages/suitable-jobs";
 import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
-import SavedJobsPage from '/src/pages/dashboard-candidate/saved-jobs/index.jsx'
+import SavedJobsPage from "/src/pages/dashboard-candidate/saved-jobs/index.jsx";
 // Candidate Pages
 import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
 import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
@@ -156,6 +157,18 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* Suitable Jobs */}
+            <Route
+              path="/suitable-jobs"
+              element={
+                <ProtectedRoute requiredRoleId="Candidate">
+                  <MainLayout>
+                    <SuitableJobsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Contact */}
             <Route
               path="/contact"
               element={
@@ -229,14 +242,14 @@ function App() {
                 }
               />
               <Route
-                  index
-                  path="saved-jobs"
-                  element={
-                    <ProtectedRoute requiredRoleId="Candidate">
-                      <SavedJobsPage />
-                    </ProtectedRoute>
-                  }
-                />
+                index
+                path="saved-jobs"
+                element={
+                  <ProtectedRoute requiredRoleId="Candidate">
+                    <SavedJobsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 index
                 path="applied-jobs"
