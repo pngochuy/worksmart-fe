@@ -11,13 +11,16 @@ const getAccessToken = () => {
 export const checkActiveSubscription = async (userId) => {
   try {
     const token = getAccessToken();
-    
-    const response = await axios.get(`${BACKEND_API_URL}/subscriptions/has-active-subscription/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
+
+    const response = await axios.get(
+      `${BACKEND_API_URL}/subscriptions/has-active-subscription/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     const data = response.data;
     return data;
   } catch (error) {
@@ -304,7 +307,8 @@ export const createPaymentLink = async (userId, packageId, role) => {
 export const getUserSubscription = async (userId) => {
   try {
     const response = await fetch(
-      `/${BACKEND_API_URL}api/subscriptions/getByUserId/${userId}`);
+      `/${BACKEND_API_URL}api/subscriptions/getByUserId/${userId}`
+    );
     if (response.status === 404) {
       return null;
     }
@@ -331,18 +335,26 @@ export const checkPaymentStatus = async (orderCode) => {
   }
 };
 
-export const cancelPayment = async ({ orderCode, code, id, cancel, status }) => {
+export const cancelPayment = async ({
+  orderCode,
+  code,
+  id,
+  cancel,
+  status,
+}) => {
   try {
-    console.log('Query Params:', { orderCode, code, id, cancel, status }); 
+    console.log("Query Params:", { orderCode, code, id, cancel, status });
 
     const response = await axios.get(
-      `${BACKEND_API_URL}/api/Payment/payment-cancel`, {
+      `${BACKEND_API_URL}/api/Payment/payment-cancel`,
+      {
         params: { orderCode, code, id, cancel, status },
-      });
-      console.log("DATA SENDING:", response);
+      }
+    );
+    console.log("DATA SENDING:", response);
     return response.data;
   } catch (error) {
-    console.error('Error canceling payment:', error);
+    console.error("Error canceling payment:", error);
     throw error;
   }
 };
@@ -399,7 +411,7 @@ export const getPackages = async () => {
 };
 
 export const getEmployerSubscriptions = async (userId) => {
-  try{
+  try {
     const response = await axios.get(
       `${BACKEND_API_URL}/subscriptions/getByUserId/${userId}`
     );
@@ -412,7 +424,7 @@ export const getEmployerSubscriptions = async (userId) => {
     }
     throw error;
   }
-}
+};
 
 export const getUserTransactions = async (userId) => {
   try {
@@ -428,4 +440,26 @@ export const getUserTransactions = async (userId) => {
     }
     throw error;
   }
-}
+};
+
+export const scanCVs = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    console.log("Uploading file:", file.name);
+
+    const response = await axios.post(
+      `${BACKEND_API_URL}/uploads/upload-file`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return response.data; // Trả về URL file đã upload
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
