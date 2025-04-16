@@ -28,7 +28,7 @@ export const Index = () => {
               <h3 style={{ marginBottom: "0px" }}>
                 Welcome back to{" "}
                 <a href="/" style={{ color: "#0d6efd" }}>
-                  WorkSmart
+                  WorkSmart.
                 </a>
               </h3>
               {!email ? (
