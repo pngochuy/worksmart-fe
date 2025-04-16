@@ -1,5 +1,4 @@
-import leftbannerimg from "../../assets/images/background/12.jpg";
-// import react from "../../assets/images/background/12.jpg";
+import leftBannerImg from "../../assets/images/background/12.jpg";
 import { useState } from "react";
 import { SocialRegister } from "../register/SocialRegister";
 import { ForgotPassword } from "./ForgotPassword";
@@ -18,7 +17,7 @@ export const Index = () => {
           <div
             className="image-layer"
             style={{
-              backgroundImage: `url(${leftbannerimg})`,
+              backgroundImage: `url(${leftBannerImg})`,
             }}
           ></div>
         </a>
