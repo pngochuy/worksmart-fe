@@ -3,9 +3,9 @@ import leftBannerImg from "../../assets/images/background/12.jpg";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import { SocialRegister } from "../register/SocialRegister";
-import { ForgotPassword} from "./ForgotPassword";
+import { ForgotPassword } from "./ForgotPassword";
 import { VerifyOTP } from "./VerifyOTP";
-import { ResetPassword} from "./ResetPassword";
+import { ResetPassword } from "./ResetPassword";
 // import "react-toastify/dist/ReactToastify.css";
 
 export const Index = () => {
