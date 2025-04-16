@@ -11,10 +11,10 @@ const verifyOTPSchema = z.object({
 
 export const VerifyOTP = ({ email, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const { 
-    register, 
-    handleSubmit, 
-    setError, 
+  const {
+    register,
+    handleSubmit,
+    setError,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(verifyOTPSchema),
@@ -35,11 +35,13 @@ export const VerifyOTP = ({ email, onSuccess }) => {
       onSuccess(response.resetToken);
     } catch (error) {
       if (error.response?.status === 500) {
-        toast.error(error.response.data?.error || "Server error, please try again.");
+        toast.error(
+          error.response.data?.error || "Server error, please try again."
+        );
       } else {
-        setError("otp", { 
-          type: "manual", 
-          message: error.response?.data || "Invalid OTP" 
+        setError("otp", {
+          type: "manual",
+          message: error.response?.data || "Invalid OTP",
         });
       }
     } finally {
@@ -51,7 +53,11 @@ export const VerifyOTP = ({ email, onSuccess }) => {
     <form className="default-form" onSubmit={handleSubmit(onSubmit)}>
       <div className="form-group">
         <label>OTP</label>
-        <input type="text" {...register("otp")} placeholder="Enter 6-digit code" />
+        <input
+          type="text"
+          {...register("otp")}
+          placeholder="Enter 6-digit code"
+        />
         {errors.otp && <p className="text-danger">{errors.otp.message}</p>}
       </div>
       <div className="form-group">
@@ -62,5 +68,3 @@ export const VerifyOTP = ({ email, onSuccess }) => {
     </form>
   );
 };
-
-export default VerifyOTP;

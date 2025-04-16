@@ -161,12 +161,12 @@ export const uploadCVToScan = async (uploadData) => {
       fileName: uploadData.fileName,
       filePath: uploadData.filePath,
     };
-    
+
     const response = await axios.post(
       `${BACKEND_API_URL}/api/CV/upload-read-cv`,
       dataToSend
     );
-    
+
     return response.data;
   } catch (error) {
     console.error("Error uploading CV to scan:", error);

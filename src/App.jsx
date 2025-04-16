@@ -1,81 +1,82 @@
 import { PrimeReactProvider } from "primereact/api";
 import { ToastContainer } from "react-toastify";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { MainLayout } from "./layouts/MainLayout";
-import { Index as HomePage } from "./pages/home";
-import { index as NotFoundPage } from "./pages/404-not-found";
-import { Index as LoginPage } from "./pages/login";
-import { Index as RegisterPage } from "./pages/register";
-import { Index as ForgotPasswordPage } from "./pages/forgot-password";
-import { Index as VerifyOTPPage } from "./pages/forgot-password";
-import { Index as ResetPasswordPage } from "./pages/forgot-password";
-import { index as ContactPage } from "./pages/contact";
-import { index as ConfirmEmailPage } from "./pages/confirm-email";
-import { Index as JobListPage } from "./pages/job-list";
-import { Index as JobDetailPage } from "./pages/job-list/job-detail";
-import { Index as SuitableJobPage } from "./pages/suitable-jobs-ex";
-import { Index as CompanyListPage } from "./pages/company-list";
-import { Index as CompanyDetailPage } from "./pages/company-list/company-detail";
-import { Index as CandidateListPage } from "./pages/candidate-list";
-import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-detail";
-import { Index as SuitableJobsPage } from "./pages/suitable-jobs";
-import { UserLayout } from "./layouts/UserLayout";
-import { ProtectedRoute } from "./layouts/ProtectedRoute";
+import { MainLayout } from "@/layouts/MainLayout";
+import { Index as HomePage } from "@/pages/home";
+import { index as NotFoundPage } from "@/pages/404-not-found";
+import { Index as LoginPage } from "@/pages/login";
+import { Index as RegisterPage } from "@/pages/register";
+import { Index as ForgotPasswordPage } from "@/pages/forgot-password";
+// import { Index as ForgotPasswordPage } from "@/pages/forgot-password/index.jsx";
+// import { Index as VerifyOTPPage } from "@/pages/forgot-password";
+// import { Index as ResetPasswordPage } from "@/pages/forgot-password";
+import { index as ContactPage } from "@/pages/contact";
+import { index as ConfirmEmailPage } from "@/pages/confirm-email";
+import { Index as JobListPage } from "@/pages/job-list";
+import { Index as JobDetailPage } from "@/pages/job-list/job-detail";
+import { Index as SuitableJobPage } from "@/pages/suitable-jobs-ex";
+import { Index as CompanyListPage } from "@/pages/company-list";
+import { Index as CompanyDetailPage } from "@/pages/company-list/company-detail";
+import { Index as CandidateListPage } from "@/pages/candidate-list";
+import { index as CandidateDetailPage } from "@/pages/candidate-list/candidate-detail";
+import { Index as SuitableJobsPage } from "@/pages/suitable-jobs";
+import { UserLayout } from "@/layouts/UserLayout";
+import { ProtectedRoute } from "@/layouts/ProtectedRoute";
+import SavedJobsPage from "@/pages/dashboard-candidate/saved-jobs";
 // Candidate Pages
-import SavedJobsPage from "/src/pages/dashboard-candidate/saved-jobs/index.jsx";
-import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
-import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
-import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
-import { index as CreateCVPage } from "./pages/dashboard-candidate/my-cv/create-cv";
-import { index as AppliedJobsPage } from "./pages/dashboard-candidate/applied-jobs";
-import { Index as CategoryTagsManagerPage } from "./pages/dashboard-candidate/category-tag-management";
-import { index as JobAlertsPage } from "./pages/dashboard-candidate/job-alerts";
-// import { index as SavedJobsPage } from "./pages/dashboard-candidate/saved-jobs";
-import { index as CandidateSubscriptionPlansPage } from "./pages/dashboard-candidate/subscription-plans";
-import { Index as CandidateTransactionHistoryPage } from "./pages/dashboard-candidate/transaction-history";
-import { Index as CandidateMessagesPage } from "./pages/dashboard-candidate/messages";
-import { Index as CandidateNotificationsPage } from "./pages/dashboard-candidate/notifications";
-import { Index as CandidateChangePasswordPage } from "./pages/dashboard-candidate/change-password";
-import { Index as CandidateSettingPage } from "./pages/dashboard-candidate/settings";
-import CandidatePackagePurchase from "./pages/dashboard-candidate/package/PackagePurchase";
-import CandidatePaymentResult from "./pages/dashboard-candidate/package/PackageResult";
-import CandidatePaymentCancel from "./pages/dashboard-candidate/package/PackageCancel";
+import { Index as CandidateDashboardPage } from "@/pages/dashboard-candidate";
+import { Index as MyProfilePage } from "@/pages/dashboard-candidate/my-profile";
+import { index as MyCVPage } from "@/pages/dashboard-candidate/my-cv";
+import { index as CreateCVPage } from "@/pages/dashboard-candidate/my-cv/create-cv";
+import { index as AppliedJobsPage } from "@/pages/dashboard-candidate/applied-jobs";
+import { Index as CategoryTagsManagerPage } from "@/pages/dashboard-candidate/category-tag-management";
+import { index as JobAlertsPage } from "@/pages/dashboard-candidate/job-alerts";
+// import { index as SavedJobsPage } from "@/pages/dashboard-candidate/saved-jobs";
+import { index as CandidateSubscriptionPlansPage } from "@/pages/dashboard-candidate/subscription-plans";
+import { Index as CandidateTransactionHistoryPage } from "@/pages/dashboard-candidate/transaction-history";
+import { Index as CandidateMessagesPage } from "@/pages/dashboard-candidate/messages";
+import { Index as CandidateNotificationsPage } from "@/pages/dashboard-candidate/notifications";
+import { Index as CandidateChangePasswordPage } from "@/pages/dashboard-candidate/change-password";
+import { Index as CandidateSettingPage } from "@/pages/dashboard-candidate/settings";
+import CandidatePackagePurchase from "@/pages/dashboard-candidate/package/PackagePurchase";
+import CandidatePaymentResult from "@/pages/dashboard-candidate/package/PackageResult";
+import CandidatePaymentCancel from "@/pages/dashboard-candidate/package/PackageCancel";
 
 // Employer Pages
-import { Index as EmployerDashboardPage } from "./pages/dashboard-employer";
-import { Index as CompanyProfilePage } from "./pages/dashboard-employer/company-profile";
-import { Index as PostJobPage } from "./pages/dashboard-employer/post-job";
-import ManageJobsPage from "./pages/dashboard-employer/manage-jobs";
-import EditJobPage from "./pages/dashboard-employer/manage-jobs/edit-job";
-import { index as EmployerSubscriptionPlansPage } from "./pages/dashboard-employer/subscription-plans";
-import { Index as EmployerTransactionHistoryPage } from "./pages/dashboard-employer/transaction-history";
-import { Index as EmployerMessagesPage } from "./pages/dashboard-employer/messages";
-import { Index as EmployerNotificationsPage } from "./pages/dashboard-employer/notifications";
-import { Index as EmployerChangePasswordPage } from "./pages/dashboard-employer/change-password";
-import { Index as AllCandidatesPage } from "./pages/dashboard-employer/all-candidates";
-import { Index as ProposedCVsPage } from "./pages/dashboard-employer/proposed-cvs";
-import { index as ShortlistedCVsPage } from "./pages/dashboard-employer/shortlisted-cvs";
-import VerificationForm from "./pages/dashboard-employer/verification/VerificationForm";
-import VerifyTax from "./pages/dashboard-employer/verification/VerifyTax";
-import BusinessLicense from "./pages/dashboard-employer/verification/BusinessLicense";
-import UploadFileTest from "./pages/dashboard-employer/upload-file/UploadFileTest";
-import CandidatesPage from "./pages/dashboard-employer/manage-jobs/CandidatesPage";
-import EmployerPackagePurchase from "./pages/dashboard-employer/package/PackagePurchase";
-import EmployerPaymentResult from "./pages/dashboard-employer/package/PaymentResult";
-import EmployerPaymentCancel from "./pages/dashboard-employer/package/PaymentCancel";
-import { Index as EmployerSettingPage } from "./pages/dashboard-employer/settings";
+import { Index as EmployerDashboardPage } from "@/pages/dashboard-employer";
+import { Index as CompanyProfilePage } from "@/pages/dashboard-employer/company-profile";
+import { Index as PostJobPage } from "@/pages/dashboard-employer/post-job";
+import ManageJobsPage from "@/pages/dashboard-employer/manage-jobs";
+import EditJobPage from "@/pages/dashboard-employer/manage-jobs/edit-job";
+import { index as EmployerSubscriptionPlansPage } from "@/pages/dashboard-employer/subscription-plans";
+import { Index as EmployerTransactionHistoryPage } from "@/pages/dashboard-employer/transaction-history";
+import { Index as EmployerMessagesPage } from "@/pages/dashboard-employer/messages";
+import { Index as EmployerNotificationsPage } from "@/pages/dashboard-employer/notifications";
+import { Index as EmployerChangePasswordPage } from "@/pages/dashboard-employer/change-password";
+import { Index as AllCandidatesPage } from "@/pages/dashboard-employer/all-candidates";
+import { Index as ProposedCVsPage } from "@/pages/dashboard-employer/proposed-cvs";
+import { index as ShortlistedCVsPage } from "@/pages/dashboard-employer/shortlisted-cvs";
+import VerificationForm from "@/pages/dashboard-employer/verification/VerificationForm";
+import VerifyTax from "@/pages/dashboard-employer/verification/VerifyTax";
+import BusinessLicense from "@/pages/dashboard-employer/verification/BusinessLicense";
+import UploadFileTest from "@/pages/dashboard-employer/upload-file/UploadFileTest";
+import CandidatesPage from "@/pages/dashboard-employer/manage-jobs/CandidatesPage";
+import EmployerPackagePurchase from "@/pages/dashboard-employer/package/PackagePurchase";
+import EmployerPaymentResult from "@/pages/dashboard-employer/package/PaymentResult";
+import EmployerPaymentCancel from "@/pages/dashboard-employer/package/PaymentCancel";
+import { Index as EmployerSettingPage } from "@/pages/dashboard-employer/settings";
 
 // Admin Pages
-import { AdminLayout } from "./layouts/AdminLayout";
-import { Index as AdminDashboardPage } from "./pages/dashboard-admin";
-import { Index as UsersManagementPage } from "./pages/dashboard-admin/users-management";
-import { Index as JobPostingsManagementPage } from "./pages/dashboard-admin/job-postings-management";
-import { Index as ReportsPage } from "./pages/dashboard-admin/reports";
-import { FreePlanSettings } from "./pages/dashboard-admin/settings/FreePlanSettings";
+import { AdminLayout } from "@/layouts/AdminLayout";
+import { Index as AdminDashboardPage } from "@/pages/dashboard-admin";
+import { Index as UsersManagementPage } from "@/pages/dashboard-admin/users-management";
+import { Index as JobPostingsManagementPage } from "@/pages/dashboard-admin/job-postings-management";
+import { Index as ReportsPage } from "@/pages/dashboard-admin/reports";
+import { FreePlanSettings } from "@/pages/dashboard-admin/settings/FreePlanSettings";
 
-import EmployerCandidateDetailPage from "./pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
-// import ProposedCandidates from "./pages/dashboard-employer/proposed-cvs/job";
-import CandidateMatchingPage from "./pages/dashboard-employer/proposed-cvs/job";
+import EmployerCandidateDetailPage from "@/pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
+// import ProposedCandidates from "@/pages/dashboard-employer/proposed-cvs/job";
+import CandidateMatchingPage from "@/pages/dashboard-employer/proposed-cvs/job";
 function App() {
   return (
     <>
@@ -101,8 +102,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/verify-otp" element={<VerifyOTPPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            {/* <Route path="/verify-otp" element={<VerifyOTPPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} /> */}
             {/* Job */}
             <Route
               path="/job-list"
