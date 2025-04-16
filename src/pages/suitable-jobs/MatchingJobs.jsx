@@ -1,113 +1,75 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Building2,
   MapPin,
-  Calendar,
   BadgeCheck,
   Briefcase,
   Heart,
   ChevronRight,
   Sparkles,
   Clock,
-  CalendarDays,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import EnhancedPagination from "../job-list/EnhancedPagination";
 
+// Function to convert API score to display percentage
+const convertScoreToPercentage = (score) => {
+  // Base conversion (score to percentage)
+  let percentage = Math.round(score * 100);
+
+  // Apply tiered bonus based on score ranges
+  if (score >= 0.6 && score <= 0.79) {
+    // Add 20% bonus for high matches
+    percentage += 20;
+  } else if (score >= 0.5 && score <= 0.59) {
+    // Add 10% bonus for medium matches
+    percentage += 10;
+  }
+
+  // Cap at 100%
+  return Math.min(percentage, 100);
+};
+
+// Define color functions
+const getMatchColor = (percentage) => {
+  if (percentage >= 85) return "from-green-400 to-green-600";
+  if (percentage >= 70) return "from-blue-400 to-blue-600";
+  return "from-amber-400 to-amber-600";
+};
+
+const getMatchBadgeColor = (percentage) => {
+  if (percentage >= 85) return "bg-green-50 text-green-700";
+  if (percentage >= 70) return "bg-blue-50 text-blue-700";
+  return "bg-amber-50 text-amber-700";
+};
+
 export const MatchingJobs = ({
-  userId,
+  jobs = [],
+  isLoading = false,
   renderMatchIndicator,
   renderMatchBadge,
 }) => {
-  const [matchingJobs, setMatchingJobs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
     PageSize: 5,
   });
 
-  // Simulate fetching matching jobs
-  useEffect(() => {
-    const fetchMatchingJobs = async () => {
-      setIsLoading(true);
-      // In real implementation, this would be an API call
-      // fetchMatchingJobsForUser(userId, searchParams)
-
-      // Simulated data for demonstration
-      const mockData = {
-        jobs: [
-          {
-            id: 1,
-            title: "Senior Frontend Developer",
-            company: "NAL Solutions",
-            companyLogo: "https://via.placeholder.com/50",
-            location: "Ha Noi",
-            salary: "1,500,000 - 2,500,000",
-            matchPercentage: 94,
-            postedDate: new Date(2025, 3, 10),
-            workType: "Full-time",
-            priority: true,
-          },
-          {
-            id: 2,
-            title: "Business Analyst (N2)",
-            company: "FPT Software",
-            companyLogo: "https://via.placeholder.com/50",
-            location: "Ha Noi & 2 others",
-            salary: "1,200,000 - 2,000,000",
-            matchPercentage: 86,
-            postedDate: new Date(2025, 3, 5),
-            workType: "Full-time",
-            priority: false,
-          },
-          {
-            id: 3,
-            title: "Business Analyst (N2 Up)",
-            company: "FPT Software",
-            companyLogo: "https://via.placeholder.com/50",
-            location: "Ha Noi & 2 others",
-            salary: "1,300,000 - 2,200,000",
-            matchPercentage: 82,
-            postedDate: new Date(2025, 3, 8),
-            workType: "Full-time",
-            priority: false,
-          },
-          {
-            id: 4,
-            title: "Business Analyst",
-            company: "Thanh Vinh Holdings",
-            companyLogo: "https://via.placeholder.com/50",
-            location: "Ho Chi Minh City",
-            salary: "1,500,000 - 2,400,000",
-            matchPercentage: 74,
-            postedDate: new Date(2025, 3, 1),
-            workType: "Full-time",
-            priority: true,
-          },
-        ],
-        totalPage: 3,
-        totalJobs: 12,
-      };
-
-      setTimeout(() => {
-        setMatchingJobs(mockData.jobs);
-        setTotalPages(mockData.totalPage);
-        setIsLoading(false);
-      }, 800);
-    };
-
-    fetchMatchingJobs();
-  }, [userId, searchParams]);
+  // Calculate pagination
+  const itemsPerPage = searchParams.PageSize;
+  const totalPages = Math.ceil(jobs.length / itemsPerPage);
+  const startIndex = (searchParams.PageIndex - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentJobs = jobs.slice(startIndex, endIndex);
 
   // Helper function to format time ago
   const formatTimeAgo = (date) => {
     const now = new Date();
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    const jobDate = new Date(date);
+    const diffInDays = Math.floor((now - jobDate) / (1000 * 60 * 60 * 24));
 
     if (diffInDays === 0) return "Today";
     if (diffInDays === 1) return "Yesterday";
@@ -128,7 +90,7 @@ export const MatchingJobs = ({
   };
 
   return (
-    <section className="py-6 ">
+    <section className="py-6">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -169,12 +131,18 @@ export const MatchingJobs = ({
               </Card>
             ))}
           </div>
+        ) : jobs.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-gray-600">
+              No matching jobs found for your profile.
+            </p>
+          </Card>
         ) : (
           <>
             <div className="space-y-4">
-              {matchingJobs.map((job) => (
+              {currentJobs.map((job) => (
                 <Card
-                  key={job.id}
+                  key={job.jobID}
                   className="overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
                 >
                   <CardContent className="p-0">
@@ -184,20 +152,31 @@ export const MatchingJobs = ({
                         renderMatchIndicator(job)
                       ) : (
                         <div
-                          className="rounded-md absolute top-0 left-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"
-                          style={{ width: `${job.matchPercentage}%` }}
+                          className="rounded-md absolute top-0 left-0 h-1 bg-gradient-to-r"
+                          style={{
+                            width: `${job.matchPercentage}%`,
+                            backgroundImage: `linear-gradient(to right, ${getMatchColor(
+                              job.matchPercentage
+                            )})`,
+                          }}
                         ></div>
                       )}
 
                       <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-start gap-4">
                         {/* Company logo */}
                         <div className="flex-shrink-0">
-                          <div className="w-12 h-12 rounded-md border border-gray-200 overflow-hidden">
-                            <img
-                              src={job.companyLogo}
-                              alt={`${job.company} logo`}
-                              className="w-full h-full object-contain"
-                            />
+                          <div className="w-12 h-12 rounded-md border border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
+                            {job.avatar ? (
+                              <img
+                                src={job.avatar}
+                                alt={job.company || "Company Logo"}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xl font-semibold text-gray-500">
+                                {job.company ? job.company.charAt(0) : "C"}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -208,7 +187,7 @@ export const MatchingJobs = ({
                               <div className="flex items-center gap-2">
                                 <h3
                                   className="font-semibold text-blue-600 hover:text-blue-800 text-lg cursor-pointer"
-                                  onClick={() => handleApplyJob(job.id)}
+                                  onClick={() => handleApplyJob(job.jobID)}
                                 >
                                   {job.title}
                                 </h3>
@@ -221,7 +200,12 @@ export const MatchingJobs = ({
                               </div>
                               <div className="flex items-center text-gray-600 mt-1">
                                 <Building2 className="h-4 w-4 mr-1" />
-                                <span>{job.company}</span>
+                                <span>{job.company || "Company"}</span>
+                                {job.industry && (
+                                  <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded ml-2">
+                                    {job.industry}
+                                  </span>
+                                )}
                               </div>
                             </div>
 
@@ -229,7 +213,11 @@ export const MatchingJobs = ({
                               {renderMatchBadge ? (
                                 renderMatchBadge(job)
                               ) : (
-                                <div className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-medium">
+                                <div
+                                  className={`flex items-center px-3 py-1 rounded-md text-sm font-medium ${getMatchBadgeColor(
+                                    job.matchPercentage
+                                  )}`}
+                                >
                                   <BadgeCheck className="h-4 w-4 mr-1" />
                                   {job.matchPercentage}% Match
                                 </div>
@@ -260,7 +248,7 @@ export const MatchingJobs = ({
                             </Badge>
                             <div className="text-gray-500 text-sm flex items-center">
                               <Clock className="h-3 w-3 mr-1" />
-                              {formatTimeAgo(job.postedDate)}
+                              {formatTimeAgo(job.createdAt)}
                             </div>
                           </div>
                         </div>
@@ -270,14 +258,14 @@ export const MatchingJobs = ({
                           <Button
                             variant="default"
                             className="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700"
-                            onClick={() => handleApplyJob(job.id)}
+                            onClick={() => handleApplyJob(job.jobID)}
                           >
                             Apply Now
                           </Button>
                           <Button
                             variant="outline"
                             className="flex-1 sm:flex-initial text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={() => handleSaveJob(job.id)}
+                            onClick={() => handleSaveJob(job.jobID)}
                           >
                             <Heart className="h-4 w-4 mr-1" />
                             Save
@@ -291,11 +279,13 @@ export const MatchingJobs = ({
             </div>
 
             {totalPages > 1 && (
-              <EnhancedPagination
-                currentPage={searchParams.PageIndex}
-                totalPage={totalPages}
-                setSearchParams={setSearchParams}
-              />
+              <div className="mt-6">
+                <EnhancedPagination
+                  currentPage={searchParams.PageIndex}
+                  totalPage={totalPages}
+                  setSearchParams={setSearchParams}
+                />
+              </div>
             )}
           </>
         )}

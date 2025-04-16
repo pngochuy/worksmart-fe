@@ -30,7 +30,7 @@ export const fetchAppliedJobs = async (userId) => {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/Application/candidate/applied-jobs`,
       {
-        params: {userId}
+        params: { userId },
       }
     );
     return response.data;
@@ -306,10 +306,22 @@ export const fetchJobDetailsV2 = async (jobId) => {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/Job/detail/${jobId}`
     );
-    
+
     return response.data;
   } catch (error) {
     console.error("Error fetching job details:", error);
+    throw error;
+  }
+};
+
+export const fetchJobRecommendations = async (cvId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/JobRecommendation/cv/${cvId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job recommendations:", error);
     throw error;
   }
 };

@@ -29,8 +29,8 @@ const SalaryRangeDropdown = ({ setSearchParams }) => {
 
     setSearchParams((prev) => ({
       ...prev,
-      MinSalary: minSalaryUSD,
-      MaxSalary: maxSalaryUSD,
+      MinSalary: minVND,
+      MaxSalary: maxVND,
       PageIndex: 1,
     }));
   };

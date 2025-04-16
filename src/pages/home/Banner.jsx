@@ -3,8 +3,37 @@ import client1Img from "../../assets/images/index-22/client-1.png";
 import client2Img from "../../assets/images/index-22/client-2.png";
 import client3Img from "../../assets/images/index-22/client-3.png";
 import client4Img from "../../assets/images/index-22/client-4.png";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Banner = () => {
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    console.log("Submitting search from home:", { title, location });
+
+    // Tạo query params cho URL
+    const params = new URLSearchParams();
+    if (title) params.append("title", title);
+    if (location) params.append("location", location);
+
+    // Thêm flag expand vào cả URL và state
+    params.append("expand", "true");
+
+    // Điều hướng với đầy đủ thông tin
+    navigate(`/job-list?${params.toString()}`, {
+      state: {
+        title,
+        location,
+        expand: true, // Thêm flag expand vào state
+      },
+    });
+  };
+
   return (
     <section className="banner-section-three at-home22">
       <div className="auto-container">
@@ -25,14 +54,16 @@ export const Banner = () => {
                 className="job-search-form-two wow fadeInUp"
                 data-wow-delay="200ms"
               >
-                <form method="post" action="job-list-v10.html">
+                <form onSubmit={handleSubmit}>
                   <div className="row">
                     <div className="form-group col-lg-5 col-md-12 col-sm-12">
                       <label className="title">What</label>
                       <span className="icon flaticon-search-1"></span>
                       <input
                         type="text"
-                        name="field_name"
+                        name="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         placeholder="Job title, keywords, or company"
                       />
                     </div>
@@ -42,8 +73,10 @@ export const Banner = () => {
                       <span className="icon flaticon-map-locator"></span>
                       <input
                         type="text"
-                        name="field_name"
-                        placeholder="City or postcode"
+                        name="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="City or location"
                       />
                     </div>
                     {/* Form Group */}

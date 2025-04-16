@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
-import { MatchingJobs } from "./MatchingJobs";
 import { useState, useEffect } from "react";
+import { MatchingJobs } from "./MatchingJobs";
+import { getCVsByUserId } from "../../services/cvServices";
+import { fetchJobRecommendations } from "../../services/jobServices";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,29 +24,146 @@ import {
   BadgeCheck,
 } from "lucide-react";
 
-// Modify MatchingJobs component to accept a colorScheme prop
-const ModifiedMatchingJobs = ({ userId }) => {
-  // Import the original MatchingJobs component and enhance it
+// Modify MatchingJobs component to fetch and display recommended jobs
+const ModifiedMatchingJobs = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [recommendedJobs, setRecommendedJobs] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Define a function to determine color based on match percentage
+  // Get user ID from localStorage
+  const getUserId = () => {
+    try {
+      const userStr = localStorage.getItem("userLoginData");
+      console.log("userStr", userStr);
+      if (!userStr) return null;
+
+      const user = JSON.parse(userStr);
+      return user?.userID;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
+  };
+
+  // Function to convert API score to display percentage
+  const convertScoreToPercentage = (score) => {
+    // Base conversion (score to percentage)
+    let percentage = Math.round(score * 100);
+
+    // Apply tiered bonus based on score ranges
+    if (score >= 0.591 && score <= 0.79) {
+      // Add 20% bonus for high matches
+      percentage += 20;
+    } else if (score >= 0.55 && score <= 0.59) {
+      // Add 10% bonus for medium matches
+      percentage += 10;
+    } else if (score >= 0.491) {
+      // Add 5% bonus for low matches
+      percentage += 5;
+    }
+
+    // Cap at 100%
+    return Math.min(percentage, 100);
+  };
+
+  // Define color functions
   const getMatchColor = (percentage) => {
-    if (percentage >= 90) return "from-green-400 to-green-600";
-    if (percentage >= 80) return "from-blue-400 to-blue-600";
+    if (percentage >= 85) return "from-green-400 to-green-600";
+    if (percentage >= 70) return "from-blue-400 to-blue-600";
     return "from-amber-400 to-amber-600";
   };
 
-  // Define a function to determine badge color based on match percentage
   const getMatchBadgeColor = (percentage) => {
-    if (percentage >= 90) return "bg-green-50 text-green-700";
-    if (percentage >= 80) return "bg-blue-50 text-blue-700";
+    if (percentage >= 85) return "bg-green-50 text-green-700";
+    if (percentage >= 70) return "bg-blue-50 text-blue-700";
     return "bg-amber-50 text-amber-700";
   };
 
-  // This would be imported from the original component
-  // I'm showing a wrapper that modifies the rendering to use new color scheme
+  useEffect(() => {
+    const fetchRecommendedJobs = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Get user ID
+        const userId = getUserId();
+        if (!userId) {
+          throw new Error("User ID not found. Please log in again.");
+        }
+
+        // Get user's CVs
+        const cvs = await getCVsByUserId(userId);
+
+        if (!cvs || cvs.length === 0) {
+          throw new Error("No CVs found. Please create a CV first.");
+        }
+
+        // Find featured CV or use the first one
+        const featuredCV = cvs.find((cv) => cv.isFeatured) || cvs[0];
+
+        // Fetch job recommendations based on CV
+        const recommendations = await fetchJobRecommendations(featuredCV.cvid);
+
+        if (!recommendations || recommendations.length === 0) {
+          throw new Error("No job recommendations found for your CV.");
+        }
+
+        // Transform recommendations data để xử lý định dạng mới
+        const formattedJobs = recommendations.map((item) => {
+          // Tính toán phần trăm phù hợp dựa trên score
+          const matchPercentage = convertScoreToPercentage(item.score);
+
+          return {
+            ...item.job,
+            matchPercentage,
+            // Sử dụng trường dữ liệu mới từ API
+            company: item.job.companyName,
+            avatar: item.job.avatar,
+            industry: item.job.industry,
+            companySize: item.job.companySize,
+            companyWebsite: item.job.companyWebsite,
+            companyDescription: item.job.companyDescription,
+            email: item.job.email,
+            phoneNumber: item.job.phoneNumber,
+            address: item.job.address,
+            workLocation: item.job.workLocation,
+            tags: item.job.tags || [],
+            jobDetailTags: item.job.jobDetailTags || [],
+            // Lưu lại điểm gốc để debug nếu cần
+            originalScore: item.score,
+          };
+        });
+
+        setRecommendedJobs(formattedJobs);
+      } catch (error) {
+        console.error("Error fetching job recommendations:", error);
+        setError(error.message || "Failed to load job recommendations");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecommendedJobs();
+  }, []);
+
+  // If there's an error, show error message
+  if (error && !isLoading) {
+    return (
+      <Card className="border border-red-200 bg-red-50">
+        <CardContent className="p-6">
+          <p className="text-red-600">{error}</p>
+          <p className="mt-2 text-sm text-gray-600">
+            Please check your profile settings or try again later.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <MatchingJobs
-      userId={userId}
+      jobs={recommendedJobs}
+      isLoading={isLoading}
       renderMatchIndicator={(job) => (
         <div
           className={`rounded-md absolute top-0 left-0 h-1 bg-gradient-to-r ${getMatchColor(
@@ -124,7 +243,7 @@ export const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Matching Jobs (2/3 width on large screens) */}
             <div className="lg:col-span-2">
-              <ModifiedMatchingJobs userId={1} />
+              <ModifiedMatchingJobs />
             </div>
 
             {/* Right Column - Business Features (1/3 width on large screens) */}
