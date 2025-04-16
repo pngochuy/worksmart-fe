@@ -16,6 +16,8 @@ import {
 } from "@/services/notificationServices";
 import { toast } from "react-toastify";
 import { useNotifications } from "@/layouts/NotificationProvider";
+import { RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Index = () => {
   const [notifications, setNotifications] = useState([]);
@@ -171,12 +173,15 @@ export const Index = () => {
                   <div className="widget-title d-flex justify-content-between align-items-center  border-none">
                     <h4>Notifications</h4>
                     {!loading && notifications.length > 0 && (
-                      <button
-                        className="theme-btn btn-style-one btn-small px-2 py-2"
+                      <Button
+                        className="h-8 px-2 lg:px-3"
+                        variant="outline"
+                        disabled={loading}
                         onClick={loadNotifications}
                       >
-                        <i className="la la-refresh mr-1"></i> Refresh
-                      </button>
+                        <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        <span className="ml-1 hidden sm:inline"></span>
+                      </Button>
                     )}
                   </div>
 
@@ -242,7 +247,7 @@ export const Index = () => {
                                         }
                                         disabled={
                                           actionLoading[
-                                            notification.notificationID
+                                          notification.notificationID
                                           ] === "delete"
                                         }
                                       >
@@ -270,7 +275,7 @@ export const Index = () => {
                                           }
                                           disabled={
                                             actionLoading[
-                                              notification.notificationID
+                                            notification.notificationID
                                             ] === "read"
                                           }
                                         >
@@ -320,9 +325,8 @@ export const Index = () => {
                           <nav aria-label="Notification pagination">
                             <ul className="pagination">
                               <li
-                                className={`page-item ${
-                                  currentPage === 1 ? "disabled" : ""
-                                }`}
+                                className={`page-item ${currentPage === 1 ? "disabled" : ""
+                                  }`}
                               >
                                 <button
                                   className="page-link"
@@ -336,9 +340,8 @@ export const Index = () => {
                               {[...Array(totalPages).keys()].map((number) => (
                                 <li
                                   key={number + 1}
-                                  className={`page-item ${
-                                    currentPage === number + 1 ? "active" : ""
-                                  }`}
+                                  className={`page-item ${currentPage === number + 1 ? "active" : ""
+                                    }`}
                                 >
                                   <button
                                     className="page-link"
@@ -350,9 +353,8 @@ export const Index = () => {
                               ))}
 
                               <li
-                                className={`page-item ${
-                                  currentPage === totalPages ? "disabled" : ""
-                                }`}
+                                className={`page-item ${currentPage === totalPages ? "disabled" : ""
+                                  }`}
                               >
                                 <button
                                   className="page-link"

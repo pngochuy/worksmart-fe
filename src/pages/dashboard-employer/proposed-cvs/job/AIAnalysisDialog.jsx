@@ -30,7 +30,7 @@ export const AIAnalysisDialog = ({ open, onOpenChange, candidate }) => {
               </div>
             </div>
             <Badge
-              className={`text-md px-3 py-1 ${
+              className={`rounded-md text-md px-3 py-1 ${
                 candidate.matchPercentage >= 90
                   ? "bg-green-100 text-green-800"
                   : candidate.matchPercentage >= 80
@@ -99,7 +99,7 @@ export const AIAnalysisDialog = ({ open, onOpenChange, candidate }) => {
                     <div className="text-sm text-slate-500">{exp.duration}</div>
                   </div>
                   <Badge
-                    className={`mb-3 ${
+                    className={`rounded-md px-3 py-1 mb-3 ${
                       exp.relevance === "High" || exp.relevance === "Very High"
                         ? "bg-green-100 text-green-800"
                         : "bg-amber-100 text-amber-800"

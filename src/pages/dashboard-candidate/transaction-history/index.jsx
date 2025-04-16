@@ -148,10 +148,11 @@ export const Index = () => {
                     <Button
                       className="h-8 px-2 lg:px-3"
                       variant="outline"
+                      disabled={loading}
                       onClick={handleRefresh}
                     >
-                      <RefreshCcw className="h-4 w-4 mr-2" />
-                      <span className="ml-1 hidden sm:inline">Refresh</span>
+                      <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                      <span className="ml-1 hidden sm:inline"></span>
                     </Button>
                   )}
                 </div>
@@ -180,11 +181,15 @@ export const Index = () => {
                     </div>
                   ) : error ? (
                     <div className="text-center py-4 text-danger">{error}</div>
-                  ) : transactions.length === 0 ? (
+                  ) : filteredTransactions.length === 0 ? (
                     <div className="text-center py-4">
                       <div className="empty-state">
                         <i className="la la-file-invoice-dollar la-3x text-muted mb-3"></i>
-                        <p>No transactions to display</p>
+                        {searchTerm ? (
+                          <p>No transactions matching "{searchTerm}"</p>
+                        ) : (
+                          <p>No transactions to display</p>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -219,8 +224,8 @@ export const Index = () => {
                         </tbody>
                       </table>
 
-                      {/* Thêm phân trang */}
-                      {transactions.length > 0 && (
+                      {/* Pagination */}
+                      {filteredTransactions.length > 0 && (
                         <div className="pagination-container mt-4 d-flex justify-content-center">
                           <nav aria-label="Transaction pagination">
                             <ul className="pagination">

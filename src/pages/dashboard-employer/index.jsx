@@ -569,80 +569,85 @@ export const Index = () => {
 
           {/* First Row - Stats Summary */}
           <div className="row">
-            <div className="col-12 text-right" style={{ paddingBottom: 5 }}>
-              <Button
-                variant="outline"
-                onClick={handleRefreshRow1}
-                disabled={isRefreshingRow1}
-                className="h-8 px-3"
-              >
-                {isRefreshingRow1 ? (
-                  <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                )}
-                Refresh
-              </Button>
-            </div>
+            <div className="col-12">
+              <div className="stats-container bg-white p-8 rounded-lg d-flex justify-content-between align-items-center position-relative">
 
-            <div className="ui-block col-xl-4 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item">
-                <div className="left">
-                  <i className="icon flaticon-briefcase"></i>
+                {/* Posted Jobs */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-start">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{jobs?.length || 0}</h3>
+                      <p className="text-muted mb-0">Posted Jobs</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="right">
-                  <h4>{jobs?.length || 0}</h4>
-                  <p>Posted Jobs</p>
+
+                {/* Application */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="la la-file-invoice text-red-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{applications?.totalApplications || 0}</h3>
+                      <p className="text-muted mb-0">Applications</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="ui-block col-xl-4 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item ui-red">
-                <div className="left">
-                  <i className="icon la la-file-invoice"></i>
+
+                {/* Notifications */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-end">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{unreadCount}</h3>
+                      <p className="text-muted mb-0">Notifications</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="right">
-                  <h4>{applications?.totalApplications || 0}</h4>
-                  <p>Application</p>
-                </div>
-              </div>
-            </div>
-            <div className="ui-block col-xl-4 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item ui-green">
-                <div className="left">
-                  <i className="icon la la-bookmark-o"></i>
-                </div>
-                <div className="right">
-                  <h4>{unreadCount}</h4>
-                  <p>Notifications</p>
-                </div>
+
+                {/* Single refresh button positioned absolutely */}
+                <Button
+                  variant="ghost"
+                  onClick={handleRefreshRow1}
+                  disabled={isRefreshingRow1}
+                  className="h-6 w-6 p-1 ml-2"
+                  style={{ position: 'absolute', top: '8px', right: '8px' }}
+
+                >
+                  <RefreshCcw
+                    className={`h-4 w-4 ${isRefreshingRow1
+                      ? 'animate-spin'
+                      : ''
+                      }`}
+                  />
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Second Row - Chart and Notifications */}
           <div className="row mt-4">
-            <div className="col-12 text-right" style={{ paddingBottom: 5 }}>
-              <Button
-                variant="outline"
-                onClick={handleRefreshRow2}
-                disabled={isRefreshingRow2}
-                className="h-8 px-3"
-              >
-                {isRefreshingRow2 ? (
-                  <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                )}
-                Refresh
-              </Button>
+            <div className="col-lg-7">
+
             </div>
 
             <div className="col-xl-7 col-lg-12">
               {/* Graph widget */}
               <div className="graph-widget ls-widget">
                 <div className="tabs-box">
-                  <div className="widget-title d-flex justify-content-between align-items-center">
+                  <div className="widget-title">
                     <h4>Your Job Posting Activity</h4>
                     <div className="d-flex align-items-center">
                       <div className="chosen-outer d-flex">
@@ -670,6 +675,14 @@ export const Index = () => {
                           <option value="365">Last 12 Months</option>
                         </select>
                       </div>
+                      <Button
+                        variant="ghost"
+                        onClick={handleRefreshChart}
+                        disabled={isRefreshingChart}
+                        className="h-6 w-6 p-1 ml-2"
+                      >
+                        <RefreshCcw className={`h-4 w-4 ${isRefreshingChart ? 'animate-spin' : ''}`} />
+                      </Button>
                     </div>
                   </div>
 
@@ -730,17 +743,26 @@ export const Index = () => {
               </div>
             </div>
 
-            <div className="col-xl-5 col-lg-12">
+            <div className="col-lg-5">
               {/* Notification Widget */}
               <div className="notification-widget ls-widget">
-                <div className="widget-title d-flex justify-content-between align-items-center">
+                <div className="widget-title">
                   <h4>Notifications</h4>
+                  <Button
+                    variant="ghost"
+                    onClick={handleRefreshNotifications}
+                    disabled={isRefreshingNotifications}
+                    className="h-6 w-6 p-1 ml-2"
+                    style={{ position: 'absolute', top: '8px', right: '8px' }}
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${isRefreshingNotifications ? 'animate-spin' : ''}`} />
+                  </Button>
                 </div>
                 <div className="widget-content">
-                  {loadingNotifications || isRefreshingNotifications ? (
+                  {loading || isRefreshingNotifications ? (
                     <p>Loading notifications...</p>
-                  ) : notificationError ? (
-                    <p>{notificationError}</p>
+                  ) : error ? (
+                    <p>{error}</p>
                   ) : (
                     <div className="notification" style={{
                       maxHeight: '300px',
@@ -772,24 +794,20 @@ export const Index = () => {
           <div className="row mt-4">
             <div className="col-lg-12">
               <div className="ls-widget">
-                <div className="widget-title d-flex justify-content-between align-items-center">
+                <div className="widget-title">
                   <h4>Your Job Listings</h4>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={handleRefreshRow3}
                     disabled={isRefreshingRow3}
-                    className="h-8 px-3"
+                    className="h-6 w-6 p-1 ml-2"
+                    style={{ position: 'absolute', top: '8px', right: '8px' }}
                   >
-                    {isRefreshingRow3 ? (
-                      <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <RefreshCcw className="h-4 w-4 mr-2" />
-                    )}
-                    Refresh
+                    <RefreshCcw className={`h-4 w-4 ${isRefreshingRow3 ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
                 <div className="widget-content">
-                  {loading || isRefreshingJobs ? (
+                  {loading || isRefreshingRow3 ? (
                     <div className="text-center py-5">
                       <div className="spinner-border text-primary" role="status">
                         <span className="sr-only">Loading...</span>
@@ -813,7 +831,7 @@ export const Index = () => {
                     </div>
                   ) : (
                     <div className="row">
-                      {jobs.map((job) => (
+                      {jobs.slice(0, 4).map((job) => (
                         <div key={job.jobID} className="job-block col-lg-6 col-md-12 col-sm-12 mb-4">
                           <div className={`inner-box border ${getBorderColor(job.status)} rounded hover:shadow-md transition-shadow duration-300`}>
                             <div className="content p-4">

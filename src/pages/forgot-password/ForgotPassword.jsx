@@ -11,12 +11,12 @@ const forgotPasswordSchema = z.object({
 
 export const ForgotPassword = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const { 
-    register, 
-    handleSubmit, 
+  const {
+    register,
+    handleSubmit,
     formState: { errors },
-    setError, 
-    } = useForm({
+    setError,
+  } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
@@ -27,11 +27,16 @@ export const ForgotPassword = ({ onSuccess }) => {
       toast.success("OTP sent to your email!");
       onSuccess(data.email); // Chuyển sang trang OTP
     } catch (error) {
-        if (error.response?.status === 500) {
-            toast.error(error.response.data?.error || "Server error, please try again.");
-        } else {
-            setError("email", { type: "manual", message: error.data || "Email is not register" });
-        }
+      if (error.response?.status === 500) {
+        toast.error(
+          error.response.data?.error || "Server error, please try again."
+        );
+      } else {
+        setError("email", {
+          type: "manual",
+          message: error.data || "Email is not register",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -46,11 +51,9 @@ export const ForgotPassword = ({ onSuccess }) => {
       </div>
       <div className="form-group">
         <button className="theme-btn btn-style-one" disabled={loading}>
-            {loading ? <span className="loading-spinner"></span> : "Send OTP"}
+          {loading ? <span className="loading-spinner"></span> : "Send OTP"}
         </button>
       </div>
     </form>
   );
 };
-
-export default ForgotPassword;

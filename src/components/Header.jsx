@@ -229,9 +229,8 @@ export const Header = () => {
             <nav className="nav main-menu">
               <ul className="navigation" id="navbar">
                 <li
-                  className={`dropdown ${
-                    activeDropdown?.innerText.includes("Jobs") ? "current" : ""
-                  }`}
+                  className={`dropdown ${activeDropdown?.innerText.includes("Jobs") ? "current" : ""
+                    }`}
                 >
                   <span>Jobs</span>
                   <ul>
@@ -247,11 +246,10 @@ export const Header = () => {
                   </ul>
                 </li>
                 <li
-                  className={`dropdown ${
-                    activeDropdown?.innerText.includes("Company")
+                  className={`dropdown ${activeDropdown?.innerText.includes("Company")
                       ? "current"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span>Company</span>
                   <ul>
@@ -264,11 +262,10 @@ export const Header = () => {
                   </ul>
                 </li>
                 <li
-                  className={`dropdown ${
-                    activeDropdown?.innerText.includes("Profile & CV")
+                  className={`dropdown ${activeDropdown?.innerText.includes("Profile & CV")
                       ? "current"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span>Profile & CV</span>
                   <ul>
@@ -282,11 +279,10 @@ export const Header = () => {
                 </li>
                 {userRole === "Employer" && (
                   <li
-                    className={`dropdown ${
-                      activeDropdown?.innerText.includes("Candidates")
+                    className={`dropdown ${activeDropdown?.innerText.includes("Candidates")
                         ? "current"
                         : ""
-                    }`}
+                      }`}
                   >
                     <span>Candidates</span>
                     <ul>

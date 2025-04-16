@@ -65,6 +65,8 @@ import { CandidatePagination } from "./CandidatePagination";
 
 const CandidateMatchingPage = () => {
   const { jobId } = useParams();
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userId = user?.userID || null;
   const [job, setJob] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [matchedCandidates, setMatchedCandidates] = useState([]);
@@ -1695,6 +1697,8 @@ const CandidateMatchingPage = () => {
         onOpenChange={setOpenCVDialog}
         candidate={selectedCandidate}
         cv={selectedCV}
+        jobId={jobId}
+        employerId={userId}
       />
 
       <AIAnalysisDialog

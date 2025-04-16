@@ -76,6 +76,16 @@ export const getAllJobs = async () => {
   }
 };
 
+export const getJobsActive = async () => {
+  try {
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/getJobsActive`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    throw error;
+  }
+};
+
 export const fetchCandidateDetail = async (candidateId, jobId) => {
   try {
     const response = await axios.get(
@@ -322,6 +332,16 @@ export const fetchJobRecommendations = async (cvId) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching job recommendations:", error);
+// Gửi lời mời cho candidate
+export const sendInvitationEmail = async (data) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Job/send-invitation`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error sending invitation:", error);
     throw error;
   }
 };
