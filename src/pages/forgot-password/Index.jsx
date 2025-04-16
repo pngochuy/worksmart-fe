@@ -1,6 +1,4 @@
-import { useEffect } from "react";
 import leftBannerImg from "../../assets/images/background/12.jpg";
-import { toast } from "react-toastify";
 import { useState } from "react";
 import { SocialRegister } from "../register/SocialRegister";
 import { ForgotPassword } from "./ForgotPassword";
