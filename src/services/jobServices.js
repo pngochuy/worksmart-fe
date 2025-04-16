@@ -332,6 +332,8 @@ export const fetchJobRecommendations = async (cvId) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching job recommendations:", error);
+  }
+};
 // Gửi lời mời cho candidate
 export const sendInvitationEmail = async (data) => {
   try {
