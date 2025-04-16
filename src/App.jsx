@@ -6,7 +6,7 @@ import { Index as HomePage } from "@/pages/home";
 import { index as NotFoundPage } from "@/pages/404-not-found";
 import { Index as LoginPage } from "@/pages/login";
 import { Index as RegisterPage } from "@/pages/register";
-import { Index as ForgotPasswordPage } from "@/pages/forgot-password";
+import { Index as ForgotPasswordPage } from "@/pages/forgot-password/index.jsx";
 // import { Index as VerifyOTPPage } from "@/pages/forgot-password";
 // import { Index as ResetPasswordPage } from "@/pages/forgot-password";
 import { index as ContactPage } from "@/pages/contact";
