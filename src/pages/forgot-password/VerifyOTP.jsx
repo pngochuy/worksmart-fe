@@ -68,5 +68,3 @@ export const VerifyOTP = ({ email, onSuccess }) => {
     </form>
   );
 };
-
-export default VerifyOTP;
