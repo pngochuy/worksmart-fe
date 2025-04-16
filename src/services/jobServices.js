@@ -323,6 +323,15 @@ export const fetchJobDetailsV2 = async (jobId) => {
     throw error;
   }
 };
+
+export const fetchJobRecommendations = async (cvId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/JobRecommendation/cv/${cvId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job recommendations:", error);
 // Gửi lời mời cho candidate
 export const sendInvitationEmail = async (data) => {
   try {
