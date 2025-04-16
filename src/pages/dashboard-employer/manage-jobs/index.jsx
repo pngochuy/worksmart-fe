@@ -104,7 +104,7 @@ export default function ManageJobsPage() {
         PageIndex: 1,
         PageSize: 1000 // Số lớn để lấy tất cả dữ liệu
       };
-      
+
       const data = await fetchJobsForManagement(paramsToSend);
       console.log("Jobs từ API:", data.jobs.length);
       // Lọc ở phía client
@@ -151,7 +151,7 @@ export default function ManageJobsPage() {
       setLoading(false);
     }
   };
-  
+
   // Handle sort order change
   const handleSortOrderChange = (e) => {
     const newSortOrder = e.target.value;
@@ -396,8 +396,8 @@ export default function ManageJobsPage() {
                 )}
                 <button
                   className={`view-candidates-btn ${candidateCounts[selectedJob.jobID]
-                      ? "has-candidates"
-                      : "no-candidates"
+                    ? "has-candidates"
+                    : "no-candidates"
                     }`}
                   onClick={() => {
                     closeDetailModal();
@@ -631,7 +631,7 @@ export default function ManageJobsPage() {
                 <div className="widget-title-right">
                   <div className="refresh-button">
                     <button className="btn-refresh" onClick={() => getJobs()}>
-                      <i className="fas fa-sync-alt"></i> Refresh
+                      <i className="fas fa-sync-alt"></i>
                     </button>
                   </div>
                   <div className="page-size-selector">
@@ -719,8 +719,8 @@ export default function ManageJobsPage() {
                                   {job.priority === true && <i className="fas fa-gem text-primary mr-2"></i>}
                                   <span
                                     className={`job-title-text ${isJobExpired(job.deadline)
-                                        ? "text-danger"
-                                        : ""
+                                      ? "text-danger"
+                                      : ""
                                       }`}
                                   >
                                     {job.title}
@@ -822,7 +822,7 @@ export default function ManageJobsPage() {
                                       </button>
                                     </ConfirmDialog>
                                   )}
-                                  
+
                                   {job.status !== 2 ? (
                                     <ConfirmDialog
                                       title="Hide job?"
@@ -856,8 +856,8 @@ export default function ManageJobsPage() {
                               <td className="text-center">
                                 <button
                                   className={`view-candidates-btn ${candidateCounts[job.jobID]
-                                      ? "has-candidates"
-                                      : "no-candidates"
+                                    ? "has-candidates"
+                                    : "no-candidates"
                                     }`}
                                   onClick={() =>
                                     handleViewCandidates(job.jobID)

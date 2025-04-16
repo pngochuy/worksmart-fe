@@ -100,10 +100,11 @@ export const index = () => {
                       <Button
                         className="h-8 px-2 lg:px-3"
                         variant="outline"
+                        disabled={loadingJobs}
                         onClick={handleRefresh}
                       >
-                        <RefreshCcw className="h-4 w-4 mr-2" />
-                        <span className="ml-1 hidden sm:inline">Refresh</span>
+                        <RefreshCcw className={`h-4 w-4 ${loadingJobs ? 'animate-spin' : ''}`} />
+                        <span className="ml-1 hidden sm:inline"></span>
                       </Button>
                     )}
                   </div>

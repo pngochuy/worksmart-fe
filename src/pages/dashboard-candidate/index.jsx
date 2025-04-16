@@ -27,7 +27,7 @@ export const Index = () => {
   const [chartData, setChartData] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('30');
   const [chartGroupBy, setChartGroupBy] = useState('day');
-  const {unreadCount, refreshNotifications } = useNotifications();
+  const { unreadCount, refreshNotifications } = useNotifications();
 
   useEffect(() => {
     const user = getUserLoginData();
@@ -36,9 +36,9 @@ export const Index = () => {
 
   useEffect(() => {
     loadNotifications();
-    loadFavouriteJobs();
     if (userDataLogin) {
       loadAppliedJobs();
+      loadFavouriteJobs();
     }
   }, [userDataLogin]);
 
@@ -56,7 +56,7 @@ export const Index = () => {
     setIsRefreshing1stNotifications(true);
     try {
       const data = await fetchUserNotifications();
-      setNotifications(data);   
+      setNotifications(data);
       refreshNotifications();
     } catch (err) {
       setError("Failed to load notifications");
@@ -66,6 +66,7 @@ export const Index = () => {
     }
   };
 
+  // Handle refresh for notifications
   const handleRefresh2ndNotifications = async () => {
     setIsRefreshing2ndNotifications(true);
     try {
@@ -151,8 +152,6 @@ export const Index = () => {
       setLoadingJobs(true);
       const userId = userDataLogin.userID;
       const data = await fetchAppliedJobs(userId);
-      console.log("Job Data:", data);
-      console.log("Job Data:", userId);
       setAppliedJobs(data);
     } catch (err) {
       setJobError("Failed to load applied jobs");
@@ -455,81 +454,79 @@ export const Index = () => {
             <div className="text">Ready to jump back in?</div>
           </div>
 
-          <div className="col-12 text-right mt-2" style={{ paddingBottom: 5 }}>
-            <Button
-              variant="outline"
-              onClick={() => {
-                handleRefreshJobs();
-                handleRefresh1stNotifications();
-                handleRefreshFavourites();
-              }}
-              disabled={isRefreshingJobs || isRefreshing1stNotifications || isRefreshingFavourites}
-              className="h-8 px-3"
-            >
-              {(isRefreshingJobs || isRefreshing1stNotifications || isRefreshingFavourites) ? (
-                <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <RefreshCcw className="h-4 w-4 mr-2" />
-              )}
-              Refresh
-            </Button>
-          </div>
-
           <div className="row">
-            <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item">
-                <div className="left">
-                  <i className="icon flaticon-briefcase"></i>
+            <div className="col-12">
+              <div className="stats-container bg-white p-8 rounded-lg d-flex justify-content-between align-items-center position-relative">
+                {/* Applied Jobs */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-start">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{appliedJobs?.length || 0}</h3>
+                      <p className="text-muted mb-0">Applied Jobs</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="right">
-                  <h4>{appliedJobs.length || 0}</h4>
-                  <p>Applied Jobs</p>
+
+                {/* Notifications */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="la la-file-invoice text-red-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{unreadCount}</h3>
+                      <p className="text-muted mb-0">Notifications</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item ui-red">
-                <div className="left">
-                  <i className="icon la la-file-invoice"></i>
+
+                {/* Favourite Jobs */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-end">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{favouriteJobs?.length || 0}</h3>
+                      <p className="text-muted mb-0">Favourite Jobs</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="right">
-                  <h4>{unreadCount}</h4>
-                  <p>Notifications</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12">
-              <div className="ui-item ui-green">
-                <div className="left">
-                  <i className="icon la la-bookmark-o"></i>
-                </div>
-                <div className="right">
-                  <h4>{favouriteJobs?.length || 0}</h4>
-                  <p>Favourite Jobs</p>
-                </div>
+
+                {/* Single refresh button positioned absolutely */}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    handleRefreshJobs();
+                    handleRefresh1stNotifications();
+                    handleRefreshFavourites();
+                  }}
+                  disabled={isRefreshingJobs || isRefreshing1stNotifications || isRefreshingFavourites}
+                  className="h-6 w-6 p-1 ml-2"
+                  style={{ position: 'absolute', top: '8px', right: '8px' }}
+                >
+                  <RefreshCcw
+                    className={`h-4 w-4 ${isRefreshingJobs || isRefreshing1stNotifications || isRefreshingFavourites
+                      ? 'animate-spin'
+                      : ''
+                      }`}
+
+                  />
+                </Button>
               </div>
             </div>
           </div>
 
           <div className="row mt-4">
-            <div className="col-12 text-right mt-2" style={{ paddingBottom: 5 }}>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  handleRefreshChart();
-                  handleRefresh2ndNotifications();
-                }}
-                disabled={isRefreshingChart || isRefreshing2ndNotifications}
-                className="h-8 px-3"
-              >
-                {(isRefreshingChart || isRefreshing2ndNotifications) ? (
-                  <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                )}
-                Refresh
-              </Button>
-            </div>
             <div className="col-lg-7">
               {/* Graph widget */}
               <div className="graph-widget ls-widget">
@@ -562,6 +559,14 @@ export const Index = () => {
                           <option value="365">Last 12 Months</option>
                         </select>
                       </div>
+                      <Button
+                        variant="ghost"
+                        onClick={handleRefreshChart}
+                        disabled={isRefreshingChart}
+                        className="h-6 w-6 p-1 ml-2"
+                      >
+                        <RefreshCcw className={`h-4 w-4 ${isRefreshingChart ? 'animate-spin' : ''}`} />
+                      </Button>
                     </div>
                   </div>
 
@@ -627,6 +632,15 @@ export const Index = () => {
               <div className="notification-widget ls-widget">
                 <div className="widget-title">
                   <h4>Notifications</h4>
+                  <Button
+                    variant="ghost"
+                    onClick={handleRefresh2ndNotifications}
+                    disabled={isRefreshing2ndNotifications}
+                    className="h-6 w-6 p-1 ml-2"
+                    style={{ position: 'absolute', top: '8px', right: '8px' }}
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${isRefreshing2ndNotifications ? 'animate-spin' : ''}`} />
+                  </Button>
                 </div>
                 <div className="widget-content">
                   {loading || isRefreshing2ndNotifications ? (
@@ -661,27 +675,20 @@ export const Index = () => {
           </div>
 
           <div className="row mt-4">
-
-            <div className="col-12 text-right mt-2" style={{ paddingBottom: 5 }}>
-              <Button
-                variant="outline"
-                onClick={handleRefreshJobs}
-                disabled={isRefreshingJobs}
-                className="h-8 px-3"
-              >
-                {isRefreshingJobs ? (
-                  <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                )}
-                Refresh
-              </Button>
-            </div>
             <div className="col-lg-12">
               {/* Applied Jobs Widget */}
               <div className="applicants-widget ls-widget">
                 <div className="widget-title">
                   <h4>Jobs Applied Recently</h4>
+                  <Button
+                    variant="ghost"
+                    onClick={handleRefreshJobs}
+                    disabled={isRefreshingJobs}
+                    className="h-6 w-6 p-1 ml-2"
+                    style={{ position: 'absolute', top: '8px', right: '8px' }}
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${isRefreshingJobs ? 'animate-spin' : ''}`} />
+                  </Button>
                 </div>
                 <div className="widget-content">
                   <div className="row">
@@ -694,7 +701,7 @@ export const Index = () => {
                         <p>{jobError}</p>
                       </div>
                     ) : appliedJobs.length > 0 ? (
-                      // Chỉ hiển thị 4 công việc đầu tiên với slice(0, 4)
+                      // Only show the first 4 jobs with slice(0, 4)
                       appliedJobs.slice(0, 4).map((job) => (
                         <div key={job.jobID} className="job-block col-lg-6 col-md-12 col-sm-12">
                           <div className="inner-box">
@@ -756,7 +763,7 @@ export const Index = () => {
                     )}
                   </div>
 
-                  {/* Thêm nút "View All" khi có nhiều hơn 4 công việc */}
+                  {/* Add "View All" button when there are more than 4 jobs */}
                   {appliedJobs.length > 4 && (
                     <div className="row mt-1" style={{ paddingBottom: 20 }}>
                       <div className="col-12 text-center">
