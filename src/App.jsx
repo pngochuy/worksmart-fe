@@ -21,8 +21,8 @@ import { index as CandidateDetailPage } from "./pages/candidate-list/candidate-d
 import { Index as SuitableJobsPage } from "./pages/suitable-jobs";
 import { UserLayout } from "./layouts/UserLayout";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
-import SavedJobsPage from "/src/pages/dashboard-candidate/saved-jobs/index.jsx";
 // Candidate Pages
+import SavedJobsPage from "/src/pages/dashboard-candidate/saved-jobs/index.jsx";
 import { Index as CandidateDashboardPage } from "./pages/dashboard-candidate";
 import { Index as MyProfilePage } from "./pages/dashboard-candidate/my-profile";
 import { index as MyCVPage } from "./pages/dashboard-candidate/my-cv";
