@@ -86,10 +86,10 @@ export default function EmployerCandidateDetailPage() {
       setIsAccepting(false);
     }
   };
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (applicationStatus) => {
     let badgeClass = "status-badge";
 
-    switch (status?.toLowerCase()) {
+    switch (applicationStatus?.toLowerCase()) {
       case "pending":
         badgeClass += " pending";
         break;
@@ -103,7 +103,7 @@ export default function EmployerCandidateDetailPage() {
         badgeClass += " default";
     }
 
-    return <span className={badgeClass}>{status || "Unknown"}</span>;
+    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
   };
   const handleBackToCandidates = () => {
     navigate(`/employer/manage-jobs/candidates/${jobId}`);
@@ -170,7 +170,7 @@ export default function EmployerCandidateDetailPage() {
         <div className="upper-title-box">
           <div className="title-flex">
             <button className="back-button" onClick={handleBackToCandidates}>
-              <i className="fas fa-arrow-left mr-1"></i> Back 
+              <i className="fas fa-arrow-left mr-1"></i> Back
             </button>
             <h3>
               Candidate Detail for:
@@ -192,12 +192,10 @@ export default function EmployerCandidateDetailPage() {
               <div className="widget-content">
                 <div className="candidate-info-container">
                   <div className="candidate-header">
-                    <div className="candidate-avatar-large">
+                    <div className="candidate-avatar">
                       <img
                         src={
                           candidate?.avatar
-                            ? candidate.avatar
-                            : "https://www.topcv.vn/images/avatar-default.jpg"
                         }
                         alt={candidate.avatar}
                         className={{
@@ -213,9 +211,9 @@ export default function EmployerCandidateDetailPage() {
                       </h2>
                       <div className="status-badge-container">
                         <span
-                          className={`status-badge ${candidate.status?.toLowerCase()}`}
+                          className={`status-badge ${candidate.applicationStatus?.toLowerCase()}`}
                         >
-                          {getStatusBadge(candidate.status)}
+                          {getStatusBadge(candidate.applicationStatus)}
                         </span>
                       </div>
                       <div className="candidate-contact">
@@ -238,8 +236,8 @@ export default function EmployerCandidateDetailPage() {
                       </div>
                     </div>
                     <div className="candidate-actions">
-                      {candidate.status !== "Rejected" &&
-                        candidate.status === "Pending" && (
+                      {candidate.applicationStatus !== "Rejected" &&
+                        candidate.applicationStatus === "Pending" && (
                           <ConfirmDialog
                             title="Accept Candidate"
                             description="Are you sure you want to accept this candidate?"
@@ -249,7 +247,7 @@ export default function EmployerCandidateDetailPage() {
                             showReasonField={false}
                             disabled={isAccepting || isRejecting}
                           >
-                            <button 
+                            <button
                               className={`accept-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
                               disabled={isAccepting || isRejecting}
                             >
@@ -266,8 +264,8 @@ export default function EmployerCandidateDetailPage() {
                           </ConfirmDialog>
                         )}
 
-                      {candidate.status !== "Accepted" &&
-                        candidate.status === "Pending" && (
+                      {candidate.applicationStatus !== "Accepted" &&
+                        candidate.applicationStatus === "Pending" && (
                           <ConfirmDialog
                             title="Reject Candidate"
                             description="Please provide a reason for rejecting this candidate. This reason will be included in the email sent to the candidate."
@@ -277,7 +275,7 @@ export default function EmployerCandidateDetailPage() {
                             showReasonField={true}
                             disabled={isAccepting || isRejecting}
                           >
-                            <button 
+                            <button
                               className={`reject-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
                               disabled={isAccepting || isRejecting}
                             >

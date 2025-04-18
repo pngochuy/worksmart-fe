@@ -40,39 +40,38 @@ export default function CandidatesPage() {
   const getCandidates = async (jobId) => {
     try {
       setLoading(true);
-      // Assuming your fetchCandidatesForJob function can accept pagination params
-      // You might need to update your API service to handle pagination
       const data = await fetchCandidatesForJob(jobId, searchParams);
 
-      // If your API returns paginated data in this format:
       if (data.candidates && data.totalPage) {
         setCandidates(data.candidates);
         setTotalPage(data.totalPage);
       } else {
-        // If your API doesn't support pagination yet, handle it client-side
-        setCandidates(data);
+        const filteredData = Array.isArray(data) ? data : [data];
+        setCandidates(filteredData);
 
-        // Calculate total pages based on data length
-        const totalItems = data.length;
+        const totalItems = filteredData.length;
         const calculatedTotalPages = Math.ceil(
           totalItems / searchParams.PageSize
         );
-        setTotalPage(calculatedTotalPages);
+        setTotalPage(calculatedTotalPages || 1);
 
-        // Paginate the data client-side
-        const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
-        const endIndex = startIndex + searchParams.PageSize;
-        const filteredData = data
-          .filter(
+        if (searchParams.name && searchParams.name.trim() !== '') {
+          const filtered = filteredData.filter(
             (candidate) =>
-              !searchParams.name ||
-              (candidate.fullName &&
-                candidate.fullName
-                  .toLowerCase()
-                  .includes(searchParams.name.toLowerCase()))
-          )
-          .slice(startIndex, endIndex);
-        setCandidates(filteredData);
+              candidate.fullName &&
+              candidate.fullName
+                .toLowerCase()
+                .includes(searchParams.name.toLowerCase())
+          );
+
+          const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
+          const endIndex = startIndex + searchParams.PageSize;
+          setCandidates(filtered.slice(startIndex, endIndex));
+        } else {
+          const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
+          const endIndex = startIndex + searchParams.PageSize;
+          setCandidates(filteredData.slice(startIndex, endIndex));
+        }
       }
 
       console.log("Candidates data:", data);
@@ -80,7 +79,7 @@ export default function CandidatesPage() {
     } catch (error) {
       setLoading(false);
       console.error("Error fetching candidates:", error);
-      // toast.error("Could not load candidates. Please try again.");
+      toast.error("Could not load candidates. Please try again.");
     }
   };
 
@@ -99,10 +98,9 @@ export default function CandidatesPage() {
     navigate("/employer/manage-jobs");
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (applicationStatus) => {
     let badgeClass = "status-badge";
-
-    switch (status?.toLowerCase()) {
+    switch (applicationStatus?.toLowerCase()) {
       case "pending":
         badgeClass += " pending";
         break;
@@ -116,12 +114,17 @@ export default function CandidatesPage() {
         badgeClass += " default";
     }
 
-    return <span className={badgeClass}>{status || "Unknown"}</span>;
+    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
   };
 
   // New function to handle message button click
   const handleMessageClick = (candidate) => {
-    setSelectedCandidate(candidate);
+    setSelectedCandidate({
+      ...candidate,
+      userID: candidate.userID,     // Đảm bảo userID được thiết lập đúng
+      fullName: candidate.fullName, // Đảm bảo fullName được thiết lập đúng
+      email: candidate.email       // Đảm bảo email được thiết lập đúng
+    });
     setShowMessageDialog(true);
   };
 
@@ -277,11 +280,12 @@ export default function CandidatesPage() {
                                           ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.avatar}
-                                      className={{
+                                      alt={candidate.fullName || "Candidate"}
+                                      style={{
                                         height: "50px",
                                         width: "50px",
                                         borderRadius: "50%",
+                                        objectFit: "cover"
                                       }}
                                     />
                                   </div>
@@ -293,8 +297,7 @@ export default function CandidatesPage() {
                                 </div>
                               </td>
                               <td>
-                                <a
-                                  href={`mailto:${candidate.email}`}
+                                <a href={`mailto:${candidate.email}`}
                                   className="email-link"
                                 >
                                   {candidate.email || "Unknown"}
@@ -302,8 +305,8 @@ export default function CandidatesPage() {
                               </td>
                               <td>
                                 {candidate.phoneNumber ? (
-                                  <a
-                                    href={`tel:${candidate.phoneNumber}`}
+
+                                  <a href={`tel:${candidate.phoneNumber}`}
                                     className="phone-link"
                                   >
                                     {candidate.phoneNumber}
@@ -312,7 +315,7 @@ export default function CandidatesPage() {
                                   "Unknown"
                                 )}
                               </td>
-                              <td>{getStatusBadge(candidate.status)}</td>
+                              <td>{getStatusBadge(candidate.applicationStatus)}</td>
                               <td className="text-center">
                                 <div className="action-buttons">
                                   {/* View Detail Button */}
@@ -328,13 +331,10 @@ export default function CandidatesPage() {
                                   </button>
 
                                   {/* Message Button - Only show for Approved candidates */}
-                                  {candidate.status?.toLowerCase() ===
-                                    "approved" && (
+                                  {candidate.applicationStatus?.toLowerCase() === "approved" && (
                                     <button
                                       className="message-btn"
-                                      onClick={() =>
-                                        handleMessageClick(candidate)
-                                      }
+                                      onClick={() => handleMessageClick(candidate)}
                                     >
                                       <i className="fas fa-comment-alt"></i>{" "}
                                       Message
@@ -372,80 +372,88 @@ export default function CandidatesPage() {
       </div>
 
       {/* Message Dialog */}
-      {showMessageDialog && selectedCandidate && (
-        <div className="message-dialog-overlay">
-          <div className="message-dialog">
-            <div className="message-dialog-header">
-              <h3>Send Message to {selectedCandidate.fullName}</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowMessageDialog(false)}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            <div className="message-dialog-body">
-              <p className="message-info">
-                You&apos;re about to send a message to this approved candidate.
-                This will notify them via email and in-app notification.
-              </p>
+      {
+        showMessageDialog && selectedCandidate && (
+          <div className="message-dialog-overlay">
+            <div className="message-dialog">
+              <div className="message-dialog-header">
+                <h3>Send Message to {selectedCandidate.fullName}</h3>
+                <button
+                  className="close-btn"
+                  onClick={() => setShowMessageDialog(false)}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="message-dialog-body">
+                <p className="message-info">
+                  You&apos;re about to send a message to this approved candidate.
+                  This will notify them via email and in-app notification.
+                </p>
 
-              <div className="candidate-details">
-                <div className="detail-item">
-                  <span className="label">Email:</span>
-                  <span className="value">{selectedCandidate.email}</span>
-                </div>
-                {selectedCandidate.phoneNumber && (
+                <div className="candidate-details">
                   <div className="detail-item">
-                    <span className="label">Phone:</span>
-                    <span className="value">
-                      {selectedCandidate.phoneNumber}
-                    </span>
+                    <span className="label">Email:</span>
+                    <span className="value">{selectedCandidate.email}</span>
                   </div>
-                )}
-                <div className="detail-item">
-                  <span className="label">Job Position:</span>
-                  <span className="value">{jobTitle}</span>
+                  {selectedCandidate.phoneNumber && (
+                    <div className="detail-item">
+                      <span className="label">Phone:</span>
+                      <span className="value">
+                        {selectedCandidate.phoneNumber}
+                      </span>
+                    </div>
+                  )}
+                  <div className="detail-item">
+                    <span className="label">Job Position:</span>
+                    <span className="value">{selectedCandidate.title || jobTitle}</span>
+                  </div>
+                  {selectedCandidate.location && (
+                    <div className="detail-item">
+                      <span className="label">Location:</span>
+                      <span className="value">{selectedCandidate.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="message-textarea-container">
+                  <label>Your message:</label>
+                  <textarea
+                    className="message-textarea"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Enter your message to the candidate..."
+                    rows={6}
+                  ></textarea>
                 </div>
               </div>
-
-              <div className="message-textarea-container">
-                <label>Your message:</label>
-                <textarea
-                  className="message-textarea"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Enter your message to the candidate..."
-                  rows={6}
-                ></textarea>
+              <div className="message-dialog-footer">
+                <button
+                  className="cancel-btn"
+                  onClick={() => setShowMessageDialog(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="send-btn"
+                  onClick={handleSendMessage}
+                  disabled={isSending}
+                >
+                  {isSending ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i> Sending...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-paper-plane"></i> Send Message
+                    </>
+                  )}
+                </button>
               </div>
-            </div>
-            <div className="message-dialog-footer">
-              <button
-                className="cancel-btn"
-                onClick={() => setShowMessageDialog(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="send-btn"
-                onClick={handleSendMessage}
-                disabled={isSending}
-              >
-                {isSending ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i> Sending...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-paper-plane"></i> Send Message
-                  </>
-                )}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <style>{`
         .view-detail-btn, .message-btn {
@@ -960,6 +968,6 @@ export default function CandidatesPage() {
           margin-right: 8px;
         }
       `}</style>
-    </section>
+    </section >
   );
 }
