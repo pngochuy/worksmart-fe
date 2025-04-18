@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import { fetchJobs } from "../../services/jobServices";
+import { 
+  getFavoriteJobsByUserId, 
+  toggleFavoriteJob 
+} from "../../services/favoriteJobService";
 import WorkTypeFilter from "./WorkTypeFilter";
 import JobPositionDropdown from "./JobPositionDropdown";
 import SalaryRangeDropdown from "./SalaryRangeDropdown";
@@ -39,9 +43,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
 export const Index = () => {
   const [jobs, setJobs] = useState([]);
@@ -49,6 +62,12 @@ export const Index = () => {
   const [totalJob, setTotalJob] = useState(1);
   const [groupedJobs, setGroupedJobs] = useState({});
   const [hoveredJob, setHoveredJob] = useState(null);
+  const [favoriteJobs, setFavoriteJobs] = useState([]);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const { toast } = useToast();
+
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
     PageSize: 5,
@@ -62,6 +81,139 @@ export const Index = () => {
     Tags: [],
     MostRecent: null,
   });
+
+  // Get user ID from auth context or localStorage
+  const getUserId = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('userLoginData') || '{}');
+      console.log("User data:", user);
+      return user.userID || null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
+  };
+
+  const userId = getUserId();
+  console.log("Current user ID:", userId);
+
+  // Fetch user's favorite jobs
+  const fetchFavoriteJobs = async () => {
+    if (!userId) {
+      console.log("No user ID, skipping favorites fetch");
+      return;
+    }
+    
+    try {
+      console.log("Fetching favorite jobs for user:", userId);
+      setIsLoadingFavorites(true);
+      const favorites = await getFavoriteJobsByUserId(userId);
+      console.log("Fetched favorites:", favorites);
+      setFavoriteJobs(favorites || []);
+    } catch (error) {
+      console.error("Error fetching favorite jobs:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your saved jobs",
+        variant: "destructive",
+      });
+      setFavoriteJobs([]);
+    } finally {
+      setIsLoadingFavorites(false);
+    }
+  };
+
+  // Check if a job is in favorites
+  const isJobFavorite = (jobId) => {
+    if (!favoriteJobs || !Array.isArray(favoriteJobs) || favoriteJobs.length === 0) {
+      return false;
+    }
+    return favoriteJobs.some(fav => fav && Number(fav.jobID) === Number(jobId));
+  };
+
+  // Handle when user clicks the save button
+  const handleSaveClick = (e, job) => {
+    e.preventDefault(); // Prevent accordion from opening/closing
+    e.stopPropagation(); // Stop event propagation
+    
+    if (!userId) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save jobs to favorites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If job is already favorite, remove it without confirmation
+    if (isJobFavorite(job.jobID)) {
+      console.log("Removing job from favorites directly:", job.jobID);
+      handleToggleFavorite(job.jobID, false);
+    } else {
+      // If not favorite, show confirmation dialog
+      console.log("Setting selected job for confirmation:", job.jobID);
+      setSelectedJob(job);
+      setConfirmDialogOpen(true);
+    }
+  };
+
+  // Handle favorite toggle after confirmation
+  const handleToggleFavorite = async (jobId, needConfirmation = true) => {
+    if (!userId) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save jobs to favorites.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      console.log(`Toggling favorite for user: ${userId}, job: ${jobId}`);
+      setIsLoadingFavorites(true);
+      
+      // Optimistic UI update
+      const currentlyFavorite = isJobFavorite(jobId);
+      if (currentlyFavorite) {
+        // Temporarily remove from UI
+        setFavoriteJobs(prev => prev.filter(job => Number(job.jobID) !== Number(jobId)));
+      } else {
+        // Temporarily add to UI
+        setFavoriteJobs(prev => [...prev, { jobID: jobId }]);
+      }
+      
+      // Make the API call
+      const result = await toggleFavoriteJob(userId, jobId);
+      console.log("Toggle result:", result);
+      
+      if (result) {
+        toast({
+          title: "Success",
+          description: result.message || (result.isFavorite ? "Job added to favorites" : "Job removed from favorites"),
+          variant: "default",
+        });
+      }
+      
+      // Refresh favorite jobs to ensure UI is synced with server
+      fetchFavoriteJobs();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorites. Please try again.",
+        variant: "destructive",
+      });
+      // Refresh to ensure UI is in sync with server state
+      fetchFavoriteJobs();
+    } finally {
+      setIsLoadingFavorites(false);
+      
+      if (needConfirmation) {
+        setConfirmDialogOpen(false);
+        setSelectedJob(null);
+      }
+    }
+  };
 
   const getJobs = async () => {
     try {
@@ -123,6 +275,17 @@ export const Index = () => {
     searchParams.MostRecent,
     searchParams.Category,
   ]);
+
+  // Fetch favorite jobs when component mounts or user changes
+  useEffect(() => {
+    if (userId) {
+      console.log("User ID changed, fetching favorites");
+      fetchFavoriteJobs();
+    } else {
+      console.log("No user ID, clearing favorites");
+      setFavoriteJobs([]);
+    }
+  }, [userId]);
 
   // Format salary display
   const formatSalary = (salary) => {
@@ -481,11 +644,23 @@ export const Index = () => {
                                 <div className="mt-4 flex justify-end">
                                   <Button
                                     variant="outline"
-                                    className="text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 cursor-default"
+                                    className={`border hover:bg-blue-100 flex items-center gap-2 ${
+                                      isJobFavorite(job.jobID)
+                                        ? "text-blue-600 border-blue-200 bg-blue-50"
+                                        : "text-gray-500 border-gray-200 hover:text-blue-600"
+                                    }`}
+                                    onClick={(e) => handleSaveClick(e, job)}
+                                    disabled={isLoadingFavorites}
                                   >
-                                    <Heart className="h-4 w-4  text-blue-500" />
-                                    <span className="hidden sm:inline text-blue-500">
-                                      Save
+                                    <Heart 
+                                      className={`h-4 w-4 ${
+                                        isJobFavorite(job.jobID) 
+                                          ? "text-blue-500 fill-blue-500" 
+                                          : "text-gray-500"
+                                      }`} 
+                                    />
+                                    <span className="hidden sm:inline">
+                                      {isJobFavorite(job.jobID) ? "Saved" : "Save"}
                                     </span>
                                   </Button>
                                 </div>
@@ -571,6 +746,46 @@ export const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Job</DialogTitle>
+            <DialogDescription>
+              Do you want to save this job to your favorites?
+              {selectedJob && (
+                <div className="mt-2 font-medium text-gray-900">
+                  {selectedJob.title} at {selectedJob.companyName}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setConfirmDialogOpen(false);
+                setSelectedJob(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (selectedJob) {
+                  handleToggleFavorite(selectedJob.jobID, true);
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Save Job
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
