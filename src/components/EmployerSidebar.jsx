@@ -1,13 +1,32 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useNotifications } from "@/layouts/NotificationProvider";
+import { useRef } from "react";
 
 export const EmployerSidebar = () => {
   const location = useLocation();
   const { unreadCount } = useNotifications();
+  const signalRConnection = useRef(null);
 
   const checkActive = (path) => {
     // Kiểm tra nếu path truyền vào trùng với pathname hiện tại
     return location.pathname === path;
+  };
+
+  // Logout function
+  const logout = () => {
+    // Stop SignalR connection before logout
+    if (signalRConnection.current) {
+      signalRConnection.current
+        .stop()
+        .then(() => console.log("SignalR connection stopped on logout"))
+        .catch((err) =>
+          console.error("Error stopping SignalR connection on logout:", err)
+        );
+    }
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userLoginData");
+    window.location.href = "/login";
   };
 
   return (
@@ -33,6 +52,11 @@ export const EmployerSidebar = () => {
         <li className={checkActive("/employer/manage-jobs") ? "active" : ""}>
           <NavLink to="/employer/manage-jobs">
             <i className="la la-briefcase"></i> Manage Jobs
+          </NavLink>
+        </li>
+        <li className={checkActive("/employer/proposed-cvs") ? "active" : ""}>
+          <NavLink to="/employer/proposed-cvs">
+            <i className="la la-thumbs-up"></i> Proposed CVs
           </NavLink>
         </li>
         <li className={checkActive("/employer/all-candidates") ? "active" : ""}>
@@ -91,15 +115,18 @@ export const EmployerSidebar = () => {
           </NavLink>
         </li>
         <li>
-          <NavLink to="index.html">
+          <NavLink to="#" onClick={(e) => {
+            e.preventDefault();
+            logout();
+          }}>
             <i className="la la-sign-out"></i>Logout
           </NavLink>
         </li>
-        <li>
+        {/* <li>
           <NavLink to="index.html">
             <i className="la la-trash"></i>Delete Profile
           </NavLink>
-        </li>
+        </li> */}
       </ul>
 
       <style>

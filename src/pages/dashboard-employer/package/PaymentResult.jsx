@@ -10,7 +10,7 @@ const PaymentResult = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [seconds, setSeconds] = useState(30);
+  const [seconds, setSeconds] = useState(5);
 
   useEffect(() => {
     const processPayment = async () => {
@@ -116,7 +116,7 @@ const PaymentResult = () => {
       // Chuyển hướng sau 30 giây
       timer = setTimeout(() => {
         navigate("/employer/package-list");
-      }, 30000);
+      }, 5000);
       
       return () => {
         clearTimeout(timer);
@@ -128,7 +128,7 @@ const PaymentResult = () => {
 
   if (loading) {
     return (
-      <div className="container d-flex justify-content-center align-items-center vh-45">
+      <div className="container d-flex justify-content-center align-items-center vh-45" style={{marginTop: 30}}>
         <div className="text-center">
           <div className="spinner-border text-primary mb-3" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -142,7 +142,7 @@ const PaymentResult = () => {
 
   return (
     <div className="container d-flex justify-content-center align-items-center vh-45">
-      <div className="col-md-8 col-lg-6">
+      <div className="col-md-8 col-lg-6" style={{marginTop: 30}}>
         <div className={`card border-0 shadow ${
           status.success 
             ? 'border-success' 

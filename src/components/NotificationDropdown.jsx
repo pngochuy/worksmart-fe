@@ -128,6 +128,31 @@ const NotificationDropdown = ({ userId }) => {
         }
       });
 
+      connection.on("NotificationRead", (notificationId) => {
+        // Update the notification as read in our local state
+        setNotifications((prev) =>
+          prev.map((item) =>
+            item.notificationID === notificationId
+              ? { ...item, isRead: true }
+              : item
+          )
+        );
+      });
+
+      // Thêm xử lý khi nhận tín hiệu xóa thông báo
+      connection.on("NotificationDeleted", (notificationId) => {
+        console.log("Notification deleted:", notificationId);
+        // Xóa thông báo khỏi danh sách local
+        setNotifications((prev) =>
+          prev.filter((item) => item.notificationID !== notificationId)
+        );
+      });
+
+      connection.on("UnreadCountUpdated", (count) => {
+        // Update the unread count directly from the server
+        setUnreadCount(count);
+      });
+
       // Start connection
       await connection.start();
       console.log("✅ SignalR Connected!");
@@ -188,15 +213,15 @@ const NotificationDropdown = ({ userId }) => {
           `${BACKEND_API_URL}/api/Notification/markAsRead/${notification.notificationID}`
         );
 
-        setNotifications((prev) =>
-          prev.map((item) =>
-            item.notificationID === notification.notificationID
-              ? { ...item, isRead: true }
-              : item
-          )
-        );
+        // setNotifications((prev) =>
+        //   prev.map((item) =>
+        //     item.notificationID === notification.notificationID
+        //       ? { ...item, isRead: true }
+        //       : item
+        //   )
+        // );
 
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+        // setUnreadCount((prev) => Math.max(0, prev - 1));
       } catch (error) {
         console.error("Error marking notification as read:", error);
       }

@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchJobs } from "../../services/jobServices";
+import { expandSearchTerms } from "./action";
+import { useLocation } from "react-router-dom";
 import WorkTypeFilter from "./WorkTypeFilter";
 import JobPositionDropdown from "./JobPositionDropdown";
 import SalaryRangeDropdown from "./SalaryRangeDropdown";
@@ -17,6 +19,8 @@ import {
   Heart,
   CalendarDays,
   Sparkle,
+  Loader2,
+  Search,
 } from "lucide-react";
 import {
   Select,
@@ -62,10 +66,347 @@ export const Index = () => {
     Tags: [],
     MostRecent: null,
   });
+  const [isExpanding, setIsExpanding] = useState(false);
+  const [relatedKeywords, setRelatedKeywords] = useState([]);
+  const [originalKeyword, setOriginalKeyword] = useState("");
+  const [displayTitle, setDisplayTitle] = useState("");
+  const [expandKeywords, setExpandKeywords] = useState(false); // State để theo dõi trạng thái mở rộng
+  const locationHook = useLocation();
+
+  // Ref để theo dõi trạng thái search params mới nhất
+  const searchParamsRef = useRef(searchParams);
+
+  // Di chuyển định nghĩa handleSearch lên trước useEffect
+  const handleSearch = async (e) => {
+    e.preventDefault();
+
+    const searchTerm = displayTitle; // Sử dụng displayTitle
+
+    console.log("handleSearch called with term:", searchTerm);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      try {
+        setIsExpanding(true);
+
+        // Lưu từ khóa gốc
+        setOriginalKeyword(searchTerm);
+
+        // Gọi AI để mở rộng từ khóa
+        const keywordsList = await expandSearchTerms(searchTerm);
+
+        // Loại bỏ từ khóa gốc từ danh sách các từ khóa liên quan
+        const filteredKeywords = keywordsList.filter(
+          (keyword) => keyword.toLowerCase() !== searchTerm.toLowerCase()
+        );
+
+        // Đặt danh sách các từ khóa liên quan để hiển thị
+        setRelatedKeywords(filteredKeywords);
+
+        // Tạo chuỗi tất cả các từ khóa để tìm kiếm
+        const allKeywords = keywordsList.join(", ");
+
+        // Cập nhật searchParams và searchParamsRef.current cùng lúc
+        const newParams = {
+          ...searchParams,
+          Title: allKeywords,
+          PageIndex: 1,
+        };
+
+        // Cập nhật searchParamsRef trước khi gọi API
+        searchParamsRef.current = newParams;
+
+        // Cập nhật state React (không cần đợi cập nhật xong)
+        setSearchParams(newParams);
+
+        // Gọi getJobs ngay lập tức với searchParamsRef.current đã cập nhật
+        getJobs();
+      } catch (error) {
+        console.error("Error expanding search terms:", error);
+
+        // Xử lý lỗi tương tự
+        const newParams = {
+          ...searchParams,
+          Title: searchTerm,
+          PageIndex: 1,
+        };
+        searchParamsRef.current = newParams;
+        setSearchParams(newParams);
+        getJobs();
+      } finally {
+        setIsExpanding(false);
+      }
+    } else {
+      // Nếu không có từ khóa, thực hiện tìm kiếm bình thường
+      setRelatedKeywords([]);
+      setOriginalKeyword("");
+      const newParams = {
+        ...searchParams,
+        Title: "",
+      };
+      searchParamsRef.current = newParams;
+      setSearchParams(newParams);
+      getJobs();
+    }
+  };
+
+  // Cập nhật ref khi searchParams thay đổi
+  useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
+
+  // Đồng bộ hóa displayTitle với searchParams.Title ban đầu
+  useEffect(() => {
+    setDisplayTitle(searchParams.Title);
+  }, []);
+
+  // Cập nhật useEffect xử lý navigation
+  useEffect(() => {
+    const processNavigationState = async () => {
+      if (locationHook.state) {
+        console.log("Received state from navigation:", locationHook.state);
+
+        // Destructure state đúng cách
+        const {
+          title = "",
+          location = "",
+          expand = false,
+        } = locationHook.state;
+
+        if (title || location) {
+          console.log("Processing navigation with title:", title);
+
+          // Cập nhật displayTitle trước
+          setDisplayTitle(title);
+
+          // Tìm kiếm trực tiếp thay vì thông qua handleSearch
+          // nếu cần mở rộng AI
+          if (expand && title) {
+            // Đánh dấu đang loading
+            setIsExpanding(true);
+
+            try {
+              console.log("Expanding search with AI for:", title);
+
+              // Lưu từ khóa gốc
+              setOriginalKeyword(title);
+
+              // Gọi API mở rộng từ khóa
+              const keywordsList = await expandSearchTerms(title);
+
+              // Lọc từ khóa gốc
+              const filteredKeywords = keywordsList.filter(
+                (keyword) => keyword.toLowerCase() !== title.toLowerCase()
+              );
+
+              // Cập nhật từ khóa liên quan
+              setRelatedKeywords(filteredKeywords);
+
+              // Join tất cả từ khóa
+              const allKeywords = keywordsList.join(", ");
+
+              // Cập nhật params
+              const newParams = {
+                ...searchParams,
+                Title: allKeywords,
+                Location: location || searchParams.Location,
+                PageIndex: 1,
+              };
+
+              // Cập nhật ref và state
+              searchParamsRef.current = newParams;
+              setSearchParams(newParams);
+
+              // Gọi API tìm kiếm
+              getJobs();
+            } catch (error) {
+              console.error("Error expanding search:", error);
+
+              // Fallback nếu lỗi
+              const newParams = {
+                ...searchParams,
+                Title: title,
+                Location: location || searchParams.Location,
+                PageIndex: 1,
+              };
+              searchParamsRef.current = newParams;
+              setSearchParams(newParams);
+              getJobs();
+            } finally {
+              setIsExpanding(false);
+            }
+          } else {
+            // Không cần mở rộng, tìm kiếm thông thường
+            const newParams = {
+              ...searchParams,
+              Title: title,
+              Location: location || searchParams.Location,
+              PageIndex: 1,
+            };
+
+            // Cập nhật ref và state
+            searchParamsRef.current = newParams;
+            setSearchParams(newParams);
+
+            // Gọi API tìm kiếm
+            getJobs();
+          }
+        }
+
+        // Xóa state sau khi xử lý
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }
+    };
+
+    // Chạy function xử lý
+    processNavigationState();
+  }, [locationHook.state]); // useEffect chạy khi state thay đổi
+
+  // Cập nhật useEffect xử lý stateKey để luôn chạy AI trước khi fetch
+  useEffect(() => {
+    const handleURLWithStateKey = async () => {
+      try {
+        const queryParams = new URLSearchParams(window.location.search);
+        const stateKey = queryParams.get("stateKey");
+        const from = queryParams.get("from");
+        const title = queryParams.get("title"); // Fallback
+
+        console.log("URL params:", { stateKey, from, title });
+
+        // Lấy keyword từ localStorage nếu đến từ từ khóa liên quan
+        if (stateKey && from === "related") {
+          // Lấy keyword từ localStorage
+          const keyword = localStorage.getItem(stateKey);
+          console.log("Retrieved keyword from localStorage:", keyword);
+
+          // Nếu có keyword từ localStorage, sử dụng nó
+          if (keyword) {
+            // Cập nhật displayTitle và originalKeyword
+            setDisplayTitle(keyword);
+            setOriginalKeyword(keyword);
+
+            // Đánh dấu đang mở rộng từ khóa
+            setIsExpanding(true);
+
+            try {
+              // Chạy AI để mở rộng từ khóa trước khi fetch
+              console.log("Expanding search with AI for:", keyword);
+              const keywordsList = await expandSearchTerms(keyword);
+
+              // Lọc từ khóa gốc từ danh sách các từ khóa liên quan
+              const filteredKeywords = keywordsList.filter(
+                (kw) => kw.toLowerCase() !== keyword.toLowerCase()
+              );
+
+              // Đặt danh sách các từ khóa liên quan để hiển thị
+              setRelatedKeywords(filteredKeywords);
+
+              // Tạo chuỗi tất cả các từ khóa để tìm kiếm
+              const allKeywords = keywordsList.join(", ");
+
+              // Cập nhật searchParams và searchParamsRef.current cùng lúc
+              const newParams = {
+                ...searchParams,
+                Title: allKeywords, // Cập nhật Title cho API với tất cả từ khóa
+                PageIndex: 1,
+              };
+
+              // Cập nhật searchParamsRef trước khi gọi API
+              searchParamsRef.current = newParams;
+              setSearchParams(newParams);
+
+              // Gọi API với tất cả các từ khóa
+              console.log(
+                "Calling fetchJobs with expanded keywords:",
+                newParams
+              );
+              fetchJobs(newParams)
+                .then((data) => {
+                  setJobs(data.jobs || []);
+                  setTotalPage(data.totalPage || 1);
+                  setTotalJob(data.totalJob || 0);
+
+                  // Group jobs by company
+                  const grouped = {};
+                  data.jobs.forEach((job) => {
+                    if (!grouped[job.companyName]) {
+                      grouped[job.companyName] = {
+                        companyName: job.companyName,
+                        avatar: job.avatar,
+                        jobs: [],
+                      };
+                    }
+                    grouped[job.companyName].jobs.push(job);
+                  });
+                  setGroupedJobs(grouped);
+                })
+                .catch((error) => {
+                  console.error("Error fetching jobs:", error);
+                })
+                .finally(() => {
+                  // Xóa dữ liệu đã sử dụng
+                  localStorage.removeItem(stateKey);
+                });
+            } catch (error) {
+              console.error("Error expanding search terms:", error);
+
+              // Fallback nếu AI fail: tìm kiếm với từ khóa gốc
+              const newParams = {
+                ...searchParams,
+                Title: keyword,
+                PageIndex: 1,
+              };
+
+              searchParamsRef.current = newParams;
+              setSearchParams(newParams);
+              getJobs();
+            } finally {
+              setIsExpanding(false);
+
+              // Xóa query params khỏi URL (sau khi đã xử lý)
+              window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+              );
+            }
+          }
+          // Fallback: nếu không có keyword trong localStorage, sử dụng title từ URL
+          else if (title) {
+            // Tương tự như trên, nhưng sử dụng title từ URL
+            setDisplayTitle(title);
+            setOriginalKeyword(title);
+            setIsExpanding(true);
+
+            // Xử lý tương tự như trên với title từ URL
+            try {
+              const keywordsList = await expandSearchTerms(title);
+              // ... xử lý tương tự
+            } catch (error) {
+              // ... xử lý lỗi
+            } finally {
+              setIsExpanding(false);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error processing URL parameters:", error);
+        setIsExpanding(false);
+      }
+    };
+
+    // Gọi hàm xử lý khi component mount
+    handleURLWithStateKey();
+  }, []);
 
   const getJobs = async () => {
     try {
-      const data = await fetchJobs(searchParams);
+      // Sử dụng searchParamsRef.current thay vì searchParams
+      console.log("getJobs called with params:", searchParamsRef.current);
+      const data = await fetchJobs(searchParamsRef.current);
       setJobs(data.jobs || []);
       setTotalPage(data.totalPage || 1);
       setTotalJob(data.totalJob || 0);
@@ -88,9 +429,17 @@ export const Index = () => {
     }
   };
 
-  // Hàm cập nhật searchParams khi nhập liệu
+  // Cập nhật handleInputChange để sử dụng displayTitle thay vì searchParams.Title
   const handleInputChange = (e) => {
-    setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "Title") {
+      // Cập nhật displayTitle khi người dùng nhập vào ô tìm kiếm
+      setDisplayTitle(value);
+    } else {
+      // Các trường khác vẫn cập nhật searchParams bình thường
+      setSearchParams({ ...searchParams, [name]: value });
+    }
   };
 
   const handleOrderChange = (value) => {
@@ -110,9 +459,23 @@ export const Index = () => {
     }));
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    getJobs();
+  const handleClearFilters = () => {
+    setSearchParams({
+      PageIndex: 1,
+      PageSize: 5,
+      Category: "",
+      Title: "",
+      JobPosition: "",
+      WorkTypes: [],
+      Location: "",
+      MinSalary: null,
+      MaxSalary: null,
+      Tags: [],
+      MostRecent: null,
+    });
+    setDisplayTitle(""); // Đảm bảo xóa cả displayTitle
+    setRelatedKeywords([]);
+    setOriginalKeyword("");
   };
 
   useEffect(() => {
@@ -122,6 +485,12 @@ export const Index = () => {
     searchParams.PageIndex,
     searchParams.MostRecent,
     searchParams.Category,
+    searchParams.Location,
+    searchParams.JobPosition,
+    searchParams.WorkTypes,
+    searchParams.Tags,
+    searchParams.MinSalary,
+    searchParams.MaxSalary,
   ]);
 
   // Format salary display
@@ -145,10 +514,92 @@ export const Index = () => {
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
+  // Cập nhật RelatedKeywordsSection để thêm chức năng click vào từ khóa
+  const RelatedKeywordsSection = () => {
+    if (relatedKeywords.length === 0) return null;
+
+    // Số lượng từ khóa hiển thị khi thu gọn
+    const initialDisplayCount = 15;
+
+    // Danh sách từ khóa hiển thị dựa vào trạng thái mở rộng
+    const displayedKeywords = expandKeywords
+      ? relatedKeywords
+      : relatedKeywords.slice(0, initialDisplayCount);
+
+    // Kiểm tra có nút "Show more" hay không
+    const hasMoreKeywords = relatedKeywords.length > initialDisplayCount;
+
+    // Hàm xử lý khi người dùng click vào từ khóa
+    const handleKeywordClick = (keyword) => {
+      // Lưu từ khóa vào localStorage với khóa duy nhất
+      const stateKey = `search_title_${Date.now()}`;
+      localStorage.setItem(stateKey, keyword);
+
+      // Tạo URL với tham số
+      const queryParams = new URLSearchParams();
+      queryParams.append("title", keyword);
+      queryParams.append("from", "related"); // Đánh dấu đến từ từ khóa liên quan
+      queryParams.append("stateKey", stateKey);
+
+      // Mở tab mới với URL tạo ra
+      window.open(
+        `${window.location.pathname}?${queryParams.toString()}`,
+        "_blank"
+      );
+    };
+
+    return (
+      <section className="bg-gray-50 py-3 border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 mr-1 text-gray-600" />
+              <span className="text-sm font-medium">
+                Related to &quot;{originalKeyword}&quot;:
+              </span>
+              {hasMoreKeywords && (
+                <button
+                  onClick={() => setExpandKeywords(!expandKeywords)}
+                  className="ml-auto text-blue-600 text-sm hover:text-blue-800 transition-colors focus:outline-none"
+                >
+                  {expandKeywords
+                    ? "Show less"
+                    : `Show all (${relatedKeywords.length})`}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {displayedKeywords.map((keyword, index) => (
+                <div
+                  key={index}
+                  className="text-sm bg-white text-blue-700 px-3 py-1.5 border border-gray-300 rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer"
+                  onClick={() => handleKeywordClick(keyword)}
+                  title="Search with this keyword in a new tab"
+                >
+                  {keyword}
+                </div>
+              ))}
+
+              {!expandKeywords && hasMoreKeywords && (
+                <div
+                  className="text-sm bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-200 transition-colors"
+                  onClick={() => setExpandKeywords(true)}
+                >
+                  +{relatedKeywords.length - initialDisplayCount} more
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   return (
     <>
-      {/*Page Title*/}
-      <section className="bg-white py-12" style={{ marginTop: "111px" }}>
+      {/*Page Title - sửa padding-bottom thành 0*/}
+      <section className="bg-white py-12 pb-0" style={{ marginTop: "111px" }}>
         <div className="container mx-auto px-4">
           {/* Job Search Form */}
           <div className="text-center mb-8">
@@ -170,7 +621,7 @@ export const Index = () => {
                       type="text"
                       name="Title"
                       placeholder="Job title, keywords or company"
-                      value={searchParams.Title}
+                      value={displayTitle} // Sử dụng displayTitle thay vì searchParams.Title
                       onChange={handleInputChange}
                       className="pl-14"
                     />
@@ -193,8 +644,16 @@ export const Index = () => {
                     <Button
                       type="submit"
                       className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isExpanding}
                     >
-                      Search
+                      {isExpanding ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Searching...</span>
+                        </>
+                      ) : (
+                        "Search"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -203,6 +662,9 @@ export const Index = () => {
           </Card>
         </div>
       </section>
+
+      {/* Hiển thị từ khóa liên quan */}
+      <RelatedKeywordsSection />
 
       {/* Filters Section */}
       <section className="bg-gray-50 py-4 border-y border-gray-200">
@@ -536,25 +998,7 @@ export const Index = () => {
                       We couldn&apos;t find any jobs matching your search
                       criteria. Try adjusting your filters or search terms.
                     </p>
-                    <Button
-                      onClick={() => {
-                        setSearchParams({
-                          PageIndex: 1,
-                          PageSize: 5,
-                          Category: "",
-                          Title: "",
-                          JobPosition: "",
-                          WorkTypes: [],
-                          Location: "",
-                          MinSalary: null,
-                          MaxSalary: null,
-                          Tags: [],
-                          MostRecent: null,
-                        });
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
+                    <Button onClick={handleClearFilters}>Clear Filters</Button>
                   </CardContent>
                 </Card>
               )}

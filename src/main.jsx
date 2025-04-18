@@ -38,7 +38,7 @@ import "./assets/js/rellax.min.js";
 // import "rellax";
 import "./assets/js/owl.js";
 // import "./assets/js/wow.js";
-import "wowjs";
+// import "wowjs";
 import "./assets/js/script.js";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 

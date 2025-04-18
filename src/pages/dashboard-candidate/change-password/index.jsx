@@ -142,7 +142,7 @@ export const Index = () => {
       resetPasswordForm();
       setStep(1);
     } catch (error) {
-      const errorMsg = error.message || "Failed to change password";
+      const errorMsg = error.message || "Incorrect Current Password";
       
       if (errorMsg.toLowerCase().includes("current") || errorMsg.toLowerCase().includes("old")) {
         setErrorPassword("currentPassword", {
@@ -166,118 +166,142 @@ export const Index = () => {
   };
 
   return (
-    <>
-      <section className="user-dashboard">
-        <div className="dashboard-outer">
-          <div className="upper-title-box">
-            <h3>Change Password</h3>
-            <div className="text">Secure your account with a new password</div>
-          </div>
-          <ToastContainer />
-          {/* Step 1: Email Form */}
-          {step === 1 && (
-            <form className="default-form" onSubmit={handleSubmitEmail(onSubmitEmail)}>
-              <div className="row">
-                <div className="form-group col-lg-7 col-md-12">
-                  <label>Your Email</label>
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    {...registerEmail("email")}
-                    defaultValue={email}
-                    // readOnly={true} 
-                    // className="read-only-input"
-                  />
-                  {emailErrors.email && (
-                    <p className="text-danger">{emailErrors.email.message}</p>
-                  )}
-                </div>
-                <div className="form-group col-lg-6 col-md-12">
-                  <button className="theme-btn btn-style-one" disabled={loading}>
-                    {loading ? <span className="loading-spinner"></span> : "Send OTP"}
-                  </button>
-                </div>
-              </div>
-            </form>
-          )}
-
-          {/* Step 2: OTP Form */}
-          {step === 2 && (
-            <form className="default-form" onSubmit={handleSubmitOTP(onSubmitOTP)}>
-              <div className="row">
-                <div className="form-group col-lg-7 col-md-12">
-                  <label>OTP Code</label>
-                  <div className="form-group col-lg-7 col-md-12">
-                    <div className="text-sm">
-                      OTP sent to: {email}
-                    </div>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Enter OTP sent to your email"
-                    {...registerOTP("otp")}
-                  />
-                  {otpErrors.otp && (
-                    <p className="text-danger">{otpErrors.otp.message}</p>
-                  )}
-                </div>
-                <div className="form-group col-lg-6 col-md-12">
-                  <button className="theme-btn btn-style-one" disabled={loading}>
-                    {loading ? <span className="loading-spinner"></span> : "Verify OTP"}
-                  </button>
-                </div>
-              </div>
-            </form>
-          )}
-
-          {/* Step 3: Password Form */}
-          {step === 3 && (
-            <form className="default-form" onSubmit={handleSubmitPassword(onSubmitPassword)}>
-              <div className="row">
-                <div className="form-group col-lg-7 col-md-12">
-                  <label>Current Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter your current password"
-                    {...registerPassword("currentPassword")}
-                  />
-                  {passwordErrors.currentPassword && (
-                    <p className="text-danger">{passwordErrors.currentPassword.message}</p>
-                  )}
-                </div>
-                <div className="form-group col-lg-7 col-md-12">
-                  <label>New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter new password"
-                    {...registerPassword("newPassword")}
-                  />
-                  {passwordErrors.newPassword && (
-                    <p className="text-danger">{passwordErrors.newPassword.message}</p>
-                  )}
-                </div>
-                <div className="form-group col-lg-7 col-md-12">
-                  <label>Confirm New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    {...registerPassword("confirmPassword")}
-                  />
-                  {passwordErrors.confirmPassword && (
-                    <p className="text-danger">{passwordErrors.confirmPassword.message}</p>
-                  )}
-                </div>
-                <div className="form-group col-lg-6 col-md-12">
-                  <button className="theme-btn btn-style-one" disabled={loading}>
-                    {loading ? <span className="loading-spinner"></span> : "Change Password"}
-                  </button>
-                </div>
-              </div>
-            </form>
-          )}
+    <section className="user-dashboard">
+      <div className="dashboard-outer">
+        <div className="upper-title-box">
+          <h3>Change Password</h3>
+          <div className="text">Secure your account with a new password</div>
         </div>
-      </section>
-    </>
+
+        <div className="row">
+          <div className="col-lg-12">
+            <div className="ls-widget">
+              <div className="tabs-box">
+                <ToastContainer />
+
+                {/* Step 1: Email Form */}
+                {step === 1 && (
+                  <div className="widget-content">
+                    <form className="default-form" onSubmit={handleSubmitEmail(onSubmitEmail)}>
+                      <div className="form-group" style={{ marginTop: 20 }}>
+                        <h4>Your Email</h4>
+                        <input
+                          type="email"
+                          name="email"
+                          placeholder="Enter your email"
+                          {...registerEmail("email")}
+                          defaultValue={email}
+                          style={{ marginTop: 20 }}
+                        />
+                        {emailErrors.email && (
+                          <p className="text-danger">{emailErrors.email.message}</p>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <button
+                          className="theme-btn btn-style-one"
+                          type="submit"
+                          disabled={loading}
+                        >
+                          {loading ? <span className="loading-spinner"></span> : "Send OTP"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Step 2: OTP Form */}
+                {step === 2 && (
+                  <div className="widget-content">
+                    <form className="default-form" onSubmit={handleSubmitOTP(onSubmitOTP)}>
+                      <div className="form-group" style={{ marginTop: 20 }}>
+                        <h4 >OTP sent to: {email}</h4>
+                        <input
+                          type="text"
+                          name="otp"
+                          placeholder="Enter OTP sent to your email"
+                          {...registerOTP("otp")}
+                          style={{ marginTop: 20 }}
+                        />
+                        {otpErrors.otp && (
+                          <p className="text-danger">{otpErrors.otp.message}</p>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <button
+                          className="theme-btn btn-style-one"
+                          type="submit"
+                          disabled={loading}
+                        >
+                          {loading ? <span className="loading-spinner"></span> : "Verify OTP"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Step 3: Password Form */}
+                {step === 3 && (
+                  <div className="widget-content">
+                    <form className="default-form" onSubmit={handleSubmitPassword(onSubmitPassword)}>
+                      <div className="form-group" style={{ marginTop: 20 }}>
+                        <h4>Current Password</h4>
+                        <input
+                          type="password"
+                          name="currentPassword"
+                          placeholder="Enter your current password"
+                          {...registerPassword("currentPassword")}
+                        />
+                        {passwordErrors.currentPassword && (
+                          <p className="text-danger">{passwordErrors.currentPassword.message}</p>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <h4>New Password</h4>
+                        <input
+                          type="password"
+                          name="newPassword"
+                          placeholder="Enter new password"
+                          {...registerPassword("newPassword")}
+                        />
+                        {passwordErrors.newPassword && (
+                          <p className="text-danger">{passwordErrors.newPassword.message}</p>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <h4>Confirm New Password</h4>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          placeholder="Confirm new password"
+                          {...registerPassword("confirmPassword")}
+                        />
+                        {passwordErrors.confirmPassword && (
+                          <p className="text-danger">{passwordErrors.confirmPassword.message}</p>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <button
+                          className="theme-btn btn-style-one"
+                          type="submit"
+                          disabled={loading}
+                        >
+                          {loading ? <span className="loading-spinner"></span> : "Change Password"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
