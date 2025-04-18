@@ -2,30 +2,45 @@ import axios from "axios";
 
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
-// Lấy tất cả công việc đã lưu của người dùng
-export const getUserFavoriteJobs = async (userId) => {
+// Get all favorite jobs
+export const getAllFavoriteJobs = async () => {
   try {
-    const response = await axios.get(
-      `${BACKEND_API_URL}/api/FavoriteJob/user/${userId}`
-    );
+    const response = await axios.get(`${BACKEND_API_URL}/favoritejob`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching favorite jobs:", error);
+    console.error("Error fetching all favorite jobs:", error);
     throw error;
   }
 };
 
-// Thêm công việc vào danh sách yêu thích
-export const addJobToFavorites = async (userId, jobId) => {
+// Get a specific favorite job by ID
+export const getFavoriteJobById = async (id) => {
   try {
-    const payload = {
-      userID: userId,
-      jobID: jobId
-    };
-    const response = await axios.post(
-      `${BACKEND_API_URL}/api/FavoriteJob`, 
-      payload
-    );
+    const response = await axios.get(`${BACKEND_API_URL}/favoritejob/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching favorite job with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+// Get all favorite jobs for a specific user
+export const getFavoriteJobsByUserId = async (userId) => {
+  try {
+    console.log(`Requesting favorite jobs for user ID: ${userId}`);
+    const response = await axios.get(`${BACKEND_API_URL}/favoritejob/user/${userId}`);
+    console.log(`Response for user ${userId} favorite jobs:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching favorite jobs for user ${userId}:`, error);
+    return []; // Return empty array on error for better UI handling
+  }
+};
+
+// Add a job to favorites
+export const addJobToFavorites = async (jobData) => {
+  try {
+    const response = await axios.post(`${BACKEND_API_URL}/favoritejob`, jobData);
     return response.data;
   } catch (error) {
     console.error("Error adding job to favorites:", error);
@@ -33,44 +48,51 @@ export const addJobToFavorites = async (userId, jobId) => {
   }
 };
 
-// Xóa công việc khỏi danh sách yêu thích
-export const removeJobFromFavorites = async (favoriteJobId) => {
+// Remove a job from favorites
+export const removeFavoriteJob = async (favoriteJobId) => {
   try {
-    const response = await axios.delete(
-      `${BACKEND_API_URL}/api/FavoriteJob/${favoriteJobId}`
-    );
+    console.log(`Removing favorite job with ID: ${favoriteJobId}`);
+    const response = await axios.delete(`${BACKEND_API_URL}/favoritejob/${favoriteJobId}`);
     return response.data;
   } catch (error) {
-    console.error("Error removing job from favorites:", error);
+    console.error(`Error removing favorite job with ID ${favoriteJobId}:`, error);
     throw error;
   }
 };
 
-// Kiểm tra một công việc có nằm trong danh sách yêu thích của người dùng không
+// Check if a job is in user's favorites
 export const checkJobIsFavorite = async (userId, jobId) => {
   try {
-    const favorites = await getUserFavoriteJobs(userId);
-    const isJobFavorite = favorites.some(favorite => favorite.jobID === parseInt(jobId));
-    
-    // Nếu công việc đã được yêu thích, trả về favoriteJobID để có thể xóa
-    if (isJobFavorite) {
-      const favoriteJob = favorites.find(favorite => favorite.jobID === parseInt(jobId));
-      return {
-        isFavorite: true,
-        favoriteJobId: favoriteJob.favoriteJobID
-      };
-    }
-    
-    return {
-      isFavorite: false,
-      favoriteJobId: null
-    };
+    const favoriteJobs = await getFavoriteJobsByUserId(userId);
+    return favoriteJobs.some(job => job.jobID === jobId);
   } catch (error) {
-    console.error("Error checking if job is favorite:", error);
-    return {
-      isFavorite: false,
-      favoriteJobId: null,
-      error: error.message
-    };
+    console.error(`Error checking if job ${jobId} is in favorites:`, error);
+    return false;
+  }
+};
+
+// Toggle job favorite status (add if not in favorites, remove if already there)
+export const toggleFavoriteJob = async (userId, jobId) => {
+  try {
+    // First check if the job is already in favorites
+    const favoriteJobs = await getFavoriteJobsByUserId(userId);
+    const existingFavorite = favoriteJobs.find(job => job.jobID === jobId);
+    
+    if (existingFavorite) {
+      // If already in favorites, remove it
+      await removeFavoriteJob(existingFavorite.favoriteJobID);
+      return { isFavorite: false, message: "Job removed from favorites" };
+    } else {
+      // If not in favorites, add it
+      const newFavorite = await addJobToFavorites({
+        userID: userId,
+        jobID: jobId,
+        dateSaved: new Date().toISOString()
+      });
+      return { isFavorite: true, message: "Job added to favorites", data: newFavorite };
+    }
+  } catch (error) {
+    console.error(`Error toggling favorite status for job ${jobId}:`, error);
+    throw error;
   }
 };
