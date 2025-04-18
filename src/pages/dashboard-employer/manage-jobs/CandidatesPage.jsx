@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
 import axios from "axios";
+import { getCVById } from "../../../services/cvServices"; // Add this import
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -40,41 +41,99 @@ export default function CandidatesPage() {
   const getCandidates = async (jobId) => {
     try {
       setLoading(true);
+      // Assuming your fetchCandidatesForJob function can accept pagination params
       const data = await fetchCandidatesForJob(jobId, searchParams);
 
-      if (data.candidates && data.totalPage) {
-        setCandidates(data.candidates);
-        setTotalPage(data.totalPage);
-      } else {
-        const filteredData = Array.isArray(data) ? data : [data];
-        setCandidates(filteredData);
+      // Process candidates with CV data
+      const processedCandidates = [];
 
-        const totalItems = filteredData.length;
-        const calculatedTotalPages = Math.ceil(
-          totalItems / searchParams.PageSize
-        );
-        setTotalPage(calculatedTotalPages || 1);
+      if (Array.isArray(data)) {
+        // Fetch CV data for each candidate if they have a CV ID
+        for (const candidate of data) {
+          let enrichedCandidate = {
+            ...candidate,
+            // Default fallback name
+            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+          };
 
-        if (searchParams.name && searchParams.name.trim() !== '') {
-          const filtered = filteredData.filter(
-            (candidate) =>
-              candidate.fullName &&
-              candidate.fullName
-                .toLowerCase()
-                .includes(searchParams.name.toLowerCase())
-          );
+          // If candidate has a CV ID, try to fetch CV data
+          if (candidate.cvid) {
+            try {
+              const cvData = await getCVById(candidate.cvid);
+              console.log(`CV data for candidate ${candidate.applicationID}:`, cvData);
 
-          const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
-          const endIndex = startIndex + searchParams.PageSize;
-          setCandidates(filtered.slice(startIndex, endIndex));
-        } else {
-          const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
-          const endIndex = startIndex + searchParams.PageSize;
-          setCandidates(filteredData.slice(startIndex, endIndex));
+
+              enrichedCandidate = {
+                ...enrichedCandidate,
+                candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
+                email: cvData?.email || "Unknown",
+                cvData: cvData
+              };
+            } catch (cvError) {
+              console.error(`Error fetching CV for candidate ${candidate.applicationID}:`, cvError);
+            }
+          }
+
+          processedCandidates.push(enrichedCandidate);
         }
       }
 
-      console.log("Candidates data:", data);
+      if (data.candidates && data.totalPage) {
+        // Process paginated data similar to above
+        const processedPaginatedCandidates = [];
+        for (const candidate of data.candidates) {
+          let enrichedCandidate = {
+            ...candidate,
+            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+          };
+
+          if (candidate.cvid) {
+            try {
+              const cvData = await getCVById(candidate.cvid);
+              enrichedCandidate = {
+                ...enrichedCandidate,
+                candidateName: cvData?.fullName || enrichedCandidate.candidateName,
+                email: cvData?.email || enrichedCandidate.email,
+                cvData: cvData
+              };
+            } catch (cvError) {
+              console.error(`Error fetching CV:`, cvError);
+            }
+          }
+
+          processedPaginatedCandidates.push(enrichedCandidate);
+        }
+
+        setCandidates(processedPaginatedCandidates);
+        setTotalPage(data.totalPage);
+      } else {
+        // If your API doesn't support pagination yet, handle it client-side
+        setCandidates(data);
+
+        // Calculate total pages based on data length
+        const totalItems = data.length;
+        const calculatedTotalPages = Math.ceil(
+          totalItems / searchParams.PageSize
+        );
+        setTotalPage(calculatedTotalPages);
+
+        // Paginate the data client-side
+        const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
+        const endIndex = startIndex + searchParams.PageSize;
+        const filteredData = data
+          .filter(
+            (candidate) =>
+              !searchParams.name ||
+              (candidate.fullName &&
+                candidate.fullName
+                  .toLowerCase()
+                  .includes(searchParams.name.toLowerCase()))
+          )
+          .slice(startIndex, endIndex);
+        setCandidates(filteredData);
+      }
+
+      console.log("Processed candidates data:", processedCandidates);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -266,7 +325,6 @@ export default function CandidatesPage() {
                           </th>
                         </tr>
                       </thead>
-                      {/* comment out */}
                       <tbody>
                         {candidates.length > 0 ? (
                           candidates.map((candidate) => (
@@ -280,8 +338,8 @@ export default function CandidatesPage() {
                                           ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.fullName || "Candidate"}
-                                      style={{
+                                      alt={candidate.avatar}
+                                      className={{
                                         height: "50px",
                                         width: "50px",
                                         borderRadius: "50%",
@@ -291,7 +349,7 @@ export default function CandidatesPage() {
                                   </div>
                                   <div className="candidate-info">
                                     <span className="name">
-                                      {candidate.fullName || "Unknown"}
+                                      {candidate.fullName || "Unknown Candidate"}
                                     </span>
                                   </div>
                                 </div>
@@ -372,87 +430,80 @@ export default function CandidatesPage() {
       </div>
 
       {/* Message Dialog */}
-      {
-        showMessageDialog && selectedCandidate && (
-          <div className="message-dialog-overlay">
-            <div className="message-dialog">
-              <div className="message-dialog-header">
-                <h3>Send Message to {selectedCandidate.fullName}</h3>
-                <button
-                  className="close-btn"
-                  onClick={() => setShowMessageDialog(false)}
-                >
-                  <i className="fas fa-times"></i>
-                </button>
-              </div>
-              <div className="message-dialog-body">
-                <p className="message-info">
-                  You&apos;re about to send a message to this approved candidate.
-                  This will notify them via email and in-app notification.
-                </p>
+      {showMessageDialog && selectedCandidate && (
+        <div className="message-dialog-overlay">
+          <div className="message-dialog">
+            <div className="message-dialog-header">
+              <h3>Send Message to {selectedCandidate.fullName}</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowMessageDialog(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="message-dialog-body">
+              <p className="message-info">
+                You&apos;re about to send a message to this approved candidate.
+                This will notify them via email and in-app notification.
+              </p>
 
-                <div className="candidate-details">
-                  <div className="detail-item">
-                    <span className="label">Email:</span>
-                    <span className="value">{selectedCandidate.email}</span>
-                  </div>
-                  {selectedCandidate.phoneNumber && (
-                    <div className="detail-item">
-                      <span className="label">Phone:</span>
-                      <span className="value">
-                        {selectedCandidate.phoneNumber}
-                      </span>
-                    </div>
-                  )}
-                  <div className="detail-item">
-                    <span className="label">Job Position:</span>
-                    <span className="value">{selectedCandidate.title || jobTitle}</span>
-                  </div>
-                  {selectedCandidate.location && (
-                    <div className="detail-item">
-                      <span className="label">Location:</span>
-                      <span className="value">{selectedCandidate.location}</span>
-                    </div>
-                  )}
+              <div className="candidate-details">
+                <div className="detail-item">
+                  <span className="label">Email:</span>
+                  <span className="value">{selectedCandidate.email}</span>
                 </div>
-
-                <div className="message-textarea-container">
-                  <label>Your message:</label>
-                  <textarea
-                    className="message-textarea"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Enter your message to the candidate..."
-                    rows={6}
-                  ></textarea>
+                {selectedCandidate.phoneNumber && (
+                  <div className="detail-item">
+                    <span className="label">Phone:</span>
+                    <span className="value">
+                      {selectedCandidate.phoneNumber}
+                    </span>
+                  </div>
+                )}
+                <div className="detail-item">
+                  <span className="label">Job Position:</span>
+                  <span className="value">{jobTitle}</span>
                 </div>
               </div>
-              <div className="message-dialog-footer">
-                <button
-                  className="cancel-btn"
-                  onClick={() => setShowMessageDialog(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="send-btn"
-                  onClick={handleSendMessage}
-                  disabled={isSending}
-                >
-                  {isSending ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Sending...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-paper-plane"></i> Send Message
-                    </>
-                  )}
-                </button>
+
+              <div className="message-textarea-container">
+                <label>Your message:</label>
+                <textarea
+                  className="message-textarea"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="Enter your message to the candidate..."
+                  rows={6}
+                ></textarea>
               </div>
             </div>
+            <div className="message-dialog-footer">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowMessageDialog(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="send-btn"
+                onClick={handleSendMessage}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane"></i> Send Message
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        )
+        </div>
+      )
       }
 
       <style>{`
@@ -837,15 +888,13 @@ export default function CandidatesPage() {
         }
 
         .candidate-avatar {
-          width: 40px;
-          height: 40px;
+          width: 50px;
+          height: 50px;
           border-radius: 50%;
-          background-color: #3498db;
-          color: white;
+          overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
         }
 
         .candidate-info {

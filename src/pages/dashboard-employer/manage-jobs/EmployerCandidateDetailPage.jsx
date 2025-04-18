@@ -207,7 +207,9 @@ export default function EmployerCandidateDetailPage() {
                     </div>
                     <div className="candidate-header-info">
                       <h2 className="candidate-name">
-                        {candidate.fullName || "Unknown Candidate"}
+                        {cv?.firstName && cv?.lastName ?
+                          `${cv.lastName} ${cv.firstName}`.trim() :
+                          (candidate.fullName || "Unknown Candidate")}
                       </h2>
                       <div className="status-badge-container">
                         <span
@@ -217,14 +219,12 @@ export default function EmployerCandidateDetailPage() {
                         </span>
                       </div>
                       <div className="candidate-contact">
-                        {candidate.email && (
-                          <div className="contact-item">
-                            <i className="fas fa-envelope"></i>
-                            <a href={`mailto:${candidate.email}`}>
-                              {candidate.email}
-                            </a>
-                          </div>
-                        )}
+                        <div className="contact-item">
+                          <i className="fas fa-envelope"></i>
+                          <a href={`mailto:${cv?.email || ''}`}>
+                            {cv?.email || "Unknown email"}
+                          </a>
+                        </div>
                         {candidate.phoneNumber && (
                           <div className="contact-item">
                             <i className="fas fa-phone"></i>
@@ -547,8 +547,6 @@ export default function EmployerCandidateDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* <style>{}</style> */}
     </section>
   );
 }

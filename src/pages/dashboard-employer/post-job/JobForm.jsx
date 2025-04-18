@@ -43,7 +43,8 @@ export const JobForm = () => {
   const [locations, setLocation] = useState([]);
   const [canCreateJob, setCanCreateJob] = useState(true);
   const [isCheckingLimit, setIsCheckingLimit] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false); // New state to prevent multiple submissions
+  const [isSubmitting, setIsSubmitting] = useState(false); // State to prevent multiple submissions
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false); // New state for duplicate check
   const navigate = useNavigate();
 
   // Check job creation limit and fetch tags - only run once on component mount
@@ -130,12 +131,35 @@ export const JobForm = () => {
     }
   };
 
+  // Check for duplicate job title
+  const checkForDuplicateTitle = async (title) => {
+    if (!title.trim()) return false;
+    
+    try {
+      setIsCheckingDuplicate(true);
+      const isDuplicate = await checkDuplicateJobTitle(userID, title);
+      return isDuplicate;
+    } catch (error) {
+      console.error("Error checking duplicate job title:", error);
+      return false;
+    } finally {
+      setIsCheckingDuplicate(false);
+    }
+  };
+
   // Submit form with protection against multiple submissions
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Prevent submission if already submitting or if user can't create jobs
-    if (isSubmitting || !canCreateJob) {
+    if (isSubmitting || isCheckingDuplicate || !canCreateJob) {
+      return;
+    }
+
+    // Check for duplicate job title
+    const isDuplicate = await checkForDuplicateTitle(jobData.title);
+    if (isDuplicate) {
+      toast.error("A job with this title already exists. Please use a different title.");
       return;
     }
 
@@ -170,7 +194,6 @@ export const JobForm = () => {
         )} - ${maxSalary.toLocaleString("en-US")}`
       };
       
-      console.log("updatedJobData: ", updatedJobData);
       await createJob(updatedJobData);
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
@@ -178,6 +201,9 @@ export const JobForm = () => {
       console.error("Error creating job:", error);
       if (error.response && error.response.status === 403) {
         setCanCreateJob(false);
+      } else if (error.response && error.response.status === 409) {
+        // Handle specific duplicate title error from server if needed
+        toast.error("A job with this title already exists. Please use a different title.");
       } else {
         toast.error("Failed to create job. Please try again!");
       }
@@ -443,9 +469,9 @@ export const JobForm = () => {
                         <button
                           type="submit"
                           className="theme-btn btn-style-one"
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isCheckingDuplicate}
                         >
-                          {isSubmitting ? "Creating..." : "Create Job"}
+                          {isSubmitting ? "Creating..." : isCheckingDuplicate ? "Checking..." : "Create Job"}
                         </button>
                       </div>
                     </div>
