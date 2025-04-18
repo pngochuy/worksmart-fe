@@ -488,49 +488,7 @@ export const Index = () => {
             </div>
           </div>
           
-          {/* Recent Jobs Widget */}
-          <div className="col-xl-6 col-lg-6 col-md-12">
-            <div className="ls-widget">
-              <div className="widget-title">
-                <h4>Recent Jobs</h4>
-              </div>
-              <div className="widget-content">
-                {userJobs.length > 0 ? (
-                  <div className="row">
-                    {userJobs.slice(0, 4).map((job) => (
-                      <div key={job.jobID} className="job-block col-lg-6 col-md-12 col-sm-12 mb-4">
-                        <div className={`inner-box border ${getBorderColor(job.status)} rounded hover:shadow-md transition-shadow duration-300`}>
-                          <div className="content p-4">
-                            <div className="d-flex justify-content-between mb-3">
-                              <h4 className="job-title text-xl font-semibold">
-                                <a href={`/employer/job-detail/${job.jobID}`}>{job.title}</a>
-                              </h4>
-                              <span className={`status-badge px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(job.status)}`}>
-                                {getStatusText(job.status)}
-                              </span>
-                            </div>
-                            <div className="job-info-block">
-                              <ul className="job-info">
-                                <li><i className="icon flaticon-map-locator"></i> {job.location || "Remote"}</li>
-                                <li><i className="icon flaticon-briefcase"></i> {job.workType || "Full Time"}</li>
-                                <li><i className="icon flaticon-clock"></i> Posted {formatTimeAgo(job.createdAt)}</li>
-                              </ul>
-                            </div>
-                            <div className="mt-3">
-                              <span className="badge bg-light text-dark me-2">Applications: {job.applicationCount || 0}</span>
-                              <span className="badge bg-light text-dark">Views: {job.viewCount || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center py-3">No jobs posted yet</p>
-                )}
-              </div>
-            </div>
-          </div>
+          
         </div>
 
         {/* Applicants Section */}

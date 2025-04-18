@@ -8,7 +8,6 @@ import TagDropdown from "./TagDropdown";
 import LocationDropdown from "./LocationDropdown";
 import CategoryDropdown from "./CategoryDropdown";
 import { Editor } from "@tinymce/tinymce-react";
-import { checkDuplicateJobTitle } from "../../../services/jobServices"; // Import new service
 
 export const JobForm = () => {
   const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
