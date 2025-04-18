@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
 import axios from "axios";
+import { getCVById } from "../../../services/cvServices"; // Add this import
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -41,19 +42,77 @@ export default function CandidatesPage() {
     try {
       setLoading(true);
       // Assuming your fetchCandidatesForJob function can accept pagination params
-      // You might need to update your API service to handle pagination
       const data = await fetchCandidatesForJob(jobId, searchParams);
+      
+      // Process candidates with CV data
+      const processedCandidates = [];
+      
+      if (Array.isArray(data)) {
+        // Fetch CV data for each candidate if they have a CV ID
+        for (const candidate of data) {
+          let enrichedCandidate = { 
+            ...candidate,
+            // Default fallback name
+            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+          };
+          
+          // If candidate has a CV ID, try to fetch CV data
+          if (candidate.cvid) {
+            try {
+              const cvData = await getCVById(candidate.cvid);
+              console.log(`CV data for candidate ${candidate.applicationID}:`, cvData);
+              
+              
+              enrichedCandidate = {
+                ...enrichedCandidate,
+                candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
+                email: cvData?.email || "Unknown",
+                cvData: cvData
+              };
+            } catch (cvError) {
+              console.error(`Error fetching CV for candidate ${candidate.applicationID}:`, cvError);
+            }
+          }
+          
+          processedCandidates.push(enrichedCandidate);
+        }
+      }
 
       // If your API returns paginated data in this format:
       if (data.candidates && data.totalPage) {
-        setCandidates(data.candidates);
+        // Process paginated data similar to above
+        const processedPaginatedCandidates = [];
+        for (const candidate of data.candidates) {
+          let enrichedCandidate = { 
+            ...candidate,
+            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+          };
+          
+          if (candidate.cvid) {
+            try {
+              const cvData = await getCVById(candidate.cvid);
+              enrichedCandidate = {
+                ...enrichedCandidate,
+                candidateName: cvData?.fullName || enrichedCandidate.candidateName,
+                email: cvData?.email || enrichedCandidate.email,
+                cvData: cvData
+              };
+            } catch (cvError) {
+              console.error(`Error fetching CV:`, cvError);
+            }
+          }
+          
+          processedPaginatedCandidates.push(enrichedCandidate);
+        }
+        
+        setCandidates(processedPaginatedCandidates);
         setTotalPage(data.totalPage);
       } else {
         // If your API doesn't support pagination yet, handle it client-side
-        setCandidates(data);
+        setCandidates(processedCandidates);
 
         // Calculate total pages based on data length
-        const totalItems = data.length;
+        const totalItems = processedCandidates.length;
         const calculatedTotalPages = Math.ceil(
           totalItems / searchParams.PageSize
         );
@@ -62,12 +121,12 @@ export default function CandidatesPage() {
         // Paginate the data client-side
         const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
         const endIndex = startIndex + searchParams.PageSize;
-        const filteredData = data
+        const filteredData = processedCandidates
           .filter(
             (candidate) =>
               !searchParams.name ||
-              (candidate.fullName &&
-                candidate.fullName
+              (candidate.candidateName && 
+                candidate.candidateName
                   .toLowerCase()
                   .includes(searchParams.name.toLowerCase()))
           )
@@ -75,7 +134,7 @@ export default function CandidatesPage() {
         setCandidates(filteredData);
       }
 
-      console.log("Candidates data:", data);
+      console.log("Processed candidates data:", processedCandidates);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -263,7 +322,6 @@ export default function CandidatesPage() {
                           </th>
                         </tr>
                       </thead>
-                      {/* comment out */}
                       <tbody>
                         {candidates.length > 0 ? (
                           candidates.map((candidate) => (
@@ -277,17 +335,18 @@ export default function CandidatesPage() {
                                           ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.avatar}
-                                      className={{
+                                      alt={candidate.candidateName || "Candidate"}
+                                      style={{
                                         height: "50px",
                                         width: "50px",
                                         borderRadius: "50%",
+                                        objectFit: "cover"
                                       }}
                                     />
                                   </div>
                                   <div className="candidate-info">
                                     <span className="name">
-                                      {candidate.fullName || "Unknown"}
+                                      {candidate.candidateName || "Unknown Candidate"}
                                     </span>
                                   </div>
                                 </div>
@@ -376,7 +435,7 @@ export default function CandidatesPage() {
         <div className="message-dialog-overlay">
           <div className="message-dialog">
             <div className="message-dialog-header">
-              <h3>Send Message to {selectedCandidate.fullName}</h3>
+              <h3>Send Message to {selectedCandidate.candidateName || "Candidate"}</h3>
               <button
                 className="close-btn"
                 onClick={() => setShowMessageDialog(false)}
@@ -392,8 +451,12 @@ export default function CandidatesPage() {
 
               <div className="candidate-details">
                 <div className="detail-item">
+                  <span className="label">Candidate:</span>
+                  <span className="value">{selectedCandidate.candidateName || "Unknown Candidate"}</span>
+                </div>
+                <div className="detail-item">
                   <span className="label">Email:</span>
-                  <span className="value">{selectedCandidate.email}</span>
+                  <span className="value">{selectedCandidate.email || "Unknown Email"}</span>
                 </div>
                 {selectedCandidate.phoneNumber && (
                   <div className="detail-item">
@@ -829,15 +892,13 @@ export default function CandidatesPage() {
         }
 
         .candidate-avatar {
-          width: 40px;
-          height: 40px;
+          width: 50px;
+          height: 50px;
           border-radius: 50%;
-          background-color: #3498db;
-          color: white;
+          overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
         }
 
         .candidate-info {
