@@ -43,26 +43,26 @@ export default function CandidatesPage() {
       setLoading(true);
       // Assuming your fetchCandidatesForJob function can accept pagination params
       const data = await fetchCandidatesForJob(jobId, searchParams);
-      
+
       // Process candidates with CV data
       const processedCandidates = [];
-      
+
       if (Array.isArray(data)) {
         // Fetch CV data for each candidate if they have a CV ID
         for (const candidate of data) {
-          let enrichedCandidate = { 
+          let enrichedCandidate = {
             ...candidate,
             // Default fallback name
             candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
           };
-          
+
           // If candidate has a CV ID, try to fetch CV data
           if (candidate.cvid) {
             try {
               const cvData = await getCVById(candidate.cvid);
               console.log(`CV data for candidate ${candidate.applicationID}:`, cvData);
-              
-              
+
+
               enrichedCandidate = {
                 ...enrichedCandidate,
                 candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
@@ -73,21 +73,20 @@ export default function CandidatesPage() {
               console.error(`Error fetching CV for candidate ${candidate.applicationID}:`, cvError);
             }
           }
-          
+
           processedCandidates.push(enrichedCandidate);
         }
       }
 
-      // If your API returns paginated data in this format:
       if (data.candidates && data.totalPage) {
         // Process paginated data similar to above
         const processedPaginatedCandidates = [];
         for (const candidate of data.candidates) {
-          let enrichedCandidate = { 
+          let enrichedCandidate = {
             ...candidate,
             candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
           };
-          
+
           if (candidate.cvid) {
             try {
               const cvData = await getCVById(candidate.cvid);
@@ -101,18 +100,18 @@ export default function CandidatesPage() {
               console.error(`Error fetching CV:`, cvError);
             }
           }
-          
+
           processedPaginatedCandidates.push(enrichedCandidate);
         }
-        
+
         setCandidates(processedPaginatedCandidates);
         setTotalPage(data.totalPage);
       } else {
         // If your API doesn't support pagination yet, handle it client-side
-        setCandidates(processedCandidates);
+        setCandidates(data);
 
         // Calculate total pages based on data length
-        const totalItems = processedCandidates.length;
+        const totalItems = data.length;
         const calculatedTotalPages = Math.ceil(
           totalItems / searchParams.PageSize
         );
@@ -121,12 +120,12 @@ export default function CandidatesPage() {
         // Paginate the data client-side
         const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
         const endIndex = startIndex + searchParams.PageSize;
-        const filteredData = processedCandidates
+        const filteredData = data
           .filter(
             (candidate) =>
               !searchParams.name ||
-              (candidate.candidateName && 
-                candidate.candidateName
+              (candidate.fullName &&
+                candidate.fullName
                   .toLowerCase()
                   .includes(searchParams.name.toLowerCase()))
           )
@@ -139,7 +138,7 @@ export default function CandidatesPage() {
     } catch (error) {
       setLoading(false);
       console.error("Error fetching candidates:", error);
-      // toast.error("Could not load candidates. Please try again.");
+      toast.error("Could not load candidates. Please try again.");
     }
   };
 
@@ -158,10 +157,9 @@ export default function CandidatesPage() {
     navigate("/employer/manage-jobs");
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (applicationStatus) => {
     let badgeClass = "status-badge";
-
-    switch (status?.toLowerCase()) {
+    switch (applicationStatus?.toLowerCase()) {
       case "pending":
         badgeClass += " pending";
         break;
@@ -175,12 +173,17 @@ export default function CandidatesPage() {
         badgeClass += " default";
     }
 
-    return <span className={badgeClass}>{status || "Unknown"}</span>;
+    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
   };
 
   // New function to handle message button click
   const handleMessageClick = (candidate) => {
-    setSelectedCandidate(candidate);
+    setSelectedCandidate({
+      ...candidate,
+      userID: candidate.userID,     // Đảm bảo userID được thiết lập đúng
+      fullName: candidate.fullName, // Đảm bảo fullName được thiết lập đúng
+      email: candidate.email       // Đảm bảo email được thiết lập đúng
+    });
     setShowMessageDialog(true);
   };
 
@@ -335,8 +338,8 @@ export default function CandidatesPage() {
                                           ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.candidateName || "Candidate"}
-                                      style={{
+                                      alt={candidate.avatar}
+                                      className={{
                                         height: "50px",
                                         width: "50px",
                                         borderRadius: "50%",
@@ -346,14 +349,13 @@ export default function CandidatesPage() {
                                   </div>
                                   <div className="candidate-info">
                                     <span className="name">
-                                      {candidate.candidateName || "Unknown Candidate"}
+                                      {candidate.fullName || "Unknown Candidate"}
                                     </span>
                                   </div>
                                 </div>
                               </td>
                               <td>
-                                <a
-                                  href={`mailto:${candidate.email}`}
+                                <a href={`mailto:${candidate.email}`}
                                   className="email-link"
                                 >
                                   {candidate.email || "Unknown"}
@@ -361,8 +363,8 @@ export default function CandidatesPage() {
                               </td>
                               <td>
                                 {candidate.phoneNumber ? (
-                                  <a
-                                    href={`tel:${candidate.phoneNumber}`}
+
+                                  <a href={`tel:${candidate.phoneNumber}`}
                                     className="phone-link"
                                   >
                                     {candidate.phoneNumber}
@@ -371,7 +373,7 @@ export default function CandidatesPage() {
                                   "Unknown"
                                 )}
                               </td>
-                              <td>{getStatusBadge(candidate.status)}</td>
+                              <td>{getStatusBadge(candidate.applicationStatus)}</td>
                               <td className="text-center">
                                 <div className="action-buttons">
                                   {/* View Detail Button */}
@@ -387,13 +389,10 @@ export default function CandidatesPage() {
                                   </button>
 
                                   {/* Message Button - Only show for Approved candidates */}
-                                  {candidate.status?.toLowerCase() ===
-                                    "approved" && (
+                                  {candidate.applicationStatus?.toLowerCase() === "approved" && (
                                     <button
                                       className="message-btn"
-                                      onClick={() =>
-                                        handleMessageClick(candidate)
-                                      }
+                                      onClick={() => handleMessageClick(candidate)}
                                     >
                                       <i className="fas fa-comment-alt"></i>{" "}
                                       Message
@@ -435,7 +434,7 @@ export default function CandidatesPage() {
         <div className="message-dialog-overlay">
           <div className="message-dialog">
             <div className="message-dialog-header">
-              <h3>Send Message to {selectedCandidate.candidateName || "Candidate"}</h3>
+              <h3>Send Message to {selectedCandidate.fullName}</h3>
               <button
                 className="close-btn"
                 onClick={() => setShowMessageDialog(false)}
@@ -451,12 +450,8 @@ export default function CandidatesPage() {
 
               <div className="candidate-details">
                 <div className="detail-item">
-                  <span className="label">Candidate:</span>
-                  <span className="value">{selectedCandidate.candidateName || "Unknown Candidate"}</span>
-                </div>
-                <div className="detail-item">
                   <span className="label">Email:</span>
-                  <span className="value">{selectedCandidate.email || "Unknown Email"}</span>
+                  <span className="value">{selectedCandidate.email}</span>
                 </div>
                 {selectedCandidate.phoneNumber && (
                   <div className="detail-item">
@@ -508,7 +503,8 @@ export default function CandidatesPage() {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       <style>{`
         .view-detail-btn, .message-btn {
@@ -1021,6 +1017,6 @@ export default function CandidatesPage() {
           margin-right: 8px;
         }
       `}</style>
-    </section>
+    </section >
   );
 }
