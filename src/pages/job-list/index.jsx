@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchJobs } from "../../services/jobServices";
 import { 
   getFavoriteJobsByUserId, 
@@ -21,6 +21,8 @@ import {
   Heart,
   CalendarDays,
   Sparkle,
+  Loader2,
+  Search,
 } from "lucide-react";
 import {
   Select,
@@ -67,6 +69,16 @@ export const Index = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const { toast } = useToast();
+  
+  // Add missing state variables
+  const [displayTitle, setDisplayTitle] = useState("");
+  const [relatedKeywords, setRelatedKeywords] = useState([]);
+  const [originalKeyword, setOriginalKeyword] = useState("");
+  const [expandKeywords, setExpandKeywords] = useState(false);
+  const [isExpanding, setIsExpanding] = useState(false);
+  
+  // Create ref for searchParams
+  const searchParamsRef = useRef(null);
 
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
@@ -81,6 +93,61 @@ export const Index = () => {
     Tags: [],
     MostRecent: null,
   });
+  
+  // Update searchParamsRef whenever searchParams changes
+  useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
+
+  // Add missing handleSearch function
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setIsExpanding(true);
+    
+    setSearchParams(prev => ({
+      ...prev,
+      Title: displayTitle,
+      PageIndex: 1,
+    }));
+    
+    // Store original keyword
+    setOriginalKeyword(displayTitle);
+    
+    // Generate related keywords (simplified example)
+    // In a real app, you might fetch this from an API
+    if (displayTitle.trim() !== "") {
+      const keywords = generateRelatedKeywords(displayTitle);
+      setRelatedKeywords(keywords);
+    } else {
+      setRelatedKeywords([]);
+    }
+    
+    setTimeout(() => {
+      setIsExpanding(false);
+    }, 500);
+  };
+  
+  // Helper function to generate related keywords (simplified)
+  const generateRelatedKeywords = (keyword) => {
+    // This is a simplified example. In a real app, you would fetch these from an API
+    const baseKeywords = [
+      "full time", "remote", "hybrid", "entry level", "senior", 
+      "manager", "director", "software", "development", "engineering",
+      "marketing", "sales", "customer service", "finance", "accounting",
+      "human resources", "design", "product manager", "data analyst"
+    ];
+    
+    // Filter and combine with the original keyword
+    return baseKeywords
+      .filter(k => k !== keyword.toLowerCase())
+      .map(k => {
+        if (keyword.toLowerCase().includes(k) || k.includes(keyword.toLowerCase())) {
+          return k;
+        }
+        return `${keyword} ${k}`;
+      })
+      .slice(0, 20); // Limit to 20 keywords
+  };
 
   // Get user ID from auth context or localStorage
   const getUserId = () => {
@@ -217,7 +284,9 @@ export const Index = () => {
 
   const getJobs = async () => {
     try {
-      const data = await fetchJobs(searchParams);
+      // Use searchParamsRef.current instead of searchParams
+      console.log("getJobs called with params:", searchParamsRef.current);
+      const data = await fetchJobs(searchParamsRef.current);
       setJobs(data.jobs || []);
       setTotalPage(data.totalPage || 1);
       setTotalJob(data.totalJob || 0);
@@ -240,9 +309,17 @@ export const Index = () => {
     }
   };
 
-  // Hàm cập nhật searchParams khi nhập liệu
+  // Update handleInputChange to use displayTitle instead of searchParams.Title
   const handleInputChange = (e) => {
-    setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "Title") {
+      // Update displayTitle when user types in search box
+      setDisplayTitle(value);
+    } else {
+      // Update other fields normally
+      setSearchParams({ ...searchParams, [name]: value });
+    }
   };
 
   const handleOrderChange = (value) => {
@@ -262,9 +339,23 @@ export const Index = () => {
     }));
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    getJobs();
+  const handleClearFilters = () => {
+    setSearchParams({
+      PageIndex: 1,
+      PageSize: 5,
+      Category: "",
+      Title: "",
+      JobPosition: "",
+      WorkTypes: [],
+      Location: "",
+      MinSalary: null,
+      MaxSalary: null,
+      Tags: [],
+      MostRecent: null,
+    });
+    setDisplayTitle(""); // Clear displayTitle too
+    setRelatedKeywords([]);
+    setOriginalKeyword("");
   };
 
   useEffect(() => {
@@ -308,10 +399,92 @@ export const Index = () => {
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
+  // Updated RelatedKeywordsSection with click functionality
+  const RelatedKeywordsSection = () => {
+    if (relatedKeywords.length === 0) return null;
+
+    // Number of keywords to show when collapsed
+    const initialDisplayCount = 15;
+
+    // Keywords list based on expanded state
+    const displayedKeywords = expandKeywords
+      ? relatedKeywords
+      : relatedKeywords.slice(0, initialDisplayCount);
+
+    // Check if "Show more" button should be displayed
+    const hasMoreKeywords = relatedKeywords.length > initialDisplayCount;
+
+    // Handle keyword click
+    const handleKeywordClick = (keyword) => {
+      // Save keyword in localStorage with unique key
+      const stateKey = `search_title_${Date.now()}`;
+      localStorage.setItem(stateKey, keyword);
+
+      // Create URL with parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append("title", keyword);
+      queryParams.append("from", "related"); // Mark as coming from related keywords
+      queryParams.append("stateKey", stateKey);
+
+      // Open in new tab
+      window.open(
+        `${window.location.pathname}?${queryParams.toString()}`,
+        "_blank"
+      );
+    };
+
+    return (
+      <section className="bg-gray-50 py-3 border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 mr-1 text-gray-600" />
+              <span className="text-sm font-medium">
+                Related to &quot;{originalKeyword}&quot;:
+              </span>
+              {hasMoreKeywords && (
+                <button
+                  onClick={() => setExpandKeywords(!expandKeywords)}
+                  className="ml-auto text-blue-600 text-sm hover:text-blue-800 transition-colors focus:outline-none"
+                >
+                  {expandKeywords
+                    ? "Show less"
+                    : `Show all (${relatedKeywords.length})`}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {displayedKeywords.map((keyword, index) => (
+                <div
+                  key={index}
+                  className="text-sm bg-white text-blue-700 px-3 py-1.5 border border-gray-300 rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer"
+                  onClick={() => handleKeywordClick(keyword)}
+                  title="Search with this keyword in a new tab"
+                >
+                  {keyword}
+                </div>
+              ))}
+
+              {!expandKeywords && hasMoreKeywords && (
+                <div
+                  className="text-sm bg-gray-100 text-gray-700 px-3 py-1.5 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-200 transition-colors"
+                  onClick={() => setExpandKeywords(true)}
+                >
+                  +{relatedKeywords.length - initialDisplayCount} more
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   return (
     <>
-      {/*Page Title*/}
-      <section className="bg-white py-12" style={{ marginTop: "111px" }}>
+      {/*Page Title - sửa padding-bottom thành 0*/}
+      <section className="bg-white py-12 pb-0" style={{ marginTop: "111px" }}>
         <div className="container mx-auto px-4">
           {/* Job Search Form */}
           <div className="text-center mb-8">
@@ -333,7 +506,7 @@ export const Index = () => {
                       type="text"
                       name="Title"
                       placeholder="Job title, keywords or company"
-                      value={searchParams.Title}
+                      value={displayTitle} // Use displayTitle instead of searchParams.Title
                       onChange={handleInputChange}
                       className="pl-14"
                     />
@@ -356,8 +529,16 @@ export const Index = () => {
                     <Button
                       type="submit"
                       className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isExpanding}
                     >
-                      Search
+                      {isExpanding ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Searching...</span>
+                        </>
+                      ) : (
+                        "Search"
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -366,6 +547,9 @@ export const Index = () => {
           </Card>
         </div>
       </section>
+
+      {/* Display related keywords */}
+      <RelatedKeywordsSection />
 
       {/* Filters Section */}
       <section className="bg-gray-50 py-4 border-y border-gray-200">
@@ -711,25 +895,7 @@ export const Index = () => {
                       We couldn&apos;t find any jobs matching your search
                       criteria. Try adjusting your filters or search terms.
                     </p>
-                    <Button
-                      onClick={() => {
-                        setSearchParams({
-                          PageIndex: 1,
-                          PageSize: 5,
-                          Category: "",
-                          Title: "",
-                          JobPosition: "",
-                          WorkTypes: [],
-                          Location: "",
-                          MinSalary: null,
-                          MaxSalary: null,
-                          Tags: [],
-                          MostRecent: null,
-                        });
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
+                    <Button onClick={handleClearFilters}>Clear Filters</Button>
                   </CardContent>
                 </Card>
               )}

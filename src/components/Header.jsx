@@ -197,8 +197,7 @@ export const Header = () => {
         );
     }
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userLoginData");
+    localStorage.clear();
     window.location.href = "/login";
   };
 
@@ -242,7 +241,7 @@ export const Header = () => {
                       <a href="/suitable-jobs">Suitable Jobs</a>
                     </li>
                     <li>
-                      <a href="/it-jobs">IT Jobs</a>
+                      <a href="#">IT Jobs</a>
                     </li>
                   </ul>
                 </li>
@@ -258,7 +257,7 @@ export const Header = () => {
                       <a href="/company-list">Company List</a>
                     </li>
                     <li>
-                      <a href="blog-list-v1.html">Top Company</a>
+                      <a href="#">Top Company</a>
                     </li>
                   </ul>
                 </li>
@@ -271,10 +270,10 @@ export const Header = () => {
                   <span>Profile & CV</span>
                   <ul>
                     <li>
-                      <a href="candidate/create-cv">Create CV</a>
+                      <a href="candidate/my-cv">Create CV</a>
                     </li>
                     <li>
-                      <a href="candidate/manage-cv">Manage CV</a>
+                      <a href="candidate/my-cv">Manage CV</a>
                     </li>
                   </ul>
                 </li>
@@ -331,7 +330,7 @@ export const Header = () => {
                       <Crown className="mr-2" size={16} />
                       Upgrade Account
                     </a>
-                    <a href="/candidate/job-alerts" className="menu-btn">
+                    <a href="/candidate/saved-jobs" className="menu-btn">
                       <span className="count" style={{ textAlign: "center" }}>
                         1
                       </span>

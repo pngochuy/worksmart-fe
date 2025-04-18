@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { getEmployerSubscriptions } from "@/services/employerServices";
 import { format } from "date-fns";
+import { Search, RefreshCcw, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const index = () => {
-  const [subscriptionsData, setSubscriptionsData] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [filteredSubscriptions, setFilteredSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const itemsPerPage = 10;
 
   const getUserId = () => {
     if (userInfo && userInfo.userID) {
@@ -27,36 +42,64 @@ export const index = () => {
     throw new Error("Please login to view your packages");
   };
 
-  useEffect(() => {
-    const fetchSubscriptionData = async () => {
+  const handleRefresh = () => {
+    fetchSubscriptionData(); // Tải lại dữ liệu subscription
+  }
+
+  const fetchSubscriptionData = async () => {
+    try {
+      setLoading(true);
+      const userId = getUserId();
+
       try {
-        setLoading(true);
-        const userId = getUserId();
+        const data = await getEmployerSubscriptions(userId);
+        const subscriptionsData = Array.isArray(data) ? data : [];
+        setSubscriptions(subscriptionsData);
+        setFilteredSubscriptions(subscriptionsData);
+        setError(null); // Clear any previous errors
+      } catch (apiError) {
+        console.error("API Error:", apiError);
 
-        try {
-          const data = await getEmployerSubscriptions(userId);
-          setSubscriptionsData(Array.isArray(data) ? data : []);
-          setError(null); // Clear any previous errors
-        } catch (apiError) {
-          console.error("API Error:", apiError);
-
-          if (apiError.response && apiError.response.status === 404) {
-            setSubscriptionsData([]);
-            setError(null);
-          } else {
-            setError(apiError.message || "Failed to load subscription data");
-          }
+        if (apiError.response && apiError.response.status === 404) {
+          setSubscriptions([]);
+          setFilteredSubscriptions([]);
+          setError(null);
+        } else {
+          setError(apiError.message || "Failed to load subscription data");
         }
-      } catch (err) {
-        setError(err.message || "Failed to load user data");
-        console.error("User ID Error:", err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      setError(err.message || "Failed to load user data");
+      console.error("User ID Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSubscriptionData();
-  }, [userInfo]);
+  }, []);
+
+  useEffect(() => {
+    // Filter transactions when search term changes
+    if (searchTerm.trim() === "") {
+      setFilteredSubscriptions(subscriptions);
+    } else {
+      const filtered = subscriptions.filter(item =>
+        String(item.package.name).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      console.log("Data:", subscriptions);
+      setFilteredSubscriptions(filtered);
+    }
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchTerm, subscriptions]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    console.log("Search term:", value);
+    setSearchTerm(e.target.value);
+  };
 
   const calculateUsage = (subscription, package_) => {
     if (package_.jobPostLimitPerDay) {
@@ -93,6 +136,27 @@ export const index = () => {
     }
   };
 
+  // Tính toán phân trang
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSubscriptions = filteredSubscriptions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSubscriptions.length / itemsPerPage);
+
+  // Hàm điều hướng phân trang
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <>
       <section className="user-dashboard">
@@ -108,15 +172,93 @@ export const index = () => {
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>My Packages</h4>
+                    <div className="d-flex gap-2">
+                      {/* Info Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="h-8 px-2 lg:px-3"
+                            variant="outline"
+                          >
+                            <Info className="h-4 w-4 mr-2" />
+                            <span className="ml-1 hidden sm:inline">Package Info</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Package Upgrade Information</DialogTitle>
+                          </DialogHeader>
+                          <DialogDescription>
+                            <div className="mt-2 space-y-4">
+                              <div>
+                                <h5 className="font-semibold">Package Upgrade Policy:</h5>
+                                <ul className="list-disc pl-5 mt-2 space-y-2">
+                                  <li>
+                                    <strong>Same package upgrade:</strong> If you purchase the same package again, the system will add the additional time to your current subscription (extending the expiration date).
+                                  </li>
+                                  <li>
+                                    <strong>Higher package upgrade:</strong> If you already own a lower-tier package and upgrade to a higher-tier package, the system will activate the higher package. Both packages will run simultaneously until their respective expiration dates.
+                                  </li>
+                                  <li>
+                                    <strong>Automatic downgrade:</strong> When a higher-tier package expires, the system will automatically revert to any remaining lower-tier package that is still active.
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Refresh Button */}
+                      {!loading && subscriptions.length > 0 && (
+                        <Button
+                          className="h-8 px-2 lg:px-3"
+                          variant="outline"
+                          disabled={loading}
+                          onClick={handleRefresh}
+                        >
+                          <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                          <span className="ml-1 hidden sm:inline"></span>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Full width search box with border */}
+                  <div className="search-box-outer w-full border border-gray-300 rounded-md p-3 mb-4 bg-white shadow-sm">
+                    <div className="relative w-full">
+                      <input
+                        type="text"
+                        placeholder="Search by content or order code..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="form-control w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
                   </div>
 
                   <div className="widget-content">
                     {loading ? (
-                      <div className="text-center py-4">Loading...</div>
+                      <div className="text-center py-4">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="mt-2">Loading packages...</p>
+                      </div>
                     ) : error ? (
                       <div className="text-center py-4 text-danger">{error}</div>
-                    ) : subscriptionsData.length === 0 ? (
-                      <div className="text-center py-4">No Subscription To Display</div>
+                    ) : filteredSubscriptions.length === 0 ? (
+                      <div className="text-center py-4">
+                        <div className="empty-state">
+                          <i className="la la-box-open la-3x text-muted mb-3"></i>
+                          {searchTerm ? (
+                            <p>No subscriptions matching "{searchTerm}"</p>
+                          ) : (
+                            <p>No subscriptions to display</p>
+                          )}
+                        </div>
+                      </div>
                     ) : (
                       <div className="table-outer">
                         <table className="default-table manage-job-table">
@@ -126,21 +268,21 @@ export const index = () => {
                               <th>Package</th>
                               <th>Total CV</th>
                               <th>Hightlight Profile</th>
-                              <th>Expiry</th>
+                              <th>Date Buy</th>
                               <th>Remaining Days</th>
                               <th>Status</th>
                             </tr>
                           </thead>
 
                           <tbody>
-                            {subscriptionsData.map((item, index) => {
+                            {currentSubscriptions.map((item, index) => {
                               const subscription = item.subscription || {};
                               const package_ = item.package || {};
                               const usage = calculateUsage(subscription, package_);
 
                               return (
                                 <tr key={index}>
-                                  <td>{index + 1}</td>
+                                  <td>{indexOfFirstItem + index + 1}</td>
                                   <td className="package" style={{ textDecoration: "none", color: "black" }}>
                                     <div className="font-weight-bold">{package_.name}</div>
                                   </td>
@@ -153,7 +295,7 @@ export const index = () => {
                                     {package_.hightlightProfile ? "Yes" : "No"}
                                   </td>
                                   <td className="expiry">
-                                    {formatDate(subscription.expDate)}
+                                    {formatDate(subscription.createdAt)}
                                   </td>
                                   <td className="remaining">{usage.remaining}</td>
                                   <td className="status">
@@ -166,6 +308,49 @@ export const index = () => {
                             })}
                           </tbody>
                         </table>
+
+                        {/* Phân trang */}
+                        {filteredSubscriptions.length > 0 && (
+                          <div className="pagination-container mt-4 d-flex justify-content-center">
+                            <nav aria-label="Subscription pagination">
+                              <ul className="pagination">
+                                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                                  <button
+                                    className="page-link"
+                                    onClick={goToPreviousPage}
+                                    disabled={currentPage === 1}
+                                  >
+                                    <i className="la la-angle-left"></i>
+                                  </button>
+                                </li>
+
+                                {[...Array(totalPages).keys()].map((number) => (
+                                  <li
+                                    key={number + 1}
+                                    className={`page-item ${currentPage === number + 1 ? "active" : ""}`}
+                                  >
+                                    <button
+                                      className="page-link"
+                                      onClick={() => paginate(number + 1)}
+                                    >
+                                      {number + 1}
+                                    </button>
+                                  </li>
+                                ))}
+
+                                <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                                  <button
+                                    className="page-link"
+                                    onClick={goToNextPage}
+                                    disabled={currentPage === totalPages}
+                                  >
+                                    <i className="la la-angle-right"></i>
+                                  </button>
+                                </li>
+                              </ul>
+                            </nav>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -175,6 +360,59 @@ export const index = () => {
           </div>
         </div>
       </section>
+
+      <style>
+        {`
+          /* Empty state styling */
+          .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #6c757d;
+          }
+          
+          /* Pagination styling */
+          .pagination-container {
+            margin-top: 20px;
+          }
+          
+          .pagination .page-link {
+            color: #2361ff;
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+          }
+          
+          .pagination .page-item.active .page-link {
+            background-color: #2361ff;
+            border-color: #2361ff;
+            color: white;
+          }
+          
+          .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #fff;
+            border-color: #dee2e6;
+          }
+          
+          /* Badge styling */
+          .badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 500;
+          }
+          
+          .bg-success {
+            background-color: #28a745 !important;
+          }
+          
+          .bg-danger {
+            background-color: #dc3545 !important;
+          }
+        `}
+      </style>
     </>
   );
 };

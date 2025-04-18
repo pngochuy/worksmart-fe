@@ -1,21 +1,19 @@
+/* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import {
   Check,
   X,
   Award,
   FileText,
-  Briefcase,
   Star,
   TrendingUp,
   Loader,
   Clock,
-  CheckCircle,
   AlertCircle,
   CreditCard,
-  XCircle,
   Lock,
 } from "lucide-react";
-import { getUserRoleFromToken, getUserLoginData } from "@/helpers/decodeJwt";
+import { getUserLoginData } from "@/helpers/decodeJwt";
 import { createPaymentLink, getPackages } from "@/services/employerServices";
 import { toast } from "react-toastify";
 
@@ -41,12 +39,12 @@ const PackagePurchase = () => {
     try {
       const packagesData = await getPackages();
       console.log("Package data:", packagesData);
-  
+
       // Filter only Candidate packages
       const candidatePkgs = packagesData
         .filter((pkg) => pkg.name.includes("Candidate"))
         .map((pkg) => mapPackageData(pkg));
-  
+
       setCandidatePackages(candidatePkgs);
     } catch (err) {
       console.error("Error fetching packages:", err);
@@ -65,7 +63,10 @@ const PackagePurchase = () => {
       duration: pkg.durationInDays,
       features: [
         {
-          text: pkg.cvLimit === 999 ? "Unlimited CV Uploads" : `${pkg.cvLimit} CV Uploads`,
+          text:
+            pkg.cvLimit === 999
+              ? "Unlimited CV Uploads"
+              : `${pkg.cvLimit} CV Uploads`,
           available: true,
           icon: <FileText size={16} className="text-blue-500 mr-2" />,
         },
@@ -95,17 +96,17 @@ const PackagePurchase = () => {
       color: getPackageColor(pkg.name),
       tagline: getPackageTagline(pkg.name),
     };
-  
+
     return packageData;
   };
 
   // Helper functions for package display text
   const getPackageColor = (name) => {
     if (name.includes("Premium")) return "green";
-    if (name.includes("Plus")) return "purple";
+    if (name.includes("Standard")) return "purple";
     return "blue"; // For Basic
   };
-  
+
   const getPackageTagline = (name) => {
     if (name.includes("Premium"))
       return "Complete Solution for Career Advancement";
@@ -142,7 +143,11 @@ const PackagePurchase = () => {
         throw new Error("Please login to make a transaction");
       }
 
-      const paymentData = await createPaymentLink(userId, selectedPackage.id, role);
+      const paymentData = await createPaymentLink(
+        userId,
+        selectedPackage.id,
+        role
+      );
 
       window.location.href = paymentData.checkoutUrl;
     } catch (error) {
@@ -216,7 +221,7 @@ const PackagePurchase = () => {
           <p className="text-sm opacity-90 mb-3 text-white">{pkg.tagline}</p>
           <div className="flex items-center justify-center">
             <span className="text-3xl font-bold">
-              {pkg.price.toLocaleString()}
+              {pkg.price.toLocaleString('en-US')}
             </span>
             <span className="ml-1 text-white opacity-80">VND</span>
           </div>
@@ -384,7 +389,8 @@ const PackagePurchase = () => {
               Candidate Packages
             </h3>
             <div className="text-gray-600 mt-2 max-w-2xl mx-auto">
-              Enhance your job search experience and boost your profile visibility with our premium packages
+              Enhance your job search experience and boost your profile
+              visibility with our premium packages
             </div>
           </div>
 
@@ -474,16 +480,15 @@ const PackagePurchase = () => {
                               key={pkg.id}
                               className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500"
                             >
-                              {pkg.features[1].available ? "Highlighted" : "Basic"}
+                              {pkg.features[1].available
+                                ? "Highlighted"
+                                : "Basic"}
                             </td>
                           ))}
                         </tr>
                         <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                            <Lock
-                              size={18}
-                              className="mr-2 text-green-500"
-                            />
+                            <Lock size={18} className="mr-2 text-green-500" />
                             Exclusive Jobs Access
                           </td>
                           {candidatePackages.map((pkg) => (
@@ -504,7 +509,10 @@ const PackagePurchase = () => {
                         </tr>
                         <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                            <TrendingUp size={18} className="mr-2 text-purple-500" />
+                            <TrendingUp
+                              size={18}
+                              className="mr-2 text-purple-500"
+                            />
                             Application Priority
                           </td>
                           {candidatePackages.map((pkg) => (
@@ -608,7 +616,8 @@ const PackagePurchase = () => {
                     Why Upgrade Your Package?
                   </h3>
                   <p className="text-gray-600 mt-2">
-                    Stand out from the crowd and maximize your career opportunities
+                    Stand out from the crowd and maximize your career
+                    opportunities
                   </p>
                 </div>
 
@@ -621,7 +630,8 @@ const PackagePurchase = () => {
                       Multiple CV Options
                     </h4>
                     <p className="text-gray-600">
-                      Upload different versions of your CV tailored for specific positions or industries to increase your chances.
+                      Upload different versions of your CV tailored for specific
+                      positions or industries to increase your chances.
                     </p>
                   </div>
 
@@ -633,7 +643,8 @@ const PackagePurchase = () => {
                       Highlighted Profile
                     </h4>
                     <p className="text-gray-600">
-                      Get your profile highlighted in employer searches and receive up to 3x more profile views.
+                      Get your profile highlighted in employer searches and
+                      receive up to 3x more profile views.
                     </p>
                   </div>
 
@@ -645,7 +656,8 @@ const PackagePurchase = () => {
                       Exclusive Opportunities
                     </h4>
                     <p className="text-gray-600">
-                      Access premium job listings not available to regular users and get notified about them first.
+                      Access premium job listings not available to regular users
+                      and get notified about them first.
                     </p>
                   </div>
                 </div>
@@ -669,7 +681,9 @@ const PackagePurchase = () => {
                       How does a highlighted profile work?
                     </h4>
                     <p className="text-gray-600 ml-7">
-                      Your profile will be visually enhanced in employer searches and feature a "Premium Candidate" badge. This increases your visibility by up to 300%.
+                      Your profile will be visually enhanced in employer
+                      searches and feature a &quot;Premium Candidate&quot;
+                      badge. This increases your visibility by up to 300%.
                     </p>
                   </div>
 
@@ -679,7 +693,9 @@ const PackagePurchase = () => {
                       What are exclusive jobs?
                     </h4>
                     <p className="text-gray-600 ml-7">
-                      These are high-quality job opportunities that employers reserve for premium candidates. They typically offer better compensation and career growth potential.
+                      These are high-quality job opportunities that employers
+                      reserve for premium candidates. They typically offer
+                      better compensation and career growth potential.
                     </p>
                   </div>
 
@@ -689,7 +705,9 @@ const PackagePurchase = () => {
                       Can I change my package later?
                     </h4>
                     <p className="text-gray-600 ml-7">
-                      Yes, you can upgrade your package at any time. The remaining days from your current package will be prorated and applied to your new package.
+                      Yes, you can upgrade your package at any time. The
+                      remaining days from your current package will be prorated
+                      and applied to your new package.
                     </p>
                   </div>
 
@@ -699,7 +717,10 @@ const PackagePurchase = () => {
                       How do I know my package is active?
                     </h4>
                     <p className="text-gray-600 ml-7">
-                      Your active package and its expiration date will be displayed on your dashboard. You'll also see a "Premium" or "Standard" badge on your profile.
+                      Your active package and its expiration date will be
+                      displayed on your dashboard. You&apos;ll also see a
+                      &quot;Premium&quot; or &quot;Standard&quot; badge on your
+                      profile.
                     </p>
                   </div>
                 </div>

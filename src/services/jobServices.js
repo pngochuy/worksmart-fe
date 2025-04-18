@@ -24,6 +24,25 @@ export const fetchJobs = async (searchParams) => {
     return { jobs: [], totalPage: 0 };
   }
 };
+
+export const fetchAppliedJobs = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/candidate/applied-jobs`,
+      {
+        params: { userId },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching applied jobs:", error);
+    if (error.response && error.response.status === 404) {
+      return [];
+    }
+    throw error;
+  }
+};
+
 export const fetchJobsForManagement = async (searchParams) => {
   try {
     const response = await axios.get(
@@ -50,6 +69,16 @@ export const fetchJobsForManagement = async (searchParams) => {
 export const getAllJobs = async () => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/Job/getAllJob`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    throw error;
+  }
+};
+
+export const getJobsActive = async () => {
+  try {
+    const response = await axios.get(`${BACKEND_API_URL}/api/Job/getJobsActive`);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -278,6 +307,43 @@ export const toggleJobPriority = async (id) => {
     return response.data;
   } catch (error) {
     console.error("Error toggling job priority:", error);
+    throw error;
+  }
+};
+// Fetch chi tiết của công việc (v2)
+export const fetchJobDetailsV2 = async (jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/detail/${jobId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job details:", error);
+    throw error;
+  }
+};
+
+export const fetchJobRecommendations = async (cvId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/JobRecommendation/cv/${cvId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching job recommendations:", error);
+  }
+};
+// Gửi lời mời cho candidate
+export const sendInvitationEmail = async (data) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Job/send-invitation`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error sending invitation:", error);
     throw error;
   }
 };

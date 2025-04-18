@@ -6,7 +6,6 @@ import {
 import { fetchJobDetails } from "../../../services/jobServices";
 import { Link, useNavigate } from 'react-router-dom';
 
-// Import Pagination component
 import Pagination from './Pagination';
 
 // Import UI components for popup confirmation dialog
@@ -29,7 +28,6 @@ const JobStatus = {
   3: "Active"
 };
 
-// Function to get status class based on job status
 const getStatusClass = (status) => {
   switch (status) {
     case "Pending": return "pending";
@@ -152,7 +150,7 @@ export const index = () => {
             // Combine the data
             return {
               ...favorite,
-              job: jobDetails
+              job: jobDetails,
             };
           } catch (error) {
             console.error(`Error fetching details for job ${favorite.jobID}:`, error);
@@ -180,13 +178,13 @@ export const index = () => {
     loadFavoriteJobs();
   }, []);
 
-  // Hiển thị dialog xác nhận khi người dùng muốn xóa công việc đã lưu
+  // Display confirmation dialog when user wants to remove a saved job
   const handleRemoveClick = (favoriteJobId) => {
     setSelectedJobId(favoriteJobId);
     setConfirmDialogOpen(true);
   };
 
-  // Xóa công việc đã lưu sau khi xác nhận
+  // Remove saved job after confirmation
   const handleRemoveFavorite = async () => {
     if (!selectedJobId) return;
     
@@ -196,7 +194,7 @@ export const index = () => {
       setConfirmDialogOpen(false);
       setSelectedJobId(null);
       
-      // Nếu muốn hiển thị thông báo "success" sau khi xóa, bạn có thể sử dụng toast hoặc alert
+      // If you want to show a "success" notification after deletion, you can use toast or alert
       // toast({ title: "Success", description: "Job removed from favorites" });
     } catch (error) {
       console.error('Error removing favorite job:', error);
@@ -298,7 +296,7 @@ export const index = () => {
   };
 
   // Update pagination when page changes
-  const updatePage = (params) => {
+  const handleSearch = (params) => {
     if (params.PageIndex) {
       setCurrentPage(params.PageIndex);
     }
@@ -345,7 +343,6 @@ export const index = () => {
                     <h4>My Saved Jobs</h4>
 
                     <div className="chosen-outer">
-                      {/* Time filter */}
                       <select 
                         className="chosen-select mr-3"
                         value={timeFilter}
@@ -361,7 +358,6 @@ export const index = () => {
                         <option>Last 5 year</option>
                       </select>
                       
-                      {/* Items per page */}
                       <select
                         className="chosen-select"
                         value={itemsPerPage}
@@ -499,7 +495,7 @@ export const index = () => {
                         <Pagination 
                           currentPage={currentPage} 
                           totalPage={totalPages} 
-                          setSearchParams={updatePage} 
+                          setSearchParams={handleSearch} 
                         />
                         
                         <div className="pagination-summary">
