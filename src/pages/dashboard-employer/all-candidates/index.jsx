@@ -1,9 +1,9 @@
 import { getUserLoginData } from "@/helpers/decodeJwt";
 import { fetchCompanyProfile } from "@/services/employerServices";
-import { 
-  fetchCandidatesForJob, 
-  acceptCandidate, 
-  rejectCandidate, 
+import {
+  fetchCandidatesForJob,
+  acceptCandidate,
+  rejectCandidate,
   fetchJobsByUserId,
   fetchCandidateDetail
 } from "@/services/jobServices";
@@ -29,11 +29,11 @@ export const Index = () => {
   const [selectedJobId, setSelectedJobId] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [totalPage, setTotalPage] = useState(1);
-  
+
   // Pagination parameters
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
-    PageSize: 6 
+    PageSize: 6
   });
 
   const navigate = useNavigate();
@@ -41,50 +41,50 @@ export const Index = () => {
   // Utility function to safely get candidate information
   const getCandidateInfo = (candidate, field, defaultValue = "N/A") => {
     const candidateDetail = candidateDetails[candidate.applicationID] || {};
-    
+
     // Special handling for fullName
     if (field === 'fullName') {
       // Check for firstName and lastName in candidateDetail
       if (candidateDetail.firstName && candidateDetail.lastName) {
         return `${candidateDetail.lastName} ${candidateDetail.firstName}`;
       }
-      
+
       // Check user object in candidateDetail
       if (candidateDetail.user?.firstName && candidateDetail.user?.lastName) {
         return `${candidateDetail.user.lastName} ${candidateDetail.user.firstName}`;
       }
-      
+
       // Check CV data in candidateDetail
       if (candidateDetail.cvData?.lastName && candidateDetail.cvData?.firstName) {
         return `${candidateDetail.cvData.lastName} ${candidateDetail.cvData.firstName}`;
       }
-      
+
       // Check in candidate data directly
       if (candidate.firstName && candidate.lastName) {
         return `${candidate.lastName} ${candidate.firstName}`;
       }
-      
+
       if (candidate.user?.firstName && candidate.user?.lastName) {
         return `${candidate.user.lastName} ${candidate.user.firstName}`;
       }
-      
+
       // Fallback options
       return (
-        candidateDetail[field] || 
-        candidate[field] || 
-        candidate.user?.[field] || 
-        candidateDetail.user?.[field] || 
-        candidate.candidateName || 
+        candidateDetail[field] ||
+        candidate[field] ||
+        candidate.user?.[field] ||
+        candidateDetail.user?.[field] ||
+        candidate.candidateName ||
         defaultValue
       );
     }
-    
+
     // Handle other fields
     return (
-      candidateDetail[field] || 
-      candidate[field] || 
-      candidate.user?.[field] || 
-      candidateDetail.user?.[field] || 
+      candidateDetail[field] ||
+      candidate[field] ||
+      candidate.user?.[field] ||
+      candidateDetail.user?.[field] ||
       defaultValue
     );
   };
@@ -93,22 +93,22 @@ export const Index = () => {
   const logCandidateStatuses = () => {
     console.log("All candidates:", allCandidates);
     console.log("Active tab:", activeTab);
-    
+
     // Extract all unique status values
     const statusValues = new Set();
     allCandidates.forEach(candidate => {
       statusValues.add(candidate.status);
     });
-    
+
     console.log("Unique status values:", Array.from(statusValues));
-    
+
     // Count by status
     const statusCounts = {};
     allCandidates.forEach(candidate => {
       const status = candidate.status || "undefined";
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
-    
+
     console.log("Status counts:", statusCounts);
   };
 
@@ -116,30 +116,30 @@ export const Index = () => {
   const fetchCandidateDetails = async (candidateId, jobId) => {
     try {
       const candidateDetail = await fetchCandidateDetail(candidateId, jobId);
-      
+
       if (candidateDetail && candidateDetail.cvid) {
         try {
           const cvData = await getCVById(candidateDetail.cvid);
-          
+
           const enrichedCandidateDetail = {
             ...candidateDetail,
             cvData: cvData
           };
-          
+
           setCandidateDetails(prevDetails => ({
             ...prevDetails,
             [candidateId]: enrichedCandidateDetail
           }));
-          
+
           return enrichedCandidateDetail;
         } catch (cvError) {
           console.error(`Error fetching CV for candidate ${candidateId}:`, cvError);
-          
+
           setCandidateDetails(prevDetails => ({
             ...prevDetails,
             [candidateId]: candidateDetail
           }));
-          
+
           return candidateDetail;
         }
       } else {
@@ -147,7 +147,7 @@ export const Index = () => {
           ...prevDetails,
           [candidateId]: candidateDetail
         }));
-        
+
         return candidateDetail;
       }
     } catch (error) {
@@ -159,20 +159,20 @@ export const Index = () => {
   // Skills rendering function
   const renderSkills = (candidate) => {
     const candidateDetail = candidateDetails[candidate.applicationID] || {};
-    
-    const skills = candidateDetail.skills || 
-                   candidateDetail.cvData?.skills ||
-                   candidate.skills || 
-                   candidate.user?.skills || 
-                   candidateDetail.user?.skills || 
-                   [];
+
+    const skills = candidateDetail.skills ||
+      candidateDetail.cvData?.skills ||
+      candidate.skills ||
+      candidate.user?.skills ||
+      candidateDetail.user?.skills ||
+      [];
 
     if (skills && skills.length > 0) {
       return skills.slice(0, 3).map((skill, index) => {
-        const skillName = typeof skill === 'string' 
-          ? skill 
+        const skillName = typeof skill === 'string'
+          ? skill
           : (skill.skillName || skill.name || 'Unknown Skill');
-        
+
         return (
           <li key={index}>
             <a href="#">{skillName}</a>
@@ -199,7 +199,7 @@ export const Index = () => {
       try {
         setIsLoading(true);
         const user = getUserLoginData();
-        
+
         if (!user || !user.userID) {
           setIsLoading(false);
           return;
@@ -209,26 +209,26 @@ export const Index = () => {
           // Get verification level info
           const companyData = await fetchCompanyProfile();
           setVerificationLevel(companyData.verificationLevel);
-          
+
           // Get user's job list
           const jobs = await fetchJobsByUserId(user.userID);
-          
+
           if (Array.isArray(jobs)) {
             setUserJobs(jobs);
-            
+
             // Create job mapping
             const jobsMapping = jobs.reduce((map, job) => {
               map[job.jobID] = job;
               return map;
             }, {});
             setJobsMap(jobsMapping);
-            
+
             // Collect candidates from all jobs
             const allCandidatesArray = [];
             for (const job of jobs) {
               try {
                 const candidates = await fetchCandidatesForJob(job.jobID);
-                
+
                 if (Array.isArray(candidates) && candidates.length > 0) {
                   // Enrich candidates with job info
                   const enrichedCandidates = candidates.map(candidate => ({
@@ -239,21 +239,21 @@ export const Index = () => {
                       company: job.companyName
                     }
                   }));
-                  
+
                   // Fetch detailed info for each candidate
                   for (const candidate of enrichedCandidates) {
                     await fetchCandidateDetails(candidate.applicationID, job.jobID);
                   }
-                  
+
                   allCandidatesArray.push(...enrichedCandidates);
                 }
               } catch (error) {
                 console.error(`Error fetching candidates for job ${job.jobID}:`, error);
               }
             }
-            
+
             setAllCandidates(allCandidatesArray);
-            
+
             // Debug the candidates' statuses
             setTimeout(() => {
               logCandidateStatuses();
@@ -270,7 +270,7 @@ export const Index = () => {
         setIsLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
 
@@ -280,11 +280,11 @@ export const Index = () => {
     const filtered = allCandidates.filter((candidate) => {
       // Get full name for search
       const fullName = getCandidateInfo(candidate, 'fullName', '').toLowerCase();
-      
+
       // Check if name matches search term
-      const nameMatch = searchTerm === '' || 
+      const nameMatch = searchTerm === '' ||
         fullName.includes(searchTerm.toLowerCase());
-      
+
       // Status filtering
       let statusMatch = true;
       if (activeTab === "approved") {
@@ -294,7 +294,7 @@ export const Index = () => {
       } else if (activeTab === "pending") {
         statusMatch = candidate.status === "Pending";
       }
-      
+
       // Job filtering
       let jobMatch = true;
       if (selectedJobId !== "all") {
@@ -303,14 +303,14 @@ export const Index = () => {
 
       return nameMatch && statusMatch && jobMatch;
     });
-    
+
     setFilteredCandidates(filtered);
-    
+
     // Calculate total pages based on filtered results
     const totalItems = filtered.length;
     const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / searchParams.PageSize));
     setTotalPage(calculatedTotalPages);
-    
+
     // Check if current page is valid after filtering
     if (searchParams.PageIndex > calculatedTotalPages && calculatedTotalPages > 0) {
       setSearchParams(prev => ({
@@ -325,12 +325,12 @@ export const Index = () => {
     // Calculate start and end index for pagination
     const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
     const endIndex = Math.min(startIndex + searchParams.PageSize, filteredCandidates.length);
-    
+
     // Get the slice of candidates for current page
     const currentPageCandidates = filteredCandidates.slice(startIndex, endIndex);
-    
+
     setDisplayedCandidates(currentPageCandidates);
-    
+
     // Log pagination info for debugging
     console.log("Pagination:", {
       pageIndex: searchParams.PageIndex,
@@ -411,12 +411,12 @@ export const Index = () => {
     try {
       await acceptCandidate(candidateId, jobId);
       toast.success("Candidate approved successfully!");
-      
+
       // Update candidate status
-      setAllCandidates(prevCandidates => 
-        prevCandidates.map(candidate => 
-          candidate.applicationID === candidateId 
-            ? {...candidate, status: "Approved"} 
+      setAllCandidates(prevCandidates =>
+        prevCandidates.map(candidate =>
+          candidate.applicationID === candidateId
+            ? { ...candidate, status: "Approved" }
             : candidate
         )
       );
@@ -436,21 +436,21 @@ export const Index = () => {
   // Confirm candidate rejection
   const handleConfirmReject = async () => {
     if (!selectedCandidate) return;
-    
+
     try {
       await rejectCandidate(
-        selectedCandidate.applicationID, 
-        selectedCandidate.jobInfo.jobID, 
+        selectedCandidate.applicationID,
+        selectedCandidate.jobInfo.jobID,
         rejectionReason
       );
       toast.success("Candidate rejected successfully!");
       setShowRejectModal(false);
-      
+
       // Update candidate status
-      setAllCandidates(prevCandidates => 
-        prevCandidates.map(candidate => 
-          candidate.applicationID === selectedCandidate.applicationID 
-            ? {...candidate, status: "Rejected", rejectionReason} 
+      setAllCandidates(prevCandidates =>
+        prevCandidates.map(candidate =>
+          candidate.applicationID === selectedCandidate.applicationID
+            ? { ...candidate, status: "Rejected", rejectionReason }
             : candidate
         )
       );
@@ -498,10 +498,10 @@ export const Index = () => {
                           onChange={handleSearchChange}
                         />
                       </div>
-                      
+
                       {/* Filter by job */}
                       <div className="chosen-outer mr-3">
-                        <select 
+                        <select
                           className="chosen-select"
                           onChange={handleJobChange}
                           value={selectedJobId}
@@ -517,7 +517,7 @@ export const Index = () => {
 
                       {/* Filter by status */}
                       <div className="chosen-outer mr-3">
-                        <select 
+                        <select
                           className="chosen-select"
                           onChange={(e) => handleTabChange(e.target.value)}
                           value={activeTab}
@@ -564,19 +564,19 @@ export const Index = () => {
                               >
                                 Total(s): {totalCandidates}
                               </li>
-                              <li 
+                              <li
                                 className={`tab-btn ${activeTab === "approved" ? "active-btn" : ""} approved`}
                                 onClick={() => handleTabChange("approved")}
                               >
                                 Approved: {approvedCandidates}
                               </li>
-                              <li 
+                              <li
                                 className={`tab-btn ${activeTab === "rejected" ? "active-btn" : ""} rejected`}
                                 onClick={() => handleTabChange("rejected")}
                               >
                                 Rejected(s): {rejectedCandidates}
                               </li>
-                              <li 
+                              <li
                                 className={`tab-btn ${activeTab === "pending" ? "active-btn" : ""} pending`}
                                 onClick={() => handleTabChange("pending")}
                               >
@@ -600,7 +600,7 @@ export const Index = () => {
                                           <figure className="image">
                                             <img
                                               src={
-                                                getCandidateInfo(candidate, 'avatar') || 
+                                                getCandidateInfo(candidate, 'avatar') ||
                                                 "images/resource/candidate-1.png"
                                               }
                                               alt={getCandidateInfo(candidate, 'fullName', 'Candidate')}
@@ -627,7 +627,7 @@ export const Index = () => {
                                           }}>
                                             <strong>Applied for:</strong> {candidate.jobInfo?.title || "Unknown Job"}
                                           </div>
-                                          
+
                                           <div className="application-status mt-2" style={{
                                             display: 'flex',
                                             justifyContent: 'space-between',
@@ -638,26 +638,26 @@ export const Index = () => {
                                             marginBottom: '10px'
                                           }}>
                                             <span>
-                                              <strong>Status:</strong> 
+                                              <strong>Status:</strong>
                                               <span style={{
                                                 padding: '2px 8px',
                                                 borderRadius: '10px',
                                                 marginLeft: '5px',
-                                                backgroundColor: 
-                                                  candidate.status === 'Approved' ? '#e0f7ea' : 
-                                                  candidate.status === 'Rejected' ? '#ffe5e5' : 
-                                                  candidate.status === 'Pending' ? '#f0f0f0' : '#f0f0f0',
-                                                  color: 
-                                                  candidate.status === 'Approved' ? '#28a745' : 
-                                                  candidate.status === 'Rejected' ? '#dc3545' : 
-                                                  candidate.status === 'Pending' ? '#666' : '#666'
+                                                backgroundColor:
+                                                  candidate.status === 'Approved' ? '#e0f7ea' :
+                                                    candidate.status === 'Rejected' ? '#ffe5e5' :
+                                                      candidate.status === 'Pending' ? '#f0f0f0' : '#f0f0f0',
+                                                color:
+                                                  candidate.status === 'Approved' ? '#28a745' :
+                                                    candidate.status === 'Rejected' ? '#dc3545' :
+                                                      candidate.status === 'Pending' ? '#666' : '#666'
                                               }}>
                                                 {candidate.status}
                                               </span>
                                             </span>
                                             <span><strong>Applied:</strong> {formatDate(candidate.createdAt)}</span>
                                           </div>
-                                          
+
                                           {renderSkills(candidate) && (
                                             <ul className="post-tags">
                                               {renderSkills(candidate)}
@@ -667,7 +667,7 @@ export const Index = () => {
                                         <div className="option-box">
                                           <ul className="option-list">
                                             <li>
-                                              <button 
+                                              <button
                                                 data-text="View Application"
                                                 onClick={() => handleViewApplication(candidate.jobInfo.jobID, candidate.applicationID)}
                                               >
@@ -676,7 +676,7 @@ export const Index = () => {
                                             </li>
                                             {candidate.status !== 'Approved' && (
                                               <li>
-                                                <button 
+                                                <button
                                                   data-text="Approve Application"
                                                   onClick={() => handleApproveApplication(candidate.jobInfo.jobID, candidate.applicationID)}
                                                 >
@@ -686,7 +686,7 @@ export const Index = () => {
                                             )}
                                             {candidate.status !== 'Rejected' && (
                                               <li>
-                                                <button 
+                                                <button
                                                   data-text="Reject Application"
                                                   onClick={() => handleRejectClick(candidate)}
                                                 >
@@ -695,7 +695,7 @@ export const Index = () => {
                                               </li>
                                             )}
                                             <li>
-                                              <button 
+                                              <button
                                                 data-text="Delete Application"
                                                 onClick={() => handleDeleteApplication(candidate.applicationID)}
                                               >
@@ -709,10 +709,10 @@ export const Index = () => {
                                   ))
                                 )}
                               </div>
-                              
-                              
+
+
                               {filteredCandidates.length > 0 && (
-                                <Pagination 
+                                <Pagination
                                   currentPage={searchParams.PageIndex}
                                   totalPage={totalPage}
                                   onPageChange={handlePageChange}
@@ -739,8 +739,8 @@ export const Index = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Reject Candidate</h5>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="close"
                   onClick={() => setShowRejectModal(false)}
                 >

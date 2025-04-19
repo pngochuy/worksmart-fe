@@ -5,6 +5,7 @@ import { fetchUserNotifications } from "@/services/notificationServices";
 import { fetchAppliedJobs } from "@/services/jobServices";
 import { Clock, FileEdit, Heart, MoveUpRight, Search, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
 
 export const index = () => {
   const [userDataLogin, setUserDataLogin] = useState(null);
@@ -13,6 +14,9 @@ export const index = () => {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [jobError, setJobError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const user = getUserLoginData();
@@ -28,6 +32,7 @@ export const index = () => {
   const handleRefresh = () => {
     loadAppliedJobs(); // Tải lại dữ liệu giao dịch
   }
+
   // Filter jobs whenever search term or applied jobs change
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -39,6 +44,8 @@ export const index = () => {
       console.log("Search:", filtered);
       setFilteredJobs(filtered);
     }
+    // Reset về trang 1 khi thay đổi kết quả tìm kiếm
+    setCurrentPage(1);
   }, [searchTerm, appliedJobs]);
 
   const loadAppliedJobs = async () => {
@@ -77,6 +84,27 @@ export const index = () => {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  // Tính toán phân trang
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentJobs = filteredJobs.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+
+  // Thêm các hàm điều hướng
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   return (
@@ -134,7 +162,7 @@ export const index = () => {
                             <p>{jobError}</p>
                           </div>
                         ) : filteredJobs.length > 0 ? (
-                          filteredJobs.map((job) => (
+                          currentJobs.map((job) => (
                             <div key={job.jobID} className="job-block col-lg-12 col-md-12 col-sm-12">
                               <div className="inner-box">
                                 <div className="content">
@@ -158,7 +186,7 @@ export const index = () => {
                                     </li>
                                     <li>
                                       <span className="icon flaticon-clock-3"></span>{" "}
-                                      {getTimeAgo(job.createdAt)}
+                                      {formatDateTimeNotIncludeTime(job.deadline)}
                                     </li>
                                     <li>
                                       <span className="icon flaticon-money"></span>{" "}
@@ -200,6 +228,49 @@ export const index = () => {
                           </div>
                         )}
                       </table>
+
+                      {/* Thêm phân trang */}
+                      {filteredJobs.length > 0 && (
+                        <div className="pagination-container mt-4 d-flex justify-content-center">
+                          <nav aria-label="Job applications pagination">
+                            <ul className="pagination">
+                              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                                <button
+                                  className="page-link"
+                                  onClick={goToPreviousPage}
+                                  disabled={currentPage === 1}
+                                >
+                                  <i className="la la-angle-left"></i>
+                                </button>
+                              </li>
+
+                              {[...Array(totalPages).keys()].map((number) => (
+                                <li
+                                  key={number + 1}
+                                  className={`page-item ${currentPage === number + 1 ? "active" : ""}`}
+                                >
+                                  <button
+                                    className="page-link"
+                                    onClick={() => paginate(number + 1)}
+                                  >
+                                    {number + 1}
+                                  </button>
+                                </li>
+                              ))}
+
+                              <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                                <button
+                                  className="page-link"
+                                  onClick={goToNextPage}
+                                  disabled={currentPage === totalPages}
+                                >
+                                  <i className="la la-angle-right"></i>
+                                </button>
+                              </li>
+                            </ul>
+                          </nav>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -208,7 +279,34 @@ export const index = () => {
           </div>
         </div>
       </section>
-      {/* End Dashboard */}
+
+      <style>
+        {`
+          /* Pagination styling */
+          .pagination-container {
+            margin-top: 20px;
+          }
+          
+          .pagination .page-link {
+            color: #2361ff;
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+          }
+          
+          .pagination .page-item.active .page-link {
+            background-color: #2361ff;
+            border-color: #2361ff;
+            color: white;
+          }
+          
+          .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #fff;
+            border-color: #dee2e6;
+          }
+        `}
+      </style>
     </>
   );
 };

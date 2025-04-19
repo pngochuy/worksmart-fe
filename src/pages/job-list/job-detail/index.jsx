@@ -9,9 +9,9 @@ import {
   checkApplyStatus,
   fetchJobDetails,
 } from "@/services/jobServices";
-import { 
-  toggleFavoriteJob, 
-  checkJobIsFavorite 
+import {
+  toggleFavoriteJob,
+  checkJobIsFavorite
 } from "@/services/favoriteJobService"; // Import favorite job service
 import { Clock, FileEdit, Heart, MoveUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -50,7 +50,7 @@ export const Index = () => {
   // Check if job is in user's favorites
   const checkFavoriteStatus = async () => {
     if (!userID || !jobId) return;
-    
+
     try {
       const isFav = await checkJobIsFavorite(userID, jobId);
       setIsFavorite(isFav);
@@ -91,7 +91,7 @@ export const Index = () => {
               setFeaturedCV(featured);
             }
           }
-          
+
           // Check if job is saved as favorite
           checkFavoriteStatus();
         }
@@ -182,7 +182,7 @@ export const Index = () => {
     setSavingFavorite(true);
     try {
       const result = await toggleFavoriteJob(userID, jobId);
-      
+
       if (result.isFavorite) {
         setIsFavorite(true);
         toast.success("Job saved to favorites successfully!");
@@ -311,20 +311,18 @@ export const Index = () => {
                     <div className="tags d-flex align-items-center gap-2">
                       <Button
                         variant="outline"
-                        className={`border hover:bg-blue-100 flex items-center gap-2 ${
-                          isFavorite
-                            ? "text-blue-600 border-blue-200 bg-blue-50"
-                            : "text-gray-500 border-gray-200 hover:text-blue-600"
-                        }`}
+                        className={`border hover:bg-blue-100 flex items-center gap-2 ${isFavorite
+                          ? "text-blue-600 border-blue-200 bg-blue-50"
+                          : "text-gray-500 border-gray-200 hover:text-blue-600"
+                          }`}
                         onClick={handleSaveJobClick}
                         disabled={savingFavorite}
                       >
-                        <Heart 
-                          className={`h-4 w-4 ${
-                            isFavorite 
-                              ? "text-blue-500 fill-blue-500" 
-                              : "text-gray-500"
-                          }`} 
+                        <Heart
+                          className={`h-4 w-4 ${isFavorite
+                            ? "text-blue-500 fill-blue-500"
+                            : "text-gray-500"
+                            }`}
                         />
                         <span className="hidden sm:inline">
                           {isFavorite ? "Saved" : "Save"}
@@ -579,20 +577,18 @@ export const Index = () => {
                       <div className="btn-box mb-3">
                         <Button
                           variant="outline"
-                          className={`w-full border hover:bg-blue-100 flex items-center justify-center gap-2 ${
-                            isFavorite
-                              ? "text-blue-600 border-blue-200 bg-blue-50"
-                              : "text-gray-500 border-gray-200 hover:text-blue-600"
-                          }`}
+                          className={`w-full border hover:bg-blue-100 flex items-center justify-center gap-2 ${isFavorite
+                            ? "text-blue-600 border-blue-200 bg-blue-50"
+                            : "text-gray-500 border-gray-200 hover:text-blue-600"
+                            }`}
                           onClick={handleSaveJobClick}
                           disabled={savingFavorite}
                         >
-                          <Heart 
-                            className={`h-4 w-4 ${
-                              isFavorite 
-                                ? "text-blue-500 fill-blue-500" 
-                                : "text-gray-500"
-                            }`} 
+                          <Heart
+                            className={`h-4 w-4 ${isFavorite
+                              ? "text-blue-500 fill-blue-500"
+                              : "text-gray-500"
+                              }`}
                           />
                           <span>{isFavorite ? "Saved to Favorites" : "Save Job"}</span>
                         </Button>
