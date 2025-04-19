@@ -101,25 +101,44 @@ export const Sidebar = () => {
             className="px-3 py-2 text-gray-600"
             style={{ fontSize: "0.85rem" }}
           >
-            <Tooltip target=".subscription-info" className="custom-tooltip" position="right" showDelay={0} hideDelay={0} />
-            <span>Plan: </span>
-            <span className={`font-medium ${subscriptionData?.hasActiveSubscription ? 'text-blue-500' : 'text-blue-500'}`}>
-              {subscriptionData?.hasActiveSubscription
-                ? subscriptionData.package.name.split(" ")[1]
-                : "Free"}
-              {subscriptionData && subscriptionData.hasActiveSubscription && subscriptionData.expireDate && (
-                <i
-                  className="fa-solid fa-info-circle ml-2 subscription-info"
-                  data-pr-tooltip={`Expires on: ${new Date(subscriptionData.expireDate).toLocaleDateString()}`}
-                  style={{ cursor: "pointer" }}
-                  data-pr-position="right"
-                  data-pr-at="right+9 top"
-                  data-pr-my="left center-2"
-                ></i>
-              )}
-            </span>
+            <Tooltip
+              target=".subscription-info"
+              className="custom-tooltip"
+              position="right"
+              showDelay={0}
+              hideDelay={0}
+            />
+            {userDataLogin?.role !== "Admin" && (
+              <>
+                <span>Plan: </span>
+                <span
+                  className={`font-medium ${
+                    subscriptionData?.hasActiveSubscription
+                      ? "text-blue-500"
+                      : "text-blue-500"
+                  }`}
+                >
+                  {subscriptionData?.hasActiveSubscription
+                    ? subscriptionData.package.name.split(" ")[1]
+                    : "Free"}
+                  {subscriptionData &&
+                    subscriptionData.hasActiveSubscription &&
+                    subscriptionData.expireDate && (
+                      <i
+                        className="fa-solid fa-info-circle ml-2 subscription-info"
+                        data-pr-tooltip={`Expires on: ${new Date(
+                          subscriptionData.expireDate
+                        ).toLocaleDateString()}`}
+                        style={{ cursor: "pointer" }}
+                        data-pr-position="right"
+                        data-pr-at="right+9 top"
+                        data-pr-my="left center-2"
+                      ></i>
+                    )}
+                </span>
+              </>
+            )}
           </div>
-
 
           {/* Account Verification */}
           {userDataLogin?.role === "Employer" && (
