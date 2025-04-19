@@ -50,13 +50,11 @@ export const AdminSidebar = () => {
             <i className="fa fa-chart-line"></i> Reports
           </NavLink>
         </li>
-        {/* <li
-          className={checkActive("/admin/payments-management") ? "active" : ""}
-        >
-          <NavLink to="/admin/payments-management">
-            <i className="fa fa-credit-card"></i> Payments Management
+        <li className={checkActive("/admin/transactions") ? "active" : ""}>
+          <NavLink to="/admin/transactions">
+            <i className="fa fa-money-check"></i> Transactions
           </NavLink>
-        </li> */}
+        </li>
         {/* <li
           className={checkActive("/admin/feedbackmanagement") ? "active" : ""}
         >
@@ -64,7 +62,7 @@ export const AdminSidebar = () => {
             <i className="fa fa-comment-dots"></i> Feedback Management
           </NavLink>
         </li> */}
-        {/* <li
+        <li
           className={
             checkActive("/admin/subscription-plans-management") ? "active" : ""
           }
@@ -72,7 +70,7 @@ export const AdminSidebar = () => {
           <NavLink to="/admin/subscription-plans-management">
             <i className="fa fa-gift"></i> Plans Management
           </NavLink>
-        </li> */}
+        </li>
         <li className={checkActive("/admin/settings") ? "active" : ""}>
           <NavLink to="/admin/settings">
             <i className="fa fa-cog"></i> Settings

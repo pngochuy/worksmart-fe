@@ -46,31 +46,39 @@ export default function CandidatesPage() {
 
       // Process candidates with CV data
       const processedCandidates = [];
-
+      console.log("Fetched candidates data:", data);
       if (Array.isArray(data)) {
         // Fetch CV data for each candidate if they have a CV ID
         for (const candidate of data) {
           let enrichedCandidate = {
             ...candidate,
             // Default fallback name
-            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+            candidateName:
+              candidate.candidateName ||
+              candidate.fullName ||
+              "Unknown Candidate",
           };
 
           // If candidate has a CV ID, try to fetch CV data
           if (candidate.cvid) {
             try {
               const cvData = await getCVById(candidate.cvid);
-              console.log(`CV data for candidate ${candidate.applicationID}:`, cvData);
-
+              console.log(
+                `CV data for candidate ${candidate.applicationID}:`,
+                cvData
+              );
 
               enrichedCandidate = {
                 ...enrichedCandidate,
                 candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
                 email: cvData?.email || "Unknown",
-                cvData: cvData
+                cvData: cvData,
               };
             } catch (cvError) {
-              console.error(`Error fetching CV for candidate ${candidate.applicationID}:`, cvError);
+              console.error(
+                `Error fetching CV for candidate ${candidate.applicationID}:`,
+                cvError
+              );
             }
           }
 
@@ -84,7 +92,10 @@ export default function CandidatesPage() {
         for (const candidate of data.candidates) {
           let enrichedCandidate = {
             ...candidate,
-            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+            candidateName:
+              candidate.candidateName ||
+              candidate.fullName ||
+              "Unknown Candidate",
           };
 
           if (candidate.cvid) {
@@ -92,9 +103,10 @@ export default function CandidatesPage() {
               const cvData = await getCVById(candidate.cvid);
               enrichedCandidate = {
                 ...enrichedCandidate,
-                candidateName: cvData?.fullName || enrichedCandidate.candidateName,
+                candidateName:
+                  cvData?.fullName || enrichedCandidate.candidateName,
                 email: cvData?.email || enrichedCandidate.email,
-                cvData: cvData
+                cvData: cvData,
               };
             } catch (cvError) {
               console.error(`Error fetching CV:`, cvError);
@@ -180,9 +192,9 @@ export default function CandidatesPage() {
   const handleMessageClick = (candidate) => {
     setSelectedCandidate({
       ...candidate,
-      userID: candidate.userID,     // Đảm bảo userID được thiết lập đúng
+      userID: candidate.userID, // Đảm bảo userID được thiết lập đúng
       fullName: candidate.fullName, // Đảm bảo fullName được thiết lập đúng
-      email: candidate.email       // Đảm bảo email được thiết lập đúng
+      email: candidate.email, // Đảm bảo email được thiết lập đúng
     });
     setShowMessageDialog(true);
   };
@@ -330,32 +342,34 @@ export default function CandidatesPage() {
                           candidates.map((candidate) => (
                             <tr key={candidate.applicationID}>
                               <td>
-                                <div className="candidate-name">
-                                  <div className="candidate-avatar">
+                                <div className="d-flex align-items-center">
+                                  <div className="flex-shrink-0">
                                     <img
                                       src={
                                         candidate?.avatar
                                           ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.avatar}
-                                      className={{
-                                        height: "50px",
-                                        width: "50px",
-                                        borderRadius: "50%",
-                                        objectFit: "cover"
-                                      }}
+                                      alt={
+                                        candidate.candidateName || "Candidate"
+                                      }
+                                      className="rounded-circle"
+                                      width="50"
+                                      height="50"
                                     />
                                   </div>
-                                  <div className="candidate-info">
-                                    <span className="name">
-                                      {candidate.fullName || "Unknown Candidate"}
+                                  <div className="flex-grow-1 ms-3 text-truncate">
+                                    <span className="fw-bold">
+                                      {candidate.fullName ||
+                                        "Unknown Candidate"}
                                     </span>
                                   </div>
                                 </div>
                               </td>
+
                               <td>
-                                <a href={`mailto:${candidate.email}`}
+                                <a
+                                  href={`mailto:${candidate.email}`}
                                   className="email-link"
                                 >
                                   {candidate.email || "Unknown"}
@@ -363,8 +377,8 @@ export default function CandidatesPage() {
                               </td>
                               <td>
                                 {candidate.phoneNumber ? (
-
-                                  <a href={`tel:${candidate.phoneNumber}`}
+                                  <a
+                                    href={`tel:${candidate.phoneNumber}`}
                                     className="phone-link"
                                   >
                                     {candidate.phoneNumber}
@@ -373,7 +387,9 @@ export default function CandidatesPage() {
                                   "Unknown"
                                 )}
                               </td>
-                              <td>{getStatusBadge(candidate.applicationStatus)}</td>
+                              <td>
+                                {getStatusBadge(candidate.applicationStatus)}
+                              </td>
                               <td className="text-center">
                                 <div className="action-buttons">
                                   {/* View Detail Button */}
@@ -389,10 +405,13 @@ export default function CandidatesPage() {
                                   </button>
 
                                   {/* Message Button - Only show for Approved candidates */}
-                                  {candidate.applicationStatus?.toLowerCase() === "approved" && (
+                                  {candidate.applicationStatus?.toLowerCase() ===
+                                    "approved" && (
                                     <button
                                       className="message-btn"
-                                      onClick={() => handleMessageClick(candidate)}
+                                      onClick={() =>
+                                        handleMessageClick(candidate)
+                                      }
                                     >
                                       <i className="fas fa-comment-alt"></i>{" "}
                                       Message
@@ -503,8 +522,7 @@ export default function CandidatesPage() {
             </div>
           </div>
         </div>
-      )
-      }
+      )}
 
       <style>{`
         .view-detail-btn, .message-btn {
@@ -1017,6 +1035,6 @@ export default function CandidatesPage() {
           margin-right: 8px;
         }
       `}</style>
-    </section >
+    </section>
   );
 }

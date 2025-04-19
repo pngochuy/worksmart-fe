@@ -141,7 +141,7 @@ export const Index = () => {
   const handleCreateCV = async () => {
     try {
       const userActiveSubscription = await hasActiveSubscription();
-      console.log(userActiveSubscription);
+      console.log("userActiveSubscription: ", userActiveSubscription);
       if (userActiveSubscription.hasActiveSubscription === true) {
         if (resumes.length >= userActiveSubscription.package.cvLimit) {
           toast.warning(
@@ -810,8 +810,9 @@ const SystemCVCard = ({
               variant="outline"
               size="sm"
               onClick={() => onSetAsFeatured(resume.cvid)}
-              className={`flex-1 ${isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
-                }`}
+              className={`flex-1 ${
+                isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
+              }`}
             >
               <Star
                 className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
@@ -947,8 +948,9 @@ const CVCard = ({
               variant="outline"
               size="sm"
               onClick={() => onSetAsFeatured(resume.cvid)}
-              className={`flex-1 ${isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
-                }`}
+              className={`flex-1 ${
+                isFeatured ? "bg-amber-50 border-amber-200 text-amber-700" : ""
+              }`}
             >
               <Star
                 className={`size-4 mr-1 ${isFeatured ? "fill-amber-500" : ""}`}
