@@ -207,9 +207,9 @@ export default function EmployerCandidateDetailPage() {
                     </div>
                     <div className="candidate-header-info">
                       <h2 className="candidate-name">
-                        {cv?.firstName && cv?.lastName ?
-                          `${cv.lastName} ${cv.firstName}`.trim() :
-                          (candidate.fullName || "Unknown Candidate")}
+                        {cv?.firstName && cv?.lastName
+                          ? `${cv.lastName} ${cv.firstName}`.trim()
+                          : candidate.fullName || "Unknown Candidate"}
                       </h2>
                       <div className="status-badge-container">
                         <span
@@ -221,7 +221,7 @@ export default function EmployerCandidateDetailPage() {
                       <div className="candidate-contact">
                         <div className="contact-item">
                           <i className="fas fa-envelope"></i>
-                          <a href={`mailto:${cv?.email || ''}`}>
+                          <a href={`mailto:${cv?.email || ""}`}>
                             {cv?.email || "Unknown email"}
                           </a>
                         </div>
@@ -241,23 +241,29 @@ export default function EmployerCandidateDetailPage() {
                           <ConfirmDialog
                             title="Accept Candidate"
                             description="Are you sure you want to accept this candidate?"
-                            confirmText={isAccepting ? "Processing..." : "Accept"}
+                            confirmText={
+                              isAccepting ? "Processing..." : "Accept"
+                            }
                             variant="primary"
                             onConfirm={handleAccept}
                             showReasonField={false}
                             disabled={isAccepting || isRejecting}
                           >
                             <button
-                              className={`accept-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
+                              className={`accept-btn ${
+                                isAccepting || isRejecting ? "disabled" : ""
+                              }`}
                               disabled={isAccepting || isRejecting}
                             >
                               {isAccepting ? (
                                 <>
-                                  <i className="fas fa-spinner fa-spin"></i> Processing...
+                                  <i className="fas fa-spinner fa-spin"></i>{" "}
+                                  Processing...
                                 </>
                               ) : (
                                 <>
-                                  <i className="fas fa-check-circle"></i> Accept Candidate
+                                  <i className="fas fa-check-circle"></i> Accept
+                                  Candidate
                                 </>
                               )}
                             </button>
@@ -269,23 +275,29 @@ export default function EmployerCandidateDetailPage() {
                           <ConfirmDialog
                             title="Reject Candidate"
                             description="Please provide a reason for rejecting this candidate. This reason will be included in the email sent to the candidate."
-                            confirmText={isRejecting ? "Processing..." : "Reject"}
+                            confirmText={
+                              isRejecting ? "Processing..." : "Reject"
+                            }
                             variant="destructive"
                             onConfirm={handleReject}
                             showReasonField={true}
                             disabled={isAccepting || isRejecting}
                           >
                             <button
-                              className={`reject-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
+                              className={`reject-btn ${
+                                isAccepting || isRejecting ? "disabled" : ""
+                              }`}
                               disabled={isAccepting || isRejecting}
                             >
                               {isRejecting ? (
                                 <>
-                                  <i className="fas fa-spinner fa-spin"></i> Processing...
+                                  <i className="fas fa-spinner fa-spin"></i>{" "}
+                                  Processing...
                                 </>
                               ) : (
                                 <>
-                                  <i className="fas fa-times-circle"></i> Reject Candidate
+                                  <i className="fas fa-times-circle"></i> Reject
+                                  Candidate
                                 </>
                               )}
                             </button>
