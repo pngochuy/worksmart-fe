@@ -343,13 +343,12 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
               <div className="mt-4">
                 <h4 className="text-md font-medium mb-2">Status</h4>
                 <span
-                  className={`px-3 py-1 rounded text-sm ${
-                    jobDetails.status === 1
-                      ? "bg-green-100 text-green-800"
-                      : jobDetails.status === 2
+                  className={`px-3 py-1 rounded text-sm ${jobDetails.status === 1
+                    ? "bg-green-100 text-green-800"
+                    : jobDetails.status === 2
                       ? "bg-red-100 text-red-800"
                       : "bg-gray-100 text-gray-800"
-                  }`}
+                    }`}
                 >
                   {jobDetails.status === 1 ? "Active" : "Closed"}
                 </span>
@@ -373,8 +372,8 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
                   {jobDetails.exp === 1
                     ? "year"
                     : jobDetails.exp > 1
-                    ? "years"
-                    : ""}
+                      ? "years"
+                      : ""}
                 </p>
               </div>
               <div>
@@ -446,45 +445,45 @@ function JobDetailsDialog({ job, open, onOpenChange }) {
               jobDetails.phoneNumber ||
               jobDetails.address ||
               jobDetails.companyWebsite) && (
-              <div>
-                <h4 className="text-md font-medium mb-2">
-                  Contact Information
-                </h4>
-                <div className="bg-gray-50 p-4 rounded space-y-2">
-                  {jobDetails.email && (
-                    <p>
-                      <span className="font-medium">Email:</span>{" "}
-                      {jobDetails.email}
-                    </p>
-                  )}
-                  {jobDetails.phoneNumber && (
-                    <p>
-                      <span className="font-medium">Phone:</span>{" "}
-                      {jobDetails.phoneNumber}
-                    </p>
-                  )}
-                  {jobDetails.address && (
-                    <p>
-                      <span className="font-medium">Address:</span>{" "}
-                      {jobDetails.address}
-                    </p>
-                  )}
-                  {jobDetails.companyWebsite && (
-                    <p>
-                      <span className="font-medium">Website:</span>
-                      <a
-                        href={jobDetails.companyWebsite}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline ml-1"
-                      >
-                        {jobDetails.companyWebsite}
-                      </a>
-                    </p>
-                  )}
+                <div>
+                  <h4 className="text-md font-medium mb-2">
+                    Contact Information
+                  </h4>
+                  <div className="bg-gray-50 p-4 rounded space-y-2">
+                    {jobDetails.email && (
+                      <p>
+                        <span className="font-medium">Email:</span>{" "}
+                        {jobDetails.email}
+                      </p>
+                    )}
+                    {jobDetails.phoneNumber && (
+                      <p>
+                        <span className="font-medium">Phone:</span>{" "}
+                        {jobDetails.phoneNumber}
+                      </p>
+                    )}
+                    {jobDetails.address && (
+                      <p>
+                        <span className="font-medium">Address:</span>{" "}
+                        {jobDetails.address}
+                      </p>
+                    )}
+                    {jobDetails.companyWebsite && (
+                      <p>
+                        <span className="font-medium">Website:</span>
+                        <a
+                          href={jobDetails.companyWebsite}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline ml-1"
+                        >
+                          {jobDetails.companyWebsite}
+                        </a>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Tags/Skills */}
             {jobDetails.jobDetailTags &&
@@ -673,16 +672,16 @@ export function CompanyDetailsDialog({ job, open, onOpenChange }) {
             </div>
 
             {/* Tags Section */}
-            {companyDetails.tags && companyDetails.tags.length > 0 && (
+            {companyDetails.jobDetailTags && companyDetails.jobDetailTags.length > 0 && (
               <div>
                 <h4 className="text-md font-medium mb-2">Tags</h4>
                 <div className="flex flex-wrap gap-2">
-                  {companyDetails.tags.map((tag, index) => (
+                  {companyDetails.jobDetailTags.map((tag, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-gray-100 rounded text-sm"
                     >
-                      {tag}
+                      {tag.tagName}
                     </span>
                   ))}
                 </div>

@@ -17,6 +17,8 @@ import ChatPopup from "./ChatPopup";
 import axios from "axios";
 import notificationSound from "../assets/sounds/messageSound.mp3";
 import { Crown, LayoutDashboard } from "lucide-react";
+import { getUserFavoriteJobsList } from "@/services/candidateServices";
+
 const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
 
 export const Header = () => {
@@ -27,6 +29,7 @@ export const Header = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isTabActive, setIsTabActive] = useState(true);
+  const [favouriteJobsCount, setFavouriteJobsCount] = useState(0);
   const [newMessageCount, setNewMessageCount] = useState(0);
 
   // Reference to store SignalR connection
@@ -205,6 +208,24 @@ export const Header = () => {
     setIsChatOpen(!isChatOpen);
   };
 
+  useEffect(() => {
+    const handleRefreshFavourites = async () => {
+      const user = getUserLoginData();
+      if (!user) return;
+      try {
+        const userId = user.userID;
+        const data = await getUserFavoriteJobsList(userId);
+        setFavouriteJobsCount(data ? data.length : 0);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    handleRefreshFavourites();
+    return () => {
+    };
+  }, [userDataLogin]);
+
   return (
     <>
       {/* Main Header*/}
@@ -247,8 +268,8 @@ export const Header = () => {
                 </li>
                 <li
                   className={`dropdown ${activeDropdown?.innerText.includes("Company")
-                      ? "current"
-                      : ""
+                    ? "current"
+                    : ""
                     }`}
                 >
                   <span>Company</span>
@@ -263,8 +284,8 @@ export const Header = () => {
                 </li>
                 <li
                   className={`dropdown ${activeDropdown?.innerText.includes("Profile & CV")
-                      ? "current"
-                      : ""
+                    ? "current"
+                    : ""
                     }`}
                 >
                   <span>Profile & CV</span>
@@ -280,8 +301,8 @@ export const Header = () => {
                 {userRole === "Employer" && (
                   <li
                     className={`dropdown ${activeDropdown?.innerText.includes("Candidates")
-                        ? "current"
-                        : ""
+                      ? "current"
+                      : ""
                       }`}
                   >
                     <span>Candidates</span>
@@ -331,9 +352,11 @@ export const Header = () => {
                       Upgrade Account
                     </a>
                     <a href="/candidate/saved-jobs" className="menu-btn">
-                      <span className="count" style={{ textAlign: "center" }}>
-                        1
-                      </span>
+                      {favouriteJobsCount > 0 && (
+                        <span className="count" style={{ textAlign: "center" }}>
+                          {favouriteJobsCount}
+                        </span>
+                      )}
                       <span className="icon la la-heart-o"></span>
                     </a>
                   </>
