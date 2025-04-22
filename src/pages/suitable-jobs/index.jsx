@@ -54,23 +54,21 @@ const ModifiedMatchingJobs = () => {
 
   // Function to convert API score to display percentage
   const convertScoreToPercentage = (score) => {
-    // Base conversion (score to percentage)
-    let percentage = Math.round(score * 100);
-
-    // Apply tiered bonus based on score ranges
-    if (score >= 0.591 && score <= 0.79) {
-      // Add 20% bonus for high matches
-      percentage += 20;
-    } else if (score >= 0.55 && score <= 0.59) {
-      // Add 10% bonus for medium matches
-      percentage += 10;
-    } else if (score >= 0.491) {
-      // Add 5% bonus for low matches
-      percentage += 5;
-    }
-
-    // Cap at 100%
-    return Math.min(percentage, 100);
+    if (score >= 0.93) return 98;
+    if (score >= 0.9) return 96;
+    if (score >= 0.87) return 94;
+    if (score >= 0.83) return 91;
+    if (score >= 0.8) return 88;
+    if (score >= 0.77) return 85;
+    if (score >= 0.74) return 82;
+    if (score >= 0.7) return 79;
+    if (score >= 0.66) return 75;
+    if (score >= 0.62) return 71;
+    if (score >= 0.58) return 67;
+    if (score >= 0.55) return 63;
+    if (score >= 0.52) return 59;
+    if (score >= 0.5) return 56;
+    return 52; // fallback thấp nhất
   };
 
   // Define color functions

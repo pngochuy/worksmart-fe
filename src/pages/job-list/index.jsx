@@ -674,12 +674,6 @@ export const Index = () => {
               <SalaryRangeDropdown setSearchParams={setSearchParams} />
             </div>
             <div className="flex-1 min-w-[220px]">
-              <JobPositionDropdown
-                searchParams={searchParams}
-                setSearchParams={setSearchParams}
-              />
-            </div>
-            <div className="flex-1 min-w-[220px]">
               <CategoryDropdown setSearchParams={setSearchParams} />
             </div>
             <div className="flex-1 min-w-[220px]">
