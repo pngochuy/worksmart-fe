@@ -34,16 +34,13 @@ const EditJobPage = () => {
     minSalary: "",
     maxSalary: "",
   });
-  // Thêm state để theo dõi vị trí con trỏ
   const [cursorPositions, setCursorPositions] = useState({
     minSalary: 0,
     maxSalary: 0,
   });
-  // Refs để tham chiếu tới các input elements
   const minSalaryInputRef = useRef(null);
   const maxSalaryInputRef = useRef(null);
 
-  // Cập nhật vị trí con trỏ sau mỗi lần render
   useEffect(() => {
     if (minSalaryInputRef.current) {
       minSalaryInputRef.current.selectionStart = cursorPositions.minSalary;
@@ -66,7 +63,6 @@ const EditJobPage = () => {
           ? new Date(data.job.deadline).toLocaleDateString("en-CA")
           : "";
 
-        // Parse salary string (format: "minSalary - maxSalary")
         let minSalary = "";
         let maxSalary = "";
         if (data.job.salary) {
@@ -75,11 +71,9 @@ const EditJobPage = () => {
             .map((part) => part.trim());
 
           if (salaryParts.length === 2) {
-            // Xử lý dữ liệu đầu vào - loại bỏ dấu phẩy nếu có
             const minClean = salaryParts[0].replace(/,/g, "");
             const maxClean = salaryParts[1].replace(/,/g, "");
 
-            // Chuyển đổi về số và định dạng lại với dấu phẩy
             const minNum = parseInt(minClean, 10);
             const maxNum = parseInt(maxClean, 10);
 

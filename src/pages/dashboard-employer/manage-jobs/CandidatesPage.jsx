@@ -4,10 +4,10 @@ import {
   fetchJobDetails,
 } from "../../../services/jobServices";
 import { useParams, useNavigate } from "react-router-dom";
-import Pagination from "./Pagination"; // Reusing your existing Pagination component
+import Pagination from "./Pagination";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { getCVById } from "../../../services/cvServices"; // Add this import
+import { getCVById } from "../../../services/cvServices";
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -19,8 +19,8 @@ export default function CandidatesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
-    PageSize: 5, // Show 5 candidates per page
-    name: "", // To filter by candidate name
+    PageSize: 5,
+    name: "",
   });
 
   // New state for message dialog
@@ -38,21 +38,32 @@ export default function CandidatesPage() {
     getCandidates(jobId);
   }, [jobId, searchParams.PageIndex, searchParams.PageSize, searchParams.name]);
 
+  // New function to fetch user details by userID
+  const fetchUserById = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:5239/admins/list-user`);
+      const users = response.data;
+      
+      // Find the specific user with the matching userID
+      const user = users.find(user => user.userID === userId);
+      return user || null;
+    } catch (error) {
+      console.error(`Error fetching user details for ID ${userId}:`, error);
+      return null;
+    }
+  };
+
   const getCandidates = async (jobId) => {
     try {
       setLoading(true);
-      // Assuming your fetchCandidatesForJob function can accept pagination params
       const data = await fetchCandidatesForJob(jobId, searchParams);
       
-      // Process candidates with CV data
       const processedCandidates = [];
       
       if (Array.isArray(data)) {
-        // Fetch CV data for each candidate if they have a CV ID
         for (const candidate of data) {
           let enrichedCandidate = { 
             ...candidate,
-            // Default fallback name
             candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
           };
           
@@ -62,13 +73,38 @@ export default function CandidatesPage() {
               const cvData = await getCVById(candidate.cvid);
               console.log(`CV data for candidate ${candidate.applicationID}:`, cvData);
               
+              // Properly combine first and last name from CV
+              const fullName = cvData?.lastName && cvData?.firstName 
+                ? `${cvData.lastName} ${cvData.firstName}`
+                : enrichedCandidate.candidateName;
               
               enrichedCandidate = {
                 ...enrichedCandidate,
-                candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
-                email: cvData?.email || "Unknown",
+                candidateName: fullName,
+                email: cvData?.email || enrichedCandidate.email || candidate.email || "Unknown",
+                phoneNumber: cvData?.phone || enrichedCandidate.phoneNumber || candidate.phoneNumber,
                 cvData: cvData
               };
+              
+              // NEW: If userID is available in cvData, fetch user details from the admin API
+              if (cvData?.userID) {
+                try {
+                  const userData = await fetchUserById(cvData.userID);
+                  if (userData) {
+                    // Enhance candidate data with additional user information if needed
+                    enrichedCandidate = {
+                      ...enrichedCandidate,
+                      userData: userData,
+                      // You can override or add additional user data here if needed
+                      avatar: userData.avatar || enrichedCandidate.avatar,
+                      email: userData.email || enrichedCandidate.email,
+                      phoneNumber: userData.phoneNumber || enrichedCandidate.phoneNumber
+                    };
+                  }
+                } catch (userError) {
+                  console.error(`Error fetching user data for candidate ${candidate.applicationID}:`, userError);
+                }
+              }
             } catch (cvError) {
               console.error(`Error fetching CV for candidate ${candidate.applicationID}:`, cvError);
             }
@@ -91,12 +127,39 @@ export default function CandidatesPage() {
           if (candidate.cvid) {
             try {
               const cvData = await getCVById(candidate.cvid);
+              
+              // Properly combine first and last name from CV
+              const fullName = cvData?.lastName && cvData?.firstName 
+                ? `${cvData.lastName} ${cvData.firstName}`
+                : enrichedCandidate.candidateName;
+                
               enrichedCandidate = {
                 ...enrichedCandidate,
-                candidateName: cvData?.fullName || enrichedCandidate.candidateName,
-                email: cvData?.email || enrichedCandidate.email,
+                candidateName: fullName,
+                email: cvData?.email || enrichedCandidate.email || "Unknown",
+                phoneNumber: cvData?.phone || enrichedCandidate.phoneNumber,
                 cvData: cvData
               };
+              
+              // NEW: If userID is available in cvData, fetch user details from the admin API
+              if (cvData?.userID) {
+                try {
+                  const userData = await fetchUserById(cvData.userID);
+                  if (userData) {
+                    // Enhance candidate data with additional user information
+                    enrichedCandidate = {
+                      ...enrichedCandidate,
+                      userData: userData,
+                      // You can override or add additional user data here if needed
+                      avatar: userData.avatar || enrichedCandidate.avatar,
+                      email: userData.email || enrichedCandidate.email,
+                      phoneNumber: userData.phoneNumber || enrichedCandidate.phoneNumber
+                    };
+                  }
+                } catch (userError) {
+                  console.error(`Error fetching user data for candidate ${candidate.applicationID}:`, userError);
+                }
+              }
             } catch (cvError) {
               console.error(`Error fetching CV:`, cvError);
             }
@@ -184,7 +247,7 @@ export default function CandidatesPage() {
     setShowMessageDialog(true);
   };
 
-  // Update handleSendMessage
+  // Update handleSendMessage to use userData if available
   const handleSendMessage = async () => {
     if (!messageText.trim()) {
       toast.error("Please enter a message");
@@ -196,7 +259,16 @@ export default function CandidatesPage() {
     try {
       // Get sender (employer) and receiver (candidate) IDs
       const senderId = user.userID;
-      const receiverId = selectedCandidate.userID; // Assuming this property exists
+      
+      // Get receiverId with priority: userData > cvData > candidate object
+      const receiverId = 
+        (selectedCandidate.userData?.userID) || 
+        (selectedCandidate.cvData?.userID) || 
+        selectedCandidate.userID;
+
+      if (!receiverId) {
+        throw new Error("Could not determine recipient's user ID");
+      }
 
       // Create message data
       const messageData = {
@@ -233,7 +305,6 @@ export default function CandidatesPage() {
               <i className="fas fa-arrow-left mr-1"></i> Back
             </button>
             <h3>
-              {/* <i className="fas fa-users mr-2"></i> */}
               Candidates for: <span className="text-primary">{jobTitle}</span>
             </h3>
           </div>
@@ -331,11 +402,11 @@ export default function CandidatesPage() {
                                   <div className="candidate-avatar">
                                     <img
                                       src={
-                                        candidate?.avatar
-                                          ? candidate.avatar
+                                         candidate?.userData?.avatar
+                                          ? candidate.userData.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.candidateName || "Candidate"}
+                                      alt={candidate.userData?.fullName || "Candidate"}
                                       style={{
                                         height: "50px",
                                         width: "50px",
@@ -346,26 +417,31 @@ export default function CandidatesPage() {
                                   </div>
                                   <div className="candidate-info">
                                     <span className="name">
-                                      {candidate.candidateName || "Unknown Candidate"}
+                                      {candidate.userData?.fullName || "Unknown Candidate"}
                                     </span>
+                                    
                                   </div>
                                 </div>
                               </td>
                               <td>
-                                <a
-                                  href={`mailto:${candidate.email}`}
-                                  className="email-link"
-                                >
-                                  {candidate.email || "Unknown"}
-                                </a>
+                                {candidate.userData?.email ? (
+                                  <a
+                                    href={`mailto:${candidate.userData?.email}`}
+                                    className="email-link"
+                                  >
+                                    {candidate.userData?.email}
+                                  </a>
+                                ) : (
+                                  "Unknown"
+                                )}
                               </td>
                               <td>
-                                {candidate.phoneNumber ? (
+                                {candidate.userData?.phoneNumber ? (
                                   <a
-                                    href={`tel:${candidate.phoneNumber}`}
+                                    href={`tel:${candidate.userData?.phoneNumber}`}
                                     className="phone-link"
                                   >
-                                    {candidate.phoneNumber}
+                                    {candidate.userData?.phoneNumber}
                                   </a>
                                 ) : (
                                   "Unknown"
@@ -470,6 +546,12 @@ export default function CandidatesPage() {
                   <span className="label">Job Position:</span>
                   <span className="value">{jobTitle}</span>
                 </div>
+                {selectedCandidate.userData?.userID && (
+                  <div className="detail-item">
+                    <span className="label">User ID:</span>
+                    <span className="value">{selectedCandidate.userData.userID}</span>
+                  </div>
+                )}
               </div>
 
               <div className="message-textarea-container">
