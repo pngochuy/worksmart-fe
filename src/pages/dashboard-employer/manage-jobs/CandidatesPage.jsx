@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
 import axios from "axios";
+import { getCVById } from "../../../services/cvServices"; // Add this import
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -41,12 +42,81 @@ export default function CandidatesPage() {
     try {
       setLoading(true);
       // Assuming your fetchCandidatesForJob function can accept pagination params
-      // You might need to update your API service to handle pagination
       const data = await fetchCandidatesForJob(jobId, searchParams);
 
-      // If your API returns paginated data in this format:
+      // Process candidates with CV data
+      const processedCandidates = [];
+      console.log("Fetched candidates data:", data);
+      if (Array.isArray(data)) {
+        // Fetch CV data for each candidate if they have a CV ID
+        for (const candidate of data) {
+          let enrichedCandidate = {
+            ...candidate,
+            // Default fallback name
+            candidateName:
+              candidate.candidateName ||
+              candidate.fullName ||
+              "Unknown Candidate",
+          };
+
+          // If candidate has a CV ID, try to fetch CV data
+          if (candidate.cvid) {
+            try {
+              const cvData = await getCVById(candidate.cvid);
+              console.log(
+                `CV data for candidate ${candidate.applicationID}:`,
+                cvData
+              );
+
+              enrichedCandidate = {
+                ...enrichedCandidate,
+                candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
+                email: cvData?.email || "Unknown",
+                cvData: cvData,
+              };
+            } catch (cvError) {
+              console.error(
+                `Error fetching CV for candidate ${candidate.applicationID}:`,
+                cvError
+              );
+            }
+          }
+
+          processedCandidates.push(enrichedCandidate);
+        }
+      }
+
       if (data.candidates && data.totalPage) {
-        setCandidates(data.candidates);
+        // Process paginated data similar to above
+        const processedPaginatedCandidates = [];
+        for (const candidate of data.candidates) {
+          let enrichedCandidate = {
+            ...candidate,
+            candidateName:
+              candidate.candidateName ||
+              candidate.fullName ||
+              "Unknown Candidate",
+          };
+
+          if (candidate.cvid) {
+            try {
+              const cvData = await getCVById(candidate.cvid);
+              enrichedCandidate = {
+                ...enrichedCandidate,
+                candidateName:
+                  cvData?.fullName || enrichedCandidate.candidateName,
+                email: cvData?.email || enrichedCandidate.email,
+                cvData: cvData,
+              };
+            } catch (cvError) {
+              console.error(`Error fetching CV:`, cvError);
+            }
+          }
+
+          processedPaginatedCandidates.push(enrichedCandidate);
+        }
+
+        setCandidates(processedPaginatedCandidates);
         setTotalPage(data.totalPage);
       } else {
         // If your API doesn't support pagination yet, handle it client-side
@@ -75,12 +145,12 @@ export default function CandidatesPage() {
         setCandidates(filteredData);
       }
 
-      console.log("Candidates data:", data);
+      console.log("Processed candidates data:", processedCandidates);
       setLoading(false);
     } catch (error) {
       setLoading(false);
       console.error("Error fetching candidates:", error);
-      // toast.error("Could not load candidates. Please try again.");
+      toast.error("Could not load candidates. Please try again.");
     }
   };
 
@@ -99,10 +169,9 @@ export default function CandidatesPage() {
     navigate("/employer/manage-jobs");
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (applicationStatus) => {
     let badgeClass = "status-badge";
-
-    switch (status?.toLowerCase()) {
+    switch (applicationStatus?.toLowerCase()) {
       case "pending":
         badgeClass += " pending";
         break;
@@ -116,12 +185,17 @@ export default function CandidatesPage() {
         badgeClass += " default";
     }
 
-    return <span className={badgeClass}>{status || "Unknown"}</span>;
+    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
   };
 
   // New function to handle message button click
   const handleMessageClick = (candidate) => {
-    setSelectedCandidate(candidate);
+    setSelectedCandidate({
+      ...candidate,
+      userID: candidate.userID, // Đảm bảo userID được thiết lập đúng
+      fullName: candidate.fullName, // Đảm bảo fullName được thiết lập đúng
+      email: candidate.email, // Đảm bảo email được thiết lập đúng
+    });
     setShowMessageDialog(true);
   };
 
@@ -263,35 +337,36 @@ export default function CandidatesPage() {
                           </th>
                         </tr>
                       </thead>
-                      {/* comment out */}
                       <tbody>
                         {candidates.length > 0 ? (
                           candidates.map((candidate) => (
                             <tr key={candidate.applicationID}>
                               <td>
-                                <div className="candidate-name">
-                                  <div className="candidate-avatar">
+                                <div className="d-flex align-items-center">
+                                  <div className="flex-shrink-0">
                                     <img
                                       src={
                                         candidate?.avatar
                                           ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.avatar}
-                                      className={{
-                                        height: "50px",
-                                        width: "50px",
-                                        borderRadius: "50%",
-                                      }}
+                                      alt={
+                                        candidate.candidateName || "Candidate"
+                                      }
+                                      className="rounded-circle"
+                                      width="50"
+                                      height="50"
                                     />
                                   </div>
-                                  <div className="candidate-info">
-                                    <span className="name">
-                                      {candidate.fullName || "Unknown"}
+                                  <div className="flex-grow-1 ms-3 text-truncate">
+                                    <span className="fw-bold">
+                                      {candidate.fullName ||
+                                        "Unknown Candidate"}
                                     </span>
                                   </div>
                                 </div>
                               </td>
+
                               <td>
                                 <a
                                   href={`mailto:${candidate.email}`}
@@ -312,7 +387,9 @@ export default function CandidatesPage() {
                                   "Unknown"
                                 )}
                               </td>
-                              <td>{getStatusBadge(candidate.status)}</td>
+                              <td>
+                                {getStatusBadge(candidate.applicationStatus)}
+                              </td>
                               <td className="text-center">
                                 <div className="action-buttons">
                                   {/* View Detail Button */}
@@ -328,7 +405,7 @@ export default function CandidatesPage() {
                                   </button>
 
                                   {/* Message Button - Only show for Approved candidates */}
-                                  {candidate.status?.toLowerCase() ===
+                                  {candidate.applicationStatus?.toLowerCase() ===
                                     "approved" && (
                                     <button
                                       className="message-btn"
@@ -829,15 +906,13 @@ export default function CandidatesPage() {
         }
 
         .candidate-avatar {
-          width: 40px;
-          height: 40px;
+          width: 50px;
+          height: 50px;
           border-radius: 50%;
-          background-color: #3498db;
-          color: white;
+          overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
         }
 
         .candidate-info {

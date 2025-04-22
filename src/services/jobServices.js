@@ -47,7 +47,6 @@ export const fetchJobsForManagement = async (searchParams) => {
   try {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/Job/getAllJobManage`,
-      //  `${BACKEND_API_URL}/api/Job/ByEmployer`,
       {
         params: searchParams,
         paramsSerializer: (params) =>
@@ -65,6 +64,7 @@ export const fetchJobsForManagement = async (searchParams) => {
     return { jobs: [], totalPage: 0 };
   }
 };
+
 // Hàm lấy tất cả công việc
 export const getAllJobs = async () => {
   try {
@@ -100,6 +100,7 @@ export const fetchCandidateDetail = async (candidateId, jobId) => {
     throw error;
   }
 };
+
 export const fetchJobsByUserId = async (userId) => {
   try {
     const response = await axios.get(
@@ -111,6 +112,7 @@ export const fetchJobsByUserId = async (userId) => {
     throw error;
   }
 };
+
 // Fetch chi tiết của công việc
 export const fetchJobDetails = async (jobId) => {
   try {
@@ -135,6 +137,7 @@ export const checkLimitCreateJob = async (userID) => {
     return false;
   }
 };
+
 // Tạo công việc mới
 export const createJob = async (jobData) => {
   try {
@@ -150,6 +153,7 @@ export const createJob = async (jobData) => {
     throw error;
   }
 };
+
 // Hàm lấy danh sách ứng viên cho công việc theo ID
 export const fetchCandidatesForJob = async (jobId) => {
   try {
@@ -289,6 +293,7 @@ export const applyToJob = async (userId, jobId) => {
     throw error;
   }
 };
+
 export const fetchJobTags = async () => {
   try {
     const response = await axios.get(`${BACKEND_API_URL}/api/JobTag/getAll`);

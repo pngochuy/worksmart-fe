@@ -86,10 +86,10 @@ export default function EmployerCandidateDetailPage() {
       setIsAccepting(false);
     }
   };
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (applicationStatus) => {
     let badgeClass = "status-badge";
 
-    switch (status?.toLowerCase()) {
+    switch (applicationStatus?.toLowerCase()) {
       case "pending":
         badgeClass += " pending";
         break;
@@ -103,7 +103,7 @@ export default function EmployerCandidateDetailPage() {
         badgeClass += " default";
     }
 
-    return <span className={badgeClass}>{status || "Unknown"}</span>;
+    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
   };
   const handleBackToCandidates = () => {
     navigate(`/employer/manage-jobs/candidates/${jobId}`);
@@ -170,7 +170,7 @@ export default function EmployerCandidateDetailPage() {
         <div className="upper-title-box">
           <div className="title-flex">
             <button className="back-button" onClick={handleBackToCandidates}>
-              <i className="fas fa-arrow-left mr-1"></i> Back 
+              <i className="fas fa-arrow-left mr-1"></i> Back
             </button>
             <h3>
               Candidate Detail for:
@@ -192,12 +192,10 @@ export default function EmployerCandidateDetailPage() {
               <div className="widget-content">
                 <div className="candidate-info-container">
                   <div className="candidate-header">
-                    <div className="candidate-avatar-large">
+                    <div className="candidate-avatar">
                       <img
                         src={
                           candidate?.avatar
-                            ? candidate.avatar
-                            : "https://www.topcv.vn/images/avatar-default.jpg"
                         }
                         alt={candidate.avatar}
                         className={{
@@ -209,24 +207,24 @@ export default function EmployerCandidateDetailPage() {
                     </div>
                     <div className="candidate-header-info">
                       <h2 className="candidate-name">
-                        {candidate.fullName || "Unknown Candidate"}
+                        {cv?.firstName && cv?.lastName
+                          ? `${cv.lastName} ${cv.firstName}`.trim()
+                          : candidate.fullName || "Unknown Candidate"}
                       </h2>
                       <div className="status-badge-container">
                         <span
-                          className={`status-badge ${candidate.status?.toLowerCase()}`}
+                          className={`status-badge ${candidate.applicationStatus?.toLowerCase()}`}
                         >
-                          {getStatusBadge(candidate.status)}
+                          {getStatusBadge(candidate.applicationStatus)}
                         </span>
                       </div>
                       <div className="candidate-contact">
-                        {candidate.email && (
-                          <div className="contact-item">
-                            <i className="fas fa-envelope"></i>
-                            <a href={`mailto:${candidate.email}`}>
-                              {candidate.email}
-                            </a>
-                          </div>
-                        )}
+                        <div className="contact-item">
+                          <i className="fas fa-envelope"></i>
+                          <a href={`mailto:${cv?.email || ""}`}>
+                            {cv?.email || "Unknown email"}
+                          </a>
+                        </div>
                         {candidate.phoneNumber && (
                           <div className="contact-item">
                             <i className="fas fa-phone"></i>
@@ -238,56 +236,68 @@ export default function EmployerCandidateDetailPage() {
                       </div>
                     </div>
                     <div className="candidate-actions">
-                      {candidate.status !== "Rejected" &&
-                        candidate.status === "Pending" && (
+                      {candidate.applicationStatus !== "Rejected" &&
+                        candidate.applicationStatus === "Pending" && (
                           <ConfirmDialog
                             title="Accept Candidate"
                             description="Are you sure you want to accept this candidate?"
-                            confirmText={isAccepting ? "Processing..." : "Accept"}
+                            confirmText={
+                              isAccepting ? "Processing..." : "Accept"
+                            }
                             variant="primary"
                             onConfirm={handleAccept}
                             showReasonField={false}
                             disabled={isAccepting || isRejecting}
                           >
-                            <button 
-                              className={`accept-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
+                            <button
+                              className={`accept-btn ${
+                                isAccepting || isRejecting ? "disabled" : ""
+                              }`}
                               disabled={isAccepting || isRejecting}
                             >
                               {isAccepting ? (
                                 <>
-                                  <i className="fas fa-spinner fa-spin"></i> Processing...
+                                  <i className="fas fa-spinner fa-spin"></i>{" "}
+                                  Processing...
                                 </>
                               ) : (
                                 <>
-                                  <i className="fas fa-check-circle"></i> Accept Candidate
+                                  <i className="fas fa-check-circle"></i> Accept
+                                  Candidate
                                 </>
                               )}
                             </button>
                           </ConfirmDialog>
                         )}
 
-                      {candidate.status !== "Accepted" &&
-                        candidate.status === "Pending" && (
+                      {candidate.applicationStatus !== "Accepted" &&
+                        candidate.applicationStatus === "Pending" && (
                           <ConfirmDialog
                             title="Reject Candidate"
                             description="Please provide a reason for rejecting this candidate. This reason will be included in the email sent to the candidate."
-                            confirmText={isRejecting ? "Processing..." : "Reject"}
+                            confirmText={
+                              isRejecting ? "Processing..." : "Reject"
+                            }
                             variant="destructive"
                             onConfirm={handleReject}
                             showReasonField={true}
                             disabled={isAccepting || isRejecting}
                           >
-                            <button 
-                              className={`reject-btn ${(isAccepting || isRejecting) ? 'disabled' : ''}`}
+                            <button
+                              className={`reject-btn ${
+                                isAccepting || isRejecting ? "disabled" : ""
+                              }`}
                               disabled={isAccepting || isRejecting}
                             >
                               {isRejecting ? (
                                 <>
-                                  <i className="fas fa-spinner fa-spin"></i> Processing...
+                                  <i className="fas fa-spinner fa-spin"></i>{" "}
+                                  Processing...
                                 </>
                               ) : (
                                 <>
-                                  <i className="fas fa-times-circle"></i> Reject Candidate
+                                  <i className="fas fa-times-circle"></i> Reject
+                                  Candidate
                                 </>
                               )}
                             </button>
@@ -549,8 +559,6 @@ export default function EmployerCandidateDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* <style>{}</style> */}
     </section>
   );
 }

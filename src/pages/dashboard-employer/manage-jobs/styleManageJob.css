@@ -1,3 +1,44 @@
+/* CSS cho phần kéo thả cột - thêm vào file styleManageJob.css */
+
+.column-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    background-color: transparent;
+    cursor: col-resize;
+    z-index: 10;
+  }
+  
+  .column-resizer:hover, 
+  .column-resizer:active {
+    background-color: #0070f3;
+  }
+  
+  th {
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  .manage-job-table td {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  body.resizing {
+    cursor: col-resize !important;
+    user-select: none;
+  }
+  
+  .manage-job-table {
+    table-layout: fixed;
+    width: 100%;
+  }
 .upper-title-box {
     margin-bottom: 30px;
     display: flex;

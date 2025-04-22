@@ -141,7 +141,7 @@ export const Index = () => {
   const handleCreateCV = async () => {
     try {
       const userActiveSubscription = await hasActiveSubscription();
-      console.log(userActiveSubscription);
+      console.log("userActiveSubscription: ", userActiveSubscription);
       if (userActiveSubscription.hasActiveSubscription === true) {
         if (resumes.length >= userActiveSubscription.package.cvLimit) {
           toast.warning(
@@ -260,33 +260,17 @@ export const Index = () => {
       const uploadResponse = await uploadFile(selectedFile);
       const fileUrl = uploadResponse.fileUrl;
 
-      const cvData = await uploadCV({
+      // Upload CV và lấy response
+      await uploadCV({
         cvid: 0,
         userID,
         fileName: selectedFile.name,
         filePath: fileUrl,
       });
 
-      if (cvData) {
-        // Thêm CV mới với thông tin isFeatured
-        setUploadedResumes((prevResumes) => [
-          { ...cvData, isFeatured: false }, // Đảm bảo có thuộc tính isFeatured
-          ...prevResumes,
-        ]);
+      await fetchCVs();
+      toast.success("CV uploaded and processed successfully!");
 
-        // Cập nhật tổng số CV
-        setTotalCount((prevCount) => prevCount + 1);
-
-        // Cập nhật trạng thái featured để bao gồm CV mới
-        setFeaturedCVs((prevState) => ({
-          ...prevState,
-          [cvData.cvid]: false, // Thêm CV mới với trạng thái không featured
-        }));
-
-        toast.success("CV uploaded and processed successfully!");
-      }
-
-      // Reset file state
       setFileName("");
     } catch (error) {
       console.error("Error processing CV:", error);

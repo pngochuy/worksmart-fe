@@ -20,7 +20,26 @@ export default function ManageJobsPage() {
   const [totalPage, setTotalPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [candidateCounts, setCandidateCounts] = useState({});
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [remainingHighPrioritySlots, setRemainingHighPrioritySlots] = useState(0);
+  // State cho độ rộng cột và kéo thả
+  const [sortOrder, setSortOrder] = useState("createdAt");
+  const [columnWidths, setColumnWidths] = useState({
+    title: 200,
+    location: 150,
+    salary: 150,
+    status: 120,
+    workType: 120,
+    created: 150,
+    expires: 150,
+    openings: 100,
+    actions: 200,
+    candidates: 150
+  });
+  
+  // Trạng thái kéo cột
+  const [resizingColumn, setResizingColumn] = useState(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const navigate = useNavigate();
@@ -33,6 +52,150 @@ export default function ManageJobsPage() {
   });
   const [verificationLevel, setVerificationLevel] = useState(null);
   const currentUser = getUserLoginData();
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+
+  // Thêm useEffect để theo dõi trạng thái kéo cột
+  useEffect(() => {
+    if (resizingColumn) {
+      document.body.classList.add('resizing');
+    } else {
+      document.body.classList.remove('resizing');
+    }
+  }, [resizingColumn]);
+
+  useEffect(() => {
+    // Thêm CSS cho resize columns vào trang
+    const style = document.createElement('style');
+    style.id = 'resizable-columns-styles';
+    style.innerHTML = `
+      .column-resizer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 8px; /* Tăng độ rộng */
+        height: 100%;
+        background-color: transparent;
+        cursor: col-resize;
+        z-index: 10;
+        transition: background-color 0.2s;
+      }
+      
+      .column-resizer:hover {
+        background-color: rgba(0, 112, 243, 0.3); /* Màu nhẹ hơn khi hover */
+      }
+      
+      .column-resizer.active {
+        background-color: rgba(0, 112, 243, 0.6); /* Màu đậm hơn khi active */
+      }
+      
+      th {
+        position: relative;
+        padding-right: 15px !important; /* Thêm padding bên phải */
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      
+      .th-content {
+        padding-right: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .manage-job-table td {
+        max-width: 0;
+        overflow: visible;  /* Changed from hidden to visible */
+        text-overflow: initial;  /* Changed from ellipsis to initial */
+        white-space: normal;  /* Changed from nowrap to normal */
+      }
+      
+      /* Job title specifically to display fully */
+      .job-title-text {
+        overflow: visible;
+        white-space: normal;
+        word-break: break-word;
+      }
+      
+      body.resizing {
+        cursor: col-resize !important;
+        user-select: none;
+      }
+      
+      .manage-job-table {
+        table-layout: fixed;
+        width: 100%;
+      }
+      
+      /* Thêm highlight cho cột đang kéo */
+      .resizing-column {
+        background-color: rgba(0, 112, 243, 0.05);
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Cleanup khi component unmount
+    return () => {
+      const styleElement = document.getElementById('resizable-columns-styles');
+      if (styleElement) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, []);
+
+  const handleResizeStart = (columnName, e) => {
+    console.log('Starting resize for column:', columnName);
+    e.preventDefault();
+    e.stopPropagation(); // Ngăn sự kiện click vào cell
+    setResizingColumn(columnName);
+    setStartX(e.clientX);
+    setStartWidth(columnWidths[columnName]);
+    
+    if (e.target.classList.contains('column-resizer')) {
+      e.target.classList.add('active');
+    }
+    
+    const headerCell = e.target.closest('th');
+    if (headerCell) {
+      headerCell.classList.add('resizing-column');
+    }
+    
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+    document.body.style.cursor = 'col-resize';
+  };
+
+  const handleResizeMove = (e) => {
+    if (!resizingColumn) return;
+    
+    const diff = e.clientX - startX;
+    const newWidth = Math.max(60, startWidth + diff); 
+    console.log('Resizing column:', resizingColumn, 'to width:', newWidth);
+    
+    setColumnWidths(prev => ({
+      ...prev,
+      [resizingColumn]: newWidth
+    }));
+  };
+
+  const handleResizeEnd = () => {
+    console.log('End resizing column:', resizingColumn);
+    
+    // Xóa class active từ tất cả thanh resize
+    document.querySelectorAll('.column-resizer.active').forEach(el => {
+      el.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.resizing-column').forEach(el => {
+      el.classList.remove('resizing-column');
+    });
+    
+    setResizingColumn(null);
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
+    document.body.style.cursor = 'default';
+    document.body.classList.remove('resizing');
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -43,7 +206,9 @@ export default function ManageJobsPage() {
           const companyData = await fetchCompanyProfile();
 
           setVerificationLevel(companyData.verificationLevel);
+          setRemainingHighPrioritySlots(companyData.remainingHighPrioritySlots || 0);
           console.log("Verification Level:", companyData.verificationLevel);
+          console.log("Remaining High Priority Slots:", companyData.remainingHighPrioritySlots);
         }
       } catch (error) {
         console.error("Error loading verification data:", error);
@@ -67,7 +232,6 @@ export default function ManageJobsPage() {
     searchParams.MostRecent,
   ]);
 
-  // Thêm useEffect để kiểm tra kiểu dữ liệu của priority
   useEffect(() => {
     if (jobs.length > 0) {
       console.log("Job priority types:");
@@ -95,19 +259,16 @@ export default function ManageJobsPage() {
         setLoading(false);
         return;
       }
-      // Nếu backend không hỗ trợ lọc theo userID, chúng ta cần lấy tất cả và lọc ở frontend
       const paramsToSend = {
         ...searchParams,
         IncludeHidden: true,
         MostRecent: searchParams.MostRecent,
-        // Tạm thời không truyền PageIndex và PageSize để lấy tất cả dữ liệu
         PageIndex: 1,
         PageSize: 1000 // Số lớn để lấy tất cả dữ liệu
       };
 
       const data = await fetchJobsForManagement(paramsToSend);
       console.log("Jobs từ API:", data.jobs.length);
-      // Lọc ở phía client
       const filteredJobs = data.jobs.filter(job => job.userID == userInfo.userID);
       const totalItems = filteredJobs.length;
       const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / searchParams.PageSize));
@@ -123,7 +284,6 @@ export default function ManageJobsPage() {
       const endIndex = Math.min(startIndex + searchParams.PageSize, totalItems);
       const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
 
-      // Chuyển đổi priority thành kiểu boolean nếu cần
       const processedJobs = paginatedJobs.map(job => ({
         ...job,
         priority: Boolean(job.priority)
@@ -132,7 +292,6 @@ export default function ManageJobsPage() {
       setJobs(processedJobs);
       setTotalPage(calculatedTotalPages);
 
-      // Lấy số lượng ứng viên cho các job đã phân trang
       const counts = {};
       for (const job of processedJobs) {
         try {
@@ -157,19 +316,39 @@ export default function ManageJobsPage() {
     const newSortOrder = e.target.value;
     setSortOrder(newSortOrder);
 
-    // Update MostRecent parameter based on sort type
     setSearchParams((prevParams) => ({
       ...prevParams,
-      MostRecent: newSortOrder === "createdAt", // true if sorting by creation date, false if by update date
+      MostRecent: newSortOrder === "updatedAt", // true if sorting by update date, false if by creation date
     }));
   };
 
-  // Toggle job priority with duration check
+  // Mở dialog nâng cấp gói
+  const handlePriorityLimitReached = () => {
+    toast.info("You need to upgrade your subscription to set more jobs to High Priority.");
+    setUpgradeDialogOpen(true);
+  };
+
+  // Xử lý đồng ý nâng cấp
+  const handleConfirmUpgrade = () => {
+    setUpgradeDialogOpen(false);
+    navigate("/employer/package-list");
+  };
+
+  // Đóng dialog nâng cấp
+  const handleCancelUpgrade = () => {
+    setUpgradeDialogOpen(false);
+  };
+
   const handleTogglePriority = async (jobId) => {
     try {
       const job = jobs.find(j => j.jobID === jobId);
 
-      // Do not allow toggling priority for expired or pending/rejected jobs
+      // Chặn việc set Low Priority nếu job đang là High Priority
+      if (job && job.priority) {
+        toast.error("High priority status cannot be changed until your subscription duration expires.");
+        return;
+      }
+
       if (job && (isJobExpired(job.deadline) || job.status === 0 || job.status === 1)) {
         let reason = isJobExpired(job.deadline)
           ? "expired jobs"
@@ -183,43 +362,43 @@ export default function ManageJobsPage() {
       // Call the backend to toggle priority
       const response = await toggleJobPriority(jobId);
 
-      // If the backend returns false, it means either:
-      // 1. The job's high priority duration hasn't expired yet, or
-      // 2. The user has reached their featured job limit
       if (response === false) {
-        if (job.priority) {
-          // If trying to change from high to low priority
-          toast.error("High priority status cannot be changed until your subscription duration expires.");
-        } else {
-          // If trying to change from low to high priority
-          toast.error("You have reached the maximum number of featured jobs allowed by your subscription.");
-        }
+        // Khi đạt giới hạn, mở dialog nâng cấp
+        handlePriorityLimitReached();
         return;
       }
-      // If successful, update local state to reflect the new priority status
+      
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
           job.jobID === jobId ? { ...job, priority: !job.priority } : job
         )
       );
-      const priorityStatus = jobs.find(job => job.jobID === jobId)?.priority ? 'Low' : 'High';
-      toast.success(`Job priority has been set to ${priorityStatus}!`);
+      
+      // Update remaining high-priority slots
+      setRemainingHighPrioritySlots(prev => Math.max(0, prev - 1));
+      
+      toast.success("Job priority has been set to High!");
     } catch (error) {
       console.error("Failed to update job priority:", error);
       if (error.response && error.response.status === 400) {
-        toast.error(error.response.data.message || "Unable to update priority. You might have reached your limit.");
+        // Kiểm tra nếu lỗi liên quan đến giới hạn gói
+        const errorMessage = error.response.data.message || "";
+        
+        if (errorMessage.includes("limit") || errorMessage.includes("subscription") || errorMessage.includes("maximum")) {
+          handlePriorityLimitReached();
+        } else {
+          toast.error(errorMessage || "Unable to update priority.");
+        }
       } else {
         toast.error("Unable to update job priority.");
       }
     }
   };
 
-  // Hide job - Updated to use status instead of isHidden
   const handleHideJob = async (jobId) => {
     try {
       await hideJob(jobId);
 
-      // Update local state to reflect the new status (2 = Hidden)
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
           job.jobID === jobId ? { ...job, status: 2 } : job
@@ -233,12 +412,10 @@ export default function ManageJobsPage() {
     }
   };
 
-  // Unhide job - Updated to use status instead of isHidden
   const handleUnhideJob = async (jobId) => {
     try {
       await unhideJob(jobId);
 
-      // Update local state to set status to Active (3)
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
           job.jobID === jobId ? { ...job, status: 3 } : job
@@ -270,7 +447,6 @@ export default function ManageJobsPage() {
     setSelectedJob(null);
   };
 
-  // Function to get the appropriate button text based on candidate count
   const getCandidateButtonText = (jobId) => {
     const count = candidateCounts[jobId] || 0;
     return count === 0
@@ -280,14 +456,11 @@ export default function ManageJobsPage() {
         : `View ${count} Candidates`;
   };
 
-  // Updated to use status values instead of isHidden
   const getStatusBadge = (status, deadline) => {
-    // Check if job is expired first
     if (isJobExpired(deadline)) {
       return <span className="status-badge expired">Expired</span>;
     }
 
-    // Handle status based on JobStatus enum values
     let badgeClass = "status-badge";
     console.log("Job status: ", status);
     switch (status) {
@@ -309,7 +482,6 @@ export default function ManageJobsPage() {
     }
   };
 
-  // Đã cập nhật hàm này để nhất quán
   const getPriorityBadge = (priority) => {
     let badgeClass = "priority-badge";
 
@@ -322,7 +494,6 @@ export default function ManageJobsPage() {
     }
   };
 
-  // Render the job detail modal
   const renderJobDetailModal = () => {
     if (!selectedJob || !showDetailModal) return null;
 
@@ -382,17 +553,31 @@ export default function ManageJobsPage() {
                     <i className={`fas fa-gem ${selectedJob.priority ? '' : 'text-secondary'}`}></i>
                     Priority
                   </button>
-                ) : (
+                ) : selectedJob.priority ? (
                   <button
-                    className={`priority-btn ${selectedJob.priority ? 'high-priority' : 'low-priority'}`}
-                    onClick={() => {
+                    className="priority-btn high-priority disabled"
+                    disabled
+                    title="High priority status cannot be changed until your subscription duration expires"
+                  >
+                    <i className="fas fa-gem"></i>
+                    High Priority
+                  </button>
+                ) : (
+                  <ConfirmDialog
+                    title="Change to High Priority?"
+                    description="Are you sure you want to set this job to High Priority? This will count against your featured job limit and cannot be changed back until your subscription duration expires."
+                    confirmText="Set High"
+                    variant="primary"
+                    onConfirm={() => {
                       closeDetailModal();
                       handleTogglePriority(selectedJob.jobID);
                     }}
                   >
-                    <i className={`fas fa-gem ${selectedJob.priority ? '' : 'text-secondary'}`}></i>
-                    {selectedJob.priority ? 'Set Low Priority' : 'Set High Priority'}
-                  </button>
+                    <button className="priority-btn low-priority">
+                      <i className="fas fa-gem text-secondary"></i>
+                      Set High Priority
+                    </button>
+                  </ConfirmDialog>
                 )}
                 <button
                   className={`view-candidates-btn ${candidateCounts[selectedJob.jobID]
@@ -581,14 +766,26 @@ export default function ManageJobsPage() {
       </div>
     );
   };
-
   return (
     <section className="user-dashboard">
       <div className="dashboard-outer">
         <div className="upper-title-box">
-          <div className="title-flex">
+        <div className="title-flex">
             <h3>Manage Jobs</h3>
             <div className="text">Here are your job postings</div>
+            <div className="remaining-high-priority-slots ml-3">
+              <span className="badge" style={{
+                backgroundColor: '#2ecc71', 
+                color: 'white',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                fontWeight: '600',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <i className="fas fa-gem mr-2" style={{color: '#fff'}}></i>
+                {remainingHighPrioritySlots} High Priority Slot{remainingHighPrioritySlots !== 1 ? 's' : ''} Left
+              </span>
+            </div>
           </div>
           <div className="search-and-sort-container d-flex align-items-center">
             <div className="sort-options mr-3">
@@ -597,8 +794,8 @@ export default function ManageJobsPage() {
                 value={sortOrder}
                 onChange={handleSortOrderChange}
               >
-                <option value="updatedAt">Sort by update date</option>
                 <option value="createdAt">Sort by creation date</option>
+                <option value="updatedAt">Sort by update date</option>
               </select>
             </div>
             <div className="search-input-wrapper">
@@ -665,38 +862,78 @@ export default function ManageJobsPage() {
                     <table className="default-table manage-job-table">
                       <thead>
                         <tr>
-                          <th>
+                          <th style={{ width: `${columnWidths.title}px`, position: 'relative' }}>
                             <i className="fas fa-file-alt mr-1"></i> Title
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('title', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.location}px`, position: 'relative' }}>
                             <i className="fas fa-map-marker-alt mr-1"></i>{" "}
                             Location
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('location', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.salary}px`, position: 'relative' }}>
                             <i className="fas fa-solid fa-money-bill mr-1"></i> Salary(VND)
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('salary', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.status}px`, position: 'relative' }}>
                             <i className="fas fa-info-circle mr-1"></i> Status
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('status', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.workType}px`, position: 'relative' }}>
                             <i className="fas fa-briefcase mr-1"></i> Work Type
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('workType', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.created}px`, position: 'relative' }}>
                             <i className="fas fa-calendar-plus mr-1"></i>{" "}
                             Created
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('created', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.expires}px`, position: 'relative' }}>
                             <i className="fas fa-calendar-times mr-1"></i>{" "}
                             Expires
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('expires', e)}
+                            ></div>
                           </th>
-                          <th>
+                          <th style={{ width: `${columnWidths.openings}px`, position: 'relative' }}>
                             <i className="fas fa-user-plus mr-1"></i> Openings
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('openings', e)}
+                            ></div>
                           </th>
-                          <th className="text-center">
+                          <th className="text-center" style={{ width: `${columnWidths.actions}px`, position: 'relative' }}>
                             <i className="fas fa-cogs mr-1"></i> Actions
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('actions', e)}
+                            ></div>
                           </th>
-                          <th className="text-center">
+                          <th className="text-center" style={{ width: `${columnWidths.candidates}px`, position: 'relative' }}>
                             <i className="fas fa-users mr-1"></i> Candidates
+                            <div
+                              className="column-resizer"
+                              onMouseDown={(e) => handleResizeStart('candidates', e)}
+                            ></div>
                           </th>
                         </tr>
                       </thead>
@@ -804,26 +1041,47 @@ export default function ManageJobsPage() {
                                       <i className={`fas fa-gem ${job.priority ? '' : 'text-secondary'}`}></i>
                                       {job.priority ? 'High Priority' : 'Low Priority'}
                                     </button>
+                                  ) : job.priority ? (
+                                    <button
+                                      className="priority-btn high-priority disabled"
+                                      disabled
+                                      title="High priority status cannot be changed until your subscription duration expires"
+                                    >
+                                      <i className="fas fa-gem"></i>
+                                      High Priority
+                                    </button>
                                   ) : (
                                     <ConfirmDialog
-                                      title={job.priority ? "Change to Low Priority?" : "Change to High Priority?"}
-                                      description={
-                                        job.priority
-                                          ? "Are you sure you want to set this job to Low Priority? Note: This may not be possible until your subscription duration expires."
-                                          : "Are you sure you want to set this job to High Priority? This will count against your featured job limit and cannot be changed back until your subscription duration expires."
-                                      }
-                                      confirmText={job.priority ? "Set Low" : "Set High"}
-                                      variant={job.priority ? "warning" : "primary"}
+                                      title="Change to High Priority?"
+                                      description="Are you sure you want to set this job to High Priority? This will count against your featured job limit and cannot be changed back until your subscription duration expires."
+                                      confirmText="Set High"
+                                      variant="primary"
                                       onConfirm={() => handleTogglePriority(job.jobID)}
                                     >
-                                      <button className={`priority-btn ${job.priority ? 'high-priority' : 'low-priority'}`}>
-                                        <i className={`fas fa-gem ${job.priority ? '' : 'text-secondary'}`}></i>
-                                        {job.priority ? 'Set Low Priority' : 'Set High Priority'}
+                                      <button className="priority-btn low-priority">
+                                        <i className="fas fa-gem text-secondary"></i>
+                                        Set High Priority
                                       </button>
                                     </ConfirmDialog>
                                   )}
 
-                                  {job.status !== 2 ? (
+                                  {/* Hide/Unhide button */}
+                                  {isJobExpired(job.deadline) || job.status === 0 || job.status === 1 ? (
+                                    // Disabled button for expired, pending, or rejected jobs
+                                    <button
+                                      className="hide-btn disabled"
+                                      disabled
+                                      title={
+                                        isJobExpired(job.deadline)
+                                          ? "Cannot hide/unhide expired jobs"
+                                          : job.status === 0
+                                            ? "Cannot hide/unhide pending jobs"
+                                            : "Cannot hide/unhide rejected jobs"
+                                      }
+                                    >
+                                      <i className="fas fa-eye-slash"></i> {job.status === 2 ? "Unhide" : "Hide"}
+                                    </button>
+                                  ) : job.status !== 2 ? (
                                     <ConfirmDialog
                                       title="Hide job?"
                                       description="Are you sure you want to hide this job? It will not be visible to candidates."
@@ -897,6 +1155,18 @@ export default function ManageJobsPage() {
         </div>
       </div>
       {renderJobDetailModal()}
+
+      <ConfirmDialog
+        title="Upgrade Subscription"
+        description="To set more jobs to High Priority, you need to upgrade your subscription. Would you like to view available packages?"
+        confirmText="View Packages"
+        variant="primary"
+        onConfirm={handleConfirmUpgrade}
+        onCancel={handleCancelUpgrade}
+        open={upgradeDialogOpen}
+      >
+        <button style={{ display: 'none' }}></button>
+      </ConfirmDialog>
     </section>
   );
 }

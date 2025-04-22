@@ -101,25 +101,20 @@ export const uploadCV = async (uploadData) => {
 
     const dataToSend = {
       cvid: uploadData.cvid,
-      userId: uploadData.userID, // Note the case change from userID to userId
+      userId: uploadData.userID,
       fileName: uploadData.fileName,
       filePath: uploadData.filePath,
     };
 
-    console.log("Dữ liệu gửi lên API:", JSON.stringify(uploadData, null, 2));
-
     const response = await axios.post(
-      `${BACKEND_API_URL}/api/CV/upload-cv`,
-      dataToSend,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+      `${BACKEND_API_URL}/api/CV/upload-parse-cv`, dataToSend);
 
-    return response.data.cvDto;
+    if (response.data && response.data.data) {
+      return response.data.data;
+    } else if (response.data) {
+      return response.data;
+    }
+    return null;
   } catch (error) {
     console.error("Error uploading CV:", error);
     throw error;
