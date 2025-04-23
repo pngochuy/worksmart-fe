@@ -78,7 +78,9 @@ export const getAllJobs = async () => {
 
 export const getJobsActive = async () => {
   try {
-    const response = await axios.get(`${BACKEND_API_URL}/api/Job/getJobsActive`);
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/getJobsActive`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -91,7 +93,7 @@ export const fetchCandidateDetail = async (candidateId, jobId) => {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/Application/Job/${jobId}/application/${candidateId}`
     );
-    console.log("test", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error fetching candidate detail:", error);
@@ -349,6 +351,18 @@ export const sendInvitationEmail = async (data) => {
     return response.data;
   } catch (error) {
     console.error("Error sending invitation:", error);
+    throw error;
+  }
+};
+export const sendInvitationForAPpliedCandidateEmail = async (data) => {
+  try {
+    const response = await axios.post(
+      `${BACKEND_API_URL}/api/Application/send-invitation-for-applied-candidate`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error send-invitation-for-applied-candidate:", error);
     throw error;
   }
 };

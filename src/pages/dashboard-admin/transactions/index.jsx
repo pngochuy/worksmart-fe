@@ -59,15 +59,19 @@ export const Index = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      Completed: {
+      PAID: {
         color: "bg-green-100 text-green-800",
         icon: <CheckCircle2 className="h-4 w-4" />,
       },
-      Pending: {
+      CANCELLED: {
+        color: "bg-red-100 text-red-800",
+        icon: <XCircle className="h-4 w-4" />,
+      },
+      PENDING: {
         color: "bg-amber-100 text-amber-800",
         icon: <Clock className="h-4 w-4" />,
       },
-      Failed: {
+      FAILED: {
         color: "bg-red-100 text-red-800",
         icon: <XCircle className="h-4 w-4" />,
       },
@@ -75,7 +79,7 @@ export const Index = () => {
 
     return (
       <Badge
-        className={`rounded-md ${statusConfig[status].color} flex items-center gap-1 hover:bg-opacity-80 transition duration-200`}
+        className={`w-1/2 rounded-md ${statusConfig[status].color} flex items-center gap-1 hover:bg-opacity-80 transition duration-200`}
       >
         {statusConfig[status].icon}
         {status}
@@ -94,7 +98,7 @@ export const Index = () => {
         "Order Code": `#${transaction.orderCode}`,
         "User ID": transaction.userID,
         Content: transaction.content,
-        "Amount (₫)": transaction.price,
+        "Amount (VND)": transaction.price,
         Status: transaction.status,
         Date: formatDateTime(transaction.createdAt),
       }));
@@ -229,9 +233,7 @@ export const Index = () => {
       accessorKey: "price",
       header: "Amount (VND)",
       cell: ({ row }) => (
-        <span>
-          {new Intl.NumberFormat("en-US").format(row.original.price)}
-        </span>
+        <span>{new Intl.NumberFormat("en-US").format(row.original.price)}</span>
       ),
     },
     {
