@@ -73,6 +73,8 @@ import { Index as UsersManagementPage } from "@/pages/dashboard-admin/users-mana
 import { Index as JobPostingsManagementPage } from "@/pages/dashboard-admin/job-postings-management";
 import { Index as ReportsPage } from "@/pages/dashboard-admin/reports";
 import { FreePlanSettings } from "@/pages/dashboard-admin/settings/FreePlanSettings";
+import { Index as SubscriptionPlansPage } from "@/pages/dashboard-admin/subscription-plans-management";
+import { Index as TransactionsPage } from "@/pages/dashboard-admin/transactions";
 
 import EmployerCandidateDetailPage from "@/pages/dashboard-employer/manage-jobs/EmployerCandidateDetailPage";
 // import ProposedCandidates from "@/pages/dashboard-employer/proposed-cvs/job";
@@ -638,6 +640,24 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoleId="Admin">
                     <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="transactions"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <TransactionsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                index
+                path="subscription-plans-management"
+                element={
+                  <ProtectedRoute requiredRoleId="Admin">
+                    <SubscriptionPlansPage />
                   </ProtectedRoute>
                 }
               />

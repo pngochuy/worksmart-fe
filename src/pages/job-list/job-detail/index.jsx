@@ -9,6 +9,10 @@ import {
   checkApplyStatus,
   fetchJobDetails,
 } from "@/services/jobServices";
+import {
+  toggleFavoriteJob,
+  checkJobIsFavorite,
+} from "@/services/favoriteJobService"; // Import favorite job service
 import { Clock, FileEdit, Heart, MoveUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -28,23 +32,38 @@ import ApplicationStatus from "./ApplicationStatus";
 
 export const Index = () => {
   const [loading, setLoading] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
   const [job, setJob] = useState({});
   const [similarJobs, setSimilarJobs] = useState([]);
   const [userCVs, setUserCVs] = useState([]);
   const [featuredCV, setFeaturedCV] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false); // Track if job is saved as favorite
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
   const userRole = user?.role || null;
   const { jobId } = useParams(); // Lấy jobId từ URL
 
+  // Check if job is in user's favorites
+  const checkFavoriteStatus = async () => {
+    if (!userID || !jobId) return;
+
+    try {
+      const isFav = await checkJobIsFavorite(userID, jobId);
+      setIsFavorite(isFav);
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchJobDetail = async () => {
       try {
         const data = await fetchJobDetails(jobId);
-
+        console.log("Job data:", data); // Log the fetched job data
         if (data) {
           setJob(data.job);
           if (data.similarJobs) {
@@ -72,6 +91,9 @@ export const Index = () => {
               setFeaturedCV(featured);
             }
           }
+
+          // Check if job is saved as favorite
+          checkFavoriteStatus();
         }
       } catch (error) {
         console.error("Error fetching job details:", error);
@@ -136,9 +158,50 @@ export const Index = () => {
     }
   };
 
+  // Handle save job button click
+  const handleSaveJobClick = () => {
+    if (!userID) {
+      toast.warning("Please login to save this job.");
+      return;
+    }
+
+    // If job is already favorited, remove it directly
+    if (isFavorite) {
+      handleToggleFavorite();
+      return;
+    }
+
+    // If not favorited yet, show confirmation dialog
+    setShowSaveConfirmDialog(true);
+  };
+
+  // Toggle favorite status of job
+  const handleToggleFavorite = async () => {
+    if (!userID || !jobId) return;
+
+    setSavingFavorite(true);
+    try {
+      const result = await toggleFavoriteJob(userID, jobId);
+
+      if (result.isFavorite) {
+        setIsFavorite(true);
+        toast.success("Job saved to favorites successfully!");
+      } else {
+        setIsFavorite(false);
+        toast.success("Job removed from favorites.");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite status:", error);
+      toast.error("Failed to update favorites. Please try again.");
+    } finally {
+      setSavingFavorite(false);
+      setShowSaveConfirmDialog(false);
+    }
+  };
+
   return (
     <>
-      {/* Confirm Dialog */}
+      {/* Application Confirm Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -205,6 +268,40 @@ export const Index = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Save Job Confirm Dialog */}
+      <Dialog
+        open={showSaveConfirmDialog}
+        onOpenChange={setShowSaveConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Job</DialogTitle>
+            <DialogDescription>
+              Do you want to save <b>{job.title}</b> at <b>{job.companyName}</b>{" "}
+              to your favorites? You can view all saved jobs in your profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowSaveConfirmDialog(false)}
+              disabled={savingFavorite}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="default"
+              onClick={handleToggleFavorite}
+              loading={savingFavorite}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Save Job
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Job Detail Section */}
       <section className="job-detail-section " style={{ marginTop: "111px" }}>
         <div className="job-detail-outer">
@@ -217,11 +314,23 @@ export const Index = () => {
                     <div className="tags d-flex align-items-center gap-2">
                       <Button
                         variant="outline"
-                        className="text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 cursor-default"
+                        className={`border hover:bg-blue-100 flex items-center gap-2 ${
+                          isFavorite
+                            ? "text-blue-600 border-blue-200 bg-blue-50"
+                            : "text-gray-500 border-gray-200 hover:text-blue-600"
+                        }`}
+                        onClick={handleSaveJobClick}
+                        disabled={savingFavorite}
                       >
-                        <Heart className="h-4 w-4  text-blue-500" />
-                        <span className="hidden sm:inline text-blue-500">
-                          Save
+                        <Heart
+                          className={`h-4 w-4 ${
+                            isFavorite
+                              ? "text-blue-500 fill-blue-500"
+                              : "text-gray-500"
+                          }`}
+                        />
+                        <span className="hidden sm:inline">
+                          {isFavorite ? "Saved" : "Save"}
                         </span>
                       </Button>
                       {userRole === "Candidate" && (
@@ -272,7 +381,7 @@ export const Index = () => {
                       <i className="icon fa-light fa-calendar-days"></i>
                       <div className="ml15">
                         <h5>Date Posted</h5>
-                        <span>Posted 1 hours ago</span>
+                        <span>Posted {getTimeAgo(job.createdAt)}</span>
                       </div>
                     </li>
                     <li>
@@ -468,6 +577,33 @@ export const Index = () => {
                       </div>
                     )}
 
+                    {/* Save Job Button in Sidebar */}
+                    {userRole === "Candidate" && (
+                      <div className="btn-box mb-3">
+                        <Button
+                          variant="outline"
+                          className={`w-full border hover:bg-blue-100 flex items-center justify-center gap-2 ${
+                            isFavorite
+                              ? "text-blue-600 border-blue-200 bg-blue-50"
+                              : "text-gray-500 border-gray-200 hover:text-blue-600"
+                          }`}
+                          onClick={handleSaveJobClick}
+                          disabled={savingFavorite}
+                        >
+                          <Heart
+                            className={`h-4 w-4 ${
+                              isFavorite
+                                ? "text-blue-500 fill-blue-500"
+                                : "text-gray-500"
+                            }`}
+                          />
+                          <span>
+                            {isFavorite ? "Saved to Favorites" : "Save Job"}
+                          </span>
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Featured CV Information (if exists) */}
                     {userRole === "Candidate" && featuredCV && (
                       <div className="mt-4 text-left p-3 border rounded bg-gray-50">
@@ -617,7 +753,6 @@ export const Index = () => {
           </div>
         </div>
       </section>
-      {/* End Job Detail Section */}
     </>
   );
 };

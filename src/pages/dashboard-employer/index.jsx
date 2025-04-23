@@ -1,659 +1,914 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { getUserLoginData } from "@/helpers/decodeJwt";
-import EmployerDashboardCharts from "../dashboard-employer/EmployerDashboardCharts";
-import { 
-  fetchJobsForManagement, 
-  fetchCandidatesForJob,
-  fetchJobsByUserId,
-  fetchCandidateDetail
-} from "../../services/jobServices";
-import { 
-  fetchUserNotifications, 
-  markNotificationAsRead 
-} from "../../services/notificationServices";
-import { getCVById } from "../../services/cvServices";
-
-// Import API URL from env if available, or use a fallback
-const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || "/api";
+import { useEffect, useState } from "react";
+import { Clock, MapPin, Briefcase, DollarSign, Users, Calendar, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { fetchJobsByUserId } from "@/services/jobServices";
+import { getApplicationByUserOwnJob } from "@/services/candidateServices";
+import { useNotifications } from "@/layouts/NotificationProvider";
+import { fetchUserNotifications } from "@/services/notificationServices";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export const Index = () => {
   const [userDataLogin, setUserDataLogin] = useState(null);
-  const [dashboardStats, setDashboardStats] = useState({
-    postedJobs: 0,
-    applications: 0,
-    messages: 0,
-    shortlist: 0,
-    profileViews: 0
-  });
+  const [jobs, setJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [recentApplicants, setRecentApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingApplications, setLoadingApplications] = useState(true);
+  const [loadingNotifications, setLoadingNotifications] = useState(true);
+  const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
+  const [isRefreshingApplications, setIsRefreshingApplications] = useState(false);
+  const [isRefreshingNotifications, setIsRefreshingNotifications] = useState(false);
+  const [isRefreshingChart, setIsRefreshingChart] = useState(false);
+  const [isRefreshingRow1, setIsRefreshingRow1] = useState(false);
+  const [isRefreshingRow2, setIsRefreshingRow2] = useState(false);
+  const [isRefreshingRow3, setIsRefreshingRow3] = useState(false);
   const [error, setError] = useState(null);
-  
-  // Candidates and Jobs Management
-  const [allCandidates, setAllCandidates] = useState([]);
-  const [activeTab, setActiveTab] = useState("totals");
-  const [userJobs, setUserJobs] = useState([]);
-  const [jobsMap, setJobsMap] = useState({});
-  const [selectedJobId, setSelectedJobId] = useState("all");
-  const [candidateDetails, setCandidateDetails] = useState({});
+  const [notificationError, setNotificationError] = useState(null);
+  const [applicationError, setApplicationError] = useState(null);
+  const [chartData, setChartData] = useState([]);
+  const [chartPeriod, setChartPeriod] = useState('30');
+  const [chartGroupBy, setChartGroupBy] = useState('day');
 
-  // Helper functions for UI elements
-  const getBorderColor = (status) => {
-    switch(status) {
-      case "Approved": return "border-green-500";
-      case "Rejected": return "border-red-500";
-      case "Pending": return "border-yellow-500";
-      default: return "border-gray-300";
-    }
-  };
-  
-  const getStatusClass = (status) => {
-    switch(status) {
-      case "Approved": return "bg-green-100 text-green-800";
-      case "Rejected": return "bg-red-100 text-red-800";
-      case "Pending": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-  
-  const getStatusText = (status) => {
-    return status || "Pending";
-  };
+  const { unreadCount, refreshNotifications } = useNotifications();
 
-  // Utility function to safely get candidate information
-  const getCandidateInfo = (candidate, field, defaultValue = "N/A") => {
-    const candidateDetail = candidateDetails[candidate.applicationID] || {};
-    
-    // Special handling for fullName
-    if (field === 'fullName') {
-      // Check multiple possible sources for full name
-      if (candidateDetail.firstName && candidateDetail.lastName) {
-        return `${candidateDetail.lastName} ${candidateDetail.firstName}`;
-      }
-      
-      if (candidateDetail.user?.firstName && candidateDetail.user?.lastName) {
-        return `${candidateDetail.user.lastName} ${candidateDetail.user.firstName}`;
-      }
-      
-      if (candidateDetail.cvData?.lastName && candidateDetail.cvData?.firstName) {
-        return `${candidateDetail.cvData.lastName} ${candidateDetail.cvData.firstName}`;
-      }
-      
-      if (candidate.firstName && candidate.lastName) {
-        return `${candidate.lastName} ${candidate.firstName}`;
-      }
-      
-      if (candidate.user?.firstName && candidate.user?.lastName) {
-        return `${candidate.user.lastName} ${candidate.user.firstName}`;
-      }
-      
-      // Fallback options
-      return (
-        candidateDetail[field] || 
-        candidate[field] || 
-        candidate.user?.[field] || 
-        candidateDetail.user?.[field] || 
-        candidate.candidateName || 
-        defaultValue
-      );
-    }
-    
-    // Handle other fields
-    return (
-      candidateDetail[field] || 
-      candidate[field] || 
-      candidate.user?.[field] || 
-      candidateDetail.user?.[field] || 
-      defaultValue
-    );
-  };
+  useEffect(() => {
+    const user = getUserLoginData();
+    setUserDataLogin(user);
+    loadNotifications();
 
-  // Fetch detailed candidate information
-  const fetchCandidateDetails = async (candidateId, jobId) => {
+    if (user && user.userID) {
+      loadJobs(user.userID);
+      loadApplications(user.userID);
+    }
+  }, []);
+
+  // Add effect to process job data for chart when jobs change or filters change
+  useEffect(() => {
+    if (jobs.length > 0) {
+      processJobData(jobs, chartPeriod, chartGroupBy);
+    } else {
+      generateEmptyData(chartPeriod, chartGroupBy);
+    }
+  }, [jobs, chartPeriod, chartGroupBy]);
+
+  const loadJobs = async (userId) => {
     try {
-      const candidateDetail = await fetchCandidateDetail(candidateId, jobId);
-      
-      if (candidateDetail && candidateDetail.cvid) {
-        try {
-          const cvData = await getCVById(candidateDetail.cvid);
-          
-          const enrichedCandidateDetail = {
-            ...candidateDetail,
-            cvData: cvData
-          };
-          
-          setCandidateDetails(prevDetails => ({
-            ...prevDetails,
-            [candidateId]: enrichedCandidateDetail
-          }));
-          
-          return enrichedCandidateDetail;
-        } catch (cvError) {
-          console.error(`Error fetching CV for candidate ${candidateId}:`, cvError);
-          
-          setCandidateDetails(prevDetails => ({
-            ...prevDetails,
-            [candidateId]: candidateDetail
-          }));
-          
-          return candidateDetail;
-        }
-      } else {
-        setCandidateDetails(prevDetails => ({
-          ...prevDetails,
-          [candidateId]: candidateDetail
-        }));
-        
-        return candidateDetail;
-      }
+      setLoading(true);
+      const data = await fetchJobsByUserId(userId);
+      setJobs(data);
     } catch (error) {
-      console.error(`Error fetching details for candidate ${candidateId}:`, error);
-      return null;
+      setError("Failed to fetch jobs");
+      console.error("Failed to fetch jobs:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Render skills for a candidate
-  const renderSkills = (candidate) => {
-    const candidateDetail = candidateDetails[candidate.applicationID] || {};
-    
-    const skills = candidateDetail.skills || 
-                   candidateDetail.cvData?.skills ||
-                   candidate.skills || 
-                   candidate.user?.skills || 
-                   candidateDetail.user?.skills || 
-                   [];
+  const loadApplications = async (userId) => {
+    try {
+      setLoadingApplications(true);
+      const data = await getApplicationByUserOwnJob(userId);
+      setApplications(data);
+    } catch (error) {
+      setApplicationError("Failed to fetch applications");
+      console.error("Failed to fetch applications:", error);
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
 
-    if (skills && skills.length > 0) {
-      return skills.slice(0, 3).map((skill, index) => {
-        const skillName = typeof skill === 'string' 
-          ? skill 
-          : (skill.skillName || skill.name || 'Unknown Skill');
-        
-        return (
-          <li key={index}>
-            <a href="#">{skillName}</a>
-          </li>
-        );
-      });
+  const loadNotifications = async () => {
+    try {
+      setLoadingNotifications(true);
+      const data = await fetchUserNotifications();
+      setNotifications(data);
+      refreshNotifications();
+    } catch (err) {
+      setNotificationError("Failed to load notifications");
+      console.error(err);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Individual refresh handlers for each data type
+  const handleRefreshJobs = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingJobs(true);
+    try {
+      const data = await fetchJobsByUserId(userDataLogin.userID);
+      setJobs(data);
+      setError(null);
+    } catch (error) {
+      setError("Failed to refresh jobs");
+      console.error("Failed to refresh jobs:", error);
+    } finally {
+      setIsRefreshingJobs(false);
+    }
+  };
+
+  const handleRefreshApplications = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingApplications(true);
+    try {
+      const data = await getApplicationByUserOwnJob(userDataLogin.userID);
+      setApplications(data);
+      setApplicationError(null);
+    } catch (error) {
+      setApplicationError("Failed to refresh applications");
+      console.error("Failed to refresh applications:", error);
+    } finally {
+      setIsRefreshingApplications(false);
+    }
+  };
+
+  const handleRefreshNotifications = async () => {
+    setIsRefreshingNotifications(true);
+    try {
+      const data = await fetchUserNotifications();
+      setNotifications(data);
+      setNotificationError(null);
+    } catch (err) {
+      setNotificationError("Failed to refresh notifications");
+      console.error("Failed to refresh notifications:", err);
+    } finally {
+      setIsRefreshingNotifications(false);
+    }
+  };
+
+  const handleRefreshChart = async () => {
+    setIsRefreshingChart(true);
+    try {
+      // Refresh jobs data to update the chart
+      if (userDataLogin) {
+        const data = await fetchJobsByUserId(userDataLogin.userID);
+        setJobs(data);
+        // Chart will update automatically via useEffect when jobs changes
+      }
+    } catch (err) {
+      console.error("Failed to refresh chart data:", err);
+    } finally {
+      setIsRefreshingChart(false);
+    }
+  };
+
+  // Row 1 refresh - Jobs, Applications, Notifications summary
+  const handleRefreshRow1 = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingRow1(true);
+
+    try {
+      // Execute all refresh operations in parallel
+      await Promise.all([
+        fetchJobsByUserId(userDataLogin.userID).then(data => {
+          setJobs(data);
+          setError(null);
+        }).catch(err => {
+          setError("Failed to refresh jobs");
+          console.error(err);
+        }),
+
+        getApplicationByUserOwnJob(userDataLogin.userID).then(data => {
+          setApplications(data);
+          setApplicationError(null);
+        }).catch(err => {
+          setApplicationError("Failed to refresh applications");
+          console.error(err);
+        }),
+
+        fetchUserNotifications().then(data => {
+          setNotifications(data);
+          refreshNotifications();
+          setNotificationError(null);
+        }).catch(err => {
+          setNotificationError("Failed to refresh notifications");
+          console.error(err);
+        }),
+      ]);
+    } finally {
+      setIsRefreshingRow1(false);
+    }
+  };
+
+  // Row 2 refresh - Charts and Notifications
+  const handleRefreshRow2 = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingRow2(true);
+    setIsRefreshingChart(true);
+    setIsRefreshingNotifications(true);
+
+    try {
+      // Execute both refresh operations in parallel
+      await Promise.all([
+        fetchJobsByUserId(userDataLogin.userID).then(data => {
+          setJobs(data);
+          setError(null);
+          // Chart will update automatically via useEffect
+        }).catch(err => {
+          setError("Failed to refresh chart data");
+          console.error(err);
+        }),
+
+        fetchUserNotifications().then(data => {
+          setNotifications(data);
+          refreshNotifications();
+          setNotificationError(null);
+        }).catch(err => {
+          setNotificationError("Failed to refresh notifications");
+          console.error(err);
+        }),
+      ]);
+    } finally {
+      setIsRefreshingRow2(false);
+      setIsRefreshingChart(false);
+      setIsRefreshingNotifications(false);
+    }
+  };
+
+  // Row 3 refresh - Job Listings
+  const handleRefreshRow3 = async () => {
+    if (!userDataLogin) return;
+
+    setIsRefreshingRow3(true);
+    setIsRefreshingJobs(true);
+
+    try {
+      const data = await fetchJobsByUserId(userDataLogin.userID);
+      setJobs(data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to refresh job listings");
+      console.error(err);
+    } finally {
+      setIsRefreshingRow3(false);
+      setIsRefreshingJobs(false);
+    }
+  };
+
+  // Process job data for the chart
+  const processJobData = (jobs, period, groupBy) => {
+    const periodDays = parseInt(period);
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setDate(now.getDate() - periodDays);
+
+    const dateRange = [];
+    const dataPoints = {};
+
+    // Format jobs by creation date
+    const formattedJobs = jobs.map(job => ({
+      ...job,
+      date: new Date(job.createdAt)
+    })).filter(job => job.date >= startDate && job.date <= now);
+
+    // Group by the selected timeframe
+    switch (groupBy) {
+      case 'day':
+        // Create date range - daily
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+          const dateKey = formatDate(d);
+          dataPoints[dateKey] = 0;
+          dateRange.push({
+            date: new Date(d),
+            key: dateKey,
+            name: formatChartLabel(d, 'day'),
+            jobsPosted: 0
+          });
+        }
+
+        // Count jobs posted per day
+        formattedJobs.forEach(job => {
+          const dateKey = formatDate(job.date);
+          if (dataPoints[dateKey] !== undefined) {
+            dataPoints[dateKey]++;
+          }
+        });
+        break;
+
+      case 'month':
+        // Create date range - monthly
+        const monthMap = {};
+
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+          const year = d.getFullYear();
+          const month = d.getMonth();
+          const monthKey = `${year}-${month + 1}`;
+
+          if (monthMap[monthKey] === undefined) {
+            monthMap[monthKey] = true;
+
+            dateRange.push({
+              date: new Date(year, month, 1),
+              key: monthKey,
+              name: formatChartLabel(d, 'month'),
+              jobsPosted: 0
+            });
+
+            dataPoints[monthKey] = 0;
+          }
+        }
+
+        // Count jobs posted per month
+        formattedJobs.forEach(job => {
+          const year = job.date.getFullYear();
+          const month = job.date.getMonth();
+          const monthKey = `${year}-${month + 1}`;
+
+          if (dataPoints[monthKey] !== undefined) {
+            dataPoints[monthKey]++;
+          }
+        });
+        break;
+
+      case 'year':
+        // Create date range - yearly
+        const yearMap = {};
+
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+          const year = d.getFullYear();
+          const yearKey = `${year}`;
+
+          if (yearMap[yearKey] === undefined) {
+            yearMap[yearKey] = true;
+
+            dateRange.push({
+              date: new Date(year, 0, 1),
+              key: yearKey,
+              name: formatChartLabel(d, 'year'),
+              jobsPosted: 0
+            });
+
+            dataPoints[yearKey] = 0;
+          }
+        }
+
+        // Count jobs posted per year
+        formattedJobs.forEach(job => {
+          const year = job.date.getFullYear();
+          const yearKey = `${year}`;
+
+          if (dataPoints[yearKey] !== undefined) {
+            dataPoints[yearKey]++;
+          }
+        });
+        break;
+    }
+
+    // Apply the counts to dateRange
+    dateRange.forEach(item => {
+      item.jobsPosted = dataPoints[item.key] || 0;
+    });
+
+    // Sort by date
+    dateRange.sort((a, b) => a.date - b.date);
+
+    // Format for chart
+    setChartData(dateRange.map(item => ({
+      name: item.name,
+      jobsPosted: item.jobsPosted,
+      // Add formatted date for tooltip
+      formattedDate: formatFullDate(item.date)
+    })));
+  };
+
+  // Generate empty data when no jobs
+  const generateEmptyData = (period, groupBy) => {
+    const periodDays = parseInt(period);
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setDate(now.getDate() - periodDays);
+
+    const emptyData = [];
+
+    switch (groupBy) {
+      case 'day':
+        // Create daily empty data
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+          emptyData.push({
+            name: formatChartLabel(d, 'day'),
+            jobsPosted: 0,
+            formattedDate: formatFullDate(d)
+          });
+        }
+        break;
+
+      case 'month':
+        // Create monthly empty data
+        const monthMap = {};
+
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+          const monthKey = d.toLocaleString('default', { month: 'short' });
+
+          if (!monthMap[monthKey]) {
+            monthMap[monthKey] = true;
+            emptyData.push({
+              name: monthKey,
+              jobsPosted: 0,
+              formattedDate: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            });
+          }
+        }
+        break;
+
+      case 'year':
+        // Create yearly empty data
+        const yearMap = {};
+
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+          const yearKey = d.getFullYear().toString();
+
+          if (!yearMap[yearKey]) {
+            yearMap[yearKey] = true;
+            emptyData.push({
+              name: yearKey,
+              jobsPosted: 0,
+              formattedDate: d.getFullYear().toString()
+            });
+          }
+        }
+        break;
+    }
+
+    setChartData(emptyData);
+  };
+
+  // Helper functions for date formatting
+  const formatDate = (date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  const formatFullDate = (date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatChartLabel = (date, groupBy) => {
+    switch (groupBy) {
+      case 'day':
+        return `${date.getDate()}/${date.getMonth() + 1}`;
+      case 'month':
+        return date.toLocaleString('en-US', { month: 'short' });
+      case 'year':
+        return date.getFullYear().toString();
+      default:
+        return formatDate(date);
+    }
+  };
+
+  // Custom tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length && payload[0].payload.jobsPosted > 0) {
+      return (
+        <div className="custom-tooltip" style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          padding: '10px',
+          border: '1px solid #ccc',
+          borderRadius: '5px'
+        }}>
+          <p><strong>{payload[0].payload.formattedDate}</strong></p>
+          <p>Jobs Posted: <strong>{payload[0].value}</strong></p>
+        </div>
+      );
     }
     return null;
   };
 
-  // Existing helper functions from the previous implementation
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleChartPeriodChange = (e) => {
+    setChartPeriod(e.target.value);
   };
 
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  const handleChartGroupByChange = (e) => {
+    setChartGroupBy(e.target.value);
   };
 
-  // Tab change handler
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
-  // Notification handling
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      setNotifications(
-        notifications.map((notification) =>
-          notification.notificationID === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
-    } catch (error) {
-      console.error("Failed to mark notification as read", error);
+  // Function to get status text
+  const getStatusText = (statusCode) => {
+    switch (statusCode) {
+      case 1:
+        return "Draft";
+      case 2:
+        return "Pending";
+      case 3:
+        return "Active";
+      case 4:
+        return "Paused";
+      case 5:
+        return "Closed";
+      default:
+        return "Unknown";
     }
   };
 
-  // Unread message and notification counting
-  const countMessages = (notifications) => {
-    if (!notifications || !Array.isArray(notifications)) return 0;
-    return notifications.filter(
-      notification => notification.type === 'message' || notification.category === 'message'
-    ).length;
-  };
-  
-  const countUnreadNotifications = (notifications) => {
-    if (!notifications || !Array.isArray(notifications)) return 0;
-    return notifications.filter(notification => !notification.isRead).length;
-  };
-
-  // Candidate filtering logic
-  const filteredCandidates = allCandidates.filter((candidate) => {
-    let statusMatch = true;
-    if (activeTab === "approved") statusMatch = candidate.status === "Approved";
-    if (activeTab === "rejected") statusMatch = candidate.status === "Rejected";
-    if (activeTab === "pending") statusMatch = candidate.status === "Pending";
-
-    let jobMatch = true;
-    if (selectedJobId !== "all") {
-      jobMatch = candidate.jobInfo?.jobID.toString() === selectedJobId;
+  // Function to get status class
+  const getStatusClass = (statusCode) => {
+    switch (statusCode) {
+      case 1:
+        return "bg-gray-200 text-gray-800"; // Draft
+      case 2:
+        return "bg-yellow-100 text-yellow-800"; // Pending
+      case 3:
+        return "bg-green-100 text-green-800"; // Active
+      case 4:
+        return "bg-blue-100 text-blue-800"; // Paused
+      case 5:
+        return "bg-red-100 text-red-800"; // Closed
+      default:
+        return "bg-gray-100 text-gray-800";
     }
+  };
 
-    return statusMatch && jobMatch;
-  });
+  // Function to get border color based on status
+  const getBorderColor = (statusCode) => {
+    switch (statusCode) {
+      case 1:
+        return "border-gray-200"; // Draft
+      case 2:
+        return "border-yellow-200"; // Pending
+      case 3:
+        return "border-green-200"; // Active
+      case 4:
+        return "border-blue-200"; // Paused
+      case 5:
+        return "border-red-200"; // Closed
+      default:
+        return "border-gray-200";
+    }
+  };
 
-  // Candidate status counts
-  const totalCandidates = allCandidates.length;
-  const approvedCandidates = allCandidates.filter(candidate => candidate.status === "Approved").length;
-  const rejectedCandidates = allCandidates.filter(candidate => candidate.status === "Rejected").length;
-  const pendingCandidates = allCandidates.filter(candidate => candidate.status === "Pending").length;
+  // Get time ago
+  const getTimeAgo = (dateString) => {
+    const postDate = new Date(dateString);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - postDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  // Main data fetching effect
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Get user login data
-        const user = getUserLoginData();
-        if (!user) {
-          console.warn("No user login data found");
-          setLoading(false);
-          return;
-        }
-        setUserDataLogin(user);
-        
-        // Fetch user's jobs
-        const userJobsResponse = await fetchJobsByUserId(user.userID);
-        setUserJobs(userJobsResponse);
-        
-        // Create job mapping
-        const jobsMapping = userJobsResponse.reduce((map, job) => {
-          map[job.jobID] = job;
-          return map;
-        }, {});
-        setJobsMap(jobsMapping);
-        
-        // Fetch candidates for all jobs
-        const allCandidatesArray = [];
-        for (const job of userJobsResponse) {
-          try {
-            const candidates = await fetchCandidatesForJob(job.jobID);
-            
-            if (Array.isArray(candidates) && candidates.length > 0) {
-              const enrichedCandidates = candidates.map(candidate => ({
-                ...candidate,
-                jobInfo: {
-                  jobID: job.jobID,
-                  title: job.title,
-                  company: job.companyName
-                }
-              }));
-              
-              // Fetch detailed info for each candidate
-              for (const candidate of enrichedCandidates) {
-                await fetchCandidateDetails(candidate.applicationID, job.jobID);
-              }
-              
-              allCandidatesArray.push(...enrichedCandidates);
-            }
-          } catch (error) {
-            console.error(`Error fetching candidates for job ${job.jobID}:`, error);
-          }
-        }
-        
-        setAllCandidates(allCandidatesArray);
-        
-        // Fetch notifications
-        const notificationsResponse = await fetchUserNotifications();
-        const notificationsArray = Array.isArray(notificationsResponse) 
-          ? notificationsResponse 
-          : [];
-        setNotifications(notificationsArray);
-        
-        // Set dashboard stats (simplified for this example)
-        setDashboardStats({
-          postedJobs: userJobsResponse.length,
-          applications: allCandidatesArray.length,
-          messages: countMessages(notificationsArray),
-          shortlist: countUnreadNotifications(notificationsArray),
-          profileViews: 0
-        });
-        
-        // Set recent applicants
-        const recentApps = allCandidatesArray
-          .slice(0, 4)
-          .map(candidate => ({
-            id: candidate.applicationID,
-            name: getCandidateInfo(candidate, 'fullName'),
-            position: candidate.jobInfo?.title || 'Unknown Position',
-            location: getCandidateInfo(candidate, 'address', 'Not specified'),
-            hourlyRate: candidate.expectedSalary || 0,
-            skills: renderSkills(candidate) || [],
-            image: getCandidateInfo(candidate, 'avatar') || "images/resource/default-candidate.png",
-            status: candidate.status || "Pending",
-            createdAt: candidate.createdAt || new Date()
-          }));
-        
-        setRecentApplicants(recentApps);
-        
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        setError("Failed to load dashboard data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
-
-  // Loading and error states
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3">Loading dashboard data...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="alert alert-danger m-4" role="alert">
-        <h4 className="alert-heading">Error!</h4>
-        <p>{error}</p>
-        <hr />
-        <p className="mb-0">Please check your network connection and try again.</p>
-      </div>
-    );
-  }
+    if (diffDays < 1) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+  };
 
   return (
-    <section className="user-dashboard">
-      <div className="dashboard-outer" style={{ padding: "10px 30px" }}>
-        {/* Existing dashboard header and stats cards */}
-        <div className="upper-title-box">
-          <h3>Hi, {userDataLogin?.fullName || "User"}!</h3>
-          <div className="text">Ready to jump back in?</div>
-        </div>
-        
-        {/* Stats Cards */}
-        <div className="row">
-          <div className="ui-block col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div className="ui-item">
-              <div className="left">
-                <i className="icon flaticon-briefcase"></i>
-              </div>
-              <div className="right">
-                <h4>{dashboardStats.postedJobs}</h4>
-                <p>Posted Jobs</p>
-              </div>
-            </div>
+    <>
+      <section className="user-dashboard">
+        <div className="dashboard-outer">
+          <div className="upper-title-box">
+            <h3>Howdy, {userDataLogin?.fullName}!</h3>
+            <div className="text">Ready to jump back in?</div>
           </div>
-          <div className="ui-block col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div className="ui-item ui-red">
-              <div className="left">
-                <i className="icon la la-file-invoice"></i>
-              </div>
-              <div className="right">
-                <h4>{dashboardStats.applications}</h4>
-                <p>Applications</p>
-              </div>
-            </div>
-          </div>
-          <div className="ui-block col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div className="ui-item ui-yellow">
-              <div className="left">
-                <i className="icon la la-comment-o"></i>
-              </div>
-              <div className="right">
-                <h4>{dashboardStats.messages}</h4>
-                <p>Messages</p>
-              </div>
-            </div>
-          </div>
-          <div className="ui-block col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div className="ui-item ui-green">
-              <div className="left">
-                <i className="icon la la-bookmark-o"></i>
-              </div>
-              <div className="right">
-                <h4>{dashboardStats.shortlist}</h4>
-                <p>Unread Notifications</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Charts */}
-        <EmployerDashboardCharts />
+          {/* First Row - Stats Summary */}
+          <div className="row">
+            <div className="col-12">
+              <div className="stats-container bg-white p-8 rounded-lg d-flex justify-content-between align-items-center position-relative">
 
-        {/* Notifications and Applicants Section */}
-        <div className="row">
-          {/* Notifications Widget */}
-          <div className="col-xl-6 col-lg-6 col-md-12">
-            <div className="notification-widget ls-widget">
-              <div className="widget-title">
-                <h4>Notifications</h4>
-              </div>
-              <div className="widget-content">
-                {notifications.length > 0 ? (
-                  <ul className="notification-list">
-                    {notifications.slice(0, 6).map(notification => (
-                      <li 
-                        key={notification.notificationID || Math.random().toString(36).substr(2, 9)} 
-                        className={!notification.isRead ? "fw-bold bg-light" : ""}
-                      >
-                        <span className="icon flaticon-briefcase"></span>{" "}
-                        <strong>{notification.sender || "System"}</strong> {notification.message || "New notification"}
-                        
-                        {!notification.isRead && (
-                          <span className="new-badge ml-2">New</span>
-                        )}
-                        
-                        <span className="time-ago ml-2">
-                          {formatTimeAgo(notification.createdAt || new Date())}
-                        </span>
-                        
-                        {!notification.isRead && (
-                          <button 
-                            className="btn btn-sm btn-outline-primary ml-2"
-                            onClick={() => handleMarkAsRead(notification.notificationID)}
-                          >
-                            Mark Read
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-center py-3">No notifications yet</p>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          
-        </div>
-
-        {/* Applicants Section */}
-        <div className="row">
-          <div className="col-lg-12">
-            <div className="ls-widget">
-              <div className="tabs-box">
-                <div className="widget-title">
-                  <h4>All Applicants</h4>
-                  
-                  <div className="filters-container">
-                    {/* Job Filtering Dropdown */}
-                    <select 
-                      className="chosen-select"
-                      onChange={(e) => setSelectedJobId(e.target.value)}
-                      value={selectedJobId}
-                    >
-                      <option value="all">All Jobs</option>
-                      {userJobs.map(job => (
-                        <option key={job.jobID} value={job.jobID.toString()}>
-                          {job.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="widget-content">
-                  <div className="tabs-box">
-                    {/* Applicant Status Tabs */}
-                    <div className="aplicants-upper-bar">
-                      <h6>All Jobs Candidates</h6>
-                      <ul className="aplicantion-status tab-buttons clearfix">
-                        <li
-                          className={`tab-btn ${activeTab === "totals" ? "active-btn" : ""} totals`}
-                          onClick={() => handleTabChange("totals")}
-                        >
-                          Total(s): {totalCandidates}
-                        </li>
-                        <li
-                          className={`tab-btn ${activeTab === "approved" ? "active-btn" : ""} approved`}
-                          onClick={() => handleTabChange("approved")}
-                        >
-                          Approved: {approvedCandidates}
-                        </li>
-                        <li
-                          className={`tab-btn ${activeTab === "rejected" ? "active-btn" : ""} rejected`}
-                          onClick={() => handleTabChange("rejected")}
-                        >
-                          Rejected(s): {rejectedCandidates}
-                        </li>
-                        <li
-                          className={`tab-btn ${activeTab === "pending" ? "active-btn" : ""} pending`}
-                          onClick={() => handleTabChange("pending")}
-                        >
-                          Pending(s): {pendingCandidates}
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Candidates List */}
-                    <div className="tabs-content">
-                      <div className="row">
-                        {filteredCandidates.length === 0 ? (
-                          <div className="col-12 text-center py-5">
-                            <h5>No candidates found</h5>
-                          </div>
-                        ) : (
-                          filteredCandidates.slice(0, 4).map((candidate) => (
-                            <div 
-                              className="candidate-block-three col-lg-6 col-md-12 col-sm-12" 
-                              key={candidate.applicationID}
-                            >
-                              <div className="inner-box">
-                                <div className="content">
-                                  <figure className="image">
-                                    <img
-                                      src={
-                                        getCandidateInfo(candidate, 'avatar') || 
-                                        "images/resource/candidate-1.png"
-                                      }
-                                      alt={getCandidateInfo(candidate, 'fullName', 'Candidate')}
-                                    />
-                                  </figure>
-                                  <h4 className="name">
-                                    <a href="#">{getCandidateInfo(candidate, 'fullName')}</a>
-                                  </h4>
-                                  <ul className="candidate-info">
-                                    <li className="designation">
-                                      {getCandidateInfo(candidate, 'jobPosition', 'Job Position')}
-                                    </li>
-                                    <li>
-                                      <span className="icon flaticon-map-locator"></span>{" "}
-                                      {getCandidateInfo(candidate, 'address', 'Location not specified')}
-                                    </li>
-                                  </ul>
-                                  
-                                  <div className="job-info-badge mt-2 mb-2" style={{
-                                    display: 'inline-block',
-                                    padding: '5px 10px',
-                                    backgroundColor: '#f0f0f0',
-                                    borderRadius: '5px',
-                                    fontSize: '12px'
-                                  }}>
-                                    <strong>Applied for:</strong> {candidate.jobInfo?.title || "Unknown Job"}
-                                  </div>
-                                  
-                                  <div className="application-status mt-2" style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    padding: '5px 10px',
-                                    backgroundColor: '#f5f5f5',
-                                    borderRadius: '5px',
-                                    fontSize: '12px',
-                                    marginBottom: '10px'
-                                  }}>
-                                    <span>
-                                      <strong>Status:</strong> 
-                                      <span style={{
-                                        padding: '2px 8px',
-                                        borderRadius: '10px',
-                                        marginLeft: '5px',
-                                        backgroundColor: 
-                                          candidate.status === 'Approved' ? '#e0f7ea' : 
-                                          candidate.status === 'Rejected' ? '#ffe5e5' : 
-                                          candidate.status === 'Pending' ? '#f0f0f0' : '#f0f0f0',
-                                        color: 
-                                          candidate.status === 'Approved' ? '#28a745' : 
-                                          candidate.status === 'Rejected' ? '#dc3545' : 
-                                          candidate.status === 'Pending' ? '#666' : '#666'
-                                      }}>
-                                        {candidate.status}
-                                      </span>
-                                    </span>
-                                    <span><strong>Applied:</strong> {formatDate(candidate.createdAt)}</span>
-                                  </div>
-                                  
-                                  {renderSkills(candidate) && (
-                                    <ul className="post-tags">
-                                      {renderSkills(candidate)}
-                                    </ul>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
+                {/* Posted Jobs */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-start">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
                       </div>
                     </div>
-                    
-                    {/* View All Applicants Link */}
-                    <div className="all-applicants-list mt-4 text-center">
-                      <a href="/employer/all-candidates" className="theme-btn btn-style-one">
-                        View All Applicants
-                      </a>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{jobs?.length || 0}</h3>
+                      <p className="text-muted mb-0">Posted Jobs</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Application */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="la la-file-invoice text-red-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{applications?.totalApplications || 0}</h3>
+                      <p className="text-muted mb-0">Applications</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notifications */}
+                <div className="d-flex align-items-center flex-grow-1 justify-content-end">
+                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
+                    <div className="icon-wrapper mr-3">
+                      <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                        <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="fs-2 fw-bold">{unreadCount}</h3>
+                      <p className="text-muted mb-0">Notifications</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Single refresh button positioned absolutely */}
+                <Button
+                  variant="ghost"
+                  onClick={handleRefreshRow1}
+                  disabled={isRefreshingRow1}
+                  className="h-6 w-6 p-1 ml-2"
+                  style={{ position: 'absolute', top: '8px', right: '8px' }}
+
+                >
+                  <RefreshCcw
+                    className={`h-4 w-4 ${isRefreshingRow1
+                      ? 'animate-spin'
+                      : ''
+                      }`}
+                  />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Second Row - Chart and Notifications */}
+          <div className="row mt-4">
+            <div className="col-lg-7">
+
+            </div>
+
+            <div className="col-xl-7 col-lg-12">
+              {/* Graph widget */}
+              <div className="graph-widget ls-widget">
+                <div className="tabs-box">
+                  <div className="widget-title">
+                    <h4>Your Job Posting Activity</h4>
+                    <div className="d-flex align-items-center">
+                      <div className="chosen-outer d-flex">
+                        <select
+                          className="chosen-select mr-2"
+                          value={chartGroupBy}
+                          onChange={handleChartGroupByChange}
+                          style={{ marginRight: '10px' }}
+                        >
+                          <option value="day">Daily</option>
+                          <option value="month">Monthly</option>
+                          <option value="year">Yearly</option>
+                        </select>
+
+                        <select
+                          className="chosen-select"
+                          value={chartPeriod}
+                          onChange={handleChartPeriodChange}
+                        >
+                          <option value="7">Last 7 Days</option>
+                          <option value="14">Last 14 Days</option>
+                          <option value="30">Last 30 Days</option>
+                          <option value="90">Last 3 Months</option>
+                          <option value="180">Last 6 Months</option>
+                          <option value="365">Last 12 Months</option>
+                        </select>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        onClick={handleRefreshChart}
+                        disabled={isRefreshingChart}
+                        className="h-6 w-6 p-1 ml-2"
+                      >
+                        <RefreshCcw className={`h-4 w-4 ${isRefreshingChart ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="widget-content">
+                    {loading || isRefreshingChart ? (
+                      <div className="d-flex justify-content-center align-items-center" style={{ height: "300px" }}>
+                        <p>Loading chart data...</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart
+                          data={chartData}
+                          margin={{
+                            top: 20,
+                            right: 30,
+                            left: 0,
+                            bottom: 5,
+                          }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fontSize: 12 }}
+                            interval={chartGroupBy === 'day' && chartData.length > 14 ? Math.floor(chartData.length / 7) : 0}
+                          />
+                          <YAxis allowDecimals={false} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend />
+                          <Line
+                            type="monotone"
+                            dataKey="jobsPosted"
+                            name="Jobs Posted"
+                            stroke="#1967d2"
+                            activeDot={{ r: 8 }}
+                            strokeWidth={2}
+                            dot={(props) => {
+                              const { cx, cy, payload } = props;
+                              if (payload.jobsPosted > 0) {
+                                return (
+                                  <circle
+                                    cx={cx}
+                                    cy={cy}
+                                    r={4}
+                                    fill="#1967d2"
+                                    stroke="#fff"
+                                    strokeWidth={2}
+                                  />
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-5">
+              {/* Notification Widget */}
+              <div className="notification-widget ls-widget">
+                <div className="widget-title">
+                  <h4>Notifications</h4>
+                  <Button
+                    variant="ghost"
+                    onClick={handleRefreshNotifications}
+                    disabled={isRefreshingNotifications}
+                    className="h-6 w-6 p-1 ml-2"
+                    style={{ position: 'absolute', top: '8px', right: '8px' }}
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${isRefreshingNotifications ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
+                <div className="widget-content">
+                  {loading || isRefreshingNotifications ? (
+                    <p>Loading notifications...</p>
+                  ) : error ? (
+                    <p>{error}</p>
+                  ) : (
+                    <div className="notification" style={{
+                      maxHeight: '300px',
+                    }}>
+                      <ul className="notification-list">
+                        {notifications.length > 0 ? (
+                          notifications.map((notification) => (
+                            <li
+                              key={notification.notificationID}
+                              className={notification.isRead ? "" : "success"}
+                            >
+                              <span className="icon flaticon-briefcase"></span>{" "}
+                              <strong>{notification.title}</strong>{" "}
+                              <span className="colored">{notification.message}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <li>No notifications available</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Third Row - Job Listings */}
+          <div className="row mt-4">
+            <div className="col-lg-12">
+              <div className="ls-widget">
+                <div className="widget-title">
+                  <h4>Your Job Listings</h4>
+                  <Button
+                    variant="ghost"
+                    onClick={handleRefreshRow3}
+                    disabled={isRefreshingRow3}
+                    className="h-6 w-6 p-1 ml-2"
+                    style={{ position: 'absolute', top: '8px', right: '8px' }}
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${isRefreshingRow3 ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
+                <div className="widget-content">
+                  {loading || isRefreshingRow3 ? (
+                    <div className="text-center py-5">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="sr-only">Loading...</span>
+                      </div>
+                      <p className="mt-2">Loading your job listings...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-5">
+                      <p>{error}</p>
+                    </div>
+                  ) : jobs.length === 0 ? (
+                    <div className="text-center py-5">
+                      <div className="empty-state">
+                        <Briefcase size={48} className="text-gray-400 mx-auto mb-3" />
+                        <h5>No Jobs Posted Yet</h5>
+                        <p className="text-muted">Start creating job listings to attract the right candidates</p>
+                        <a href="/employer/post-job" className="theme-btn btn-style-one mt-3">
+                          Post a New Job
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="row">
+                      {jobs.slice(0, 4).map((job) => (
+                        <div key={job.jobID} className="job-block col-lg-6 col-md-12 col-sm-12 mb-4">
+                          <div className={`inner-box border ${getBorderColor(job.status)} rounded hover:shadow-md transition-shadow duration-300`}>
+                            <div className="content p-4">
+                              <div className="d-flex justify-content-between mb-3">
+                                <h4 className="job-title text-xl font-semibold">
+                                  <a href={`/employer/job-detail/${job.jobID}`}>{job.title}</a>
+                                </h4>
+                                <span className={`status-badge px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(job.status)}`}>
+                                  {getStatusText(job.status)}
+                                </span>
+                              </div>
+
+                              <ul className="job-info flex flex-wrap gap-y-2 mb-3">
+                                <li className="flex items-center w-full sm:w-1/2 text-gray-700">
+                                  <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
+                                  {job.jobPosition}
+                                </li>
+                                <li className="flex items-center w-full sm:w-1/2 text-gray-700">
+                                  <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                                  {job.location}
+                                </li>
+                                <li className="flex items-center w-full sm:w-1/2 text-gray-700">
+                                  <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
+                                  {job.salary || "Negotiable"}
+                                </li>
+                                <li className="flex items-center w-full sm:w-1/2 text-gray-700">
+                                  <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                                  {job.workType}
+                                </li>
+                                <li className="flex items-center w-full sm:w-1/2 text-gray-700">
+                                  <Users className="h-4 w-4 mr-2 text-gray-500" />
+                                  {job.numberOfRecruitment || 0} openings
+                                </li>
+                                <li className="flex items-center w-full sm:w-1/2 text-gray-700">
+                                  <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                                  Posted {getTimeAgo(job.createdAt)}
+                                </li>
+                              </ul>
+
+                              <div className="job-tags flex flex-wrap gap-2 mb-3">
+                                {job.level && (
+                                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                                    {job.level}
+                                  </span>
+                                )}
+                                {typeof job.exp === 'number' && (
+                                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                                    {job.exp} years exp
+                                  </span>
+                                )}
+                                {job.education && (
+                                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                                    {job.education}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="job-actions flex justify-end mt-3 pt-3 border-t border-gray-100">
+                                <a
+                                  href="/employer/manage-jobs"
+                                  className="text-blue-600 hover:text-blue-800 mr-4 text-sm"
+                                >
+                                  View Jobs
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
-
-export default Index;
