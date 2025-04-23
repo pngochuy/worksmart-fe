@@ -40,7 +40,7 @@ export default function EmployerCandidateDetailPage() {
       setLoading(true);
       const data = await fetchCandidateDetail(candidateId, jobId);
       setCandidate(data);
-      console.log("Candidate detail:", data);
+      console.log("Candidate detail 1:", data);
 
       if (data && data.cvid) {
         try {
@@ -196,7 +196,7 @@ export default function EmployerCandidateDetailPage() {
                           </h2>
 
                           <div>
-                            <span className={`px-3 py-1 text-sm font-medium rounded-full ${candidate.applicationStatus === "Approved" ? "bg-green-100 text-green-800" :
+                            <span className={`px-3 py-1 text-sm font-medium rounded-md ${candidate.applicationStatus === "Approved" ? "bg-green-100 text-green-800" :
                               candidate.applicationStatus === "Rejected" ? "bg-red-100 text-red-800" :
                                 "bg-yellow-100 text-yellow-800"
                               }`}>

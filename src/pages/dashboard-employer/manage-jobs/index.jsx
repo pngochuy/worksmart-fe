@@ -3,7 +3,7 @@ import {
   fetchCandidatesForJob,
   hideJob,
   unhideJob,
-  toggleJobPriority
+  toggleJobPriority,
 } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -14,13 +14,15 @@ import { fetchJobsForManagement } from "../../../services/jobServices";
 import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
 import { getUserLoginData } from "@/helpers/decodeJwt";
 import "../manage-jobs/styleManageJob.css";
+import { Filter, Search, X } from "lucide-react";
 
 export default function ManageJobsPage() {
   const [jobs, setJobs] = useState([]);
   const [totalPage, setTotalPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [candidateCounts, setCandidateCounts] = useState({});
-  const [remainingHighPrioritySlots, setRemainingHighPrioritySlots] = useState(0);
+  const [remainingHighPrioritySlots, setRemainingHighPrioritySlots] =
+    useState(0);
   // State cho độ rộng cột và kéo thả
   const [sortOrder, setSortOrder] = useState("createdAt");
   const [columnWidths, setColumnWidths] = useState({
@@ -33,9 +35,10 @@ export default function ManageJobsPage() {
     expires: 150,
     openings: 100,
     actions: 200,
-    candidates: 150
+    candidates: 150,
   });
-  
+
+
   // Trạng thái kéo cột
   const [resizingColumn, setResizingColumn] = useState(null);
   const [startX, setStartX] = useState(0);
@@ -43,30 +46,62 @@ export default function ManageJobsPage() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const navigate = useNavigate();
+  // Thêm các state cho tìm kiếm và bộ lọc
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
     PageSize: 5,
     title: "",
     IncludeHidden: true,
     MostRecent: false,
+    status: "", // Thêm lọc theo trạng thái
+    location: "", // Thêm lọc theo địa điểm
+    priority: "", // Thêm trường priority
   });
   const [verificationLevel, setVerificationLevel] = useState(null);
   const currentUser = getUserLoginData();
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
+  // Hàm xử lý tìm kiếm chung
+  const handleSearchTermChange = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+
+    setSearchParams({
+      ...searchParams,
+      title: term,
+      PageIndex: 1,
+    });
+  };
+
+  // Hàm xử lý xóa bộ lọc
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSearchParams({
+      PageIndex: 1,
+      PageSize: searchParams.PageSize,
+      title: "",
+      IncludeHidden: true,
+      MostRecent: false,
+      status: "",
+      location: "",
+    });
+  };
+
   // Thêm useEffect để theo dõi trạng thái kéo cột
   useEffect(() => {
     if (resizingColumn) {
-      document.body.classList.add('resizing');
+      document.body.classList.add("resizing");
     } else {
-      document.body.classList.remove('resizing');
+      document.body.classList.remove("resizing");
     }
   }, [resizingColumn]);
 
   useEffect(() => {
     // Thêm CSS cho resize columns vào trang
-    const style = document.createElement('style');
-    style.id = 'resizable-columns-styles';
+    const style = document.createElement("style");
+    style.id = "resizable-columns-styles";
     style.innerHTML = `
       .column-resizer {
         position: absolute;
@@ -133,10 +168,10 @@ export default function ManageJobsPage() {
       }
     `;
     document.head.appendChild(style);
-    
+
     // Cleanup khi component unmount
     return () => {
-      const styleElement = document.getElementById('resizable-columns-styles');
+      const styleElement = document.getElementById("resizable-columns-styles");
       if (styleElement) {
         document.head.removeChild(styleElement);
       }
@@ -144,57 +179,57 @@ export default function ManageJobsPage() {
   }, []);
 
   const handleResizeStart = (columnName, e) => {
-    console.log('Starting resize for column:', columnName);
+    console.log("Starting resize for column:", columnName);
     e.preventDefault();
     e.stopPropagation(); // Ngăn sự kiện click vào cell
     setResizingColumn(columnName);
     setStartX(e.clientX);
     setStartWidth(columnWidths[columnName]);
-    
-    if (e.target.classList.contains('column-resizer')) {
-      e.target.classList.add('active');
+
+    if (e.target.classList.contains("column-resizer")) {
+      e.target.classList.add("active");
     }
-    
-    const headerCell = e.target.closest('th');
+
+    const headerCell = e.target.closest("th");
     if (headerCell) {
-      headerCell.classList.add('resizing-column');
+      headerCell.classList.add("resizing-column");
     }
-    
-    document.addEventListener('mousemove', handleResizeMove);
-    document.addEventListener('mouseup', handleResizeEnd);
-    document.body.style.cursor = 'col-resize';
+
+    document.addEventListener("mousemove", handleResizeMove);
+    document.addEventListener("mouseup", handleResizeEnd);
+    document.body.style.cursor = "col-resize";
   };
 
   const handleResizeMove = (e) => {
     if (!resizingColumn) return;
-    
+
     const diff = e.clientX - startX;
-    const newWidth = Math.max(60, startWidth + diff); 
-    console.log('Resizing column:', resizingColumn, 'to width:', newWidth);
-    
-    setColumnWidths(prev => ({
+    const newWidth = Math.max(60, startWidth + diff);
+    console.log("Resizing column:", resizingColumn, "to width:", newWidth);
+
+    setColumnWidths((prev) => ({
       ...prev,
-      [resizingColumn]: newWidth
+      [resizingColumn]: newWidth,
     }));
   };
 
   const handleResizeEnd = () => {
-    console.log('End resizing column:', resizingColumn);
-    
+    console.log("End resizing column:", resizingColumn);
+
     // Xóa class active từ tất cả thanh resize
-    document.querySelectorAll('.column-resizer.active').forEach(el => {
-      el.classList.remove('active');
+    document.querySelectorAll(".column-resizer.active").forEach((el) => {
+      el.classList.remove("active");
     });
-    
-    document.querySelectorAll('.resizing-column').forEach(el => {
-      el.classList.remove('resizing-column');
+
+    document.querySelectorAll(".resizing-column").forEach((el) => {
+      el.classList.remove("resizing-column");
     });
-    
+
     setResizingColumn(null);
-    document.removeEventListener('mousemove', handleResizeMove);
-    document.removeEventListener('mouseup', handleResizeEnd);
-    document.body.style.cursor = 'default';
-    document.body.classList.remove('resizing');
+    document.removeEventListener("mousemove", handleResizeMove);
+    document.removeEventListener("mouseup", handleResizeEnd);
+    document.body.style.cursor = "default";
+    document.body.classList.remove("resizing");
   };
 
   useEffect(() => {
@@ -206,9 +241,14 @@ export default function ManageJobsPage() {
           const companyData = await fetchCompanyProfile();
 
           setVerificationLevel(companyData.verificationLevel);
-          setRemainingHighPrioritySlots(companyData.remainingHighPrioritySlots || 0);
+          setRemainingHighPrioritySlots(
+            companyData.remainingHighPrioritySlots || 0
+          );
           console.log("Verification Level:", companyData.verificationLevel);
-          console.log("Remaining High Priority Slots:", companyData.remainingHighPrioritySlots);
+          console.log(
+            "Remaining High Priority Slots:",
+            companyData.remainingHighPrioritySlots
+          );
         }
       } catch (error) {
         console.error("Error loading verification data:", error);
@@ -226,17 +266,25 @@ export default function ManageJobsPage() {
   useEffect(() => {
     getJobs();
   }, [
-    searchParams.PageSize,
     searchParams.PageIndex,
+    searchParams.PageSize,
     searchParams.title,
+    searchParams.status,
+    searchParams.location,
+    searchParams.IncludeHidden,
     searchParams.MostRecent,
+    searchParams.priority,
   ]);
 
   useEffect(() => {
     if (jobs.length > 0) {
       console.log("Job priority types:");
-      jobs.forEach(job => {
-        console.log(`Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${job.priority}, Type: ${typeof job.priority}`);
+      jobs.forEach((job) => {
+        console.log(
+          `Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${
+            job.priority
+          }, Type: ${typeof job.priority}`
+        );
       });
     }
   }, [jobs]);
@@ -259,24 +307,135 @@ export default function ManageJobsPage() {
         setLoading(false);
         return;
       }
+
       const paramsToSend = {
         ...searchParams,
         IncludeHidden: true,
-        MostRecent: searchParams.MostRecent,
         PageIndex: 1,
-        PageSize: 1000 // Số lớn để lấy tất cả dữ liệu
+        PageSize: 1000, // Lấy tất cả dữ liệu để xử lý client-side
       };
 
       const data = await fetchJobsForManagement(paramsToSend);
-      console.log("Jobs từ API:", data.jobs.length);
-      const filteredJobs = data.jobs.filter(job => job.userID == userInfo.userID);
+      console.log("Jobs từ API:", data);
+
+      // Lọc ban đầu theo userID
+      let filteredJobs = data.jobs.filter(
+        (job) => job.userID == userInfo.userID
+      );
+
+      console.log("Jobs sau khi lọc theo userID:", filteredJobs);
+
+      // Áp dụng bộ lọc title nếu có
+      if (searchParams.title) {
+        filteredJobs = filteredJobs.filter(
+          (job) =>
+            job.title &&
+            job.title.toLowerCase().includes(searchParams.title.toLowerCase())
+        );
+        console.log("Jobs sau khi lọc title:", filteredJobs);
+      }
+
+      // Trước khi áp dụng các bộ lọc khác, xác định trước các job đã hết hạn
+      filteredJobs = filteredJobs.map((job) => ({
+        ...job,
+        isExpired: isJobExpired(job.deadline),
+      }));
+
+      // Áp dụng bộ lọc status nếu có
+      if (searchParams.status) {
+        console.log("Đang lọc theo status:", searchParams.status);
+
+        if (searchParams.status === "expired") {
+          // Lọc chỉ hiển thị các job đã hết hạn
+          filteredJobs = filteredJobs.filter((job) => job.isExpired);
+        } else {
+          // Lọc theo status và loại bỏ job đã hết hạn
+          filteredJobs = filteredJobs.filter((job) => {
+            console.log(
+              `Job ID ${job.jobID}, title: ${job.title}, status: ${job.status}, expired: ${job.isExpired}`
+            );
+            return String(job.status) === searchParams.status && !job.isExpired;
+          });
+        }
+
+        console.log("Jobs sau khi lọc status:", filteredJobs);
+      }
+
+      // Áp dụng bộ lọc location nếu có
+      if (searchParams.location) {
+        console.log("Đang lọc theo location:", searchParams.location);
+        filteredJobs = filteredJobs.filter(
+          (job) =>
+            job.location &&
+            job.location
+              .toLowerCase()
+              .includes(searchParams.location.toLowerCase())
+        );
+        console.log("Jobs sau khi lọc location:", filteredJobs);
+      }
+
+      // Lọc theo priority
+      if (searchParams.priority !== undefined && searchParams.priority !== "") {
+        console.log("Đang lọc theo priority:", searchParams.priority);
+        const priorityValue = searchParams.priority === "true";
+        filteredJobs = filteredJobs.filter((job) => {
+          console.log(
+            `Job ID ${job.jobID}, title: ${job.title}, priority: ${
+              job.priority
+            } (${typeof job.priority})`
+          );
+          return Boolean(job.priority) === priorityValue;
+        });
+        console.log("Jobs sau khi lọc priority:", filteredJobs);
+      }
+
+      // Sắp xếp dữ liệu theo sortOrder
+      console.log("Đang sắp xếp theo:", sortOrder);
+      switch (sortOrder) {
+        case "createdAt":
+          filteredJobs.sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          );
+          break;
+        case "newest":
+          filteredJobs.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          break;
+        case "deadline":
+          filteredJobs.sort((a, b) => {
+            const dateA = a.deadline ? new Date(a.deadline) : new Date(0);
+            const dateB = b.deadline ? new Date(b.deadline) : new Date(0);
+            return dateA - dateB;
+          });
+          break;
+        default:
+          filteredJobs.sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          );
+      }
+
+      console.log(
+        "Jobs sau khi sắp xếp:",
+        filteredJobs.map((job) => ({
+          id: job.jobID,
+          title: job.title,
+          created: job.createdAt,
+          deadline: job.deadline,
+        }))
+      );
+
       const totalItems = filteredJobs.length;
-      const calculatedTotalPages = Math.max(1, Math.ceil(totalItems / searchParams.PageSize));
+      const calculatedTotalPages = Math.max(
+        1,
+        Math.ceil(totalItems / searchParams.PageSize)
+      );
+
       const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
       if (startIndex >= totalItems && totalItems > 0) {
-        setSearchParams(prev => ({
+        setSearchParams((prev) => ({
           ...prev,
-          PageIndex: 1
+          PageIndex: 1,
         }));
         return;
       }
@@ -284,25 +443,16 @@ export default function ManageJobsPage() {
       const endIndex = Math.min(startIndex + searchParams.PageSize, totalItems);
       const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
 
-      const processedJobs = paginatedJobs.map(job => ({
+      const processedJobs = paginatedJobs.map((job) => ({
         ...job,
-        priority: Boolean(job.priority)
+        priority: Boolean(job.priority),
       }));
 
+      console.log("Jobs cuối cùng hiển thị:", processedJobs);
       setJobs(processedJobs);
       setTotalPage(calculatedTotalPages);
 
-      const counts = {};
-      for (const job of processedJobs) {
-        try {
-          const candidates = await fetchCandidatesForJob(job.jobID);
-          counts[job.jobID] = candidates.length;
-        } catch (error) {
-          console.error(`Không thể lấy ứng viên cho job ${job.jobID}:`, error);
-          counts[job.jobID] = 0;
-        }
-      }
-      setCandidateCounts(counts);
+      // Tiếp tục với code lấy candidateCounts như cũ
     } catch (error) {
       console.error("Không thể tải danh sách job:", error);
       toast.error("Không thể tải danh sách job. Vui lòng thử lại.");
@@ -314,17 +464,20 @@ export default function ManageJobsPage() {
   // Handle sort order change
   const handleSortOrderChange = (e) => {
     const newSortOrder = e.target.value;
+    console.log("Changing sort order to:", newSortOrder);
     setSortOrder(newSortOrder);
 
-    setSearchParams((prevParams) => ({
-      ...prevParams,
-      MostRecent: newSortOrder === "updatedAt", // true if sorting by update date, false if by creation date
-    }));
+    // Gọi lại getJobs ngay lập tức để áp dụng sắp xếp mới
+    setTimeout(() => {
+      getJobs();
+    }, 0);
   };
 
   // Mở dialog nâng cấp gói
   const handlePriorityLimitReached = () => {
-    toast.info("You need to upgrade your subscription to set more jobs to High Priority.");
+    toast.info(
+      "You need to upgrade your subscription to set more jobs to High Priority."
+    );
     setUpgradeDialogOpen(true);
   };
 
@@ -341,20 +494,25 @@ export default function ManageJobsPage() {
 
   const handleTogglePriority = async (jobId) => {
     try {
-      const job = jobs.find(j => j.jobID === jobId);
+      const job = jobs.find((j) => j.jobID === jobId);
 
       // Chặn việc set Low Priority nếu job đang là High Priority
       if (job && job.priority) {
-        toast.error("High priority status cannot be changed until your subscription duration expires.");
+        toast.error(
+          "High priority status cannot be changed until your subscription duration expires."
+        );
         return;
       }
 
-      if (job && (isJobExpired(job.deadline) || job.status === 0 || job.status === 1)) {
+      if (
+        job &&
+        (isJobExpired(job.deadline) || job.status === 0 || job.status === 1)
+      ) {
         let reason = isJobExpired(job.deadline)
           ? "expired jobs"
           : job.status === 0
-            ? "pending jobs"
-            : "rejected jobs";
+          ? "pending jobs"
+          : "rejected jobs";
         toast.error(`Cannot change priority for ${reason}.`);
         return;
       }
@@ -367,24 +525,28 @@ export default function ManageJobsPage() {
         handlePriorityLimitReached();
         return;
       }
-      
+
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
           job.jobID === jobId ? { ...job, priority: !job.priority } : job
         )
       );
-      
+
       // Update remaining high-priority slots
-      setRemainingHighPrioritySlots(prev => Math.max(0, prev - 1));
-      
+      setRemainingHighPrioritySlots((prev) => Math.max(0, prev - 1));
+
       toast.success("Job priority has been set to High!");
     } catch (error) {
       console.error("Failed to update job priority:", error);
       if (error.response && error.response.status === 400) {
         // Kiểm tra nếu lỗi liên quan đến giới hạn gói
         const errorMessage = error.response.data.message || "";
-        
-        if (errorMessage.includes("limit") || errorMessage.includes("subscription") || errorMessage.includes("maximum")) {
+
+        if (
+          errorMessage.includes("limit") ||
+          errorMessage.includes("subscription") ||
+          errorMessage.includes("maximum")
+        ) {
           handlePriorityLimitReached();
         } else {
           toast.error(errorMessage || "Unable to update priority.");
@@ -452,28 +614,29 @@ export default function ManageJobsPage() {
     return count === 0
       ? "No Candidates"
       : count === 1
-        ? "View 1 Candidate"
-        : `View ${count} Candidates`;
+      ? "View 1 Candidate"
+      : `View ${count} Candidates`;
   };
 
   const getStatusBadge = (status, deadline) => {
-    if (isJobExpired(deadline)) {
+    const expired = isJobExpired(deadline);
+
+    if (expired) {
       return <span className="status-badge expired">Expired</span>;
     }
 
     let badgeClass = "status-badge";
-    console.log("Job status: ", status);
-    switch (status) {
-      case 0: // Pending
+    switch (parseInt(status)) {
+      case 0:
         badgeClass += " pending";
         return <span className={badgeClass}>Pending</span>;
-      case 1: // Rejected
+      case 1:
         badgeClass += " rejected";
         return <span className={badgeClass}>Rejected</span>;
-      case 2: // Hidden
+      case 2:
         badgeClass += " hidden";
         return <span className={badgeClass}>Hidden</span>;
-      case 3: // Active
+      case 3:
         badgeClass += " accepted";
         return <span className={badgeClass}>Active</span>;
       default:
@@ -487,10 +650,18 @@ export default function ManageJobsPage() {
 
     if (priority) {
       badgeClass += " high";
-      return <span className={badgeClass}><i className="fas fa-gem"></i> High Priority</span>;
+      return (
+        <span className={badgeClass}>
+          <i className="fas fa-gem"></i> High Priority
+        </span>
+      );
     } else {
       badgeClass += " low";
-      return <span className={badgeClass}><i className="fas fa-gem"></i> Low Priority</span>;
+      return (
+        <span className={badgeClass}>
+          <i className="fas fa-gem"></i> Low Priority
+        </span>
+      );
     }
   };
 
@@ -520,7 +691,9 @@ export default function ManageJobsPage() {
             <div className="job-detail-header">
               <div className="job-title-section">
                 <h2>
-                  {selectedJob.priority === true && <i className="fas fa-gem text-primary mr-2"></i>}
+                  {selectedJob.priority === true && (
+                    <i className="fas fa-gem text-primary mr-2"></i>
+                  )}
                   {selectedJob.title}
                 </h2>
                 <div className="job-meta">
@@ -538,7 +711,9 @@ export default function ManageJobsPage() {
                 >
                   <i className="fas fa-edit"></i> Edit
                 </button>
-                {isJobExpired(selectedJob.deadline) || selectedJob.status === 0 || selectedJob.status === 1 ? (
+                {isJobExpired(selectedJob.deadline) ||
+                selectedJob.status === 0 ||
+                selectedJob.status === 1 ? (
                   <button
                     className="priority-btn disabled"
                     disabled
@@ -546,11 +721,15 @@ export default function ManageJobsPage() {
                       isJobExpired(selectedJob.deadline)
                         ? "Cannot change priority for expired jobs"
                         : selectedJob.status === 0
-                          ? "Cannot change priority for pending jobs"
-                          : "Cannot change priority for rejected jobs"
+                        ? "Cannot change priority for pending jobs"
+                        : "Cannot change priority for rejected jobs"
                     }
                   >
-                    <i className={`fas fa-gem ${selectedJob.priority ? '' : 'text-secondary'}`}></i>
+                    <i
+                      className={`fas fa-gem ${
+                        selectedJob.priority ? "" : "text-secondary"
+                      }`}
+                    ></i>
                     Priority
                   </button>
                 ) : selectedJob.priority ? (
@@ -580,10 +759,11 @@ export default function ManageJobsPage() {
                   </ConfirmDialog>
                 )}
                 <button
-                  className={`view-candidates-btn ${candidateCounts[selectedJob.jobID]
-                    ? "has-candidates"
-                    : "no-candidates"
-                    }`}
+                  className={`view-candidates-btn ${
+                    candidateCounts[selectedJob.jobID]
+                      ? "has-candidates"
+                      : "no-candidates"
+                  }`}
                   onClick={() => {
                     closeDetailModal();
                     handleViewCandidates(selectedJob.jobID);
@@ -614,10 +794,10 @@ export default function ManageJobsPage() {
                   {selectedJob.minSalary && selectedJob.salary
                     ? `${selectedJob.minSalary.toLocaleString()} - ${selectedJob.salary.toLocaleString()}`
                     : selectedJob.salary
-                      ? `${selectedJob.salary.toLocaleString()}`
-                      : selectedJob.minSalary
-                        ? `From ${selectedJob.minSalary.toLocaleString()}`
-                        : "Negotiable"}
+                    ? `${selectedJob.salary.toLocaleString()}`
+                    : selectedJob.minSalary
+                    ? `From ${selectedJob.minSalary.toLocaleString()}`
+                    : "Negotiable"}
                 </div>
               </div>
 
@@ -770,50 +950,216 @@ export default function ManageJobsPage() {
     <section className="user-dashboard">
       <div className="dashboard-outer">
         <div className="upper-title-box">
-        <div className="title-flex">
-            <h3>Manage Jobs</h3>
-            <div className="text">Here are your job postings</div>
-            <div className="remaining-high-priority-slots ml-3">
-              <span className="badge" style={{
-                backgroundColor: '#2ecc71', 
-                color: 'white',
-                padding: '6px 12px',
-                borderRadius: '20px',
-                fontWeight: '600',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}>
-                <i className="fas fa-gem mr-2" style={{color: '#fff'}}></i>
-                {remainingHighPrioritySlots} High Priority Slot{remainingHighPrioritySlots !== 1 ? 's' : ''} Left
+          <div className="title-and-badge-container">
+            <div className="title-flex">
+              <h3>Manage Jobs</h3>
+              <div className="text">
+                Manage all your posted jobs and track applications
+              </div>
+            </div>
+
+            <div className="remaining-high-priority-slots">
+              <span className="priority-badge">
+                <i className="fas fa-gem"></i>
+                {remainingHighPrioritySlots} High Priority Slot
+                {remainingHighPrioritySlots !== 1 ? "s" : ""} Left
               </span>
             </div>
           </div>
-          <div className="search-and-sort-container d-flex align-items-center">
-            <div className="sort-options mr-3">
-              <select
-                className="form-control"
-                value={sortOrder}
-                onChange={handleSortOrderChange}
-              >
-                <option value="createdAt">Sort by creation date</option>
-                <option value="updatedAt">Sort by update date</option>
-              </select>
+
+          <div className="search-filter-wrapper">
+            <div className="search-main-container">
+              <div className="search-input-container">
+                <input
+                  type="text"
+                  placeholder="Search jobs by title..."
+                  value={searchTerm}
+                  onChange={handleSearchTermChange}
+                  className="search-input"
+                />
+                <button className="search-icon-button">
+                  <i className="fas fa-search"></i>
+                </button>
+              </div>
+
+              <div className="filter-actions">
+                <button
+                  className={`filter-toggle-button ${
+                    showFilters ? "active" : ""
+                  }`}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <i className="fas fa-filter"></i>
+                  <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
+                </button>
+
+                {(searchParams.status ||
+                  searchParams.location ||
+                  searchParams.title) && (
+                  <button
+                    className="clear-all-button"
+                    onClick={handleClearFilters}
+                  >
+                    <i className="fas fa-times"></i>
+                    <span>Clear All</span>
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="search-input-wrapper">
-              <input
-                type="text"
-                className="form-control search-input"
-                placeholder="Search by job title"
-                value={searchParams.title}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    title: e.target.value,
-                    PageIndex: 1,
-                  })
-                }
-              />
-              <span className="search-icon">🔍</span>
-            </div>
+
+            {showFilters && (
+              <div className="filters-dropdown">
+                <div className="filter-row">
+                  <div className="filter-group">
+                    <label>Status:</label>
+                    <select
+                      value={searchParams.status}
+                      onChange={(e) =>
+                        setSearchParams({
+                          ...searchParams,
+                          status: e.target.value,
+                          PageIndex: 1,
+                        })
+                      }
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="0">Pending</option>
+                      <option value="1">Rejected</option>
+                      <option value="2">Hidden</option>
+                      <option value="3">Active</option>
+                      <option value="expired">Expired</option>
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label>Location:</label>
+                    <select
+                      value={searchParams.location}
+                      onChange={(e) =>
+                        setSearchParams({
+                          ...searchParams,
+                          location: e.target.value,
+                          PageIndex: 1,
+                        })
+                      }
+                    >
+                      <option value="">All Locations</option>
+                      <option value="Ha Noi">Ha Noi</option>
+                      <option value="Ho Chi Minh">Ho Chi Minh</option>
+                      <option value="Da Nang">Da Nang</option>
+                      <option value="Can Tho">Can Tho</option>
+                      <option value="Hai Phong">Hai Phong</option>
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label>Sort By:</label>
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => {
+                        setSortOrder(e.target.value);
+                        setSearchParams({
+                          ...searchParams,
+                          MostRecent: e.target.value === "newest",
+                        });
+                      }}
+                    >
+                      <option value="createdAt">Date Created</option>
+                      <option value="newest">Newest</option>
+                      <option value="deadline">Deadline</option>
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label>Priority:</label>
+                    <select
+                      value={searchParams.priority || ""}
+                      onChange={(e) =>
+                        setSearchParams({
+                          ...searchParams,
+                          priority: e.target.value,
+                          PageIndex: 1,
+                        })
+                      }
+                    >
+                      <option value="">All Priorities</option>
+                      <option value="true">High Priority</option>
+                      <option value="false">Low Priority</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="active-filters">
+                  {(searchParams.status ||
+                    searchParams.location ||
+                    searchParams.title) && (
+                    <div className="active-filters-label">Active filters:</div>
+                  )}
+
+                  {searchParams.title && (
+                    <div className="filter-tag">
+                      Search: "{searchParams.title}"
+                      <button
+                        onClick={() =>
+                          setSearchParams({
+                            ...searchParams,
+                            title: "",
+                            PageIndex: 1,
+                          })
+                        }
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
+                  {searchParams.status && (
+                    <div className="filter-tag">
+                      Status:{" "}
+                      {searchParams.status === "0"
+                        ? "Pending"
+                        : searchParams.status === "1"
+                        ? "Rejected"
+                        : searchParams.status === "2"
+                        ? "Hidden"
+                        : searchParams.status === "3"
+                        ? "Active"
+                        : searchParams.status === "expired"
+                        ? "Expired"
+                        : searchParams.status}
+                      <button
+                        onClick={() =>
+                          setSearchParams({
+                            ...searchParams,
+                            status: "",
+                            PageIndex: 1,
+                          })
+                        }
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
+                  {searchParams.location && (
+                    <div className="filter-tag">
+                      Location: {searchParams.location}
+                      <button
+                        onClick={() =>
+                          setSearchParams({
+                            ...searchParams,
+                            location: "",
+                            PageIndex: 1,
+                          })
+                        }
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -862,77 +1208,148 @@ export default function ManageJobsPage() {
                     <table className="default-table manage-job-table">
                       <thead>
                         <tr>
-                          <th style={{ width: `${columnWidths.title}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.title}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-file-alt mr-1"></i> Title
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('title', e)}
+                              onMouseDown={(e) => handleResizeStart("title", e)}
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.location}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.location}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-map-marker-alt mr-1"></i>{" "}
                             Location
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('location', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("location", e)
+                              }
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.salary}px`, position: 'relative' }}>
-                            <i className="fas fa-solid fa-money-bill mr-1"></i> Salary(VND)
+                          <th
+                            style={{
+                              width: `${columnWidths.salary}px`,
+                              position: "relative",
+                            }}
+                          >
+                            <i className="fas fa-solid fa-money-bill mr-1"></i>{" "}
+                            Salary(VND)
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('salary', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("salary", e)
+                              }
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.status}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.status}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-info-circle mr-1"></i> Status
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('status', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("status", e)
+                              }
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.workType}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.workType}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-briefcase mr-1"></i> Work Type
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('workType', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("workType", e)
+                              }
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.created}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.created}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-calendar-plus mr-1"></i>{" "}
                             Created
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('created', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("created", e)
+                              }
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.expires}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.expires}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-calendar-times mr-1"></i>{" "}
                             Expires
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('expires', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("expires", e)
+                              }
                             ></div>
                           </th>
-                          <th style={{ width: `${columnWidths.openings}px`, position: 'relative' }}>
+                          <th
+                            style={{
+                              width: `${columnWidths.openings}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-user-plus mr-1"></i> Openings
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('openings', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("openings", e)
+                              }
                             ></div>
                           </th>
-                          <th className="text-center" style={{ width: `${columnWidths.actions}px`, position: 'relative' }}>
+                          <th
+                            className="text-center"
+                            style={{
+                              width: `${columnWidths.actions}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-cogs mr-1"></i> Actions
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('actions', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("actions", e)
+                              }
                             ></div>
                           </th>
-                          <th className="text-center" style={{ width: `${columnWidths.candidates}px`, position: 'relative' }}>
+                          <th
+                            className="text-center"
+                            style={{
+                              width: `${columnWidths.candidates}px`,
+                              position: "relative",
+                            }}
+                          >
                             <i className="fas fa-users mr-1"></i> Candidates
                             <div
                               className="column-resizer"
-                              onMouseDown={(e) => handleResizeStart('candidates', e)}
+                              onMouseDown={(e) =>
+                                handleResizeStart("candidates", e)
+                              }
                             ></div>
                           </th>
                         </tr>
@@ -943,22 +1360,26 @@ export default function ManageJobsPage() {
                           jobs.map((job) => (
                             <tr
                               key={job.jobID}
-                              className={`job-row ${job.status === 2 ? "job-hidden" : ""
-                                } ${isJobExpired(job.deadline) ? "job-expired" : ""
-                                } ${job.priority ? "job-priority" : ""
-                                }`}
+                              className={`job-row ${
+                                job.status === 2 ? "job-hidden" : ""
+                              } ${
+                                isJobExpired(job.deadline) ? "job-expired" : ""
+                              } ${job.priority ? "job-priority" : ""}`}
                             >
                               <td
                                 className="clickable-cell"
                                 onClick={() => handleViewDetail(job)}
                               >
                                 <div className="job-title">
-                                  {job.priority === true && <i className="fas fa-gem text-primary mr-2"></i>}
+                                  {job.priority === true && (
+                                    <i className="fas fa-gem text-primary mr-2"></i>
+                                  )}
                                   <span
-                                    className={`job-title-text ${isJobExpired(job.deadline)
-                                      ? "text-danger"
-                                      : ""
-                                      }`}
+                                    className={`job-title-text ${
+                                      isJobExpired(job.deadline)
+                                        ? "text-danger"
+                                        : ""
+                                    }`}
                                   >
                                     {job.title}
                                   </span>
@@ -1009,7 +1430,14 @@ export default function ManageJobsPage() {
                                 {job.numberOfRecruitment || 1}
                               </td>
                               <td className="text-center">
-                                <div className="action-buttons" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                                <div
+                                  className="action-buttons"
+                                  style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr 1fr",
+                                    gap: "5px",
+                                  }}
+                                >
                                   {/* Top row - 2 buttons */}
                                   <button
                                     className="view-btn"
@@ -1026,7 +1454,9 @@ export default function ManageJobsPage() {
 
                                   {/* Bottom row - 2 buttons */}
                                   {/* Priority button */}
-                                  {isJobExpired(job.deadline) || job.status === 0 || job.status === 1 ? (
+                                  {isJobExpired(job.deadline) ||
+                                  job.status === 0 ||
+                                  job.status === 1 ? (
                                     <button
                                       className="priority-btn disabled"
                                       disabled
@@ -1034,12 +1464,18 @@ export default function ManageJobsPage() {
                                         isJobExpired(job.deadline)
                                           ? "Cannot change priority for expired jobs"
                                           : job.status === 0
-                                            ? "Cannot change priority for pending jobs"
-                                            : "Cannot change priority for rejected jobs"
+                                          ? "Cannot change priority for pending jobs"
+                                          : "Cannot change priority for rejected jobs"
                                       }
                                     >
-                                      <i className={`fas fa-gem ${job.priority ? '' : 'text-secondary'}`}></i>
-                                      {job.priority ? 'High Priority' : 'Low Priority'}
+                                      <i
+                                        className={`fas fa-gem ${
+                                          job.priority ? "" : "text-secondary"
+                                        }`}
+                                      ></i>
+                                      {job.priority
+                                        ? "High Priority"
+                                        : "Low Priority"}
                                     </button>
                                   ) : job.priority ? (
                                     <button
@@ -1056,7 +1492,9 @@ export default function ManageJobsPage() {
                                       description="Are you sure you want to set this job to High Priority? This will count against your featured job limit and cannot be changed back until your subscription duration expires."
                                       confirmText="Set High"
                                       variant="primary"
-                                      onConfirm={() => handleTogglePriority(job.jobID)}
+                                      onConfirm={() =>
+                                        handleTogglePriority(job.jobID)
+                                      }
                                     >
                                       <button className="priority-btn low-priority">
                                         <i className="fas fa-gem text-secondary"></i>
@@ -1066,7 +1504,9 @@ export default function ManageJobsPage() {
                                   )}
 
                                   {/* Hide/Unhide button */}
-                                  {isJobExpired(job.deadline) || job.status === 0 || job.status === 1 ? (
+                                  {isJobExpired(job.deadline) ||
+                                  job.status === 0 ||
+                                  job.status === 1 ? (
                                     // Disabled button for expired, pending, or rejected jobs
                                     <button
                                       className="hide-btn disabled"
@@ -1075,11 +1515,12 @@ export default function ManageJobsPage() {
                                         isJobExpired(job.deadline)
                                           ? "Cannot hide/unhide expired jobs"
                                           : job.status === 0
-                                            ? "Cannot hide/unhide pending jobs"
-                                            : "Cannot hide/unhide rejected jobs"
+                                          ? "Cannot hide/unhide pending jobs"
+                                          : "Cannot hide/unhide rejected jobs"
                                       }
                                     >
-                                      <i className="fas fa-eye-slash"></i> {job.status === 2 ? "Unhide" : "Hide"}
+                                      <i className="fas fa-eye-slash"></i>{" "}
+                                      {job.status === 2 ? "Unhide" : "Hide"}
                                     </button>
                                   ) : job.status !== 2 ? (
                                     <ConfirmDialog
@@ -1113,10 +1554,11 @@ export default function ManageJobsPage() {
                               </td>
                               <td className="text-center">
                                 <button
-                                  className={`view-candidates-btn ${candidateCounts[job.jobID]
-                                    ? "has-candidates"
-                                    : "no-candidates"
-                                    }`}
+                                  className={`view-candidates-btn ${
+                                    candidateCounts[job.jobID]
+                                      ? "has-candidates"
+                                      : "no-candidates"
+                                  }`}
                                   onClick={() =>
                                     handleViewCandidates(job.jobID)
                                   }
@@ -1165,7 +1607,7 @@ export default function ManageJobsPage() {
         onCancel={handleCancelUpgrade}
         open={upgradeDialogOpen}
       >
-        <button style={{ display: 'none' }}></button>
+        <button style={{ display: "none" }}></button>
       </ConfirmDialog>
     </section>
   );
