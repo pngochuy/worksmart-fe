@@ -28,7 +28,9 @@ export const getFavoriteJobById = async (id) => {
 export const getFavoriteJobsByUserId = async (userId) => {
   try {
     console.log(`Requesting favorite jobs for user ID: ${userId}`);
-    const response = await axios.get(`${BACKEND_API_URL}/favoritejob/user/${userId}`);
+    const response = await axios.get(
+      `${BACKEND_API_URL}/favoritejob/user/${userId}`
+    );
     console.log(`Response for user ${userId} favorite jobs:`, response.data);
     return response.data;
   } catch (error) {
@@ -40,7 +42,10 @@ export const getFavoriteJobsByUserId = async (userId) => {
 // Add a job to favorites
 export const addJobToFavorites = async (jobData) => {
   try {
-    const response = await axios.post(`${BACKEND_API_URL}/favoritejob`, jobData);
+    const response = await axios.post(
+      `${BACKEND_API_URL}/favoritejob`,
+      jobData
+    );
     return response.data;
   } catch (error) {
     console.error("Error adding job to favorites:", error);
@@ -52,10 +57,15 @@ export const addJobToFavorites = async (jobData) => {
 export const removeFavoriteJob = async (favoriteJobId) => {
   try {
     console.log(`Removing favorite job with ID: ${favoriteJobId}`);
-    const response = await axios.delete(`${BACKEND_API_URL}/favoritejob/${favoriteJobId}`);
+    const response = await axios.delete(
+      `${BACKEND_API_URL}/favoritejob/${favoriteJobId}`
+    );
     return response.data;
   } catch (error) {
-    console.error(`Error removing favorite job with ID ${favoriteJobId}:`, error);
+    console.error(
+      `Error removing favorite job with ID ${favoriteJobId}:`,
+      error
+    );
     throw error;
   }
 };
@@ -64,7 +74,7 @@ export const removeFavoriteJob = async (favoriteJobId) => {
 export const checkJobIsFavorite = async (userId, jobId) => {
   try {
     const favoriteJobs = await getFavoriteJobsByUserId(userId);
-    return favoriteJobs.some(job => job.jobID === jobId);
+    return favoriteJobs.some((job) => job.jobID === jobId);
   } catch (error) {
     console.error(`Error checking if job ${jobId} is in favorites:`, error);
     return false;
@@ -76,8 +86,8 @@ export const toggleFavoriteJob = async (userId, jobId) => {
   try {
     // First check if the job is already in favorites
     const favoriteJobs = await getFavoriteJobsByUserId(userId);
-    const existingFavorite = favoriteJobs.find(job => job.jobID === jobId);
-    
+    const existingFavorite = favoriteJobs.find((job) => job.jobID === jobId);
+
     if (existingFavorite) {
       // If already in favorites, remove it
       await removeFavoriteJob(existingFavorite.favoriteJobID);
@@ -87,12 +97,45 @@ export const toggleFavoriteJob = async (userId, jobId) => {
       const newFavorite = await addJobToFavorites({
         userID: userId,
         jobID: jobId,
-        dateSaved: new Date().toISOString()
+        dateSaved: new Date().toISOString(),
       });
-      return { isFavorite: true, message: "Job added to favorites", data: newFavorite };
+      return {
+        isFavorite: true,
+        message: "Job added to favorites",
+        data: newFavorite,
+      };
     }
   } catch (error) {
     console.error(`Error toggling favorite status for job ${jobId}:`, error);
+    throw error;
+  }
+};
+
+export const isJobFavorited = async (userId, jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/favoritejob/isfavorited/${userId}/${jobId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Error checking if job ${jobId} is favorited by user ${userId}:`,
+      error
+    );
+    throw error;
+  }
+};
+export const deleteFavoriteJob = async (userId, jobId) => {
+  try {
+    const response = await axios.delete(
+      `${BACKEND_API_URL}/favoritejob/delete-favorite-job/${userId}/${jobId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Error deleting favorite job ${jobId} for user ${userId}:`,
+      error
+    );
     throw error;
   }
 };

@@ -9,12 +9,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -27,7 +25,7 @@ import {
 import { getUserLoginData } from "../../../helpers/decodeJwt";
 
 export const Index = () => {
-  // State cho notification preferences - cập nhật theo DTO mới
+  // State cho notification preferences
   const [notificationPreferences, setNotificationPreferences] = useState({
     realTime: {
       // Applications
@@ -59,6 +57,8 @@ export const Index = () => {
     },
   });
 
+  // Thêm state theo dõi loading cho từng toggle
+  const [loadingToggles, setLoadingToggles] = useState({});
   const [loading, setLoading] = useState(false);
   const [settingId, setSettingId] = useState(null);
   const userId = getUserLoginData().userID;
@@ -72,7 +72,7 @@ export const Index = () => {
         console.log("Notification settings data:", data);
         setSettingId(data.notificationSettingID);
 
-        // Map dữ liệu API sang cấu trúc state - cập nhật theo DTO mới
+        // Map dữ liệu API sang cấu trúc state
         setNotificationPreferences({
           realTime: {
             // Applications
@@ -117,23 +117,29 @@ export const Index = () => {
     fetchNotificationSettings();
   }, [userId]);
 
-  // Xử lý sự kiện toggle thay đổi
-  const handleToggleChange = (category, setting) => {
-    setNotificationPreferences((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [setting]: !prev[category][setting],
-      },
-    }));
-  };
+  // Cập nhật hàm xử lý toggle để gọi API ngay lập tức
+  const handleToggleChange = async (category, setting) => {
+    // Tạo khóa duy nhất cho toggle
+    const toggleKey = `${category}-${setting}`;
 
-  // Xử lý submit form - chuyển đổi state UI sang định dạng API
-  const handleSubmit = async () => {
     try {
-      setLoading(true);
+      // Đánh dấu toggle đang được cập nhật
+      setLoadingToggles((prev) => ({
+        ...prev,
+        [toggleKey]: true,
+      }));
 
-      // Chuyển đổi dữ liệu UI sang định dạng API - cập nhật theo DTO mới
+      // Cập nhật state local trước để UI phản hồi ngay
+      const newValue = !notificationPreferences[category][setting];
+      setNotificationPreferences((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [setting]: newValue,
+        },
+      }));
+
+      // Chuẩn bị dữ liệu API
       const apiData = {
         notificationSettingID: settingId,
         userID: userId,
@@ -159,22 +165,48 @@ export const Index = () => {
         emailPerformanceAlerts: notificationPreferences.email.performanceAlerts,
       };
 
-      // Gửi dữ liệu đến API
+      // Cập nhật giá trị mới vào dữ liệu API
+      if (category === "realTime") {
+        apiData[setting] = newValue;
+      } else if (category === "email") {
+        apiData[`email${setting.charAt(0).toUpperCase() + setting.slice(1)}`] =
+          newValue;
+      }
+
+      // Gọi API update
       await updateNotificationSetting(userId, apiData);
+
+      // Hiển thị thông báo thành công
       toast.success(
-        "Your notification preferences have been updated successfully."
+        `${setting
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (str) => str.toUpperCase())} notifications ${
+          newValue ? "enabled" : "disabled"
+        }.`
       );
     } catch (error) {
-      console.error("Failed to update notification settings:", error);
-      toast.error(
-        "Failed to update notification preferences. Please try again."
-      );
+      console.error(`Failed to update ${setting} setting:`, error);
+
+      // Khôi phục giá trị cũ nếu có lỗi
+      setNotificationPreferences((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [setting]: !prev[category][setting],
+        },
+      }));
+
+      toast.error("Failed to update notification setting. Please try again.");
     } finally {
-      setLoading(false);
+      // Xóa trạng thái loading cho toggle
+      setLoadingToggles((prev) => ({
+        ...prev,
+        [toggleKey]: false,
+      }));
     }
   };
 
-  // Cấu hình các danh mục thông báo để hiển thị - đã cập nhật theo DTO mới
+  // Các cấu hình danh mục thông báo - không đổi
   const notificationCategories = [
     {
       id: "applications",
@@ -271,28 +303,33 @@ export const Index = () => {
                     </p>
                   </CardContent>
                 ) : (
-                  <>
-                    <CardContent className="pt-6">
-                      <div className="grid gap-8">
-                        {/* Real-time notifications section */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-4">
-                            <Bell className="h-5 w-5 text-indigo-600" />
-                            <h4 className="text-lg font-medium">
-                              Real-time Notifications
-                            </h4>
-                          </div>
+                  <CardContent className="pt-6">
+                    <div className="grid gap-8">
+                      {/* Real-time notifications section */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Bell className="h-5 w-5 text-indigo-600" />
+                          <h4 className="text-lg font-medium">
+                            Real-time Notifications
+                          </h4>
+                        </div>
 
-                          <div className="space-y-6">
-                            {notificationCategories.map((category) => (
-                              <div
-                                key={`realtime-category-${category.id}`}
-                                className="space-y-4"
-                              >
-                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                                  {category.title}
-                                </h5>
-                                {category.settings.map((setting) => (
+                        <div className="space-y-6">
+                          {notificationCategories.map((category) => (
+                            <div
+                              key={`realtime-category-${category.id}`}
+                              className="space-y-4"
+                            >
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                {category.title}
+                              </h5>
+                              {category.settings.map((setting) => {
+                                // Tạo khóa toggle và kiểm tra trạng thái loading
+                                const toggleKey = `realTime-${setting.id}`;
+                                const isToggleLoading =
+                                  loadingToggles[toggleKey];
+
+                                return (
                                   <div
                                     key={`realtime-${setting.id}`}
                                     className="flex items-center justify-between py-2"
@@ -320,40 +357,50 @@ export const Index = () => {
                                           setting.id
                                         )
                                       }
-                                      className="rounded-xl"
+                                      disabled={isToggleLoading}
+                                      className={`rounded-xl ${
+                                        isToggleLoading ? "opacity-70" : ""
+                                      }`}
                                     />
                                   </div>
-                                ))}
-                                {category.id !==
-                                  notificationCategories[
-                                    notificationCategories.length - 1
-                                  ].id && <Separator className="my-2" />}
-                              </div>
-                            ))}
-                          </div>
+                                );
+                              })}
+                              {category.id !==
+                                notificationCategories[
+                                  notificationCategories.length - 1
+                                ].id && <Separator className="my-2" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      {/* Email notifications section */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Mail className="h-5 w-5 text-indigo-600" />
+                          <h4 className="text-lg font-medium">
+                            Email Notifications
+                          </h4>
                         </div>
 
-                        <Separator />
+                        <div className="space-y-6">
+                          {notificationCategories.map((category) => (
+                            <div
+                              key={`email-category-${category.id}`}
+                              className="space-y-4"
+                            >
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                {category.title}
+                              </h5>
+                              {category.settings.map((setting) => {
+                                // Tạo khóa toggle và kiểm tra trạng thái loading
+                                const toggleKey = `email-${setting.id}`;
+                                const isToggleLoading =
+                                  loadingToggles[toggleKey];
 
-                        {/* Email notifications section */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-4">
-                            <Mail className="h-5 w-5 text-indigo-600" />
-                            <h4 className="text-lg font-medium">
-                              Email Notifications
-                            </h4>
-                          </div>
-
-                          <div className="space-y-6">
-                            {notificationCategories.map((category) => (
-                              <div
-                                key={`email-category-${category.id}`}
-                                className="space-y-4"
-                              >
-                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                                  {category.title}
-                                </h5>
-                                {category.settings.map((setting) => (
+                                return (
                                   <div
                                     key={`email-${setting.id}`}
                                     className="flex items-center justify-between py-2"
@@ -378,31 +425,24 @@ export const Index = () => {
                                       onCheckedChange={() =>
                                         handleToggleChange("email", setting.id)
                                       }
-                                      className="rounded-xl"
+                                      disabled={isToggleLoading}
+                                      className={`rounded-xl ${
+                                        isToggleLoading ? "opacity-70" : ""
+                                      }`}
                                     />
                                   </div>
-                                ))}
-                                {category.id !==
-                                  notificationCategories[
-                                    notificationCategories.length - 1
-                                  ].id && <Separator className="my-2" />}
-                              </div>
-                            ))}
-                          </div>
+                                );
+                              })}
+                              {category.id !==
+                                notificationCategories[
+                                  notificationCategories.length - 1
+                                ].id && <Separator className="my-2" />}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </CardContent>
-
-                    <CardFooter className="border-t pt-4 mt-6 flex justify-end">
-                      <Button
-                        onClick={handleSubmit}
-                        className="bg-indigo-600 hover:bg-indigo-700"
-                        disabled={loading}
-                      >
-                        {loading ? "Saving..." : "Save Preferences"}
-                      </Button>
-                    </CardFooter>
-                  </>
+                    </div>
+                  </CardContent>
                 )}
               </Card>
             </div>

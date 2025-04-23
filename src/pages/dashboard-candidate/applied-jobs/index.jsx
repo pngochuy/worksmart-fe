@@ -3,9 +3,31 @@ import { useEffect, useState } from "react";
 import { useNotifications } from "@/layouts/NotificationProvider";
 import { fetchUserNotifications } from "@/services/notificationServices";
 import { fetchAppliedJobs } from "@/services/jobServices";
-import { Clock, FileEdit, Heart, MoveUpRight, Search, RefreshCcw } from "lucide-react";
+import {
+  Clock,
+  FileEdit,
+  Heart,
+  MoveUpRight,
+  Search,
+  RefreshCcw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
+import { toast } from "react-toastify";
+import LoadingButton from "@/components/LoadingButton";
+import {
+  toggleFavoriteJob,
+  isJobFavorited,
+  deleteFavoriteJob,
+} from "@/services/favoriteJobService";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const index = () => {
   const [userDataLogin, setUserDataLogin] = useState(null);
@@ -15,8 +37,18 @@ export const index = () => {
   const [jobError, setJobError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Thêm state cho chức năng save/unsave
+  const [favoriteStatus, setFavoriteStatus] = useState({});
+  const [savingFavorite, setSavingFavorite] = useState(null);
+  const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
+  const [showUnsaveConfirmDialog, setShowUnsaveConfirmDialog] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  const userID = userDataLogin?.userID || null;
 
   useEffect(() => {
     const user = getUserLoginData();
@@ -30,23 +62,47 @@ export const index = () => {
   }, [userDataLogin]);
 
   const handleRefresh = () => {
-    loadAppliedJobs(); // Tải lại dữ liệu giao dịch
-  }
+    loadAppliedJobs();
+  };
 
   // Filter jobs whenever search term or applied jobs change
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredJobs(appliedJobs);
     } else {
-      const filtered = appliedJobs.filter(job =>
+      const filtered = appliedJobs.filter((job) =>
         job.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      console.log("Search:", filtered);
       setFilteredJobs(filtered);
     }
     // Reset về trang 1 khi thay đổi kết quả tìm kiếm
     setCurrentPage(1);
   }, [searchTerm, appliedJobs]);
+
+  // Thêm hàm kiểm tra trạng thái favorite
+  const checkFavoriteStatuses = async (jobs) => {
+    if (!userID || !jobs.length) return;
+
+    try {
+      const statusPromises = jobs.map((job) =>
+        isJobFavorited(userID, job.jobID).then((isFavorite) => ({
+          jobId: job.jobID,
+          isFavorite,
+        }))
+      );
+
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = {};
+
+      statuses.forEach(({ jobId, isFavorite }) => {
+        statusMap[jobId] = isFavorite;
+      });
+
+      setFavoriteStatus(statusMap);
+    } catch (error) {
+      console.error("Error checking favorite statuses:", error);
+    }
+  };
 
   const loadAppliedJobs = async () => {
     try {
@@ -55,11 +111,80 @@ export const index = () => {
       const data = await fetchAppliedJobs(userId);
       setAppliedJobs(data);
       setFilteredJobs(data); // Initialize filtered jobs with all jobs
+
+      // Kiểm tra trạng thái yêu thích cho mỗi job
+      if (data && data.length > 0) {
+        await checkFavoriteStatuses(data);
+      }
     } catch (err) {
       setJobError("Failed to load applied jobs");
       console.error(err);
     } finally {
       setLoadingJobs(false);
+    }
+  };
+
+  // Thêm hàm xử lý khi click vào nút Save
+  const handleSaveJobClick = (job) => {
+    setSelectedJob(job);
+    setSelectedJobId(job.jobID);
+
+    // Nếu job đã được lưu, hiện dialog xác nhận bỏ lưu
+    if (favoriteStatus[job.jobID]) {
+      setShowUnsaveConfirmDialog(true);
+    } else {
+      // Nếu chưa lưu, hiện dialog xác nhận lưu
+      setShowSaveConfirmDialog(true);
+    }
+  };
+
+  // Thêm hàm xử lý khi xác nhận lưu job
+  const handleToggleFavorite = async () => {
+    if (!userID || !selectedJobId) return;
+
+    setSavingFavorite(selectedJobId);
+    try {
+      const result = await toggleFavoriteJob(userID, selectedJobId);
+
+      setFavoriteStatus((prev) => ({
+        ...prev,
+        [selectedJobId]: result.isFavorite,
+      }));
+
+      toast.success(
+        result.isFavorite
+          ? "Job saved to favorites successfully!"
+          : "Job removed from favorites."
+      );
+    } catch (error) {
+      console.error("Error toggling favorite status:", error);
+      toast.error("Failed to update favorites. Please try again.");
+    } finally {
+      setSavingFavorite(null);
+      setShowSaveConfirmDialog(false);
+    }
+  };
+
+  // Thêm hàm xử lý khi xác nhận bỏ lưu job
+  const handleUnsaveJob = async () => {
+    if (!userID || !selectedJobId) return;
+
+    setSavingFavorite(selectedJobId);
+    try {
+      await deleteFavoriteJob(userID, selectedJobId);
+
+      setFavoriteStatus((prev) => ({
+        ...prev,
+        [selectedJobId]: false,
+      }));
+
+      toast.success("Job removed from favorites.");
+    } catch (error) {
+      console.error("Error removing job from favorites:", error);
+      toast.error("Failed to remove job from favorites. Please try again.");
+    } finally {
+      setSavingFavorite(null);
+      setShowUnsaveConfirmDialog(false);
     }
   };
 
@@ -92,15 +217,13 @@ export const index = () => {
   const currentJobs = filteredJobs.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
 
-  // Thêm các hàm điều hướng
+  // Các hàm điều hướng
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
   const goToPreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
-
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -109,6 +232,74 @@ export const index = () => {
 
   return (
     <>
+      {/* Save Job Confirm Dialog */}
+      <Dialog
+        open={showSaveConfirmDialog}
+        onOpenChange={setShowSaveConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Job</DialogTitle>
+            <DialogDescription>
+              Do you want to save <b>{selectedJob?.title}</b> at{" "}
+              <b>{selectedJob?.companyName}</b> to your favorites? You can view
+              all saved jobs in your profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowSaveConfirmDialog(false)}
+              disabled={savingFavorite === selectedJobId}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="default"
+              onClick={handleToggleFavorite}
+              loading={savingFavorite === selectedJobId}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Save Job
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unsave Job Confirm Dialog */}
+      <Dialog
+        open={showUnsaveConfirmDialog}
+        onOpenChange={setShowUnsaveConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove from Saved Jobs</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove <b>{selectedJob?.title}</b> at{" "}
+              <b>{selectedJob?.companyName}</b> from your saved jobs?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowUnsaveConfirmDialog(false)}
+              disabled={savingFavorite === selectedJobId}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleUnsaveJob}
+              loading={savingFavorite === selectedJobId}
+            >
+              Remove
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dashboard */}
       <section className="user-dashboard">
         <div className="dashboard-outer">
@@ -131,7 +322,11 @@ export const index = () => {
                         disabled={loadingJobs}
                         onClick={handleRefresh}
                       >
-                        <RefreshCcw className={`h-4 w-4 ${loadingJobs ? 'animate-spin' : ''}`} />
+                        <RefreshCcw
+                          className={`h-4 w-4 ${
+                            loadingJobs ? "animate-spin" : ""
+                          }`}
+                        />
                         <span className="ml-1 hidden sm:inline"></span>
                       </Button>
                     )}
@@ -163,17 +358,25 @@ export const index = () => {
                           </div>
                         ) : filteredJobs.length > 0 ? (
                           currentJobs.map((job) => (
-                            <div key={job.jobID} className="job-block col-lg-12 col-md-12 col-sm-12">
+                            <div
+                              key={job.jobID}
+                              className="job-block col-lg-12 col-md-12 col-sm-12"
+                            >
                               <div className="inner-box">
                                 <div className="content">
                                   <span className="company-logo">
                                     <img
-                                      src={job.avatar || "https://via.placeholder.com/80"}
+                                      src={
+                                        job.companyAvatar ||
+                                        "https://via.placeholder.com/80"
+                                      }
                                       alt={job.companyName}
                                     />
                                   </span>
                                   <h4>
-                                    <a href={`/job-list/${job.jobID}`}>{job.title}</a>
+                                    <a href={`/job-list/${job.jobID}`}>
+                                      {job.title}
+                                    </a>
                                   </h4>
                                   <ul className="job-info">
                                     <li>
@@ -186,7 +389,9 @@ export const index = () => {
                                     </li>
                                     <li>
                                       <span className="icon flaticon-clock-3"></span>{" "}
-                                      {formatDateTimeNotIncludeTime(job.deadline)}
+                                      {formatDateTimeNotIncludeTime(
+                                        job.deadline
+                                      )}
                                     </li>
                                     <li>
                                       <span className="icon flaticon-money"></span>{" "}
@@ -195,17 +400,49 @@ export const index = () => {
                                   </ul>
                                   <ul className="job-other-info">
                                     <li className="time">{job.workType}</li>
-                                    {job.level && <li className="privacy">{job.level}</li>}
-                                    {job.priority && <li className="required">Urgent</li>}
+                                    {job.level && (
+                                      <li className="privacy">{job.level}</li>
+                                    )}
+                                    {job.priority && (
+                                      <li className="required">Urgent</li>
+                                    )}
+                                    <li
+                                      className={`status ${
+                                        job.applicationStatus === "Approved"
+                                          ? "bg-green-500"
+                                          : job.applicationStatus === "Rejected"
+                                          ? "bg-red-500"
+                                          : "bg-amber-500"
+                                      }`}
+                                    >
+                                      {job.applicationStatus}
+                                    </li>
                                   </ul>
-                                  <button className="bookmark-btn" style={{ right: 70 }}>
+                                  <button
+                                    className="bookmark-btn"
+                                    style={{ right: 70 }}
+                                  >
                                     <Button
                                       variant="outline"
-                                      className="text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 cursor-default"
+                                      className={`border hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 ${
+                                        favoriteStatus[job.jobID]
+                                          ? "text-blue-600 border-blue-200 bg-blue-50"
+                                          : "text-gray-500 border-gray-200"
+                                      }`}
+                                      onClick={() => handleSaveJobClick(job)}
+                                      disabled={savingFavorite === job.jobID}
                                     >
-                                      <Heart className="h-4 w-4 text-blue-500" />
-                                      <span className="hidden sm:inline text-blue-500">
-                                        Save
+                                      <Heart
+                                        className={`h-4 w-4 ${
+                                          favoriteStatus[job.jobID]
+                                            ? "text-blue-500 fill-blue-500"
+                                            : "text-gray-500"
+                                        }`}
+                                      />
+                                      <span className="hidden sm:inline">
+                                        {favoriteStatus[job.jobID]
+                                          ? "Saved"
+                                          : "Save"}
                                       </span>
                                     </Button>
                                   </button>
@@ -221,7 +458,10 @@ export const index = () => {
                               <p>You haven't applied to any jobs yet.</p>
                             )}
                             {!searchTerm && (
-                              <a href="/job-list" className="btn btn-primary mt-3">
+                              <a
+                                href="/job-list"
+                                className="btn btn-primary mt-3"
+                              >
                                 Browse Jobs
                               </a>
                             )}
@@ -229,12 +469,16 @@ export const index = () => {
                         )}
                       </table>
 
-                      {/* Thêm phân trang */}
+                      {/* Phân trang */}
                       {filteredJobs.length > 0 && (
                         <div className="pagination-container mt-4 d-flex justify-content-center">
                           <nav aria-label="Job applications pagination">
                             <ul className="pagination">
-                              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                              <li
+                                className={`page-item ${
+                                  currentPage === 1 ? "disabled" : ""
+                                }`}
+                              >
                                 <button
                                   className="page-link"
                                   onClick={goToPreviousPage}
@@ -247,7 +491,9 @@ export const index = () => {
                               {[...Array(totalPages).keys()].map((number) => (
                                 <li
                                   key={number + 1}
-                                  className={`page-item ${currentPage === number + 1 ? "active" : ""}`}
+                                  className={`page-item ${
+                                    currentPage === number + 1 ? "active" : ""
+                                  }`}
                                 >
                                   <button
                                     className="page-link"
@@ -258,7 +504,11 @@ export const index = () => {
                                 </li>
                               ))}
 
-                              <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                              <li
+                                className={`page-item ${
+                                  currentPage === totalPages ? "disabled" : ""
+                                }`}
+                              >
                                 <button
                                   className="page-link"
                                   onClick={goToNextPage}
@@ -304,6 +554,15 @@ export const index = () => {
             pointer-events: none;
             background-color: #fff;
             border-color: #dee2e6;
+          }
+          
+          /* Status badge styling */
+          .job-other-info .status {
+            color: white;
+            padding: 5px 15px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-right: 8px;
           }
         `}
       </style>

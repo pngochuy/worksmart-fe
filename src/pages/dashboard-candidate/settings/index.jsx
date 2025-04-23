@@ -10,12 +10,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -57,6 +55,7 @@ export const Index = () => {
     },
   });
 
+  const [loadingToggles, setLoadingToggles] = useState({});
   const [loading, setLoading] = useState(false);
   const [settingId, setSettingId] = useState(null);
   const userId = getUserLoginData().userID;
@@ -111,27 +110,28 @@ export const Index = () => {
     fetchNotificationSettings();
   }, [userId]);
 
-  // Handle toggle changes
-  const handleToggleChange = (category, setting) => {
-    setNotificationPreferences((prev) => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [setting]: !prev[category][setting],
-      },
-    }));
-  };
-
-  // Handle form submission - map our state back to API format
-  const handleSubmit = async () => {
+  const handleToggleChange = async (category, setting) => {
     try {
-      setLoading(true);
+      const toggleKey = `${category}-${setting}`;
+      setLoadingToggles((prev) => ({
+        ...prev,
+        [toggleKey]: true,
+      }));
+
+      const newValue = !notificationPreferences[category][setting];
+
+      setNotificationPreferences((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [setting]: newValue,
+        },
+      }));
 
       const apiData = {
         notificationSettingID: settingId,
         userID: userId,
 
-        // Real-time Notifications
         savedJobsUpdates: notificationPreferences.realTime.savedJobsUpdates,
         recommendedJobs: notificationPreferences.realTime.recommendedJobs,
         applicationApproved:
@@ -142,7 +142,6 @@ export const Index = () => {
         applicationDeadlines:
           notificationPreferences.realTime.applicationDeadlines,
 
-        // Email Notifications
         emailSavedJobsUpdates: notificationPreferences.email.savedJobsUpdates,
         emailRecommendedJobs: notificationPreferences.email.recommendedJobs,
         emailApplicationApproved:
@@ -154,17 +153,40 @@ export const Index = () => {
           notificationPreferences.email.applicationDeadlines,
       };
 
+      if (category === "realTime") {
+        apiData[setting] = newValue;
+      } else if (category === "email") {
+        apiData[`email${setting.charAt(0).toUpperCase() + setting.slice(1)}`] =
+          newValue;
+      }
+
       await updateNotificationSetting(userId, apiData);
+
       toast.success(
-        "Your notification preferences have been updated successfully."
+        `${setting
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (str) => str.toUpperCase())} notifications ${
+          newValue ? "enabled" : "disabled"
+        }.`
       );
     } catch (error) {
-      console.error("Failed to update notification settings:", error);
-      toast.error(
-        "Failed to update notification preferences. Please try again."
-      );
+      console.error(`Failed to update ${setting} setting:`, error);
+
+      setNotificationPreferences((prev) => ({
+        ...prev,
+        [category]: {
+          ...prev[category],
+          [setting]: !prev[category][setting],
+        },
+      }));
+
+      toast.error(`Failed to update notification setting. Please try again.`);
     } finally {
-      setLoading(false);
+      const toggleKey = `${category}-${setting}`;
+      setLoadingToggles((prev) => ({
+        ...prev,
+        [toggleKey]: false,
+      }));
     }
   };
 
@@ -257,28 +279,32 @@ export const Index = () => {
                     </p>
                   </CardContent>
                 ) : (
-                  <>
-                    <CardContent className="pt-6">
-                      <div className="grid gap-8">
-                        {/* Real-time notifications section */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-4">
-                            <Bell className="h-5 w-5 text-indigo-600" />
-                            <h4 className="text-lg font-medium">
-                              Real-time Notifications
-                            </h4>
-                          </div>
+                  <CardContent className="pt-6">
+                    <div className="grid gap-8">
+                      {/* Real-time notifications section */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Bell className="h-5 w-5 text-indigo-600" />
+                          <h4 className="text-lg font-medium">
+                            Real-time Notifications
+                          </h4>
+                        </div>
 
-                          <div className="space-y-6">
-                            {notificationCategories.map((category) => (
-                              <div
-                                key={`realtime-category-${category.id}`}
-                                className="space-y-4"
-                              >
-                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                                  {category.title}
-                                </h5>
-                                {category.settings.map((setting) => (
+                        <div className="space-y-6">
+                          {notificationCategories.map((category) => (
+                            <div
+                              key={`realtime-category-${category.id}`}
+                              className="space-y-4"
+                            >
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                {category.title}
+                              </h5>
+                              {category.settings.map((setting) => {
+                                const toggleKey = `realTime-${setting.id}`;
+                                const isToggleLoading =
+                                  loadingToggles[toggleKey];
+
+                                return (
                                   <div
                                     key={`realtime-${setting.id}`}
                                     className="flex items-center justify-between py-2"
@@ -306,40 +332,49 @@ export const Index = () => {
                                           setting.id
                                         )
                                       }
-                                      className="rounded-xl"
+                                      disabled={isToggleLoading}
+                                      className={`rounded-xl ${
+                                        isToggleLoading ? "opacity-70" : ""
+                                      }`}
                                     />
                                   </div>
-                                ))}
-                                {category.id !==
-                                  notificationCategories[
-                                    notificationCategories.length - 1
-                                  ].id && <Separator className="my-2" />}
-                              </div>
-                            ))}
-                          </div>
+                                );
+                              })}
+                              {category.id !==
+                                notificationCategories[
+                                  notificationCategories.length - 1
+                                ].id && <Separator className="my-2" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      {/* Email notifications section */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Mail className="h-5 w-5 text-indigo-600" />
+                          <h4 className="text-lg font-medium">
+                            Email Notifications
+                          </h4>
                         </div>
 
-                        <Separator />
+                        <div className="space-y-6">
+                          {notificationCategories.map((category) => (
+                            <div
+                              key={`email-category-${category.id}`}
+                              className="space-y-4"
+                            >
+                              <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
+                                {category.title}
+                              </h5>
+                              {category.settings.map((setting) => {
+                                const toggleKey = `email-${setting.id}`;
+                                const isToggleLoading =
+                                  loadingToggles[toggleKey];
 
-                        {/* Email notifications section */}
-                        <div>
-                          <div className="flex items-center gap-2 mb-4">
-                            <Mail className="h-5 w-5 text-indigo-600" />
-                            <h4 className="text-lg font-medium">
-                              Email Notifications
-                            </h4>
-                          </div>
-
-                          <div className="space-y-6">
-                            {notificationCategories.map((category) => (
-                              <div
-                                key={`email-category-${category.id}`}
-                                className="space-y-4"
-                              >
-                                <h5 className="font-medium text-sm text-gray-600 uppercase tracking-wider">
-                                  {category.title}
-                                </h5>
-                                {category.settings.map((setting) => (
+                                return (
                                   <div
                                     key={`email-${setting.id}`}
                                     className="flex items-center justify-between py-2"
@@ -364,31 +399,24 @@ export const Index = () => {
                                       onCheckedChange={() =>
                                         handleToggleChange("email", setting.id)
                                       }
-                                      className="rounded-xl"
+                                      disabled={isToggleLoading}
+                                      className={`rounded-xl ${
+                                        isToggleLoading ? "opacity-70" : ""
+                                      }`}
                                     />
                                   </div>
-                                ))}
-                                {category.id !==
-                                  notificationCategories[
-                                    notificationCategories.length - 1
-                                  ].id && <Separator className="my-2" />}
-                              </div>
-                            ))}
-                          </div>
+                                );
+                              })}
+                              {category.id !==
+                                notificationCategories[
+                                  notificationCategories.length - 1
+                                ].id && <Separator className="my-2" />}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </CardContent>
-
-                    <CardFooter className="border-t pt-4 mt-6 flex justify-end">
-                      <Button
-                        onClick={handleSubmit}
-                        className="bg-indigo-600 hover:bg-indigo-700"
-                        disabled={loading}
-                      >
-                        {loading ? "Saving..." : "Save Preferences"}
-                      </Button>
-                    </CardFooter>
-                  </>
+                    </div>
+                  </CardContent>
                 )}
               </Card>
             </div>

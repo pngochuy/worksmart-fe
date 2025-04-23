@@ -129,9 +129,9 @@ export const Index = () => {
               </p>
               <Button
                 className="mt-4"
-                onClick={() => navigate("/employer/job-postings")}
+                onClick={() => navigate("/employer/post-job")}
               >
-                Manage Jobs
+                Post a new job
               </Button>
             </div>
           </Card>

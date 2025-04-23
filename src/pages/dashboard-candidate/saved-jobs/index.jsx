@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  getFavoriteJobsByUserId, 
-  removeFavoriteJob 
+import React, { useEffect, useState } from "react";
+import {
+  getFavoriteJobsByUserId,
+  removeFavoriteJob,
 } from "../../../services/favoriteJobService";
 import { fetchJobDetails } from "../../../services/jobServices";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
-import Pagination from './Pagination';
+import Pagination from "./Pagination";
 
 // Import UI components for popup confirmation dialog
 import {
@@ -25,16 +25,21 @@ const JobStatus = {
   0: "Pending",
   1: "Rejected",
   2: "Hidden",
-  3: "Active"
+  3: "Active",
 };
 
 const getStatusClass = (status) => {
   switch (status) {
-    case "Pending": return "pending";
-    case "Rejected": return "rejected";
-    case "Hidden": return "hidden";
-    case "Active": return "active";
-    default: return "";
+    case "Pending":
+      return "pending";
+    case "Rejected":
+      return "rejected";
+    case "Hidden":
+      return "hidden";
+    case "Active":
+      return "active";
+    default:
+      return "";
   }
 };
 
@@ -42,15 +47,15 @@ export const index = () => {
   const [favoriteJobs, setFavoriteJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeFilter, setTimeFilter] = useState('Last 6 Months');
+  const [timeFilter, setTimeFilter] = useState("Last 6 Months");
   const navigate = useNavigate();
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // Popup dialog states
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState(null);
@@ -59,42 +64,48 @@ export const index = () => {
   const getUserFromLocalStorage = () => {
     try {
       // Try common keys that localStorage might use to store user info
-      const keys = ['user', 'userData', 'currentUser', 'userInfo'];
-      
+      const keys = ["user", "userData", "currentUser", "userInfo"];
+
       for (const key of keys) {
         const userStr = localStorage.getItem(key);
         if (userStr) {
           try {
             const userData = JSON.parse(userStr);
-            console.log(`User data found in localStorage key '${key}':`, userData);
+            console.log(
+              `User data found in localStorage key '${key}':`,
+              userData
+            );
             return userData;
           } catch (e) {
             console.log(`Error parsing JSON from key '${key}'`, e);
           }
         }
       }
-      
+
       // If user not found in common keys, search all localStorage
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         try {
           const value = localStorage.getItem(key);
           const parsedValue = JSON.parse(value);
-          
+
           // Check if object has userID or id
           if (parsedValue && (parsedValue.userID || parsedValue.id)) {
-            console.log(`Potential user data found in key '${key}':`, parsedValue);
+            console.log(
+              `Potential user data found in key '${key}':`,
+              parsedValue
+            );
             return parsedValue;
           }
         } catch (e) {
           // Ignore errors if not JSON
         }
       }
-      
-      console.warn('No user data found in localStorage');
+
+      console.warn("No user data found in localStorage");
       return null;
     } catch (error) {
-      console.error('Error accessing localStorage:', error);
+      console.error("Error accessing localStorage:", error);
       return null;
     }
   };
@@ -104,72 +115,75 @@ export const index = () => {
     const loadFavoriteJobs = async () => {
       try {
         setIsLoading(true);
-        
+
         // Get user info from localStorage
         const currentUser = getUserFromLocalStorage();
-        console.log('Current user:', currentUser);
-        
+        console.log("Current user:", currentUser);
+
         // Check if userID exists (or id if different data structure)
         const userId = currentUser?.userID || currentUser?.id;
-        
+
         if (!userId) {
-          console.error('No valid user ID found');
+          console.error("No valid user ID found");
           setIsLoading(false);
           setFavoriteJobs([]);
           return;
         }
-        
+
         console.log(`Fetching favorite jobs for user ID: ${userId}`);
-        
+
         // Get basic favorite job data
         const favorites = await getFavoriteJobsByUserId(userId);
-        console.log('Favorite jobs retrieved:', favorites);
-        
+        console.log("Favorite jobs retrieved:", favorites);
+
         if (!favorites || favorites.length === 0) {
-          console.log('No favorite jobs found for this user');
+          console.log("No favorite jobs found for this user");
           setFavoriteJobs([]);
           setIsLoading(false);
           return;
         }
-        
+
         // Fetch detailed information for each job
         const jobDetailsPromises = favorites.map(async (favorite) => {
           try {
-            console.log('Processing favorite job:', favorite);
+            console.log("Processing favorite job:", favorite);
             const jobId = favorite.jobID;
-            
+
             if (!jobId) {
-              console.error('No jobID found in favorite:', favorite);
+              console.error("No jobID found in favorite:", favorite);
               return favorite; // Return as is if no jobID
             }
-            
+
             console.log(`Fetching details for job ID: ${jobId}`);
             const jobDetails = await fetchJobDetails(jobId);
             console.log(`Job details for job ${jobId}:`, jobDetails);
-            
+
             // Combine the data
             return {
               ...favorite,
               job: jobDetails,
             };
           } catch (error) {
-            console.error(`Error fetching details for job ${favorite.jobID}:`, error);
+            console.error(
+              `Error fetching details for job ${favorite.jobID}:`,
+              error
+            );
             // Return original favorite with placeholder job data
             return {
               ...favorite,
-              job: { 
-                title: favorite.title || 'Job information not available', 
-                companyName: favorite.companyName || 'Unknown'
-              }
+              job: {
+                title: favorite.title || "Job information not available",
+                companyName: favorite.companyName || "Unknown",
+              },
             };
           }
         });
 
         const jobsWithDetails = await Promise.all(jobDetailsPromises);
-        console.log('Jobs with details:', jobsWithDetails);
+        console.log("Jobs with details:", jobsWithDetails);
         setFavoriteJobs(jobsWithDetails);
       } catch (error) {
-        console.error('Error loading favorite jobs:', error);
+        console.error("Error loading favorite jobs:", error);
       } finally {
         setIsLoading(false);
       }
@@ -187,23 +201,25 @@ export const index = () => {
   // Remove saved job after confirmation
   const handleRemoveFavorite = async () => {
     if (!selectedJobId) return;
-    
+
     try {
       await removeFavoriteJob(selectedJobId);
-      setFavoriteJobs(favoriteJobs.filter(job => job.favoriteJobID !== selectedJobId));
+      setFavoriteJobs(
+        favoriteJobs.filter((job) => job.favoriteJobID !== selectedJobId)
+      );
       setConfirmDialogOpen(false);
       setSelectedJobId(null);
-      
+
       // If you want to show a "success" notification after deletion, you can use toast or alert
       // toast({ title: "Success", description: "Job removed from favorites" });
     } catch (error) {
-      console.error('Error removing favorite job:', error);
+      console.error("Error removing favorite job:", error);
       // toast({ title: "Error", description: "Failed to remove job from favorites" });
     }
   };
 
   const handleViewJob = (jobId) => {
-    navigate(`/job-details/${jobId}`);
+    navigate(`/job-list/${jobId}`);
   };
 
   // Function to get the createAt date from the job details
@@ -212,52 +228,61 @@ export const index = () => {
     if (favoriteJob.createAt) {
       return new Date(favoriteJob.createAt);
     }
-    
+
     // Otherwise check for dateSaved or createdAt as fallbacks
-    return new Date(favoriteJob.dateSaved || favoriteJob.createdAt || new Date());
+    return new Date(
+      favoriteJob.dateSaved || favoriteJob.createdAt || new Date()
+    );
   };
 
   // Filter jobs based on selected time period
   const filterJobs = () => {
-    console.log('Total favorite jobs before filtering:', favoriteJobs.length);
-    
+    console.log("Total favorite jobs before filtering:", favoriteJobs.length);
+
     if (!favoriteJobs.length) return [];
-    
+
     const now = new Date();
     let monthsAgo;
-    
+
     switch (timeFilter) {
-      case 'Last 6 Months':
+      case "Last 6 Months":
         monthsAgo = 6;
         break;
-      case 'Last 12 Months':
+      case "Last 12 Months":
         monthsAgo = 12;
         break;
-      case 'Last 16 Months':
+      case "Last 16 Months":
         monthsAgo = 16;
         break;
-      case 'Last 24 Months':
+      case "Last 24 Months":
         monthsAgo = 24;
         break;
-      case 'Last 5 year':
+      case "Last 5 year":
         monthsAgo = 60;
         break;
       default:
         monthsAgo = 6;
     }
-    
+
     const cutoffDate = new Date();
     cutoffDate.setMonth(now.getMonth() - monthsAgo);
-    console.log('Cutoff date for filtering:', cutoffDate);
-    
-    const filtered = favoriteJobs.filter(job => {
+    console.log("Cutoff date for filtering:", cutoffDate);
+
+    const filtered = favoriteJobs.filter((job) => {
       // Use the function to get the createAt date
       const savedDate = getJobCreateDate(job);
-      console.log('Job ID:', job.favoriteJobID, 'Save date:', savedDate, 'Include?', savedDate >= cutoffDate);
+      console.log(
+        "Job ID:",
+        job.favoriteJobID,
+        "Save date:",
+        savedDate,
+        "Include?",
+        savedDate >= cutoffDate
+      );
       return savedDate >= cutoffDate;
     });
-    
-    console.log('Jobs after date filtering:', filtered.length);
+
+    console.log("Jobs after date filtering:", filtered.length);
     return filtered;
   };
 
@@ -265,20 +290,24 @@ export const index = () => {
   const getJobStatus = (job) => {
     // Get status numeric value or string value
     let statusValue = job?.job?.job?.status;
-    
+
     // If status is a number, map it to enum value
-    if (typeof statusValue === 'number' && statusValue >= 0 && statusValue <= 3) {
+    if (
+      typeof statusValue === "number" &&
+      statusValue >= 0 &&
+      statusValue <= 3
+    ) {
       return JobStatus[statusValue];
     }
-    
+
     // If status is already a string, check if it's a valid enum value
-    if (typeof statusValue === 'string') {
+    if (typeof statusValue === "string") {
       const validStatuses = Object.values(JobStatus);
       if (validStatuses.includes(statusValue)) {
         return statusValue;
       }
     }
-    
+
     // Default to "Hidden" if status is invalid or not provided
     return "Hidden";
   };
@@ -288,7 +317,7 @@ export const index = () => {
     const filtered = filterJobs();
     setTotalItems(filtered.length);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    
+
     // Get current page items
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -343,7 +372,7 @@ export const index = () => {
                     <h4>My Saved Jobs</h4>
 
                     <div className="chosen-outer">
-                      <select 
+                      <select
                         className="chosen-select mr-3"
                         value={timeFilter}
                         onChange={(e) => {
@@ -357,7 +386,7 @@ export const index = () => {
                         <option>Last 24 Months</option>
                         <option>Last 5 year</option>
                       </select>
-                      
+
                       <select
                         className="chosen-select"
                         value={itemsPerPage}
@@ -378,7 +407,9 @@ export const index = () => {
                           <tr>
                             <th>Job Title</th>
                             <th className="text-center">Date Saved</th>
-                            <th className="text-center status-column">Status</th>
+                            <th className="text-center status-column">
+                              Status
+                            </th>
                             <th className="text-center">Action</th>
                           </tr>
                         </thead>
@@ -393,9 +424,14 @@ export const index = () => {
                               const isDisabled = isHidden || isRejected;
                               // Use the new function to get the correct date
                               const savedDate = getJobCreateDate(favoriteJob);
-                              
+
                               return (
-                                <tr key={favoriteJob.favoriteJobID || `fav-${favoriteJob.jobID}`}>
+                                <tr
+                                  key={
+                                    favoriteJob.favoriteJobID ||
+                                    `fav-${favoriteJob.jobID}`
+                                  }
+                                >
                                   <td>
                                     {/* Job Block */}
                                     <div className="job-block">
@@ -403,29 +439,48 @@ export const index = () => {
                                         <div className="content">
                                           <span className="company-logo">
                                             <img
-                                              src={favoriteJob.job?.job?.avatar || favoriteJob.companyLogo || "images/resource/company-logo/default.png"}
+                                              src={
+                                                favoriteJob.job?.job?.avatar ||
+                                                favoriteJob.companyLogo ||
+                                                "images/resource/company-logo/default.png"
+                                              }
                                               alt="Company Logo"
                                             />
                                           </span>
                                           <h4>
                                             {isDisabled ? (
-                                              <span className="disabled-job-title" style={{ color: 'red', cursor: 'not-allowed' }}>
-                                                {favoriteJob.job?.job?.title || "Job Title Unavailable"}
+                                              <span
+                                                className="disabled-job-title"
+                                                style={{
+                                                  color: "red",
+                                                  cursor: "not-allowed",
+                                                }}
+                                              >
+                                                {favoriteJob.job?.job?.title ||
+                                                  "Job Title Unavailable"}
                                               </span>
                                             ) : (
-                                              <Link to={`/job-details/${favoriteJob.jobID}`}>
-                                                {favoriteJob.job?.job?.title || "Job Title Unavailable"}
+                                              <Link
+                                                to={`/job-details/${favoriteJob.jobID}`}
+                                              >
+                                                {favoriteJob.job?.job?.title ||
+                                                  "Job Title Unavailable"}
                                               </Link>
                                             )}
                                           </h4>
                                           <ul className="job-info">
                                             <li>
                                               <span className="icon flaticon-briefcase"></span>{" "}
-                                              {favoriteJob.job?.job?.companyName || favoriteJob.companyName || "Company Name Unavailable"}
+                                              {favoriteJob.job?.job
+                                                ?.companyName ||
+                                                favoriteJob.companyName ||
+                                                "Company Name Unavailable"}
                                             </li>
                                             <li>
                                               <span className="icon flaticon-map-locator"></span>{" "}
-                                              {favoriteJob.job?.job?.location || favoriteJob.location || "Location Unavailable"}
+                                              {favoriteJob.job?.job?.location ||
+                                                favoriteJob.location ||
+                                                "Location Unavailable"}
                                             </li>
                                           </ul>
                                         </div>
@@ -450,18 +505,24 @@ export const index = () => {
                                       <ul className="option-list">
                                         {!isDisabled && (
                                           <li>
-                                            <button 
+                                            <button
                                               data-text="View Job"
-                                              onClick={() => handleViewJob(favoriteJob.jobID)}
+                                              onClick={() =>
+                                                handleViewJob(favoriteJob.jobID)
+                                              }
                                             >
                                               <span className="la la-eye"></span>
                                             </button>
                                           </li>
                                         )}
                                         <li>
-                                          <button 
+                                          <button
                                             data-text="Remove from Favorites"
-                                            onClick={() => handleRemoveClick(favoriteJob.favoriteJobID)}
+                                            onClick={() =>
+                                              handleRemoveClick(
+                                                favoriteJob.favoriteJobID
+                                              )
+                                            }
                                           >
                                             <span className="la la-trash"></span>
                                           </button>
@@ -477,8 +538,15 @@ export const index = () => {
                               <td colSpan="4" className="text-center">
                                 <div className="no-data-message">
                                   <i className="la la-heart-o"></i>
-                                  <p>No saved jobs found. Jobs you save will appear here.</p>
-                                  <Link to="/jobs" className="theme-btn btn-style-one">
+                                  <p>
+                                    No saved jobs found. Jobs you save will
+                                    appear here.
+                                  </p>
+                                  <Link
+                                    to="/job-list"
+                                    className="theme-btn btn-style-one"
+                                    style={{ color: "#fff" }}
+                                  >
                                     Browse Jobs
                                   </Link>
                                 </div>
@@ -487,19 +555,25 @@ export const index = () => {
                           )}
                         </tbody>
                       </table>
-                    </div>  
-                    
+                    </div>
+
                     {/* Pagination */}
                     {totalItems > 0 && (
                       <div className="pagination-box">
-                        <Pagination 
-                          currentPage={currentPage} 
-                          totalPage={totalPages} 
-                          setSearchParams={handleSearch} 
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPage={totalPages}
+                          setSearchParams={handleSearch}
                         />
-                        
+
                         <div className="pagination-summary">
-                          Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+                          Showing{" "}
+                          {Math.min(
+                            (currentPage - 1) * itemsPerPage + 1,
+                            totalItems
+                          )}{" "}
+                          to {Math.min(currentPage * itemsPerPage, totalItems)}{" "}
+                          of {totalItems} entries
                         </div>
                       </div>
                     )}

@@ -36,6 +36,7 @@ const ModifiedMatchingJobs = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [recommendedJobs, setRecommendedJobs] = useState([]);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Thêm hook navigate
 
   // Get user ID from localStorage
   const getUserId = () => {
@@ -103,10 +104,17 @@ const ModifiedMatchingJobs = () => {
           throw new Error("No CVs found. Please create a CV first.");
         }
 
-        // Find featured CV or use the first one
-        const featuredCV = cvs.find((cv) => cv.isFeatured) || cvs[0];
+        // Tìm CV được đánh dấu featured (không fallback về cvs[0] nữa)
+        const featuredCV = cvs.find((cv) => cv.isFeatured);
 
-        // Fetch job recommendations based on CV
+        // Kiểm tra nếu không có CV featured
+        if (!featuredCV) {
+          throw new Error(
+            "No featured CV found. Please set a CV as featured to get job recommendations."
+          );
+        }
+
+        // Fetch job recommendations based on featured CV
         const recommendations = await fetchJobRecommendations(featuredCV.cvid);
 
         if (!recommendations || recommendations.length === 0) {
@@ -156,10 +164,26 @@ const ModifiedMatchingJobs = () => {
     return (
       <Card className="border border-red-200 bg-red-50">
         <CardContent className="p-6">
-          <p className="text-red-600">{error}</p>
-          <p className="mt-2 text-sm text-gray-600">
-            Please check your profile settings or try again later.
-          </p>
+          <div className="flex items-center mb-2">
+            <XCircle className="h-5 w-5 text-red-500 mr-2" />
+            <p className="text-red-600 font-medium">{error}</p>
+          </div>
+
+          {error.includes("featured CV") && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600 mb-3">
+                You need to mark one CV as your primary CV to receive better job
+                recommendations.
+              </p>
+              <Button
+                variant="outline"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={() => navigate("/candidate/my-cv")}
+              >
+                Manage My CVs
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
