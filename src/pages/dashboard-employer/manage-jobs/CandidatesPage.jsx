@@ -351,7 +351,7 @@ export default function CandidatesPage() {
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
                                       alt={
-                                        candidate.candidateName || "Candidate"
+                                        candidate.fullName || "Candidate"
                                       }
                                       className="rounded-circle"
                                       width="50"
@@ -407,16 +407,16 @@ export default function CandidatesPage() {
                                   {/* Message Button - Only show for Approved candidates */}
                                   {candidate.applicationStatus?.toLowerCase() ===
                                     "approved" && (
-                                    <button
-                                      className="message-btn"
-                                      onClick={() =>
-                                        handleMessageClick(candidate)
-                                      }
-                                    >
-                                      <i className="fas fa-comment-alt"></i>{" "}
-                                      Message
-                                    </button>
-                                  )}
+                                      <button
+                                        className="message-btn"
+                                        onClick={() =>
+                                          handleMessageClick(candidate)
+                                        }
+                                      >
+                                        <i className="fas fa-comment-alt"></i>{" "}
+                                        Message
+                                      </button>
+                                    )}
                                 </div>
                               </td>
                             </tr>
