@@ -4,10 +4,10 @@ import {
   fetchJobDetails,
 } from "../../../services/jobServices";
 import { useParams, useNavigate } from "react-router-dom";
-import Pagination from "./Pagination";
+import Pagination from "./Pagination"; // Reusing your existing Pagination component
 import { toast } from "react-toastify";
 import axios from "axios";
-import { getCVById } from "../../../services/cvServices";
+import { getCVById } from "../../../services/cvServices"; // Add this import
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -19,8 +19,8 @@ export default function CandidatesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
     PageIndex: 1,
-    PageSize: 5,
-    name: "",
+    PageSize: 5, // Show 5 candidates per page
+    name: "", // To filter by candidate name
   });
 
   // New state for message dialog
@@ -38,144 +38,92 @@ export default function CandidatesPage() {
     getCandidates(jobId);
   }, [jobId, searchParams.PageIndex, searchParams.PageSize, searchParams.name]);
 
-  // New function to fetch user details by userID
-  const fetchUserById = async (userId) => {
-    try {
-      const response = await axios.get(`http://localhost:5239/admins/list-user`);
-      const users = response.data;
-      
-      // Find the specific user with the matching userID
-      const user = users.find(user => user.userID === userId);
-      return user || null;
-    } catch (error) {
-      console.error(`Error fetching user details for ID ${userId}:`, error);
-      return null;
-    }
-  };
-
   const getCandidates = async (jobId) => {
     try {
       setLoading(true);
+      // Assuming your fetchCandidatesForJob function can accept pagination params
       const data = await fetchCandidatesForJob(jobId, searchParams);
-      
+
+      // Process candidates with CV data
       const processedCandidates = [];
-      
+      console.log("Fetched candidates data:", data);
       if (Array.isArray(data)) {
+        // Fetch CV data for each candidate if they have a CV ID
         for (const candidate of data) {
-          let enrichedCandidate = { 
+          let enrichedCandidate = {
             ...candidate,
-            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+            // Default fallback name
+            candidateName:
+              candidate.candidateName ||
+              candidate.fullName ||
+              "Unknown Candidate",
           };
-          
+
           // If candidate has a CV ID, try to fetch CV data
           if (candidate.cvid) {
             try {
               const cvData = await getCVById(candidate.cvid);
-              console.log(`CV data for candidate ${candidate.applicationID}:`, cvData);
-              
-              // Properly combine first and last name from CV
-              const fullName = cvData?.lastName && cvData?.firstName 
-                ? `${cvData.lastName} ${cvData.firstName}`
-                : enrichedCandidate.candidateName;
-              
+              console.log(
+                `CV data for candidate ${candidate.applicationID}:`,
+                cvData
+              );
+
               enrichedCandidate = {
                 ...enrichedCandidate,
-                candidateName: fullName,
-                email: cvData?.email || enrichedCandidate.email || candidate.email || "Unknown",
-                phoneNumber: cvData?.phone || enrichedCandidate.phoneNumber || candidate.phoneNumber,
-                cvData: cvData
+                candidateName: `${cvData?.lastName} ${cvData?.firstName}`,
+                email: cvData?.email || "Unknown",
+                cvData: cvData,
               };
-              
-              // NEW: If userID is available in cvData, fetch user details from the admin API
-              if (cvData?.userID) {
-                try {
-                  const userData = await fetchUserById(cvData.userID);
-                  if (userData) {
-                    // Enhance candidate data with additional user information if needed
-                    enrichedCandidate = {
-                      ...enrichedCandidate,
-                      userData: userData,
-                      // You can override or add additional user data here if needed
-                      avatar: userData.avatar || enrichedCandidate.avatar,
-                      email: userData.email || enrichedCandidate.email,
-                      phoneNumber: userData.phoneNumber || enrichedCandidate.phoneNumber
-                    };
-                  }
-                } catch (userError) {
-                  console.error(`Error fetching user data for candidate ${candidate.applicationID}:`, userError);
-                }
-              }
             } catch (cvError) {
-              console.error(`Error fetching CV for candidate ${candidate.applicationID}:`, cvError);
+              console.error(
+                `Error fetching CV for candidate ${candidate.applicationID}:`,
+                cvError
+              );
             }
           }
-          
+
           processedCandidates.push(enrichedCandidate);
         }
       }
 
-      // If your API returns paginated data in this format:
       if (data.candidates && data.totalPage) {
         // Process paginated data similar to above
         const processedPaginatedCandidates = [];
         for (const candidate of data.candidates) {
-          let enrichedCandidate = { 
+          let enrichedCandidate = {
             ...candidate,
-            candidateName: candidate.candidateName || candidate.fullName || "Unknown Candidate"
+            candidateName:
+              candidate.candidateName ||
+              candidate.fullName ||
+              "Unknown Candidate",
           };
-          
+
           if (candidate.cvid) {
             try {
               const cvData = await getCVById(candidate.cvid);
-              
-              // Properly combine first and last name from CV
-              const fullName = cvData?.lastName && cvData?.firstName 
-                ? `${cvData.lastName} ${cvData.firstName}`
-                : enrichedCandidate.candidateName;
-                
               enrichedCandidate = {
                 ...enrichedCandidate,
-                candidateName: fullName,
-                email: cvData?.email || enrichedCandidate.email || "Unknown",
-                phoneNumber: cvData?.phone || enrichedCandidate.phoneNumber,
-                cvData: cvData
+                candidateName:
+                  cvData?.fullName || enrichedCandidate.candidateName,
+                email: cvData?.email || enrichedCandidate.email,
+                cvData: cvData,
               };
-              
-              // NEW: If userID is available in cvData, fetch user details from the admin API
-              if (cvData?.userID) {
-                try {
-                  const userData = await fetchUserById(cvData.userID);
-                  if (userData) {
-                    // Enhance candidate data with additional user information
-                    enrichedCandidate = {
-                      ...enrichedCandidate,
-                      userData: userData,
-                      // You can override or add additional user data here if needed
-                      avatar: userData.avatar || enrichedCandidate.avatar,
-                      email: userData.email || enrichedCandidate.email,
-                      phoneNumber: userData.phoneNumber || enrichedCandidate.phoneNumber
-                    };
-                  }
-                } catch (userError) {
-                  console.error(`Error fetching user data for candidate ${candidate.applicationID}:`, userError);
-                }
-              }
             } catch (cvError) {
               console.error(`Error fetching CV:`, cvError);
             }
           }
-          
+
           processedPaginatedCandidates.push(enrichedCandidate);
         }
-        
+
         setCandidates(processedPaginatedCandidates);
         setTotalPage(data.totalPage);
       } else {
         // If your API doesn't support pagination yet, handle it client-side
-        setCandidates(processedCandidates);
+        setCandidates(data);
 
         // Calculate total pages based on data length
-        const totalItems = processedCandidates.length;
+        const totalItems = data.length;
         const calculatedTotalPages = Math.ceil(
           totalItems / searchParams.PageSize
         );
@@ -184,12 +132,12 @@ export default function CandidatesPage() {
         // Paginate the data client-side
         const startIndex = (searchParams.PageIndex - 1) * searchParams.PageSize;
         const endIndex = startIndex + searchParams.PageSize;
-        const filteredData = processedCandidates
+        const filteredData = data
           .filter(
             (candidate) =>
               !searchParams.name ||
-              (candidate.candidateName && 
-                candidate.candidateName
+              (candidate.fullName &&
+                candidate.fullName
                   .toLowerCase()
                   .includes(searchParams.name.toLowerCase()))
           )
@@ -202,7 +150,7 @@ export default function CandidatesPage() {
     } catch (error) {
       setLoading(false);
       console.error("Error fetching candidates:", error);
-      // toast.error("Could not load candidates. Please try again.");
+      toast.error("Could not load candidates. Please try again.");
     }
   };
 
@@ -221,10 +169,9 @@ export default function CandidatesPage() {
     navigate("/employer/manage-jobs");
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (applicationStatus) => {
     let badgeClass = "status-badge";
-
-    switch (status?.toLowerCase()) {
+    switch (applicationStatus?.toLowerCase()) {
       case "pending":
         badgeClass += " pending";
         break;
@@ -238,16 +185,21 @@ export default function CandidatesPage() {
         badgeClass += " default";
     }
 
-    return <span className={badgeClass}>{status || "Unknown"}</span>;
+    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
   };
 
   // New function to handle message button click
   const handleMessageClick = (candidate) => {
-    setSelectedCandidate(candidate);
+    setSelectedCandidate({
+      ...candidate,
+      userID: candidate.userID, // Đảm bảo userID được thiết lập đúng
+      fullName: candidate.fullName, // Đảm bảo fullName được thiết lập đúng
+      email: candidate.email, // Đảm bảo email được thiết lập đúng
+    });
     setShowMessageDialog(true);
   };
 
-  // Update handleSendMessage to use userData if available
+  // Update handleSendMessage
   const handleSendMessage = async () => {
     if (!messageText.trim()) {
       toast.error("Please enter a message");
@@ -259,16 +211,7 @@ export default function CandidatesPage() {
     try {
       // Get sender (employer) and receiver (candidate) IDs
       const senderId = user.userID;
-      
-      // Get receiverId with priority: userData > cvData > candidate object
-      const receiverId = 
-        (selectedCandidate.userData?.userID) || 
-        (selectedCandidate.cvData?.userID) || 
-        selectedCandidate.userID;
-
-      if (!receiverId) {
-        throw new Error("Could not determine recipient's user ID");
-      }
+      const receiverId = selectedCandidate.userID; // Assuming this property exists
 
       // Create message data
       const messageData = {
@@ -305,6 +248,7 @@ export default function CandidatesPage() {
               <i className="fas fa-arrow-left mr-1"></i> Back
             </button>
             <h3>
+              {/* <i className="fas fa-users mr-2"></i> */}
               Candidates for: <span className="text-primary">{jobTitle}</span>
             </h3>
           </div>
@@ -398,56 +342,54 @@ export default function CandidatesPage() {
                           candidates.map((candidate) => (
                             <tr key={candidate.applicationID}>
                               <td>
-                                <div className="candidate-name">
-                                  <div className="candidate-avatar">
+                                <div className="d-flex align-items-center">
+                                  <div className="flex-shrink-0">
                                     <img
                                       src={
-                                         candidate?.userData?.avatar
-                                          ? candidate.userData.avatar
+                                        candidate?.avatar
+                                          ? candidate.avatar
                                           : "https://www.topcv.vn/images/avatar-default.jpg"
                                       }
-                                      alt={candidate.userData?.fullName || "Candidate"}
-                                      style={{
-                                        height: "50px",
-                                        width: "50px",
-                                        borderRadius: "50%",
-                                        objectFit: "cover"
-                                      }}
+                                      alt={
+                                        candidate.fullName || "Candidate"
+                                      }
+                                      className="rounded-circle"
+                                      width="50"
+                                      height="50"
                                     />
                                   </div>
-                                  <div className="candidate-info">
-                                    <span className="name">
-                                      {candidate.userData?.fullName || "Unknown Candidate"}
+                                  <div className="flex-grow-1 ms-3 text-truncate">
+                                    <span className="fw-bold">
+                                      {candidate.fullName ||
+                                        "Unknown Candidate"}
                                     </span>
-                                    
                                   </div>
                                 </div>
                               </td>
+
                               <td>
-                                {candidate.userData?.email ? (
-                                  <a
-                                    href={`mailto:${candidate.userData?.email}`}
-                                    className="email-link"
-                                  >
-                                    {candidate.userData?.email}
-                                  </a>
-                                ) : (
-                                  "Unknown"
-                                )}
+                                <a
+                                  href={`mailto:${candidate.email}`}
+                                  className="email-link"
+                                >
+                                  {candidate.email || "Unknown"}
+                                </a>
                               </td>
                               <td>
-                                {candidate.userData?.phoneNumber ? (
+                                {candidate.phoneNumber ? (
                                   <a
-                                    href={`tel:${candidate.userData?.phoneNumber}`}
+                                    href={`tel:${candidate.phoneNumber}`}
                                     className="phone-link"
                                   >
-                                    {candidate.userData?.phoneNumber}
+                                    {candidate.phoneNumber}
                                   </a>
                                 ) : (
                                   "Unknown"
                                 )}
                               </td>
-                              <td>{getStatusBadge(candidate.status)}</td>
+                              <td>
+                                {getStatusBadge(candidate.applicationStatus)}
+                              </td>
                               <td className="text-center">
                                 <div className="action-buttons">
                                   {/* View Detail Button */}
@@ -463,18 +405,18 @@ export default function CandidatesPage() {
                                   </button>
 
                                   {/* Message Button - Only show for Approved candidates */}
-                                  {candidate.status?.toLowerCase() ===
+                                  {candidate.applicationStatus?.toLowerCase() ===
                                     "approved" && (
-                                    <button
-                                      className="message-btn"
-                                      onClick={() =>
-                                        handleMessageClick(candidate)
-                                      }
-                                    >
-                                      <i className="fas fa-comment-alt"></i>{" "}
-                                      Message
-                                    </button>
-                                  )}
+                                      <button
+                                        className="message-btn"
+                                        onClick={() =>
+                                          handleMessageClick(candidate)
+                                        }
+                                      >
+                                        <i className="fas fa-comment-alt"></i>{" "}
+                                        Message
+                                      </button>
+                                    )}
                                 </div>
                               </td>
                             </tr>
@@ -511,7 +453,7 @@ export default function CandidatesPage() {
         <div className="message-dialog-overlay">
           <div className="message-dialog">
             <div className="message-dialog-header">
-              <h3>Send Message to {selectedCandidate.candidateName || "Candidate"}</h3>
+              <h3>Send Message to {selectedCandidate.fullName}</h3>
               <button
                 className="close-btn"
                 onClick={() => setShowMessageDialog(false)}
@@ -527,12 +469,8 @@ export default function CandidatesPage() {
 
               <div className="candidate-details">
                 <div className="detail-item">
-                  <span className="label">Candidate:</span>
-                  <span className="value">{selectedCandidate.candidateName || "Unknown Candidate"}</span>
-                </div>
-                <div className="detail-item">
                   <span className="label">Email:</span>
-                  <span className="value">{selectedCandidate.email || "Unknown Email"}</span>
+                  <span className="value">{selectedCandidate.email}</span>
                 </div>
                 {selectedCandidate.phoneNumber && (
                   <div className="detail-item">
@@ -546,12 +484,6 @@ export default function CandidatesPage() {
                   <span className="label">Job Position:</span>
                   <span className="value">{jobTitle}</span>
                 </div>
-                {selectedCandidate.userData?.userID && (
-                  <div className="detail-item">
-                    <span className="label">User ID:</span>
-                    <span className="value">{selectedCandidate.userData.userID}</span>
-                  </div>
-                )}
               </div>
 
               <div className="message-textarea-container">
