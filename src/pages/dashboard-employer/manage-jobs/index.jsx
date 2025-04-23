@@ -35,7 +35,7 @@ export default function ManageJobsPage() {
     actions: 200,
     candidates: 150
   });
-  
+
   // Trạng thái kéo cột
   const [resizingColumn, setResizingColumn] = useState(null);
   const [startX, setStartX] = useState(0);
@@ -133,7 +133,7 @@ export default function ManageJobsPage() {
       }
     `;
     document.head.appendChild(style);
-    
+
     // Cleanup khi component unmount
     return () => {
       const styleElement = document.getElementById('resizable-columns-styles');
@@ -150,16 +150,16 @@ export default function ManageJobsPage() {
     setResizingColumn(columnName);
     setStartX(e.clientX);
     setStartWidth(columnWidths[columnName]);
-    
+
     if (e.target.classList.contains('column-resizer')) {
       e.target.classList.add('active');
     }
-    
+
     const headerCell = e.target.closest('th');
     if (headerCell) {
       headerCell.classList.add('resizing-column');
     }
-    
+
     document.addEventListener('mousemove', handleResizeMove);
     document.addEventListener('mouseup', handleResizeEnd);
     document.body.style.cursor = 'col-resize';
@@ -167,11 +167,11 @@ export default function ManageJobsPage() {
 
   const handleResizeMove = (e) => {
     if (!resizingColumn) return;
-    
+
     const diff = e.clientX - startX;
-    const newWidth = Math.max(60, startWidth + diff); 
+    const newWidth = Math.max(60, startWidth + diff);
     console.log('Resizing column:', resizingColumn, 'to width:', newWidth);
-    
+
     setColumnWidths(prev => ({
       ...prev,
       [resizingColumn]: newWidth
@@ -180,16 +180,16 @@ export default function ManageJobsPage() {
 
   const handleResizeEnd = () => {
     console.log('End resizing column:', resizingColumn);
-    
+
     // Xóa class active từ tất cả thanh resize
     document.querySelectorAll('.column-resizer.active').forEach(el => {
       el.classList.remove('active');
     });
-    
+
     document.querySelectorAll('.resizing-column').forEach(el => {
       el.classList.remove('resizing-column');
     });
-    
+
     setResizingColumn(null);
     document.removeEventListener('mousemove', handleResizeMove);
     document.removeEventListener('mouseup', handleResizeEnd);
@@ -367,23 +367,23 @@ export default function ManageJobsPage() {
         handlePriorityLimitReached();
         return;
       }
-      
+
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
           job.jobID === jobId ? { ...job, priority: !job.priority } : job
         )
       );
-      
+
       // Update remaining high-priority slots
       setRemainingHighPrioritySlots(prev => Math.max(0, prev - 1));
-      
+
       toast.success("Job priority has been set to High!");
     } catch (error) {
       console.error("Failed to update job priority:", error);
       if (error.response && error.response.status === 400) {
         // Kiểm tra nếu lỗi liên quan đến giới hạn gói
         const errorMessage = error.response.data.message || "";
-        
+
         if (errorMessage.includes("limit") || errorMessage.includes("subscription") || errorMessage.includes("maximum")) {
           handlePriorityLimitReached();
         } else {
@@ -770,19 +770,19 @@ export default function ManageJobsPage() {
     <section className="user-dashboard">
       <div className="dashboard-outer">
         <div className="upper-title-box">
-        <div className="title-flex">
+          <div className="title-flex">
             <h3>Manage Jobs</h3>
             <div className="text">Here are your job postings</div>
             <div className="remaining-high-priority-slots ml-3">
               <span className="badge" style={{
-                backgroundColor: '#2ecc71', 
+                backgroundColor: '#2ecc71',
                 color: 'white',
                 padding: '6px 12px',
                 borderRadius: '20px',
                 fontWeight: '600',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}>
-                <i className="fas fa-gem mr-2" style={{color: '#fff'}}></i>
+                <i className="fas fa-gem mr-2" style={{ color: '#fff' }}></i>
                 {remainingHighPrioritySlots} High Priority Slot{remainingHighPrioritySlots !== 1 ? 's' : ''} Left
               </span>
             </div>

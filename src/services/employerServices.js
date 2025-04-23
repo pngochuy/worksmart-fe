@@ -51,6 +51,7 @@ export const fetchCompanyProfile = async () => {
   }
 };
 
+
 //Form Information
 export const updateCompanyProfile = async (profileData) => {
   try {

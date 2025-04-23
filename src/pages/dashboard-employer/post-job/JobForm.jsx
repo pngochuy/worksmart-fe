@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { createJob, checkLimitCreateJob } from "../../../services/jobServices";
+import { createJob, checkLimitCreateJob, getRemainingJobCreationLimit } from "../../../services/jobServices";
 import { toast } from "react-toastify";
 import { fetchTags } from "../../../services/tagServices";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,7 @@ export const JobForm = () => {
   const API_TYNI_KEY = import.meta.env.VITE_TINY_API_KEY;
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
-  
+
   const [jobData, setJobData] = useState({
     userID: userID,
     jobTagID: [],
@@ -45,6 +45,15 @@ export const JobForm = () => {
   const [isCheckingLimit, setIsCheckingLimit] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false); // State to prevent multiple submissions
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false); // New state for duplicate check
+
+  // Updated state to store the full limit info object
+  const [jobLimitInfo, setJobLimitInfo] = useState({
+    remainingLimit: 0,
+    totalLimit: 0,
+    usedToday: 0,
+    message: ""
+  });
+
   const navigate = useNavigate();
 
   // Check job creation limit and fetch tags - only run once on component mount
@@ -56,12 +65,16 @@ export const JobForm = () => {
         if (userID) {
           const limitCheckResult = await checkLimitCreateJob(userID);
           setCanCreateJob(limitCheckResult);
+
+          // Get remaining job creation limit
+          const limitInfo = await getRemainingJobCreationLimit(userID);
+          setJobLimitInfo(limitInfo);
         }
 
         // Fetch tags
         const tagsData = await fetchTags();
         setTags(tagsData);
-        
+
         // Set locations
         setLocation(vietnamProvinces);
       } catch (error) {
@@ -134,7 +147,7 @@ export const JobForm = () => {
   // Check for duplicate job title
   const checkForDuplicateTitle = async (title) => {
     if (!title.trim()) return false;
-    
+
     try {
       setIsCheckingDuplicate(true);
       const isDuplicate = await checkDuplicateJobTitle(userID, title);
@@ -193,7 +206,7 @@ export const JobForm = () => {
           "en-US"
         )} - ${maxSalary.toLocaleString("en-US")}`
       };
-      
+
       await createJob(updatedJobData);
       toast.success("Job created successfully!");
       navigate("/employer/manage-jobs");
@@ -249,19 +262,18 @@ export const JobForm = () => {
                   <div className="alert alert-warning">
                     <h4 className="alert-heading">Job Posting Limit Reached!</h4>
                     <p>
-                      You have reached the maximum number of jobs you can create today.
-                      Please try again tomorrow or upgrade your subscription plan to post more jobs.
+                      {jobLimitInfo.message || "You have reached the maximum number of jobs you can create today. Please try again tomorrow or upgrade your subscription plan to post more jobs."}
                     </p>
                     <hr />
                     <div className="d-flex justify-content-between">
-                      <button 
-                        className="btn btn-primary" 
+                      <button
+                        className="btn btn-primary"
                         onClick={() => navigate("/employer/manage-jobs")}
                       >
                         Back to Job Management
                       </button>
-                      <button 
-                        className="btn btn-success" 
+                      <button
+                        className="btn btn-success"
                         onClick={() => navigate("/employer/package-list")}
                       >
                         Upgrade Subscription
@@ -281,8 +293,23 @@ export const JobForm = () => {
     <section className="user-dashboard">
       <div className="dashboard-outer">
         <div className="upper-title-box">
-          <h3>Post a New Job</h3>
-          <div className="text">Fill in the job details below</div>
+          <div className="title-flex">
+            <h3>Post a New Job</h3>
+            <div className="text">Fill in the job details below</div>
+            <div className="remaining-job-slots ml-3">
+              <span className="badge" style={{
+                backgroundColor: '#2ecc71',
+                color: 'white',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                fontWeight: '600',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <i className="fas fa-clipboard-list mr-2" style={{ color: '#fff' }}></i>
+                {jobLimitInfo.remainingLimit} Post Job Slot{jobLimitInfo.remainingLimit !== 1 ? 's' : ''} Left
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="row">
@@ -444,8 +471,8 @@ export const JobForm = () => {
                           parseInt(
                             salaryRange.maxSalary.replace(/,/g, "") || 0
                           ) &&
-                        salaryRange.minSalary &&
-                        salaryRange.maxSalary ? (
+                          salaryRange.minSalary &&
+                          salaryRange.maxSalary ? (
                           <div
                             className="text-danger mt-1"
                             style={{ fontSize: "0.8rem" }}

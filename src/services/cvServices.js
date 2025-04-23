@@ -168,3 +168,19 @@ export const uploadCVToScan = async (uploadData) => {
     throw error;
   }
 };
+
+export const GetRemainingCVCreationLimit = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/CV/getRemainingCVCreationLimit/${userId}`,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error getting remaining CV creation limit:", error);
+    throw error;
+  }
+};

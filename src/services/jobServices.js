@@ -352,3 +352,19 @@ export const sendInvitationEmail = async (data) => {
     throw error;
   }
 };
+
+export const getRemainingJobCreationLimit = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/getRemainingJobCreationLimit/${userId}`,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error getting remaining job creation limit:", error);
+    throw error;
+  }
+};
