@@ -86,25 +86,11 @@ export default function EmployerCandidateDetailPage() {
       setIsAccepting(false);
     }
   };
+
   const getStatusBadge = (applicationStatus) => {
-    let badgeClass = "status-badge";
-
-    switch (applicationStatus?.toLowerCase()) {
-      case "pending":
-        badgeClass += " pending";
-        break;
-      case "approved":
-        badgeClass += " accepted";
-        break;
-      case "rejected":
-        badgeClass += " rejected";
-        break;
-      default:
-        badgeClass += " default";
-    }
-
-    return <span className={badgeClass}>{applicationStatus || "Unknown"}</span>;
+    return applicationStatus || "Unknown";
   };
+
   const handleBackToCandidates = () => {
     navigate(`/employer/manage-jobs/candidates/${jobId}`);
   };
@@ -191,118 +177,132 @@ export default function EmployerCandidateDetailPage() {
 
               <div className="widget-content">
                 <div className="candidate-info-container">
-                  <div className="candidate-header">
-                    <div className="candidate-avatar">
-                      <img
-                        src={
-                          candidate?.avatar
-                        }
-                        alt={candidate.avatar}
-                        className={{
-                          height: "50px",
-                          width: "50px",
-                          borderRadius: "50%",
-                        }}
-                      />
-                    </div>
-                    <div className="candidate-header-info">
-                      <h2 className="candidate-name">
-                        {cv?.firstName && cv?.lastName
-                          ? `${cv.lastName} ${cv.firstName}`.trim()
-                          : candidate.fullName || "Unknown Candidate"}
-                      </h2>
-                      <div className="status-badge-container">
-                        <span
-                          className={`status-badge ${candidate.applicationStatus?.toLowerCase()}`}
-                        >
-                          {getStatusBadge(candidate.applicationStatus)}
-                        </span>
+                  <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                      {/* Avatar Section - Larger and more prominent */}
+                      <div className="flex-shrink-0">
+                        <img
+                          src={candidate?.avatar || "https://www.topcv.vn/images/avatar-default.jpg"}
+                          alt={`${candidate.fullName || "Candidate"} avatar`}
+                          className="h-24 w-24 rounded-full object-cover border-2 border-gray-200"
+                        />
                       </div>
-                      <div className="candidate-contact">
-                        <div className="contact-item">
-                          <i className="fas fa-envelope"></i>
-                          <a href={`mailto:${cv?.email || ""}`}>
-                            {cv?.email || "Unknown email"}
-                          </a>
-                        </div>
-                        {candidate.phoneNumber && (
-                          <div className="contact-item">
-                            <i className="fas fa-phone"></i>
-                            <a href={`tel:${candidate.phoneNumber}`}>
-                              {candidate.phoneNumber}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="candidate-actions">
-                      {candidate.applicationStatus !== "Rejected" &&
-                        candidate.applicationStatus === "Pending" && (
-                          <ConfirmDialog
-                            title="Accept Candidate"
-                            description="Are you sure you want to accept this candidate?"
-                            confirmText={
-                              isAccepting ? "Processing..." : "Accept"
-                            }
-                            variant="primary"
-                            onConfirm={handleAccept}
-                            showReasonField={false}
-                            disabled={isAccepting || isRejecting}
-                          >
-                            <button
-                              className={`accept-btn ${
-                                isAccepting || isRejecting ? "disabled" : ""
-                              }`}
-                              disabled={isAccepting || isRejecting}
-                            >
-                              {isAccepting ? (
-                                <>
-                                  <i className="fas fa-spinner fa-spin"></i>{" "}
-                                  Processing...
-                                </>
-                              ) : (
-                                <>
-                                  <i className="fas fa-check-circle"></i> Accept
-                                  Candidate
-                                </>
-                              )}
-                            </button>
-                          </ConfirmDialog>
-                        )}
 
-                      {candidate.applicationStatus !== "Accepted" &&
-                        candidate.applicationStatus === "Pending" && (
-                          <ConfirmDialog
-                            title="Reject Candidate"
-                            description="Please provide a reason for rejecting this candidate. This reason will be included in the email sent to the candidate."
-                            confirmText={
-                              isRejecting ? "Processing..." : "Reject"
-                            }
-                            variant="destructive"
-                            onConfirm={handleReject}
-                            showReasonField={true}
-                            disabled={isAccepting || isRejecting}
-                          >
-                            <button
-                              className={`reject-btn ${
-                                isAccepting || isRejecting ? "disabled" : ""
-                              }`}
+                      {/* Candidate Information */}
+                      <div className="flex-grow space-y-2">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                          <h2 className="text-xl font-bold text-gray-800">
+                            {candidate.fullName || "Unknown Candidate"}
+                          </h2>
+
+                          <div>
+                            <span className={`px-3 py-1 text-sm font-medium rounded-full ${candidate.applicationStatus === "Approved" ? "bg-green-100 text-green-800" :
+                              candidate.applicationStatus === "Rejected" ? "bg-red-100 text-red-800" :
+                                "bg-yellow-100 text-yellow-800"
+                              }`}>
+                              {getStatusBadge(candidate.applicationStatus)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          {candidate.email && (
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                              </svg>
+                              <a href={`mailto:${candidate.email}`} className="hover:text-blue-600">
+                                {candidate.email}
+                              </a>
+                            </div>
+                          )}
+
+                          {candidate.phoneNumber && (
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                              </svg>
+                              <a href={`tel:${candidate.phoneNumber}`} className="hover:text-blue-600">
+                                {candidate.phoneNumber}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto mt-4 md:mt-0">
+                        {candidate.applicationStatus === "Pending" && (
+                          <>
+                            <ConfirmDialog
+                              title="Accept Candidate"
+                              description="Are you sure you want to accept this candidate?"
+                              confirmText={isAccepting ? "Processing..." : "Accept"}
+                              variant="primary"
+                              onConfirm={handleAccept}
+                              showReasonField={false}
                               disabled={isAccepting || isRejecting}
                             >
-                              {isRejecting ? (
-                                <>
-                                  <i className="fas fa-spinner fa-spin"></i>{" "}
-                                  Processing...
-                                </>
-                              ) : (
-                                <>
-                                  <i className="fas fa-times-circle"></i> Reject
-                                  Candidate
-                                </>
-                              )}
-                            </button>
-                          </ConfirmDialog>
+                              <button
+                                className={`flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors ${(isAccepting || isRejecting) ? "opacity-50 cursor-not-allowed" : ""
+                                  }`}
+                                disabled={isAccepting || isRejecting}
+                              >
+                                {isAccepting ? (
+                                  <>
+                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                    Accept
+                                  </>
+                                )}
+                              </button>
+                            </ConfirmDialog>
+
+                            <ConfirmDialog
+                              title="Reject Candidate"
+                              description="Please provide a reason for rejecting this candidate. This reason will be included in the email sent to the candidate."
+                              confirmText={isRejecting ? "Processing..." : "Reject"}
+                              variant="destructive"
+                              onConfirm={handleReject}
+                              showReasonField={true}
+                              disabled={isAccepting || isRejecting}
+                            >
+                              <button
+                                className={`flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors ${(isAccepting || isRejecting) ? "opacity-50 cursor-not-allowed" : ""
+                                  }`}
+                                disabled={isAccepting || isRejecting}
+                              >
+                                {isRejecting ? (
+                                  <>
+                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                    Reject
+                                  </>
+                                )}
+                              </button>
+                            </ConfirmDialog>
+                          </>
                         )}
+                      </div>
                     </div>
                   </div>
 
