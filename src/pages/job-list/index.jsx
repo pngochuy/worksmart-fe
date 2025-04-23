@@ -46,6 +46,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  toggleFavoriteJob,
+  isJobFavorited,
+  deleteFavoriteJob,
+} from "@/services/favoriteJobService";
+import LoadingButton from "@/components/LoadingButton";
+import { toast } from "react-toastify";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Index = () => {
   const [jobs, setJobs] = useState([]);
@@ -75,6 +90,113 @@ export const Index = () => {
 
   // Ref để theo dõi trạng thái search params mới nhất
   const searchParamsRef = useRef(searchParams);
+
+  // Thêm vào phần state trong component Index
+  const [favoriteStatus, setFavoriteStatus] = useState({});
+  const [savingFavorite, setSavingFavorite] = useState(null); // jobId đang được cập nhật
+  const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
+  const [showUnsaveConfirmDialog, setShowUnsaveConfirmDialog] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
+
+  // Lấy thông tin user từ localStorage
+  const user = JSON.parse(localStorage.getItem("userLoginData"));
+  const userID = user?.userID || null;
+  const userRole = user?.role || null;
+
+  // Thêm hàm kiểm tra trạng thái yêu thích
+  const checkFavoriteStatuses = async (jobsList) => {
+    if (!userID || !jobsList?.length) return;
+
+    try {
+      const statusPromises = jobsList.map((job) =>
+        isJobFavorited(userID, job.jobID).then((isFavorite) => ({
+          jobId: job.jobID,
+          isFavorite,
+        }))
+      );
+
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = {};
+
+      statuses.forEach(({ jobId, isFavorite }) => {
+        statusMap[jobId] = isFavorite;
+      });
+
+      setFavoriteStatus(statusMap);
+    } catch (error) {
+      console.error("Error checking favorite statuses:", error);
+    }
+  };
+
+  // Thêm hàm xử lý khi click vào nút Save
+  const handleSaveJobClick = (job) => {
+    if (!userID) {
+      toast.warning("Please login to save this job.");
+      return;
+    }
+
+    setSelectedJob(job);
+    setSelectedJobId(job.jobID);
+
+    // Nếu job đã được lưu, hiện dialog xác nhận bỏ lưu
+    if (favoriteStatus[job.jobID]) {
+      setShowUnsaveConfirmDialog(true);
+    } else {
+      // Nếu chưa lưu, hiện dialog xác nhận lưu
+      setShowSaveConfirmDialog(true);
+    }
+  };
+
+  // Thêm hàm xử lý khi xác nhận lưu job
+  const handleToggleFavorite = async () => {
+    if (!userID || !selectedJobId) return;
+
+    setSavingFavorite(selectedJobId);
+    try {
+      const result = await toggleFavoriteJob(userID, selectedJobId);
+
+      setFavoriteStatus((prev) => ({
+        ...prev,
+        [selectedJobId]: result.isFavorite,
+      }));
+
+      toast.success(
+        result.isFavorite
+          ? "Job saved to favorites successfully!"
+          : "Job removed from favorites."
+      );
+    } catch (error) {
+      console.error("Error toggling favorite status:", error);
+      toast.error("Failed to update favorites. Please try again.");
+    } finally {
+      setSavingFavorite(null);
+      setShowSaveConfirmDialog(false);
+    }
+  };
+
+  // Thêm hàm xử lý khi xác nhận bỏ lưu job
+  const handleUnsaveJob = async () => {
+    if (!userID || !selectedJobId) return;
+
+    setSavingFavorite(selectedJobId);
+    try {
+      await deleteFavoriteJob(userID, selectedJobId);
+
+      setFavoriteStatus((prev) => ({
+        ...prev,
+        [selectedJobId]: false,
+      }));
+
+      toast.success("Job removed from favorites.");
+    } catch (error) {
+      console.error("Error removing job from favorites:", error);
+      toast.error("Failed to remove job from favorites. Please try again.");
+    } finally {
+      setSavingFavorite(null);
+      setShowUnsaveConfirmDialog(false);
+    }
+  };
 
   // Di chuyển định nghĩa handleSearch lên trước useEffect
   const handleSearch = async (e) => {
@@ -424,6 +546,9 @@ export const Index = () => {
         grouped[job.companyName].jobs.push(job);
       });
       setGroupedJobs(grouped);
+
+      // Kiểm tra trạng thái yêu thích
+      checkFavoriteStatuses(data.jobs);
     } catch (error) {
       console.error("Error fetching jobs:", error);
     }
@@ -598,6 +723,74 @@ export const Index = () => {
 
   return (
     <>
+      {/* Save Job Confirm Dialog */}
+      <Dialog
+        open={showSaveConfirmDialog}
+        onOpenChange={setShowSaveConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Job</DialogTitle>
+            <DialogDescription>
+              Do you want to save <b>{selectedJob?.title}</b> at{" "}
+              <b>{selectedJob?.companyName}</b> to your favorites? You can view
+              all saved jobs in your profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowSaveConfirmDialog(false)}
+              disabled={savingFavorite === selectedJobId}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="default"
+              onClick={handleToggleFavorite}
+              loading={savingFavorite === selectedJobId}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Save Job
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unsave Job Confirm Dialog */}
+      <Dialog
+        open={showUnsaveConfirmDialog}
+        onOpenChange={setShowUnsaveConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove from Saved Jobs</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove <b>{selectedJob?.title}</b> at{" "}
+              <b>{selectedJob?.companyName}</b> from your saved jobs?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowUnsaveConfirmDialog(false)}
+              disabled={savingFavorite === selectedJobId}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleUnsaveJob}
+              loading={savingFavorite === selectedJobId}
+            >
+              Remove
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/*Page Title - sửa padding-bottom thành 0*/}
       <section className="bg-white py-12 pb-0" style={{ marginTop: "111px" }}>
         <div className="container mx-auto px-4">
@@ -672,12 +865,6 @@ export const Index = () => {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[220px]">
               <SalaryRangeDropdown setSearchParams={setSearchParams} />
-            </div>
-            <div className="flex-1 min-w-[220px]">
-              <JobPositionDropdown
-                searchParams={searchParams}
-                setSearchParams={setSearchParams}
-              />
             </div>
             <div className="flex-1 min-w-[220px]">
               <CategoryDropdown setSearchParams={setSearchParams} />
@@ -941,15 +1128,34 @@ export const Index = () => {
                                 </div>
 
                                 <div className="mt-4 flex justify-end">
-                                  <Button
-                                    variant="outline"
-                                    className="text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 cursor-default"
-                                  >
-                                    <Heart className="h-4 w-4  text-blue-500" />
-                                    <span className="hidden sm:inline text-blue-500">
-                                      Save
-                                    </span>
-                                  </Button>
+                                  {userRole === "Candidate" && (
+                                    <Button
+                                      variant="outline"
+                                      className={`border hover:bg-blue-100 flex items-center gap-2 ${
+                                        favoriteStatus[job.jobID]
+                                          ? "text-blue-600 border-blue-200 bg-blue-50"
+                                          : "text-gray-500 border-gray-200 hover:text-blue-600"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Ngăn accordion đóng/mở
+                                        handleSaveJobClick(job);
+                                      }}
+                                      disabled={savingFavorite === job.jobID}
+                                    >
+                                      <Heart
+                                        className={`h-4 w-4 ${
+                                          favoriteStatus[job.jobID]
+                                            ? "text-blue-500 fill-blue-500"
+                                            : "text-gray-500"
+                                        }`}
+                                      />
+                                      <span className="hidden sm:inline">
+                                        {favoriteStatus[job.jobID]
+                                          ? "Saved"
+                                          : "Save"}
+                                      </span>
+                                    </Button>
+                                  )}
                                 </div>
                               </AccordionContent>
                             </AccordionItem>

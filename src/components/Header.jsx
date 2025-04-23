@@ -222,8 +222,7 @@ export const Header = () => {
     };
 
     handleRefreshFavourites();
-    return () => {
-    };
+    return () => {};
   }, [userDataLogin]);
 
   return (
@@ -250,27 +249,31 @@ export const Header = () => {
             <nav className="nav main-menu">
               <ul className="navigation" id="navbar">
                 <li
-                  className={`dropdown ${activeDropdown?.innerText.includes("Jobs") ? "current" : ""
-                    }`}
+                  className={`dropdown ${
+                    activeDropdown?.innerText.includes("Jobs") ? "current" : ""
+                  }`}
                 >
                   <span>Jobs</span>
                   <ul>
                     <li>
                       <a href="/job-list">Job List</a>
                     </li>
-                    <li>
-                      <a href="/suitable-jobs">Suitable Jobs</a>
-                    </li>
+                    {userRole !== "Employer" && (
+                      <li>
+                        <a href="/suitable-jobs">Suitable Jobs</a>
+                      </li>
+                    )}
                     <li>
                       <a href="#">IT Jobs</a>
                     </li>
                   </ul>
                 </li>
                 <li
-                  className={`dropdown ${activeDropdown?.innerText.includes("Company")
-                    ? "current"
-                    : ""
-                    }`}
+                  className={`dropdown ${
+                    activeDropdown?.innerText.includes("Company")
+                      ? "current"
+                      : ""
+                  }`}
                 >
                   <span>Company</span>
                   <ul>
@@ -282,28 +285,32 @@ export const Header = () => {
                     </li>
                   </ul>
                 </li>
-                <li
-                  className={`dropdown ${activeDropdown?.innerText.includes("Profile & CV")
-                    ? "current"
-                    : ""
+                {userRole === "Candidate" && (
+                  <li
+                    className={`dropdown ${
+                      activeDropdown?.innerText.includes("Profile & CV")
+                        ? "current"
+                        : ""
                     }`}
-                >
-                  <span>Profile & CV</span>
-                  <ul>
-                    <li>
-                      <a href="candidate/my-cv">Create CV</a>
-                    </li>
-                    <li>
-                      <a href="candidate/my-cv">Manage CV</a>
-                    </li>
-                  </ul>
-                </li>
+                  >
+                    <span>Profile & CV</span>
+                    <ul>
+                      <li>
+                        <a href="candidate/my-cv">Create CV</a>
+                      </li>
+                      <li>
+                        <a href="candidate/my-cv">Manage CV</a>
+                      </li>
+                    </ul>
+                  </li>
+                )}
                 {userRole === "Employer" && (
                   <li
-                    className={`dropdown ${activeDropdown?.innerText.includes("Candidates")
-                      ? "current"
-                      : ""
-                      }`}
+                    className={`dropdown ${
+                      activeDropdown?.innerText.includes("Candidates")
+                        ? "current"
+                        : ""
+                    }`}
                   >
                     <span>Candidates</span>
                     <ul>
@@ -423,7 +430,7 @@ export const Header = () => {
               </>
             ) : (
               <>
-                <a href="candidate/create-cv" className="upload-cv">
+                <a href="candidate/my-cv" className="upload-cv">
                   Upload your CV
                 </a>
                 <div className="btn-box">
@@ -434,7 +441,7 @@ export const Header = () => {
                     Login / Register
                   </a>
                   <a
-                    href="employer/create-job"
+                    href="employer/post-job"
                     className="theme-btn btn-style-one"
                   >
                     Job Post

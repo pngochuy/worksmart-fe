@@ -11,7 +11,8 @@ import {
 } from "@/services/jobServices";
 import {
   toggleFavoriteJob,
-  checkJobIsFavorite,
+  isJobFavorited,
+  deleteFavoriteJob,
 } from "@/services/favoriteJobService"; // Import favorite job service
 import { Clock, FileEdit, Heart, MoveUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -39,6 +40,7 @@ export const Index = () => {
   const [featuredCV, setFeaturedCV] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
+  const [showUnsaveConfirmDialog, setShowUnsaveConfirmDialog] = useState(false); // Thêm state mới cho dialog unsave
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false); // Track if job is saved as favorite
 
@@ -52,7 +54,8 @@ export const Index = () => {
     if (!userID || !jobId) return;
 
     try {
-      const isFav = await checkJobIsFavorite(userID, jobId);
+      // Sử dụng API endpoint mới
+      const isFav = await isJobFavorited(userID, jobId);
       setIsFavorite(isFav);
     } catch (error) {
       console.error("Error checking favorite status:", error);
@@ -165,13 +168,13 @@ export const Index = () => {
       return;
     }
 
-    // If job is already favorited, remove it directly
+    // Nếu job đã được lưu, hiện dialog xác nhận bỏ lưu
     if (isFavorite) {
-      handleToggleFavorite();
+      setShowUnsaveConfirmDialog(true);
       return;
     }
 
-    // If not favorited yet, show confirmation dialog
+    // Nếu chưa lưu, hiện dialog xác nhận lưu
     setShowSaveConfirmDialog(true);
   };
 
@@ -196,6 +199,27 @@ export const Index = () => {
     } finally {
       setSavingFavorite(false);
       setShowSaveConfirmDialog(false);
+    }
+  };
+
+  // Hàm xử lý bỏ lưu job
+  const handleUnsaveJob = async () => {
+    if (!userID || !jobId) return;
+
+    setSavingFavorite(true);
+    try {
+      // Gọi API mới để xóa job khỏi favorites
+      await deleteFavoriteJob(userID, jobId);
+
+      // Cập nhật trạng thái
+      setIsFavorite(false);
+      toast.success("Job removed from favorites.");
+    } catch (error) {
+      console.error("Error removing job from favorites:", error);
+      toast.error("Failed to remove job from favorites. Please try again.");
+    } finally {
+      setSavingFavorite(false);
+      setShowUnsaveConfirmDialog(false);
     }
   };
 
@@ -302,6 +326,39 @@ export const Index = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Unsave Job Confirm Dialog */}
+      <Dialog
+        open={showUnsaveConfirmDialog}
+        onOpenChange={setShowUnsaveConfirmDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove from Saved Jobs</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove <b>{job.title}</b> at{" "}
+              <b>{job.companyName}</b> from your saved jobs?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowUnsaveConfirmDialog(false)}
+              disabled={savingFavorite}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleUnsaveJob}
+              loading={savingFavorite}
+            >
+              Remove
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Job Detail Section */}
       <section className="job-detail-section " style={{ marginTop: "111px" }}>
         <div className="job-detail-outer">
@@ -312,27 +369,29 @@ export const Index = () => {
                   {/* Job Block */}
                   <div className="job-block-seven style-two at-jsv6">
                     <div className="tags d-flex align-items-center gap-2">
-                      <Button
-                        variant="outline"
-                        className={`border hover:bg-blue-100 flex items-center gap-2 ${
-                          isFavorite
-                            ? "text-blue-600 border-blue-200 bg-blue-50"
-                            : "text-gray-500 border-gray-200 hover:text-blue-600"
-                        }`}
-                        onClick={handleSaveJobClick}
-                        disabled={savingFavorite}
-                      >
-                        <Heart
-                          className={`h-4 w-4 ${
+                      {userRole === "Candidate" && (
+                        <Button
+                          variant="outline"
+                          className={`border hover:bg-blue-100 flex items-center gap-2 ${
                             isFavorite
-                              ? "text-blue-500 fill-blue-500"
-                              : "text-gray-500"
+                              ? "text-blue-600 border-blue-200 bg-blue-50"
+                              : "text-gray-500 border-gray-200 hover:text-blue-600"
                           }`}
-                        />
-                        <span className="hidden sm:inline">
-                          {isFavorite ? "Saved" : "Save"}
-                        </span>
-                      </Button>
+                          onClick={handleSaveJobClick}
+                          disabled={savingFavorite}
+                        >
+                          <Heart
+                            className={`h-4 w-4 ${
+                              isFavorite
+                                ? "text-blue-500 fill-blue-500"
+                                : "text-gray-500"
+                            }`}
+                          />
+                          <span className="hidden sm:inline">
+                            {isFavorite ? "Saved" : "Save"}
+                          </span>
+                        </Button>
+                      )}
                       {userRole === "Candidate" && (
                         <ReportJobButton
                           className="theme-btn btn-style-one"
