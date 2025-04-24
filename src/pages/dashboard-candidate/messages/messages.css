@@ -1,0 +1,681 @@
+/* Container chính của trang tin nhắn */
+.ws-messages-container {
+  display: flex;
+  height: 75vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+/* Phần danh sách cuộc hội thoại */
+.ws-conversations {
+  width: 320px;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+}
+
+/* Phần tìm kiếm */
+.ws-search {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ws-search-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.ws-search-icon {
+  color: #64748b;
+  margin-right: 8px;
+}
+
+.ws-search input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  color: #1e293b;
+}
+
+.ws-search input::placeholder {
+  color: #94a3b8;
+}
+
+/* Danh sách các cuộc hội thoại */
+.ws-conversation-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ws-conversation-item {
+  display: flex;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ws-conversation-item:hover {
+  background-color: #f8fafc;
+}
+
+.ws-conversation-item.ws-active {
+  background-color: #f0f9ff;
+  border-left: 3px solid #2563eb;
+}
+
+.ws-conversation-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.ws-conversation-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ws-conversation-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-conversation-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ws-conversation-top h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: transparent;
+  display: flex;
+  align-items: center;
+}
+
+.ws-conversation-top h4::after {
+  content: none;
+}
+
+.ws-conversation-time {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.ws-conversation-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ws-conversation-last-msg {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 85%;
+}
+
+.ws-unread-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+}
+
+/* Phần tin nhắn */
+.ws-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+/* Header cho phần tin nhắn (chỉ hiển thị trên mobile) */
+.ws-messages-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.ws-back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  margin-right: 12px;
+  padding: 4px;
+  border-radius: 50%;
+  display: none; /* Ẩn mặc định, chỉ hiện trên mobile */
+}
+
+.ws-back-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.ws-user-info {
+  display: flex;
+  align-items: center;
+}
+
+.ws-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.ws-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ws-user-name {
+  display: flex;
+  flex-direction: column;
+}
+
+.ws-user-name h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Định dạng chung cho trạng thái người dùng */
+.ws-user-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 14px; /* Tạo không gian cho chấm tròn */
+  background: transparent;
+}
+
+/* Tạo chấm tròn trước văn bản */
+.ws-user-status::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* Chấm xanh lá cho trạng thái online */
+.ws-user-status.active::before {
+  background-color: #10b981; /* Màu xanh lá */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); /* Hiệu ứng phát sáng nhẹ */
+}
+
+/* Chấm xám cho trạng thái offline */
+.ws-user-status.offline::before {
+  background-color: #94a3b8; /* Màu xám */
+}
+
+/* Màu văn bản theo trạng thái */
+.ws-user-status.active {
+  color: #10b981;
+}
+
+.ws-user-status.offline {
+  color: #94a3b8 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Chấm nhỏ cho danh sách cuộc trò chuyện */
+.ws-user-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-left: 6px;
+  position: relative;
+  top: -1px;
+}
+
+.ws-user-status-dot.active {
+  background-color: #10b981;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.ws-user-status-dot.offline {
+  background-color: #94a3b8;
+  opacity: 0.8; /* Làm mờ đi một chút khi offline */
+}
+
+/* Danh sách tin nhắn */
+.ws-message-list {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: #f8fafc;
+}
+
+.ws-message {
+  display: flex;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.ws-message + .ws-message {
+  margin-top: 2px;
+}
+
+.ws-message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.ws-message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ws-message-content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.ws-message-content {
+  background-color: #fff;
+  border-radius: 18px;
+  padding: 10px 16px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer; /* Cho người dùng biết có thể tương tác */
+}
+
+.ws-message-content:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng nhẹ khi hover */
+}
+
+.ws-message-content p {
+  margin: 0;
+  font-size: 14px;
+  color: #1e293b;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Sửa lại cách hiển thị thời gian khi hover */
+
+/* Xóa hoặc vô hiệu hóa rule cũ */
+.ws-message:hover .ws-message-time {
+  display: none; /* Ghi đè rule cũ */
+}
+
+/* Thêm rule mới - chỉ hiển thị khi hover vào nội dung tin nhắn */
+.ws-message-content:hover ~ .ws-message-time,
+.ws-message-content:hover + .ws-message-time {
+  display: flex;
+  align-items: center;
+}
+
+/* Rule bổ sung đảm bảo hiển thị đúng */
+.ws-message-content-wrapper:hover > .ws-message-time {
+  display: none; /* Mặc định vẫn ẩn khi hover vào wrapper */
+}
+
+.ws-message-content-wrapper > .ws-message-content:hover ~ .ws-message-time {
+  display: flex; /* Chỉ hiện khi hover vào content */
+}
+
+/* Sửa lại kiểu hiển thị thời gian để không chiếm không gian */
+.ws-message-time {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  display: none; /* Ẩn hoàn toàn thay vì chỉ mờ đi */
+  z-index: 10;
+  white-space: nowrap;
+  pointer-events: none;
+  bottom: -22px;
+}
+
+/* Vị trí cho thời gian tin nhắn gửi */
+.ws-message-sent .ws-message-time {
+  right: 0;
+}
+
+/* Vị trí cho thời gian tin nhắn nhận */
+.ws-message-received .ws-message-time {
+  left: 0;
+}
+
+/* Luôn hiển thị icon trạng thái đã đọc */
+.ws-message-status {
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ws-message-sent {
+  justify-content: flex-end;
+}
+
+.ws-message-sent .ws-message-content {
+  background-color: #3b82f6;
+  border-radius: 18px 18px 4px 18px; /* Bo góc kiểu messenger */
+}
+
+.ws-message-received {
+  justify-content: flex-start;
+}
+
+.ws-message-received .ws-message-content {
+  background-color: #f1f5f9;
+  border-radius: 18px 18px 18px 4px; /* Bo góc kiểu messenger */
+}
+
+.ws-message-sent .ws-message-content p {
+  color: #fff;
+}
+
+.ws-message-sent .ws-message-time {
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.ws-message-received .ws-message-time {
+  justify-content: flex-start;
+  padding-left: 4px;
+}
+
+/* Ngày phân cách */
+.ws-date-divider {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  text-align: center;
+  opacity: 1;
+}
+
+.ws-date-divider span {
+  font-size: 12px;
+  color: #64748b;
+  background-color: #f8fafc;
+  padding: 4px 12px;
+  border-radius: 16px;
+  margin: 0 auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Phần nhập tin nhắn */
+.ws-input {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+.ws-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  background-color: #f1f5f9;
+  border-radius: 24px;
+  padding: 8px 16px;
+}
+
+.ws-input textarea {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  resize: none;
+  font-family: inherit;
+  width: 100%;
+  max-height: 100px;
+  padding: 4px 0;
+  color: #1e293b;
+  min-height: 24px;
+}
+
+.ws-input textarea::placeholder {
+  color: #94a3b8;
+}
+
+.ws-send-btn {
+  background-color: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.ws-send-btn:hover {
+  background-color: #2563eb;
+}
+
+.ws-send-btn:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Trạng thái trống */
+.ws-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px;
+  text-align: center;
+}
+
+.ws-empty-state svg {
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.ws-empty-state p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ws-empty-hint {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 4px !important;
+}
+
+/* Trạng thái không chọn hội thoại */
+.ws-no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 32px;
+  background-color: #f8fafc;
+}
+
+.ws-no-selection-icon {
+  background-color: #e0f2fe;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.ws-no-selection-icon svg {
+  color: #3b82f6;
+}
+
+.ws-no-selection h3 {
+  margin: 0 0 8px;
+  color: #1e293b;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ws-no-selection p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Tin nhắn trống */
+.ws-empty-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.ws-empty-message-icon {
+  background-color: #e0f2fe;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.ws-empty-message-icon svg {
+  color: #3b82f6;
+}
+
+.ws-empty-messages p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ws-empty-message-hint {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 4px !important;
+}
+
+/* Trạng thái đang tải */
+.ws-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.ws-loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Badge cho tổng số tin nhắn chưa đọc */
+.ws-badge {
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 16px;
+  font-size: 12px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive styling */
+@media (max-width: 992px) {
+  .ws-messages-container {
+    height: 70vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .ws-messages-container {
+    height: 80vh;
+  }
+
+  .ws-conversations {
+    width: 100%;
+  }
+
+  .ws-messages {
+    width: 100%;
+  }
+
+  .ws-mobile-hidden {
+    display: none;
+  }
+
+  .ws-back-btn {
+    display: flex;
+  }
+}
