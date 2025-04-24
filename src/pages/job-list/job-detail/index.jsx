@@ -8,6 +8,9 @@ import {
   applyToJob,
   checkApplyStatus,
   fetchJobDetails,
+  fetchApplicationDetails,
+  checkReapply,
+  withdrawJobApplication,
 } from "@/services/jobServices";
 import {
   toggleFavoriteJob,
@@ -43,6 +46,12 @@ export const Index = () => {
   const [showUnsaveConfirmDialog, setShowUnsaveConfirmDialog] = useState(false); // Thêm state mới cho dialog unsave
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false); // Track if job is saved as favorite
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  // Thêm state mới để lưu trữ toàn bộ application details
+  const [applicationDetails, setApplicationDetails] = useState(null);
+  const [canReApply, setCanReApply] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
@@ -62,11 +71,47 @@ export const Index = () => {
     }
   };
 
+  // Tạo hàm fetchApplicationInfo để tái sử dụng
+  const fetchApplicationInfo = async () => {
+    if (!userID || !jobId) return;
+
+    try {
+      // Lấy thông tin chi tiết về application
+      const appDetails = await fetchApplicationDetails(userID, jobId);
+      console.log("Application details fetched:", appDetails);
+
+      // Lưu trữ toàn bộ application details
+      setApplicationDetails(appDetails);
+
+      if (appDetails) {
+        setApplicationStatus(appDetails.applicationStatus);
+
+        // Nếu status là Rejected, lấy thêm rejection reason và kiểm tra có thể apply lại không
+        if (appDetails.applicationStatus === "Rejected") {
+          if (appDetails.rejectionReason) {
+            setRejectionReason(appDetails.rejectionReason);
+          }
+
+          // Kiểm tra có thể reapply không
+          const canReApply = await checkReapply(userID, jobId);
+          setCanReApply(canReApply);
+        }
+      } else {
+        // Reset states nếu không có application
+        setApplicationStatus(null);
+        setRejectionReason("");
+      }
+    } catch (error) {
+      console.error("Error fetching application details:", error);
+      setApplicationStatus(null);
+      setApplicationDetails(null);
+    }
+  };
+
   useEffect(() => {
     const fetchJobDetail = async () => {
       try {
         const data = await fetchJobDetails(jobId);
-        console.log("Job data:", data); // Log the fetched job data
         if (data) {
           setJob(data.job);
           if (data.similarJobs) {
@@ -76,14 +121,8 @@ export const Index = () => {
 
         // Check application status for Candidates
         if (userRole === "Candidate" && userID) {
-          try {
-            const status = await checkApplyStatus(userID, jobId);
-            if (status !== "None") {
-              setApplicationStatus(status);
-            }
-          } catch (error) {
-            console.error("Error checking application status:", error);
-          }
+          // Sử dụng hàm fetchApplicationInfo thay vì code trực tiếp
+          await fetchApplicationInfo();
 
           // Get user CVs
           const cvData = await getCVsByUserId(userID);
@@ -107,57 +146,125 @@ export const Index = () => {
   }, [userID, jobId, userRole]);
 
   const handleClickApply = async () => {
-    try {
-      // Check if already applied
-      const status = await checkApplyStatus(userID, jobId);
+    if (!userID || !jobId) {
+      toast.warning("Please login to apply for this job.");
+      return;
+    }
 
-      if (status !== "None") {
-        toast.info(`You have already applied to this job. Status: ${status}`);
-        setApplicationStatus(status);
-        return;
+    setLoading(true);
+    try {
+      // Sử dụng application details đã lưu
+      if (applicationDetails) {
+        // Nếu status là Rejected, kiểm tra xem có thể apply lại không
+        if (applicationDetails.applicationStatus === "Rejected") {
+          // Nếu đã check rồi và không thể apply lại
+          if (!canReApply.canApply) {
+            toast.info(canReApply.message);
+            setLoading(false);
+            return;
+          }
+        }
+        // Nếu status là Pending hoặc Approved, không cho phép apply nữa
+        else if (
+          applicationDetails.applicationStatus === "Pending" ||
+          applicationDetails.applicationStatus === "Approved" ||
+          applicationDetails.applicationStatus === "Accepted"
+        ) {
+          toast.info(
+            `Your application status is currently: ${applicationDetails.applicationStatus}`
+          );
+          setLoading(false);
+          return;
+        }
       }
 
-      // Not applied yet, continue with application flow
+      // Không có application details hoặc có thể apply
       if (featuredCV) {
         setShowConfirmDialog(true);
       } else if (userCVs.length > 0) {
         toast.info(
           "You haven't set a featured CV. Please choose a featured CV before applying."
         );
-      } else if (userCVs.length === 0) {
+      } else {
         toast.warning(
           "You don't have any CVs yet. Please create a CV before applying for this job."
         );
       }
     } catch (error) {
-      console.error("Error checking application status:", error);
+      console.error("Error processing application:", error);
       toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const submitApplication = async () => {
     setLoading(true);
     try {
-      // Double-check status before submitting
-      const status = await checkApplyStatus(userID, jobId);
-
-      if (status !== "None") {
-        toast.info(`You have already applied to this job. Status: ${status}`);
-        setApplicationStatus(status);
-        setShowConfirmDialog(false);
-        return;
+      console.log("Submitting application...", applicationDetails);
+      // Kiểm tra applicationDetails
+      if (applicationDetails) {
+        // Xử lý logic kiểm tra hiện tại...
+        if (applicationDetails.applicationStatus === "Rejected") {
+          if (!canReApply.canApply) {
+            toast.info(
+              "You've reached the maximum number of applications for this job."
+            );
+            setShowConfirmDialog(false);
+            return;
+          }
+        } else if (
+          applicationDetails.applicationStatus === "Pending" ||
+          applicationDetails.applicationStatus === "Approved" ||
+          applicationDetails.applicationStatus === "Accepted"
+        ) {
+          toast.info(
+            `Your application status is currently: ${applicationDetails.applicationStatus}`
+          );
+          setShowConfirmDialog(false);
+          return;
+        }
       }
 
       // Submit application
       await applyToJob(userID, jobId);
       toast.success("Application submitted successfully!");
-      setApplicationStatus("Pending");
+
+      // Fetch lại dữ liệu mới thay vì set cứng state
+      await fetchApplicationInfo();
+
+      setShowConfirmDialog(false);
     } catch (error) {
       console.error("Error applying to job:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
-      setShowConfirmDialog(false);
+    }
+  };
+
+  // Hàm xử lý rút lại đơn ứng tuyển
+  const handleWithdraw = async () => {
+    if (!userID || !jobId) {
+      toast.error("Cannot identify user or job");
+      return;
+    }
+
+    setWithdrawLoading(true);
+    try {
+      // Thực hiện withdraw
+      await withdrawJobApplication(userID, jobId);
+      toast.success("Application withdrawn successfully!");
+
+      // Thay vì set cứng application status, fetch lại dữ liệu mới từ server
+      await fetchApplicationInfo();
+
+      // Đóng dialog
+      setShowWithdrawDialog(false);
+    } catch (error) {
+      toast.error("Failed to withdraw application. Please try again later.");
+      console.error("Error withdrawing application:", error);
+    } finally {
+      setWithdrawLoading(false);
     }
   };
 
@@ -359,6 +466,35 @@ export const Index = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Withdraw Application Dialog */}
+      <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Withdraw Application</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to withdraw your application? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowWithdrawDialog(false)}
+              disabled={withdrawLoading}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleWithdraw}
+              loading={withdrawLoading}
+            >
+              Withdraw Application
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Job Detail Section */}
       <section className="job-detail-section " style={{ marginTop: "111px" }}>
         <div className="job-detail-outer">
@@ -508,15 +644,49 @@ export const Index = () => {
                   <div className="application-end-widget">
                     <div className="d-sm-flex justify-content-sm-between">
                       <div className="titles mb-3 mb-sm-0">
-                        <h4 className="fz20 fw500">Application ends</h4>
+                        <h4 className="fz20 fw500">
+                          Application ends {applicationStatus}
+                        </h4>
                         <p className="text">
                           {formatDateTimeNotIncludeTime(job.deadline)}
                         </p>
                       </div>
                       <div className="btn-box mb-0 d-flex flex-column gap-2 min-w-[250px]">
-                        {applicationStatus ? (
-                          <ApplicationStatus status={applicationStatus} />
+                        {applicationDetails ? (
+                          <>
+                            <ApplicationStatus
+                              status={applicationStatus}
+                              rejectionReason={rejectionReason}
+                            />
+
+                            {/* Trường hợp 1: Đơn đang chờ xét duyệt - hiển thị nút Withdraw */}
+                            {applicationStatus === "Pending" && (
+                              <Button
+                                variant="outline"
+                                className="text-red-600 border-red-200 hover:bg-red-50 w-full mt-2"
+                                onClick={() => setShowWithdrawDialog(true)}
+                              >
+                                Withdraw Application
+                              </Button>
+                            )}
+
+                            {/* Trường hợp 2: Đơn bị từ chối và có thể apply lại - hiển thị nút Apply Again */}
+                            {applicationDetails.applicationStatus ===
+                              "Rejected" &&
+                              canReApply.canApply && (
+                                <Button
+                                  variant="outline"
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 w-full mt-2"
+                                  onClick={handleClickApply}
+                                >
+                                  Apply Again
+                                </Button>
+                              )}
+
+                            {/* Trường hợp 3: Đơn được chấp nhận - không hiển thị nút */}
+                          </>
                         ) : (
+                          // Trường hợp 4: Chưa từng apply - hiển thị nút Apply For Job
                           <LoadingButton
                             className="theme-btn btn-style-one"
                             type="button"
@@ -616,9 +786,35 @@ export const Index = () => {
                     </p>
                     {userRole === "Candidate" && (
                       <div className="mb-3">
-                        {applicationStatus ? (
+                        {applicationDetails ? (
                           <>
-                            <ApplicationStatus status={applicationStatus} />
+                            <ApplicationStatus
+                              status={applicationStatus}
+                              rejectionReason={rejectionReason}
+                            />
+
+                            {applicationDetails.applicationStatus ===
+                              "Pending" && (
+                              <Button
+                                variant="outline"
+                                className="text-red-600 border-red-200 hover:bg-red-50 w-full mt-2"
+                                onClick={() => setShowWithdrawDialog(true)}
+                              >
+                                Withdraw Application
+                              </Button>
+                            )}
+
+                            {applicationDetails.applicationStatus ===
+                              "Rejected" &&
+                              canReApply.canApply && (
+                                <Button
+                                  variant="outline"
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 w-full mt-2"
+                                  onClick={handleClickApply}
+                                >
+                                  Apply Again
+                                </Button>
+                              )}
                           </>
                         ) : (
                           <div className="btn-box mb-3 d-flex flex-column gap-2">

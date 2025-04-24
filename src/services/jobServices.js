@@ -382,3 +382,95 @@ export const getRemainingJobCreationLimit = async (userId) => {
     throw error;
   }
 };
+
+export const checkReportStatus = async (userId, jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/application-status/${userId}/${jobId}`
+    );
+    return response.data.status;
+  } catch (error) {
+    console.error("Error checking report status:", error);
+    return "None";
+  }
+};
+
+export const withdrawJobApplication = async (userId, jobId) => {
+  try {
+    const response = await axios.delete(
+      `${BACKEND_API_URL}/api/Application/withdraw/${userId}/${jobId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error withdrawing application:", error);
+    throw error;
+  }
+};
+
+export const fetchApplicationDetails = async (userId, jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/application-details/${userId}/${jobId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching application details:", error);
+    throw error;
+  }
+};
+export const checkReapply = async (userId, jobId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Application/check-reapply/${userId}/${jobId}`
+    );
+
+    // Response từ API là boolean
+    const canApply = response.data;
+
+    if (canApply) {
+      return {
+        canApply: true,
+        message: "You can apply for this job.",
+      };
+    } else {
+      // Nếu không thể apply, lấy thông tin chi tiết để biết lý do
+      const appDetails = await fetchApplicationDetails(userId, jobId);
+      const status = appDetails?.status || "Unknown";
+
+      if (status === "Pending") {
+        return {
+          canApply: false,
+          message: "You already have a pending application for this job.",
+          status: status,
+          applicationDetails: appDetails,
+        };
+      } else if (status === "Accepted" || status === "Approved") {
+        return {
+          canApply: false,
+          message: "Your application has already been accepted.",
+          status: status,
+          applicationDetails: appDetails,
+        };
+      } else if (status === "Rejected") {
+        return {
+          canApply: false,
+          message:
+            "You've reached the maximum number of applications for this job.",
+          status: status,
+          rejectionReason: appDetails?.rejectionReason,
+          applicationDetails: appDetails,
+        };
+      } else {
+        return {
+          canApply: false,
+          message: "You cannot apply to this job at this time.",
+          status: status,
+          applicationDetails: appDetails,
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Error checking reapply status:", error);
+    throw error;
+  }
+};
