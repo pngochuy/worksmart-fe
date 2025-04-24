@@ -57,7 +57,6 @@ export const fetchJobsForManagement = async (searchParams) => {
           }),
       }
     );
-    console.log("dataaaaaaaaaaaaaaaaaaaaaaaaaa", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs for management:", error);

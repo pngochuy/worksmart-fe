@@ -10,6 +10,10 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { getCVById } from "../../../services/cvServices"; // Add this import
 import { Filter, Search, X } from "lucide-react";
+// Import thêm thư viện cần thiết
+import XLSX from "xlsx-js-style";
+import { Download, FileText } from "lucide-react";
+import openai from "@/lib/openai";
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -56,6 +60,10 @@ export default function CandidatesPage() {
   // Add these state variables
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Các state cần thêm vào component
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(null);
 
   // Add this function to handle search term changes
   const handleSearchTermChange = (e) => {
@@ -124,9 +132,9 @@ export default function CandidatesPage() {
       // Assuming your fetchCandidatesForJob function can accept pagination params
       const data = await fetchCandidatesForJob(jobId, searchParams);
       console.log("Fetched candidates data:", data);
+
       // Process candidates with CV data
       const processedCandidates = [];
-      console.log("Fetched candidates data:", data);
       if (Array.isArray(data)) {
         // Fetch CV data for each candidate if they have a CV ID
         for (const candidate of data) {
@@ -469,6 +477,575 @@ export default function CandidatesPage() {
       setIsSending(false);
     }
   };
+  // Hàm phân tích CV bằng AI
+  const analyzeCVWithOpenAI = async (cv, jobDetails, language = "en") => {
+    try {
+      // Chuẩn bị nội dung CV để phân tích
+      const cvContent = prepareContentForAnalysis(cv, language);
+
+      // Tạo prompt cho AI
+      const systemPrompt =
+        language === "vi"
+          ? `Bạn là chuyên gia phân tích CV với hơn 15 năm kinh nghiệm trong lĩnh vực tuyển dụng. 
+           Nhiệm vụ của bạn là tóm tắt CV của ứng viên và đánh giá mức độ phù hợp với vị trí công việc.
+           
+           Hãy phân tích chi tiết và chuyên nghiệp theo cấu trúc JSON với các mục sau:
+           1. summary: Tóm tắt ngắn gọn về ứng viên (150-200 từ)
+           2. keyStrengths: Mảng 3-5 điểm mạnh quan trọng liên quan đến vị trí
+           3. keySkills: Mảng kỹ năng chính phù hợp với vị trí
+           4. experienceHighlights: Tóm tắt kinh nghiệm nổi bật liên quan đến công việc
+           5. educationFit: Đánh giá về trình độ học vấn với vị trí
+           6. developmentAreas: Mảng 2-3 lĩnh vực ứng viên có thể cần phát triển
+           7. interviewQuestions: Mảng 5 câu hỏi phỏng vấn cụ thể dựa trên CV và yêu cầu công việc
+           8. fitRating: Đánh giá tổng thể mức độ phù hợp (1-10)
+           9. recommendationSummary: Nhận xét tổng thể ngắn gọn (2-3 câu)
+           
+           QUAN TRỌNG: Phân tích phải được viết hoàn toàn bằng tiếng Việt.`
+          : `You are a CV analysis expert with over 15 years of experience in recruitment. 
+           Your task is to summarize a candidate's CV and evaluate their fit for a job position.
+           
+           Please analyze in detail and professionally according to the following JSON structure:
+           1. summary: Brief summary of the candidate (150-200 words)
+           2. keyStrengths: Array of 3-5 key strengths relevant to the position
+           3. keySkills: Array of main skills that fit the position
+           4. experienceHighlights: Summary of notable experience relevant to the job
+           5. educationFit: Assessment of educational qualifications for the position
+           6. developmentAreas: Array of 2-3 areas the candidate may need to develop
+           7. interviewQuestions: Array of 5 specific interview questions based on the CV and job requirements
+           8. fitRating: Overall fit rating (1-10)
+           9. recommendationSummary: Brief overall comment (2-3 sentences)
+           
+           IMPORTANT: Analysis must be written completely in English.`;
+
+      const userPrompt =
+        language === "vi"
+          ? `Hãy phân tích CV sau cho vị trí ${
+              jobDetails.title || "không xác định"
+            }:
+           
+           CV CONTENT:
+           ${cvContent}
+           
+           JOB DESCRIPTION:
+           ${
+             jobDetails.description?.replace(/<[^>]*>/g, "") ||
+             "Không có mô tả chi tiết."
+           }
+           
+           JOB REQUIREMENTS:
+           Skills: ${
+             jobDetails.jobDetailTags?.map((tag) => tag.tagName).join(", ") ||
+             "Không có thông tin"
+           }
+           Experience: ${jobDetails.exp || "Không xác định"} 
+           Education: ${jobDetails.education || "Không xác định"}
+           
+           IMPORTANT: Vui lòng trả lời hoàn toàn bằng tiếng Việt và chỉ trả về kết quả dưới dạng JSON.`
+          : `Please analyze the following CV for the position of ${
+              jobDetails.title || "unspecified"
+            }:
+           
+           CV CONTENT:
+           ${cvContent}
+           
+           JOB DESCRIPTION:
+           ${
+             jobDetails.description?.replace(/<[^>]*>/g, "") ||
+             "No detailed description available."
+           }
+           
+           JOB REQUIREMENTS:
+           Skills: ${
+             jobDetails.jobDetailTags?.map((tag) => tag.tagName).join(", ") ||
+             "No information"
+           }
+           Experience: ${jobDetails.exp || "Unspecified"} 
+           Education: ${jobDetails.education || "Unspecified"}
+           
+           IMPORTANT: Please respond completely in English and return only JSON format results.`;
+
+      // Gọi OpenAI API
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      return JSON.parse(completion.choices[0].message.content);
+    } catch (error) {
+      console.error(`Error analyzing CV in ${language}:`, error);
+      return {
+        error:
+          language === "vi"
+            ? "Không thể phân tích CV. Vui lòng thử lại sau."
+            : "Could not analyze CV. Please try again later.",
+      };
+    }
+  };
+
+  // Thêm hàm này vào file component của bạn
+  const calculateDuration = (startDate, endDate) => {
+    if (!startDate || !endDate) return "Duration not specified";
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffInMonths =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      end.getMonth() -
+      start.getMonth();
+
+    if (diffInMonths < 12) {
+      return `${diffInMonths} months`;
+    } else {
+      const years = Math.floor(diffInMonths / 12);
+      const months = diffInMonths % 12;
+      return months > 0 ? `${years} years, ${months} months` : `${years} years`;
+    }
+  };
+
+  // Hàm chuẩn bị nội dung CV cho phân tích
+  const prepareContentForAnalysis = (cv, language = "en") => {
+    const labels = {
+      en: {
+        name: "Name",
+        position: "Position",
+        summary: "Summary",
+        skills: "Skills",
+        experience: "Professional Experience",
+        education: "Education",
+      },
+      vi: {
+        name: "Tên",
+        position: "Vị trí",
+        summary: "Tóm tắt",
+        skills: "Kỹ năng",
+        experience: "Kinh nghiệm làm việc",
+        education: "Học vấn",
+      },
+    };
+
+    const lang = labels[language] || labels.en;
+
+    if (typeof cv === "string") return cv;
+
+    let content = [];
+
+    // Basic Info
+    if (cv.firstName || cv.lastName) {
+      content.push(`${lang.name}: ${cv.firstName || ""} ${cv.lastName || ""}`);
+    }
+
+    if (cv.jobPosition) {
+      content.push(`${lang.position}: ${cv.jobPosition}`);
+    }
+
+    if (cv.summary) {
+      content.push(`\n${lang.summary}:\n${cv.summary}`);
+    }
+
+    // Skills
+    if (cv.skills) {
+      content.push(`\n${lang.skills}:`);
+      const skills = Array.isArray(cv.skills)
+        ? cv.skills
+        : Object.values(cv.skills);
+      skills.forEach((skill) => {
+        content.push(
+          `- ${
+            typeof skill === "object" ? skill.skillName || skill.name : skill
+          }`
+        );
+      });
+    }
+
+    // Experience
+    if (cv.experiences?.length > 0) {
+      content.push(`\n${lang.experience}:`);
+      cv.experiences.forEach((exp) => {
+        if (typeof exp === "string") {
+          content.push(exp);
+        } else {
+          const entry = [
+            `${exp.jobPosition} at ${exp.companyName || "N/A"}`,
+            `(${calculateDuration(exp.startedAt, exp.endedAt)})`,
+            exp.description || "",
+          ]
+            .filter(Boolean)
+            .join("\n");
+          content.push(entry);
+        }
+      });
+    }
+
+    // Education
+    if (cv.educations?.length > 0) {
+      content.push(`\n${lang.education}:`);
+      cv.educations.forEach((edu) => {
+        if (typeof edu === "string") {
+          content.push(edu);
+        } else {
+          const entry = [
+            `${edu.degree} at ${edu.schoolName || "N/A"}`,
+            `(${calculateDuration(edu.startedAt, edu.endedAt)})`,
+          ]
+            .filter(Boolean)
+            .join("\n");
+          content.push(entry);
+        }
+      });
+    }
+
+    return content.join("\n");
+  };
+
+  // Kiểm tra xem có ứng viên nào đang ở trạng thái Pending không
+  const hasPendingCandidates = (candidates) => {
+    return candidates.some(
+      (candidate) => candidate.applicationStatus?.toLowerCase() === "pending"
+    );
+  };
+
+  // Lọc ứng viên đủ điều kiện để phân tích (không ở trạng thái Pending hoặc Rejected)
+  const getEligibleCandidatesForAnalysis = (candidates) => {
+    return candidates.filter((candidate) => {
+      const status = candidate.applicationStatus?.toLowerCase();
+      return status !== "pending" && status !== "rejected";
+    });
+  };
+
+  // Hàm xử lý khi click nút Export to Excel
+  const handleExportToExcel = async () => {
+    // Kiểm tra xem có ứng viên pending không
+    if (hasPendingCandidates(candidates)) {
+      toast.warning(
+        <div>
+          <p>
+            <strong>
+              Warning: Some candidates are still in &apos;Pending&apos; status!
+            </strong>
+          </p>
+          <p>
+            Please review the status of all candidates before exporting the
+            analysis report.
+          </p>
+          <p>
+            Only candidates with &apos;Approved&apos; or &apos;Interview
+            Invited&apos; status will be analyzed.
+          </p>
+        </div>,
+        {
+          autoClose: 8000,
+          closeOnClick: true,
+          pauseOnHover: true,
+        }
+      );
+      return;
+    }
+
+    // Tiến hành phân tích và xuất Excel
+    try {
+      setIsAnalyzing(true);
+
+      // Lấy ứng viên đủ điều kiện để phân tích
+      const eligibleCandidates = getEligibleCandidatesForAnalysis(candidates);
+
+      if (eligibleCandidates.length === 0) {
+        toast.info("No candidates are qualified for analysis.");
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Lấy thông tin chi tiết về job để cung cấp ngữ cảnh cho phân tích
+      const jobDetails = await fetchJobDetails(jobId);
+
+      // Phân tích CV của từng ứng viên đủ điều kiện
+      const analyzedCandidates = [];
+      for (let i = 0; i < eligibleCandidates.length; i++) {
+        const candidate = eligibleCandidates[i];
+
+        // Cập nhật tiến trình
+        setAnalysisProgress({
+          current: i + 1,
+          total: eligibleCandidates.length,
+          candidateName: candidate.fullName || "Ứng viên",
+        });
+
+        // Lấy dữ liệu CV nếu chưa có
+        let cvData = candidate.cvData;
+        if (!cvData && candidate.cvid) {
+          try {
+            cvData = await getCVById(candidate.cvid);
+          } catch (error) {
+            console.error(
+              `Lỗi khi lấy CV của ứng viên ${candidate.applicationID}:`,
+              error
+            );
+          }
+        }
+
+        if (cvData) {
+          // Phân tích CV bằng AI cho cả tiếng Việt và tiếng Anh
+          const analysisEn = await analyzeCVWithOpenAI(
+            cvData,
+            jobDetails.job,
+            "en"
+          );
+          const analysisVi = await analyzeCVWithOpenAI(
+            cvData,
+            jobDetails.job,
+            "vi"
+          );
+
+          // Thêm vào danh sách đã phân tích
+          analyzedCandidates.push({
+            ...candidate,
+            cvData,
+            analysisEn,
+            analysisVi,
+          });
+        } else {
+          // Thêm ứng viên không có phân tích
+          analyzedCandidates.push({
+            ...candidate,
+            analysisEn: { error: "No CV data available for analysis" },
+            analysisVi: { error: "Không có dữ liệu CV để phân tích" },
+          });
+        }
+      }
+
+      // Tạo và tải xuống file Excel
+      await exportToExcel(
+        analyzedCandidates,
+        jobDetails.job.title || `Job-${jobId}`
+      );
+
+      toast.success("Analysis & summary complete! Excel file downloaded.");
+    } catch (error) {
+      console.error("Lỗi khi xuất Excel:", error);
+      toast.error(
+        "Không thể phân tích CV và xuất Excel. Vui lòng thử lại sau."
+      );
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisProgress(null);
+    }
+  };
+
+  // Hàm xuất phân tích ra file Excel
+  const exportToExcel = async (analyzedCandidates, jobTitle) => {
+    // Tạo workbook mới
+    const workbook = XLSX.utils.book_new();
+
+    // Style chung cho toàn bộ cell
+    const baseStyle = {
+      alignment: {
+        vertical: "top",
+        wrapText: true,
+      },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+
+    // Tạo dữ liệu cho 2 sheet
+    const createSheetData = (isVietnamese) => {
+      const rows = [];
+
+      // Tiêu đề với style riêng
+      const headers = isVietnamese
+        ? [
+            "Họ tên",
+            "Email",
+            "Số điện thoại",
+            "Trạng thái",
+            "Tóm tắt",
+            "Điểm mạnh",
+            "Kỹ năng chính",
+            "Kinh nghiệm nổi bật",
+            "Đánh giá học vấn",
+            "Điểm cần phát triển",
+            "Câu hỏi phỏng vấn",
+            "Đánh giá phù hợp (1-10)",
+            "Nhận xét tổng thể",
+            "Nội dung CV",
+          ]
+        : [
+            "Full Name",
+            "Email",
+            "Phone Number",
+            "Status",
+            "Summary",
+            "Key Strengths",
+            "Key Skills",
+            "Experience Highlights",
+            "Education Assessment",
+            "Areas for Development",
+            "Interview Questions",
+            "Fit Rating (1-10)",
+            "Recommendation",
+            "CV Content",
+          ];
+
+      // Header style
+      rows.push(
+        headers.map((header) => ({
+          v: header,
+          s: {
+            ...baseStyle,
+            font: {
+              bold: true,
+              color: { rgb: "FFFFFF" },
+              sz: 12,
+            },
+            fill: {
+              fgColor: { rgb: "4472C4" },
+            },
+            alignment: {
+              ...baseStyle.alignment,
+              horizontal: "center",
+            },
+          },
+        }))
+      );
+
+      // Dữ liệu ứng viên
+      for (const candidate of analyzedCandidates) {
+        // Sử dụng phân tích tiếng Việt hoặc tiếng Anh tùy theo loại sheet
+        const analysis = isVietnamese
+          ? candidate.analysisVi
+          : candidate.analysisEn;
+
+        // Chuẩn bị nội dung CV theo ngôn ngữ
+        const cvContent = prepareContentForAnalysis(
+          candidate.cvData || {},
+          isVietnamese ? "vi" : "en"
+        );
+
+        // Định dạng dữ liệu
+        const rowData = [
+          { v: candidate.fullName || "N/A", s: baseStyle },
+          { v: candidate.email || "N/A", s: baseStyle },
+          { v: candidate.phoneNumber || "N/A", s: baseStyle },
+          {
+            v: candidate.applicationStatus || "N/A",
+            s: {
+              ...baseStyle,
+              fill: getStatusColor(candidate.applicationStatus),
+            },
+          },
+          { v: analysis.summary || "No data", s: baseStyle },
+          { v: formatList(analysis.keyStrengths), s: baseStyle },
+          { v: formatList(analysis.keySkills), s: baseStyle },
+          { v: analysis.experienceHighlights || "No data", s: baseStyle },
+          { v: analysis.educationFit || "No data", s: baseStyle },
+          { v: formatList(analysis.developmentAreas), s: baseStyle },
+          { v: formatNumberedList(analysis.interviewQuestions), s: baseStyle },
+          {
+            v: analysis.fitRating || "N/A",
+            s: {
+              ...baseStyle,
+              fill: getRatingColor(analysis.fitRating),
+            },
+          },
+          { v: analysis.recommendationSummary || "No data", s: baseStyle },
+          { v: cvContent, s: baseStyle },
+        ];
+
+        rows.push(rowData);
+      }
+
+      return rows;
+    };
+
+    // Tạo và định dạng 2 sheet
+    ["vi", "en"].forEach((lang) => {
+      const isVietnamese = lang === "vi";
+      const sheetData = createSheetData(isVietnamese);
+      const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+
+      // Set column widths
+      const colWidths = [
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 40 },
+        { wch: 30 },
+        { wch: 40 },
+        { wch: 30 },
+        { wch: 30 },
+        { wch: 60 },
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 90 },
+      ];
+
+      worksheet["!cols"] = colWidths;
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        isVietnamese ? "Phân tích ứng viên" : "Candidate Analysis"
+      );
+    });
+
+    // Tạo file và tải xuống
+    const excelBuffer = XLSX.write(workbook, { type: "array" });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${jobTitle.replace(/[^a-zA-Z0-9]/g, "_")}_analysis.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Hàm hỗ trợ
+  const formatList = (items) => {
+    return Array.isArray(items)
+      ? items.map((item) => `• ${item}`).join("\n")
+      : items || "";
+  };
+
+  const formatNumberedList = (items) => {
+    return Array.isArray(items)
+      ? items.map((item, index) => `${index + 1}. ${item}`).join("\n\n")
+      : items || "";
+  };
+
+  const getStatusColor = (status) => {
+    const lowerStatus = (status || "").toLowerCase();
+    return {
+      fgColor: {
+        rgb:
+          lowerStatus === "approved"
+            ? "C6EFCE"
+            : lowerStatus === "rejected"
+            ? "FFC7CE"
+            : lowerStatus === "interview invited"
+            ? "B4C6E7"
+            : "FFFFFF",
+      },
+    };
+  };
+
+  const getRatingColor = (rating) => {
+    const numRating = Number(rating) || 0;
+    return {
+      fgColor: {
+        rgb: numRating >= 8 ? "C6EFCE" : numRating >= 6 ? "FFEB9C" : "FFC7CE",
+      },
+    };
+  };
 
   return (
     <section className="user-dashboard">
@@ -563,6 +1140,65 @@ export default function CandidatesPage() {
                       <i className="fas fa-sync-alt"></i>
                     </button>
                   </div>
+
+                  {/* Thêm nút Export Analysis */}
+                  <div className="export-button">
+                    <button
+                      className="btn-export"
+                      onClick={handleExportToExcel}
+                      disabled={
+                        loading ||
+                        isAnalyzing ||
+                        hasPendingCandidates(candidates)
+                      }
+                      title={
+                        hasPendingCandidates(candidates)
+                          ? "Please approve all pending candidates first"
+                          : "Export CV analysis to Excel"
+                      }
+                    >
+                      <Download size={16} />
+                      <span>Analyze & Summary CVs</span>
+                    </button>
+                  </div>
+
+                  {/* Thêm màn hình hiển thị tiến trình phân tích */}
+                  {isAnalyzing && (
+                    <div className="analysis-overlay">
+                      <div className="analysis-progress">
+                        <div className="spinner">
+                          <i className="fas fa-cog fa-spin"></i>
+                        </div>
+                        <h3>Analyzing CV with AI</h3>
+                        {analysisProgress && (
+                          <>
+                            <p>
+                              Analyzing CV of {analysisProgress.candidateName} (
+                              {analysisProgress.current}/
+                              {analysisProgress.total})
+                            </p>
+                            <div className="progress-bar-container">
+                              <div
+                                className="progress-bar"
+                                style={{
+                                  width: `${
+                                    (analysisProgress.current /
+                                      analysisProgress.total) *
+                                    100
+                                  }%`,
+                                }}
+                              ></div>
+                            </div>
+                          </>
+                        )}
+                        <p className="analysis-note">
+                          This process may take a few minutes. Please do not
+                          close this window.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="page-size-selector">
                     <label>Show per page:</label>
                     <select
@@ -1815,6 +2451,94 @@ export default function CandidatesPage() {
     justify-content: center;
     margin-top: 10px;
   }
+}
+/* CSS cho nút Export và màn hình loading */
+.export-button {
+  margin-left: 10px;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.btn-export:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.btn-export:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* CSS cho màn hình phân tích */
+.analysis-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.analysis-progress {
+  background-color: white;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.spinner {
+  margin-bottom: 20px;
+}
+
+.spinner i {
+  font-size: 40px;
+  color: #0088cc;
+}
+
+.analysis-progress h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  margin: 15px 0 25px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #0088cc;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.analysis-note {
+  color: #6c757d;
+  font-size: 14px;
+  margin-top: 20px;
 }
 
       `}</style>
