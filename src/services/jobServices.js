@@ -316,6 +316,20 @@ export const toggleJobPriority = async (id) => {
     throw error;
   }
 };
+
+export const unPriorityJobs = async (jobId) => {
+  try {
+    console.log(`Toggling priority for job ID: ${jobId}`);
+    const response = await axios.put(
+      `${BACKEND_API_URL}/api/Job/un-priority-jobs/${jobId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error unset job priority:", error);
+    throw error;
+  }
+};
+
 // Fetch chi tiết của công việc (v2)
 export const fetchJobDetailsV2 = async (jobId) => {
   try {
@@ -370,6 +384,22 @@ export const getRemainingJobCreationLimit = async (userId) => {
   try {
     const response = await axios.get(
       `${BACKEND_API_URL}/api/Job/getRemainingJobCreationLimit/${userId}`,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error getting remaining job creation limit:", error);
+    throw error;
+  }
+};
+
+export const getRemainingJobPriorityLimit = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/getRemainingJobPriorityLimit/${userId}`,
       {
         headers: { "Content-Type": "application/json" },
       }

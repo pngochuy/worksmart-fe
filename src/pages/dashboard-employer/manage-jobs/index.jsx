@@ -4,6 +4,8 @@ import {
   hideJob,
   unhideJob,
   toggleJobPriority,
+  unPriorityJobs,
+  getRemainingJobPriorityLimit
 } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -240,14 +242,7 @@ export default function ManageJobsPage() {
           const companyData = await fetchCompanyProfile();
 
           setVerificationLevel(companyData.verificationLevel);
-          setRemainingHighPrioritySlots(
-            companyData.remainingHighPrioritySlots || 0
-          );
           console.log("Verification Level:", companyData.verificationLevel);
-          console.log(
-            "Remaining High Priority Slots:",
-            companyData.remainingHighPrioritySlots
-          );
         }
       } catch (error) {
         console.error("Error loading verification data:", error);
@@ -274,6 +269,22 @@ export default function ManageJobsPage() {
     searchParams.MostRecent,
     searchParams.priority,
   ]);
+
+  useEffect(() => {
+    if (jobs.length > 0) {
+      console.log("Job priority types:");
+      jobs.forEach((job) => {
+        console.log(
+          `Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${job.priority
+          }, Type: ${typeof job.priority}`
+        );
+      });
+    }
+  }, [jobs]);
+
+  useEffect(() => {
+    loadRemainingPrioritySlots();
+  }, [currentUser]);
 
   const isJobExpired = (deadline) => {
     if (!deadline) return false;
@@ -366,8 +377,7 @@ export default function ManageJobsPage() {
         const priorityValue = searchParams.priority === "true";
         filteredJobs = filteredJobs.filter((job) => {
           console.log(
-            `Job ID ${job.jobID}, title: ${job.title}, priority: ${
-              job.priority
+            `Job ID ${job.jobID}, title: ${job.title}, priority: ${job.priority
             } (${typeof job.priority})`
           );
           return Boolean(job.priority) === priorityValue;
@@ -458,6 +468,20 @@ export default function ManageJobsPage() {
     }
   };
 
+  const loadRemainingPrioritySlots = async () => {
+    try {
+      const userId = currentUser?.userID;
+      if (!userId) return;
+
+      const response = await getRemainingJobPriorityLimit(userId);
+      // Lấy giá trị remainingLimit từ response object
+      setRemainingHighPrioritySlots(response.remainingLimit);
+    } catch (error) {
+      console.error("Error loading remaining priority slots:", error);
+      toast.error("Could not load remaining priority slots");
+    }
+  };
+
   // Handle sort order change
   const handleSortOrderChange = (e) => {
     const newSortOrder = e.target.value;
@@ -495,9 +519,22 @@ export default function ManageJobsPage() {
 
       // Chặn việc set Low Priority nếu job đang là High Priority
       if (job && job.priority) {
-        toast.error(
-          "High priority status cannot be changed until your subscription duration expires."
-        );
+        const response = await unPriorityJobs(jobId);
+
+        if (response) {
+          setJobs((prevJobs) =>
+            prevJobs.map((job) =>
+              job.jobID === jobId ? { ...job, priority: false } : job
+            )
+          );
+
+          // Load lại số lượng slot còn lại
+          await loadRemainingPrioritySlots();
+
+          toast.success("Job priority has been set to Low!");
+        } else {
+          toast.error("Failed to unset job priority.");
+        }
         return;
       }
 
@@ -508,35 +545,32 @@ export default function ManageJobsPage() {
         let reason = isJobExpired(job.deadline)
           ? "expired jobs"
           : job.status === 0
-          ? "pending jobs"
-          : "rejected jobs";
+            ? "pending jobs"
+            : "rejected jobs";
         toast.error(`Cannot change priority for ${reason}.`);
         return;
       }
 
-      // Call the backend to toggle priority
       const response = await toggleJobPriority(jobId);
 
       if (response === false) {
-        // Khi đạt giới hạn, mở dialog nâng cấp
         handlePriorityLimitReached();
         return;
       }
 
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
-          job.jobID === jobId ? { ...job, priority: !job.priority } : job
+          job.jobID === jobId ? { ...job, priority: true } : job
         )
       );
 
-      // Update remaining high-priority slots
-      setRemainingHighPrioritySlots((prev) => Math.max(0, prev - 1));
+      // Load lại số lượng slot còn lại
+      await loadRemainingPrioritySlots();
 
       toast.success("Job priority has been set to High!");
     } catch (error) {
       console.error("Failed to update job priority:", error);
       if (error.response && error.response.status === 400) {
-        // Kiểm tra nếu lỗi liên quan đến giới hạn gói
         const errorMessage = error.response.data.message || "";
 
         if (
@@ -612,8 +646,8 @@ export default function ManageJobsPage() {
     return count === 0
       ? "No Candidates"
       : count === 1
-      ? "View 1 Candidate"
-      : `View ${count} Candidates`;
+        ? "View 1 Candidate"
+        : `View ${count} Candidates`;
   };
 
   const getStatusBadge = (status, deadline) => {
@@ -710,8 +744,8 @@ export default function ManageJobsPage() {
                   <i className="fas fa-edit"></i> Edit
                 </button>
                 {isJobExpired(selectedJob.deadline) ||
-                selectedJob.status === 0 ||
-                selectedJob.status === 1 ? (
+                  selectedJob.status === 0 ||
+                  selectedJob.status === 1 ? (
                   <button
                     className="priority-btn disabled"
                     disabled
@@ -719,26 +753,32 @@ export default function ManageJobsPage() {
                       isJobExpired(selectedJob.deadline)
                         ? "Cannot change priority for expired jobs"
                         : selectedJob.status === 0
-                        ? "Cannot change priority for pending jobs"
-                        : "Cannot change priority for rejected jobs"
+                          ? "Cannot change priority for pending jobs"
+                          : "Cannot change priority for rejected jobs"
                     }
                   >
                     <i
-                      className={`fas fa-gem ${
-                        selectedJob.priority ? "" : "text-secondary"
-                      }`}
+                      className={`fas fa-gem ${selectedJob.priority ? "" : "text-secondary"
+                        }`}
                     ></i>
                     Priority
                   </button>
                 ) : selectedJob.priority ? (
-                  <button
-                    className="priority-btn high-priority disabled"
-                    disabled
-                    title="High priority status cannot be changed until your subscription duration expires"
+                  <ConfirmDialog
+                    title="Change to Low Priority?"
+                    description="Are you sure you want to set this job to Low Priority? This will free up a featured job slot."
+                    confirmText="Set Low"
+                    variant="primary"
+                    onConfirm={() => {
+                      closeDetailModal();
+                      handleTogglePriority(selectedJob.jobID);
+                    }}
                   >
-                    <i className="fas fa-gem"></i>
-                    High Priority
-                  </button>
+                    <button className="priority-btn high-priority">
+                      <i className="fas fa-gem"></i>
+                      High Priority
+                    </button>
+                  </ConfirmDialog>
                 ) : (
                   <ConfirmDialog
                     title="Change to High Priority?"
@@ -757,11 +797,10 @@ export default function ManageJobsPage() {
                   </ConfirmDialog>
                 )}
                 <button
-                  className={`view-candidates-btn ${
-                    candidateCounts[selectedJob.jobID]
-                      ? "has-candidates"
-                      : "no-candidates"
-                  }`}
+                  className={`view-candidates-btn ${candidateCounts[selectedJob.jobID]
+                    ? "has-candidates"
+                    : "no-candidates"
+                    }`}
                   onClick={() => {
                     closeDetailModal();
                     handleViewCandidates(selectedJob.jobID);
@@ -792,10 +831,10 @@ export default function ManageJobsPage() {
                   {selectedJob.minSalary && selectedJob.salary
                     ? `${selectedJob.minSalary.toLocaleString()} - ${selectedJob.salary.toLocaleString()}`
                     : selectedJob.salary
-                    ? `${selectedJob.salary.toLocaleString()}`
-                    : selectedJob.minSalary
-                    ? `From ${selectedJob.minSalary.toLocaleString()}`
-                    : "Negotiable"}
+                      ? `${selectedJob.salary.toLocaleString()}`
+                      : selectedJob.minSalary
+                        ? `From ${selectedJob.minSalary.toLocaleString()}`
+                        : "Negotiable"}
                 </div>
               </div>
 
@@ -982,9 +1021,8 @@ export default function ManageJobsPage() {
 
               <div className="filter-actions">
                 <button
-                  className={`filter-toggle-button ${
-                    showFilters ? "active" : ""
-                  }`}
+                  className={`filter-toggle-button ${showFilters ? "active" : ""
+                    }`}
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   <i className="fas fa-filter"></i>
@@ -994,14 +1032,14 @@ export default function ManageJobsPage() {
                 {(searchParams.status ||
                   searchParams.location ||
                   searchParams.title) && (
-                  <button
-                    className="clear-all-button"
-                    onClick={handleClearFilters}
-                  >
-                    <i className="fas fa-times"></i>
-                    <span>Clear All</span>
-                  </button>
-                )}
+                    <button
+                      className="clear-all-button"
+                      onClick={handleClearFilters}
+                    >
+                      <i className="fas fa-times"></i>
+                      <span>Clear All</span>
+                    </button>
+                  )}
               </div>
             </div>
 
@@ -1091,8 +1129,8 @@ export default function ManageJobsPage() {
                   {(searchParams.status ||
                     searchParams.location ||
                     searchParams.title) && (
-                    <div className="active-filters-label">Active filters:</div>
-                  )}
+                      <div className="active-filters-label">Active filters:</div>
+                    )}
 
                   {searchParams.title && (
                     <div className="filter-tag">
@@ -1117,14 +1155,14 @@ export default function ManageJobsPage() {
                       {searchParams.status === "0"
                         ? "Pending"
                         : searchParams.status === "1"
-                        ? "Rejected"
-                        : searchParams.status === "2"
-                        ? "Hidden"
-                        : searchParams.status === "3"
-                        ? "Active"
-                        : searchParams.status === "expired"
-                        ? "Expired"
-                        : searchParams.status}
+                          ? "Rejected"
+                          : searchParams.status === "2"
+                            ? "Hidden"
+                            : searchParams.status === "3"
+                              ? "Active"
+                              : searchParams.status === "expired"
+                                ? "Expired"
+                                : searchParams.status}
                       <button
                         onClick={() =>
                           setSearchParams({
@@ -1358,11 +1396,9 @@ export default function ManageJobsPage() {
                           jobs.map((job) => (
                             <tr
                               key={job.jobID}
-                              className={`job-row ${
-                                job.status === 2 ? "job-hidden" : ""
-                              } ${
-                                isJobExpired(job.deadline) ? "job-expired" : ""
-                              } ${job.priority ? "job-priority" : ""}`}
+                              className={`job-row ${job.status === 2 ? "job-hidden" : ""
+                                } ${isJobExpired(job.deadline) ? "job-expired" : ""
+                                } ${job.priority ? "job-priority" : ""}`}
                             >
                               <td
                                 className="clickable-cell"
@@ -1373,11 +1409,10 @@ export default function ManageJobsPage() {
                                     <i className="fas fa-gem text-primary mr-2"></i>
                                   )}
                                   <span
-                                    className={`job-title-text ${
-                                      isJobExpired(job.deadline)
-                                        ? "text-danger"
-                                        : ""
-                                    }`}
+                                    className={`job-title-text ${isJobExpired(job.deadline)
+                                      ? "text-danger"
+                                      : ""
+                                      }`}
                                   >
                                     {job.title}
                                   </span>
@@ -1453,8 +1488,8 @@ export default function ManageJobsPage() {
                                   {/* Bottom row - 2 buttons */}
                                   {/* Priority button */}
                                   {isJobExpired(job.deadline) ||
-                                  job.status === 0 ||
-                                  job.status === 1 ? (
+                                    job.status === 0 ||
+                                    job.status === 1 ? (
                                     <button
                                       className="priority-btn disabled"
                                       disabled
@@ -1462,28 +1497,33 @@ export default function ManageJobsPage() {
                                         isJobExpired(job.deadline)
                                           ? "Cannot change priority for expired jobs"
                                           : job.status === 0
-                                          ? "Cannot change priority for pending jobs"
-                                          : "Cannot change priority for rejected jobs"
+                                            ? "Cannot change priority for pending jobs"
+                                            : "Cannot change priority for rejected jobs"
                                       }
                                     >
                                       <i
-                                        className={`fas fa-gem ${
-                                          job.priority ? "" : "text-secondary"
-                                        }`}
+                                        className={`fas fa-gem ${job.priority ? "" : "text-secondary"
+                                          }`}
                                       ></i>
                                       {job.priority
                                         ? "High Priority"
                                         : "Low Priority"}
                                     </button>
                                   ) : job.priority ? (
-                                    <button
-                                      className="priority-btn high-priority disabled"
-                                      disabled
-                                      title="High priority status cannot be changed until your subscription duration expires"
+                                    <ConfirmDialog
+                                      title="Change to Low Priority?"
+                                      description="Are you sure you want to set this job to Low Priority? This will free up a featured job slot."
+                                      confirmText="Set Low"
+                                      variant="primary"
+                                      onConfirm={() =>
+                                        handleTogglePriority(job.jobID)
+                                      }
                                     >
-                                      <i className="fas fa-gem"></i>
-                                      High Priority
-                                    </button>
+                                      <button className="priority-btn high-priority">
+                                        <i className="fas fa-gem"></i>
+                                        High Priority
+                                      </button>
+                                    </ConfirmDialog>
                                   ) : (
                                     <ConfirmDialog
                                       title="Change to High Priority?"
@@ -1503,8 +1543,8 @@ export default function ManageJobsPage() {
 
                                   {/* Hide/Unhide button */}
                                   {isJobExpired(job.deadline) ||
-                                  job.status === 0 ||
-                                  job.status === 1 ? (
+                                    job.status === 0 ||
+                                    job.status === 1 ? (
                                     // Disabled button for expired, pending, or rejected jobs
                                     <button
                                       className="hide-btn disabled"
@@ -1513,8 +1553,8 @@ export default function ManageJobsPage() {
                                         isJobExpired(job.deadline)
                                           ? "Cannot hide/unhide expired jobs"
                                           : job.status === 0
-                                          ? "Cannot hide/unhide pending jobs"
-                                          : "Cannot hide/unhide rejected jobs"
+                                            ? "Cannot hide/unhide pending jobs"
+                                            : "Cannot hide/unhide rejected jobs"
                                       }
                                     >
                                       <i className="fas fa-eye-slash"></i>{" "}
@@ -1552,11 +1592,10 @@ export default function ManageJobsPage() {
                               </td>
                               <td className="text-center">
                                 <button
-                                  className={`view-candidates-btn ${
-                                    candidateCounts[job.jobID]
-                                      ? "has-candidates"
-                                      : "no-candidates"
-                                  }`}
+                                  className={`view-candidates-btn ${candidateCounts[job.jobID]
+                                    ? "has-candidates"
+                                    : "no-candidates"
+                                    }`}
                                   onClick={() =>
                                     handleViewCandidates(job.jobID)
                                   }
