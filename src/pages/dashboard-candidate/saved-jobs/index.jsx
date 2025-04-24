@@ -5,6 +5,7 @@ import {
 } from "../../../services/favoriteJobService";
 import { fetchJobDetails } from "../../../services/jobServices";
 import { Link, useNavigate } from "react-router-dom";
+import { Search } from "lucide-react"; // Import icon Search
 
 import Pagination from "./Pagination";
 
@@ -16,9 +17,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"; // Điều chỉnh đường dẫn nếu cần
+} from "@/components/ui/dialog";
 
-import { Button } from "@/components/ui/button"; // Điều chỉnh đường dẫn nếu cần
+import { Button } from "@/components/ui/button";
 
 // Job status enum matching the C# definition
 const JobStatus = {
@@ -48,6 +49,7 @@ export const index = () => {
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("Last 6 Months");
+  const [searchTerm, setSearchTerm] = useState(""); // Added state for search term
   const navigate = useNavigate();
 
   // Pagination states
@@ -63,7 +65,6 @@ export const index = () => {
   // Function to get user info from localStorage
   const getUserFromLocalStorage = () => {
     try {
-      // Try common keys that localStorage might use to store user info
       const keys = ["user", "userData", "currentUser", "userInfo"];
 
       for (const key of keys) {
@@ -82,14 +83,12 @@ export const index = () => {
         }
       }
 
-      // If user not found in common keys, search all localStorage
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         try {
           const value = localStorage.getItem(key);
           const parsedValue = JSON.parse(value);
 
-          // Check if object has userID or id
           if (parsedValue && (parsedValue.userID || parsedValue.id)) {
             console.log(
               `Potential user data found in key '${key}':`,
@@ -97,9 +96,7 @@ export const index = () => {
             );
             return parsedValue;
           }
-        } catch (e) {
-          // Ignore errors if not JSON
-        }
+        } catch (e) {}
       }
 
       console.warn("No user data found in localStorage");
@@ -111,16 +108,13 @@ export const index = () => {
   };
 
   useEffect(() => {
-    // Fetch favorite jobs when component mounts
     const loadFavoriteJobs = async () => {
       try {
         setIsLoading(true);
 
-        // Get user info from localStorage
         const currentUser = getUserFromLocalStorage();
         console.log("Current user:", currentUser);
 
-        // Check if userID exists (or id if different data structure)
         const userId = currentUser?.userID || currentUser?.id;
 
         if (!userId) {
@@ -132,7 +126,6 @@ export const index = () => {
 
         console.log(`Fetching favorite jobs for user ID: ${userId}`);
 
-        // Get basic favorite job data
         const favorites = await getFavoriteJobsByUserId(userId);
         console.log("Favorite jobs retrieved:", favorites);
 
@@ -143,7 +136,6 @@ export const index = () => {
           return;
         }
 
-        // Fetch detailed information for each job
         const jobDetailsPromises = favorites.map(async (favorite) => {
           try {
             console.log("Processing favorite job:", favorite);
@@ -151,14 +143,13 @@ export const index = () => {
 
             if (!jobId) {
               console.error("No jobID found in favorite:", favorite);
-              return favorite; // Return as is if no jobID
+              return favorite;
             }
 
             console.log(`Fetching details for job ID: ${jobId}`);
             const jobDetails = await fetchJobDetails(jobId);
             console.log(`Job details for job ${jobId}:`, jobDetails);
 
-            // Combine the data
             return {
               ...favorite,
               job: jobDetails,
@@ -168,7 +159,6 @@ export const index = () => {
               `Error fetching details for job ${favorite.jobID}:`,
               error
             );
-            // Return original favorite with placeholder job data
             return {
               ...favorite,
               job: {
@@ -192,13 +182,11 @@ export const index = () => {
     loadFavoriteJobs();
   }, []);
 
-  // Display confirmation dialog when user wants to remove a saved job
   const handleRemoveClick = (favoriteJobId) => {
     setSelectedJobId(favoriteJobId);
     setConfirmDialogOpen(true);
   };
 
-  // Remove saved job after confirmation
   const handleRemoveFavorite = async () => {
     if (!selectedJobId) return;
 
@@ -209,12 +197,8 @@ export const index = () => {
       );
       setConfirmDialogOpen(false);
       setSelectedJobId(null);
-
-      // If you want to show a "success" notification after deletion, you can use toast or alert
-      // toast({ title: "Success", description: "Job removed from favorites" });
     } catch (error) {
       console.error("Error removing favorite job:", error);
-      // toast({ title: "Error", description: "Failed to remove job from favorites" });
     }
   };
 
@@ -222,20 +206,16 @@ export const index = () => {
     navigate(`/job-list/${jobId}`);
   };
 
-  // Function to get the createAt date from the job details
   const getJobCreateDate = (favoriteJob) => {
-    // First try to get createAt from the job details structure seen in the console
     if (favoriteJob.createAt) {
       return new Date(favoriteJob.createAt);
     }
 
-    // Otherwise check for dateSaved or createdAt as fallbacks
     return new Date(
       favoriteJob.dateSaved || favoriteJob.createdAt || new Date()
     );
   };
 
-  // Filter jobs based on selected time period
   const filterJobs = () => {
     console.log("Total favorite jobs before filtering:", favoriteJobs.length);
 
@@ -268,30 +248,42 @@ export const index = () => {
     cutoffDate.setMonth(now.getMonth() - monthsAgo);
     console.log("Cutoff date for filtering:", cutoffDate);
 
-    const filtered = favoriteJobs.filter((job) => {
-      // Use the function to get the createAt date
+    const timeFiltered = favoriteJobs.filter((job) => {
       const savedDate = getJobCreateDate(job);
-      console.log(
-        "Job ID:",
-        job.favoriteJobID,
-        "Save date:",
-        savedDate,
-        "Include?",
-        savedDate >= cutoffDate
-      );
       return savedDate >= cutoffDate;
     });
 
-    console.log("Jobs after date filtering:", filtered.length);
-    return filtered;
+    if (!searchTerm.trim()) {
+      return timeFiltered;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    const searchFiltered = timeFiltered.filter((job) => {
+      const jobTitle = (
+        job?.job?.job?.title ||
+        job?.job?.title ||
+        job?.title ||
+        ""
+      ).toLowerCase();
+
+      const companyName = (
+        job?.job?.job?.companyName ||
+        job?.job?.companyName ||
+        job?.companyName ||
+        ""
+      ).toLowerCase();
+
+      return (
+        jobTitle.includes(searchLower) || companyName.includes(searchLower)
+      );
+    });
+
+    return searchFiltered;
   };
 
-  // Helper function to get job status as string
   const getJobStatus = (job) => {
-    // Get status numeric value or string value
     let statusValue = job?.job?.job?.status;
 
-    // If status is a number, map it to enum value
     if (
       typeof statusValue === "number" &&
       statusValue >= 0 &&
@@ -300,7 +292,6 @@ export const index = () => {
       return JobStatus[statusValue];
     }
 
-    // If status is already a string, check if it's a valid enum value
     if (typeof statusValue === "string") {
       const validStatuses = Object.values(JobStatus);
       if (validStatuses.includes(statusValue)) {
@@ -308,40 +299,40 @@ export const index = () => {
       }
     }
 
-    // Default to "Hidden" if status is invalid or not provided
     return "Hidden";
   };
 
-  // Apply pagination to filtered jobs
   const getPaginatedJobs = () => {
     const filtered = filterJobs();
     setTotalItems(filtered.length);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
 
-    // Get current page items
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filtered.slice(startIndex, endIndex);
   };
 
-  // Update pagination when page changes
   const handleSearch = (params) => {
-    if (params.PageIndex) {
+    if (params && params.PageIndex !== undefined) {
+      console.log("Setting current page to:", params.PageIndex);
       setCurrentPage(params.PageIndex);
     }
   };
 
-  // Update filtered and paginated jobs whenever dependencies change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
   useEffect(() => {
     const paginatedJobs = getPaginatedJobs();
     setFilteredJobs(paginatedJobs);
-  }, [favoriteJobs, timeFilter, currentPage, itemsPerPage]);
+  }, [favoriteJobs, timeFilter, searchTerm, currentPage, itemsPerPage]);
 
-  // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     const newItemsPerPage = parseInt(e.target.value);
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to page 1 when changing items per page
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -355,7 +346,6 @@ export const index = () => {
 
   return (
     <>
-      {/* Dashboard */}
       <section className="user-dashboard">
         <div className="dashboard-outer">
           <div className="upper-title-box">
@@ -365,19 +355,31 @@ export const index = () => {
 
           <div className="row">
             <div className="col-lg-12">
-              {/* Ls widget */}
               <div className="ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
                     <h4>My Saved Jobs</h4>
 
                     <div className="chosen-outer">
+                      <div
+                        className="search-box inline-icon"
+                        style={{ marginRight: "5px" }}
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search job titles..."
+                          value={searchTerm}
+                          onChange={handleSearchChange}
+                          className="form-control"
+                        />
+                      </div>
+
                       <select
                         className="chosen-select mr-3"
                         value={timeFilter}
                         onChange={(e) => {
                           setTimeFilter(e.target.value);
-                          setCurrentPage(1); // Reset to page 1 when filter changes
+                          setCurrentPage(1);
                         }}
                       >
                         <option>Last 6 Months</option>
@@ -422,7 +424,6 @@ export const index = () => {
                               const isHidden = jobStatus === "Hidden";
                               const isRejected = jobStatus === "Rejected";
                               const isDisabled = isHidden || isRejected;
-                              // Use the new function to get the correct date
                               const savedDate = getJobCreateDate(favoriteJob);
 
                               return (
@@ -433,7 +434,6 @@ export const index = () => {
                                   }
                                 >
                                   <td>
-                                    {/* Job Block */}
                                     <div className="job-block">
                                       <div className="inner-box">
                                         <div className="content">
@@ -557,7 +557,6 @@ export const index = () => {
                       </table>
                     </div>
 
-                    {/* Pagination */}
                     {totalItems > 0 && (
                       <div className="pagination-box">
                         <Pagination
@@ -584,9 +583,7 @@ export const index = () => {
           </div>
         </div>
       </section>
-      {/* End Dashboard */}
 
-      {/* Confirmation Dialog */}
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
