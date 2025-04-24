@@ -478,46 +478,91 @@ export default function CandidatesPage() {
     }
   };
   // Hàm phân tích CV bằng AI
-  const analyzeCVWithOpenAI = async (cv, jobDetails) => {
+  const analyzeCVWithOpenAI = async (cv, jobDetails, language = "en") => {
     try {
       // Chuẩn bị nội dung CV để phân tích
-      const cvContent = prepareContentForAnalysis(cv);
+      const cvContent = prepareContentForAnalysis(cv, language);
 
       // Tạo prompt cho AI
-      const systemPrompt = `Bạn là chuyên gia phân tích CV với hơn 15 năm kinh nghiệm trong lĩnh vực tuyển dụng. Nhiệm vụ của bạn là tóm tắt CV của ứng viên và đánh giá mức độ phù hợp với vị trí công việc.
+      const systemPrompt =
+        language === "vi"
+          ? `Bạn là chuyên gia phân tích CV với hơn 15 năm kinh nghiệm trong lĩnh vực tuyển dụng. 
+           Nhiệm vụ của bạn là tóm tắt CV của ứng viên và đánh giá mức độ phù hợp với vị trí công việc.
+           
+           Hãy phân tích chi tiết và chuyên nghiệp theo cấu trúc JSON với các mục sau:
+           1. summary: Tóm tắt ngắn gọn về ứng viên (150-200 từ)
+           2. keyStrengths: Mảng 3-5 điểm mạnh quan trọng liên quan đến vị trí
+           3. keySkills: Mảng kỹ năng chính phù hợp với vị trí
+           4. experienceHighlights: Tóm tắt kinh nghiệm nổi bật liên quan đến công việc
+           5. educationFit: Đánh giá về trình độ học vấn với vị trí
+           6. developmentAreas: Mảng 2-3 lĩnh vực ứng viên có thể cần phát triển
+           7. interviewQuestions: Mảng 5 câu hỏi phỏng vấn cụ thể dựa trên CV và yêu cầu công việc
+           8. fitRating: Đánh giá tổng thể mức độ phù hợp (1-10)
+           9. recommendationSummary: Nhận xét tổng thể ngắn gọn (2-3 câu)
+           
+           QUAN TRỌNG: Phân tích phải được viết hoàn toàn bằng tiếng Việt.`
+          : `You are a CV analysis expert with over 15 years of experience in recruitment. 
+           Your task is to summarize a candidate's CV and evaluate their fit for a job position.
+           
+           Please analyze in detail and professionally according to the following JSON structure:
+           1. summary: Brief summary of the candidate (150-200 words)
+           2. keyStrengths: Array of 3-5 key strengths relevant to the position
+           3. keySkills: Array of main skills that fit the position
+           4. experienceHighlights: Summary of notable experience relevant to the job
+           5. educationFit: Assessment of educational qualifications for the position
+           6. developmentAreas: Array of 2-3 areas the candidate may need to develop
+           7. interviewQuestions: Array of 5 specific interview questions based on the CV and job requirements
+           8. fitRating: Overall fit rating (1-10)
+           9. recommendationSummary: Brief overall comment (2-3 sentences)
+           
+           IMPORTANT: Analysis must be written completely in English.`;
 
-Hãy phân tích chi tiết và chuyên nghiệp theo cấu trúc JSON với các mục sau:
-1. summary: Tóm tắt ngắn gọn về ứng viên (150-200 từ)
-2. keyStrengths: Mảng 3-5 điểm mạnh quan trọng liên quan đến vị trí
-3. keySkills: Mảng kỹ năng chính phù hợp với vị trí
-4. experienceHighlights: Tóm tắt kinh nghiệm nổi bật liên quan đến công việc
-5. educationFit: Đánh giá về trình độ học vấn với vị trí
-6. developmentAreas: Mảng 2-3 lĩnh vực ứng viên có thể cần phát triển
-7. interviewQuestions: Mảng 5 câu hỏi phỏng vấn cụ thể dựa trên CV và yêu cầu công việc (bao gồm câu hỏi kỹ thuật/coding nếu phù hợp)
-8. fitRating: Đánh giá tổng thể mức độ phù hợp (1-10)
-9. recommendationSummary: Nhận xét tổng thể ngắn gọn (2-3 câu)
-
-Phân tích phải chuyên nghiệp, khách quan và cung cấp thông tin giá trị cho nhà tuyển dụng.`;
-
-      const userPrompt = `Hãy phân tích CV sau cho vị trí ${
-        jobDetails.title || "không xác định"
-      }:
-
-CV CONTENT:
-${cvContent}
-
-JOB DESCRIPTION:
-${jobDetails.description?.replace(/<[^>]*>/g, "") || "Không có mô tả chi tiết."}
-
-JOB REQUIREMENTS:
-Skills: ${
-        jobDetails.jobDetailTags?.map((tag) => tag.tagName).join(", ") ||
-        "Không có thông tin"
-      }
-Experience: ${jobDetails.exp || "Không xác định"} 
-Education: ${jobDetails.education || "Không xác định"}
-
-Vui lòng chỉ trả về kết quả dưới dạng JSON hợp lệ theo cấu trúc đã yêu cầu, không thêm giải thích hay định dạng khác.`;
+      const userPrompt =
+        language === "vi"
+          ? `Hãy phân tích CV sau cho vị trí ${
+              jobDetails.title || "không xác định"
+            }:
+           
+           CV CONTENT:
+           ${cvContent}
+           
+           JOB DESCRIPTION:
+           ${
+             jobDetails.description?.replace(/<[^>]*>/g, "") ||
+             "Không có mô tả chi tiết."
+           }
+           
+           JOB REQUIREMENTS:
+           Skills: ${
+             jobDetails.jobDetailTags?.map((tag) => tag.tagName).join(", ") ||
+             "Không có thông tin"
+           }
+           Experience: ${jobDetails.exp || "Không xác định"} 
+           Education: ${jobDetails.education || "Không xác định"}
+           
+           IMPORTANT: Vui lòng trả lời hoàn toàn bằng tiếng Việt và chỉ trả về kết quả dưới dạng JSON.`
+          : `Please analyze the following CV for the position of ${
+              jobDetails.title || "unspecified"
+            }:
+           
+           CV CONTENT:
+           ${cvContent}
+           
+           JOB DESCRIPTION:
+           ${
+             jobDetails.description?.replace(/<[^>]*>/g, "") ||
+             "No detailed description available."
+           }
+           
+           JOB REQUIREMENTS:
+           Skills: ${
+             jobDetails.jobDetailTags?.map((tag) => tag.tagName).join(", ") ||
+             "No information"
+           }
+           Experience: ${jobDetails.exp || "Unspecified"} 
+           Education: ${jobDetails.education || "Unspecified"}
+           
+           IMPORTANT: Please respond completely in English and return only JSON format results.`;
 
       // Gọi OpenAI API
       const completion = await openai.chat.completions.create({
@@ -526,16 +571,18 @@ Vui lòng chỉ trả về kết quả dưới dạng JSON hợp lệ theo cấu
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        // temperature: 0.3,
-        // max_tokens: 1000,
         response_format: { type: "json_object" },
       });
 
-      // Xử lý kết quả trả về
       return JSON.parse(completion.choices[0].message.content);
     } catch (error) {
-      console.error("Error analyzing CV:", error);
-      return { error: "Không thể phân tích CV. Vui lòng thử lại sau." };
+      console.error(`Error analyzing CV in ${language}:`, error);
+      return {
+        error:
+          language === "vi"
+            ? "Không thể phân tích CV. Vui lòng thử lại sau."
+            : "Could not analyze CV. Please try again later.",
+      };
     }
   };
 
@@ -740,20 +787,31 @@ Vui lòng chỉ trả về kết quả dưới dạng JSON hợp lệ theo cấu
         }
 
         if (cvData) {
-          // Phân tích CV bằng AI
-          const analysis = await analyzeCVWithOpenAI(cvData, jobDetails.job);
+          // Phân tích CV bằng AI cho cả tiếng Việt và tiếng Anh
+          const analysisEn = await analyzeCVWithOpenAI(
+            cvData,
+            jobDetails.job,
+            "en"
+          );
+          const analysisVi = await analyzeCVWithOpenAI(
+            cvData,
+            jobDetails.job,
+            "vi"
+          );
 
           // Thêm vào danh sách đã phân tích
           analyzedCandidates.push({
             ...candidate,
             cvData,
-            analysis,
+            analysisEn,
+            analysisVi,
           });
         } else {
           // Thêm ứng viên không có phân tích
           analyzedCandidates.push({
             ...candidate,
-            analysis: { error: "Không có dữ liệu CV để phân tích" },
+            analysisEn: { error: "No CV data available for analysis" },
+            analysisVi: { error: "Không có dữ liệu CV để phân tích" },
           });
         }
       }
@@ -764,7 +822,7 @@ Vui lòng chỉ trả về kết quả dưới dạng JSON hợp lệ theo cấu
         jobDetails.job.title || `Job-${jobId}`
       );
 
-      toast.success("Đã hoàn thành phân tích! File Excel đã được tải xuống.");
+      toast.success("Analysis & summary complete! Excel file downloaded.");
     } catch (error) {
       console.error("Lỗi khi xuất Excel:", error);
       toast.error(
@@ -858,7 +916,10 @@ Vui lòng chỉ trả về kết quả dưới dạng JSON hợp lệ theo cấu
 
       // Dữ liệu ứng viên
       for (const candidate of analyzedCandidates) {
-        const analysis = candidate.analysis || {};
+        // Sử dụng phân tích tiếng Việt hoặc tiếng Anh tùy theo loại sheet
+        const analysis = isVietnamese
+          ? candidate.analysisVi
+          : candidate.analysisEn;
 
         // Chuẩn bị nội dung CV theo ngôn ngữ
         const cvContent = prepareContentForAnalysis(
