@@ -24,7 +24,7 @@ export default function ManageJobsPage() {
   const [remainingHighPrioritySlots, setRemainingHighPrioritySlots] =
     useState(0);
   // State cho độ rộng cột và kéo thả
-  const [sortOrder, setSortOrder] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [columnWidths, setColumnWidths] = useState({
     title: 200,
     location: 150,
@@ -37,7 +37,6 @@ export default function ManageJobsPage() {
     actions: 200,
     candidates: 150,
   });
-
 
   // Trạng thái kéo cột
   const [resizingColumn, setResizingColumn] = useState(null);
@@ -54,7 +53,7 @@ export default function ManageJobsPage() {
     PageSize: 5,
     title: "",
     IncludeHidden: true,
-    MostRecent: false,
+    MostRecent: true,
     status: "", // Thêm lọc theo trạng thái
     location: "", // Thêm lọc theo địa điểm
     priority: "", // Thêm trường priority
@@ -276,19 +275,6 @@ export default function ManageJobsPage() {
     searchParams.priority,
   ]);
 
-  useEffect(() => {
-    if (jobs.length > 0) {
-      console.log("Job priority types:");
-      jobs.forEach((job) => {
-        console.log(
-          `Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${
-            job.priority
-          }, Type: ${typeof job.priority}`
-        );
-      });
-    }
-  }, [jobs]);
-
   const isJobExpired = (deadline) => {
     if (!deadline) return false;
     const deadlineDate = new Date(deadline);
@@ -453,6 +439,17 @@ export default function ManageJobsPage() {
       setTotalPage(calculatedTotalPages);
 
       // Tiếp tục với code lấy candidateCounts như cũ
+      const counts = {};
+      for (const job of processedJobs) {
+        try {
+          const candidates = await fetchCandidatesForJob(job.jobID);
+          counts[job.jobID] = candidates.length;
+        } catch (error) {
+          console.error(`Không thể lấy ứng viên cho job ${job.jobID}:`, error);
+          counts[job.jobID] = 0;
+        }
+      }
+      setCandidateCounts(counts);
     } catch (error) {
       console.error("Không thể tải danh sách job:", error);
       toast.error("Không thể tải danh sách job. Vui lòng thử lại.");
@@ -611,6 +608,7 @@ export default function ManageJobsPage() {
 
   const getCandidateButtonText = (jobId) => {
     const count = candidateCounts[jobId] || 0;
+    console.log("Candidate count for job ID", jobId, ":", count);
     return count === 0
       ? "No Candidates"
       : count === 1

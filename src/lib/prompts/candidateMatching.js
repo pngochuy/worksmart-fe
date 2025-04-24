@@ -140,7 +140,7 @@ export const generateCVMatchingPrompt = (cvData, jobRequirements) => {
           .replace("${jobRequirements}", JSON.stringify(jobRequirements)),
       },
     ],
-    temperature: 0.2,
+    // temperature: 0.2,
     model: "gpt-4o-mini",
     response_format: { type: "json_object" },
   };
