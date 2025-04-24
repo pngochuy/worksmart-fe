@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 // components/ApplicationStatus.jsx
-import { CheckCircle, Clock, XCircle } from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
 import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
 
 const ApplicationStatus = ({ status, applyDate }) => {
@@ -24,6 +24,13 @@ const ApplicationStatus = ({ status, applyDate }) => {
       className: "bg-red-50 border-red-200 text-red-800",
       description:
         "Unfortunately, your application was not selected for this position.",
+    },
+    "Interview Invited": {
+      icon: <Calendar className="h-5 w-5 text-blue-500" />,
+      title: "Interview Invited",
+      className: "bg-blue-50 border-blue-200 text-blue-800",
+      description:
+        "Congratulations! You've been invited for an interview. Check your email for details.",
     },
   };
 

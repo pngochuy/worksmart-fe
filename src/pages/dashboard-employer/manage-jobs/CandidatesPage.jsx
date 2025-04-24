@@ -708,36 +708,30 @@ export default function CandidatesPage() {
     );
   };
 
-  // Lọc ứng viên đủ điều kiện để phân tích (không ở trạng thái Pending hoặc Rejected)
+  // Lọc ứng viên đủ điều kiện để phân tích (chỉ ở trạng thái Pending)
   const getEligibleCandidatesForAnalysis = (candidates) => {
     return candidates.filter((candidate) => {
       const status = candidate.applicationStatus?.toLowerCase();
-      return status !== "pending" && status !== "rejected";
+      return status === "pending"; // Chỉ lấy ứng viên có trạng thái Pending
     });
   };
 
   // Hàm xử lý khi click nút Export to Excel
   const handleExportToExcel = async () => {
     // Kiểm tra xem có ứng viên pending không
-    if (hasPendingCandidates(candidates)) {
-      toast.warning(
+    if (!hasPendingCandidates(candidates)) {
+      toast.info(
         <div>
           <p>
-            <strong>
-              Warning: Some candidates are still in &apos;Pending&apos; status!
-            </strong>
+            <strong>No candidates with 'Pending' status found!</strong>
           </p>
           <p>
-            Please review the status of all candidates before exporting the
-            analysis report.
-          </p>
-          <p>
-            Only candidates with &apos;Approved&apos; or &apos;Interview
-            Invited&apos; status will be analyzed.
+            Only candidates with 'Pending' status can be analyzed with this
+            tool.
           </p>
         </div>,
         {
-          autoClose: 8000,
+          autoClose: 5000,
           closeOnClick: true,
           pauseOnHover: true,
         }
@@ -749,7 +743,7 @@ export default function CandidatesPage() {
     try {
       setIsAnalyzing(true);
 
-      // Lấy ứng viên đủ điều kiện để phân tích
+      // Lấy ứng viên đủ điều kiện để phân tích (chỉ các ứng viên Pending)
       const eligibleCandidates = getEligibleCandidatesForAnalysis(candidates);
 
       if (eligibleCandidates.length === 0) {
@@ -1149,12 +1143,12 @@ export default function CandidatesPage() {
                       disabled={
                         loading ||
                         isAnalyzing ||
-                        hasPendingCandidates(candidates)
+                        !hasPendingCandidates(candidates) // Thay đổi điều kiện ở đây
                       }
                       title={
-                        hasPendingCandidates(candidates)
-                          ? "Please approve all pending candidates first"
-                          : "Export CV analysis to Excel"
+                        !hasPendingCandidates(candidates)
+                          ? "No pending candidates to analyze" // Thay đổi thông báo
+                          : "Analyze pending candidates and export to Excel"
                       }
                     >
                       <Download size={16} />
