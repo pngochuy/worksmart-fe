@@ -1,0 +1,781 @@
+/* Overlay cho chat popup */
+.ws-chat-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Container chính của chat popup */
+.ws-chat-popup-container {
+  width: 900px;
+  height: 600px;
+  max-width: calc(100% - 40px);
+  max-height: calc(100% - 40px);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header của chat popup */
+.ws-chat-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.ws-chat-header-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.ws-chat-header-title h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  color: #1e293b;
+}
+
+.ws-chat-badge {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  padding: 0 6px;
+}
+
+.ws-chat-close-btn,
+.ws-chat-back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.ws-chat-close-btn:hover,
+.ws-chat-back-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.ws-chat-back-btn {
+  margin-right: 8px;
+  display: none;
+}
+
+/* Phần thân của chat */
+.ws-chat-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Danh sách hội thoại */
+.ws-chat-conversations {
+  width: 320px;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phần tìm kiếm */
+.ws-chat-search {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ws-chat-search-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.ws-chat-search-icon {
+  color: #64748b;
+  margin-right: 8px;
+}
+
+.ws-chat-search input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  color: #1e293b;
+}
+
+.ws-chat-search input::placeholder {
+  color: #94a3b8;
+}
+
+/* Danh sách các cuộc hội thoại */
+.ws-chat-conversation-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ws-chat-conversation-item {
+  display: flex;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ws-chat-conversation-item:hover {
+  background-color: #f8fafc;
+}
+
+.ws-chat-conversation-item.ws-chat-active {
+  background-color: #f0f9ff;
+}
+
+.ws-chat-conversation-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.ws-chat-conversation-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ws-chat-conversation-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-chat-conversation-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ws-chat-conversation-top h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: transparent;
+  display: flex;
+  align-items: center;
+}
+
+.ws-chat-conversation-top h4::after {
+  content: none;
+}
+
+.ws-chat-conversation-time {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.ws-chat-conversation-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ws-chat-conversation-last-msg {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 85%;
+}
+
+.ws-chat-unread-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+}
+
+/* Phần tin nhắn */
+.ws-chat-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Danh sách tin nhắn */
+.ws-chat-message-list {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: #f8fafc;
+}
+
+.ws-chat-message {
+  display: flex;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.ws-chat-message + .ws-chat-message {
+  margin-top: 2px;
+}
+
+/* Cập nhật avatar */
+.ws-chat-message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.ws-chat-message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Cập nhật content wrapper */
+.ws-chat-message-content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+/* Cập nhật bubble chat */
+.ws-chat-message-content {
+  background-color: #fff;
+  border-radius: 18px;
+  padding: 10px 16px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer; /* Cho người dùng biết có thể tương tác */
+}
+
+.ws-chat-message-content:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng nhẹ khi hover */
+}
+
+.ws-chat-message-content p {
+  margin: 0;
+  font-size: 14px;
+  color: #1e293b;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Hiển thị thời gian khi hover tin nhắn */
+.ws-chat-message-time {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  display: none; /* Ẩn hoàn toàn thay vì chỉ mờ đi */
+  z-index: 10;
+  white-space: nowrap;
+  pointer-events: none;
+  bottom: -22px;
+}
+
+/* Vị trí cho thời gian tin nhắn gửi */
+.ws-chat-message-sent .ws-chat-message-time {
+  right: 0;
+}
+
+/* Vị trí cho thời gian tin nhắn nhận */
+.ws-chat-message-received .ws-chat-message-time {
+  left: 0;
+}
+
+/* Xóa rule cũ */
+.ws-chat-message:hover .ws-chat-message-time {
+  display: none;
+}
+
+/* Thêm rule mới - chỉ hiển thị khi hover vào nội dung tin nhắn */
+.ws-chat-message-content:hover ~ .ws-chat-message-time,
+.ws-chat-message-content:hover + .ws-chat-message-time {
+  display: flex;
+  align-items: center;
+}
+
+/* Rule bổ sung đảm bảo hiển thị đúng */
+.ws-chat-message-content-wrapper:hover > .ws-chat-message-time {
+  display: none;
+}
+
+.ws-chat-message-content-wrapper
+  > .ws-chat-message-content:hover
+  ~ .ws-chat-message-time {
+  display: flex;
+}
+
+/* Luôn hiển thị icon trạng thái đã đọc */
+.ws-chat-message-status {
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Bo góc kiểu messenger cho tin nhắn */
+.ws-chat-message-sent {
+  justify-content: flex-end;
+}
+
+.ws-chat-message-sent .ws-chat-message-content {
+  background-color: #3b82f6;
+  border-radius: 18px 18px 4px 18px;
+}
+
+.ws-chat-message-received {
+  justify-content: flex-start;
+}
+
+.ws-chat-message-received .ws-chat-message-content {
+  background-color: #f1f5f9;
+  border-radius: 18px 18px 18px 4px;
+}
+
+.ws-chat-message-sent .ws-chat-message-content p {
+  color: #fff;
+}
+
+/* Ngày phân cách */
+.ws-chat-date-divider {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  text-align: center;
+  opacity: 1;
+}
+
+.ws-chat-date-divider span {
+  font-size: 12px;
+  color: #64748b;
+  background-color: #f8fafc;
+  padding: 4px 12px;
+  border-radius: 16px;
+  margin: 0 auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Giữ nguyên format cho tin nhắn có avatar */
+.ws-chat-message-received
+  .ws-chat-message-avatar
+  + .ws-chat-message-content-wrapper {
+  margin-left: 0;
+}
+
+/* Fallback cho trình duyệt không hỗ trợ :has() */
+@supports not (selector(:has(*))) {
+  .ws-chat-message-received .ws-chat-message-content-wrapper {
+    margin-left: 40px;
+  }
+
+  .ws-chat-message-received
+    .ws-chat-message-avatar
+    ~ .ws-chat-message-content-wrapper {
+    margin-left: 0;
+  }
+}
+
+/* Phần nhập tin nhắn */
+.ws-chat-input {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+.ws-chat-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  background-color: #f1f5f9;
+  border-radius: 24px;
+  padding: 8px 16px;
+}
+
+.ws-chat-input textarea {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  resize: none;
+  font-family: inherit;
+  width: 100%;
+  max-height: 100px;
+  padding: 4px 0;
+  color: #1e293b;
+}
+
+.ws-chat-input textarea::placeholder {
+  color: #94a3b8;
+}
+
+.ws-chat-send-btn {
+  background-color: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.ws-chat-send-btn:hover {
+  background-color: #2563eb;
+}
+
+.ws-chat-send-btn:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Trạng thái trống */
+.ws-chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px;
+  text-align: center;
+}
+
+.ws-chat-empty-state svg {
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.ws-chat-empty-state p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ws-chat-empty-hint {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 4px !important;
+}
+
+/* Trạng thái không chọn hội thoại */
+.ws-chat-no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 32px;
+  background-color: #f8fafc;
+}
+
+.ws-chat-no-selection-icon {
+  background-color: #e0f2fe;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.ws-chat-no-selection-icon svg {
+  color: #3b82f6;
+}
+
+.ws-chat-no-selection h3 {
+  margin: 0 0 8px;
+  color: #1e293b;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ws-chat-no-selection p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Tin nhắn trống */
+.ws-chat-empty-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.ws-chat-empty-message-icon {
+  background-color: #e0f2fe;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.ws-chat-empty-message-icon svg {
+  color: #3b82f6;
+}
+
+.ws-chat-empty-messages p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ws-chat-empty-message-hint {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 4px !important;
+}
+
+/* Trạng thái đang tải */
+.ws-chat-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.ws-chat-loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Thông tin người dùng trên header */
+.ws-chat-user-info {
+  display: flex;
+  align-items: center;
+}
+
+.ws-chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.ws-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ws-chat-user-name {
+  display: flex;
+  flex-direction: column;
+}
+
+.ws-chat-user-name h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  background: transparent;
+  display: flex;
+  align-items: center;
+}
+
+.ws-chat-user-name h4::after {
+  content: none;
+}
+
+/* Định dạng chung cho trạng thái người dùng */
+.ws-chat-user-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 14px; /* Tạo không gian cho chấm tròn */
+  background: transparent; /* Đảm bảo không có background */
+}
+
+/* Tạo chấm tròn trước văn bản */
+.ws-chat-user-status::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Chấm xanh lá cho trạng thái online */
+.ws-chat-user-status.active::before {
+  background-color: #10b981; /* Màu xanh lá */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); /* Hiệu ứng phát sáng nhẹ */
+}
+
+/* Chấm xám cho trạng thái offline */
+.ws-chat-user-status.offline::before {
+  background-color: #94a3b8; /* Màu xám */
+}
+
+/* Màu văn bản theo trạng thái */
+.ws-chat-user-status.active {
+  color: #10b981;
+}
+
+.ws-chat-user-status.offline {
+  color: #94a3b8;
+  background: transparent;
+}
+
+/* Chấm nhỏ cho danh sách cuộc trò chuyện */
+.ws-chat-user-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-left: 6px;
+  position: relative;
+  top: -1px;
+}
+
+/* Thêm hiệu ứng nhẹ cho chấm trạng thái */
+.ws-chat-user-status-dot.active {
+  background-color: #10b981;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.ws-chat-user-status-dot.offline {
+  background-color: #94a3b8;
+  opacity: 0.8; /* Làm mờ đi một chút khi offline */
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .ws-chat-popup-container {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .ws-chat-conversations {
+    width: 100%;
+    border-right: none;
+  }
+
+  .ws-chat-messages {
+    width: 100%;
+  }
+
+  .ws-mobile-hidden {
+    display: none;
+  }
+
+  .ws-chat-back-btn {
+    display: flex;
+  }
+}
+
+/* Ghi đè bất kỳ style nào có thể ảnh hưởng đến trạng thái offline */
+.ws-chat-user-status.offline {
+  color: #94a3b8 !important;
+  background: transparent !important;
+  border: none !important;
+  padding-left: 14px !important; /* Giữ không gian cho chấm tròn */
+}
+
+/* Đảm bảo không có background cho phần wrapper */
+.ws-chat-user-info,
+.ws-chat-user-name {
+  background: transparent !important;
+}
+
+/* Fix style cho các phiên bản khác có thể tồn tại */
+[class*="offline"] {
+  background-color: transparent !important;
+}
+
+/* Kiểm soát chỉ duy nhất chấm tròn có màu */
+.ws-chat-user-status.offline::before {
+  background-color: #94a3b8;
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+}

@@ -1,16 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { getUserLoginData } from "../../helpers/decodeJwt";
-import "./style.css";
+import {
+  X,
+  Search,
+  Send,
+  MessageCircle,
+  ChevronLeft,
+  Paperclip,
+  User,
+  MoreVertical,
+  Check,
+  CheckCheck,
+} from "lucide-react";
+import "./ChatPopup.css"; // Sẽ tạo file CSS mới
 
 const BACKEND_API_URL =
   import.meta.env.VITE_BACKEND_API_URL || "https://localhost:5001";
 
 const ChatPopup = ({ isOpen, onClose }) => {
-  // User state
-  const userID = getUserLoginData()?.userID || 1; // Fallback to 1 for demo
+  // Lấy thông tin người dùng
+  const userData = getUserLoginData();
+  const userID = userData?.userID || 1;
+  const userAvatar = userData?.avatar;
+  const userName = userData?.fullName || userData?.username;
 
   // State variables
   const [conversations, setConversations] = useState([]);
@@ -21,17 +36,20 @@ const ChatPopup = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  const [showMobileConversation, setShowMobileConversation] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   const selectedUserRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const messageInputRef = useRef(null);
   const chatPopupRef = useRef(null);
 
-  // Prevent click propagation for the popup container
+  // Ngăn sự kiện click lan truyền từ popup
   const handlePopupClick = (e) => {
     e.stopPropagation();
   };
 
-  // Connect to SignalR hub when popup opens
+  // Kết nối với SignalR hub khi popup mở
   useEffect(() => {
     if (!isOpen) return;
 
@@ -50,12 +68,12 @@ const ChatPopup = ({ isOpen, onClose }) => {
         await hubConnection.start();
         console.log("SignalR Connected!");
 
-        // Connect user to hub
+        // Đăng ký người dùng với hub
         await hubConnection.invoke("RegisterUser", userID);
 
-        // Set up handlers for SignalR events
+        // Thiết lập các handler cho sự kiện SignalR
         hubConnection.on("ReceiveMessage", (message) => {
-          // Use ref to access current selectedUser value
+          // Sử dụng ref để truy cập giá trị selectedUser hiện tại
           const currentSelectedUser = selectedUserRef.current;
 
           if (
@@ -66,10 +84,9 @@ const ChatPopup = ({ isOpen, onClose }) => {
                 message.senderId === userID))
           ) {
             console.log("Received message:", message);
-
             setMessages((prev) => [...prev, message]);
 
-            // Mark as read if the message is from the currently selected user
+            // Đánh dấu là đã đọc nếu tin nhắn từ người dùng hiện tại được chọn
             if (message.senderId === currentSelectedUser.userId) {
               markMessagesAsRead(currentSelectedUser.userId);
             }
@@ -83,6 +100,18 @@ const ChatPopup = ({ isOpen, onClose }) => {
         hubConnection.on("UpdateConversations", (updatedConversations) => {
           setConversations(updatedConversations);
           setLoading(false);
+        });
+
+        hubConnection.on("UserOnline", (userId) => {
+          setOnlineUsers((prev) => new Set(prev).add(userId));
+        });
+
+        hubConnection.on("UserOffline", (userId) => {
+          setOnlineUsers((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(userId);
+            return newSet;
+          });
         });
 
         setConnection(hubConnection);
@@ -102,12 +131,12 @@ const ChatPopup = ({ isOpen, onClose }) => {
     };
   }, [isOpen, selectedUser, userID]);
 
-  // Update ref whenever selectedUser changes
+  // Cập nhật ref khi selectedUser thay đổi
   useEffect(() => {
     selectedUserRef.current = selectedUser;
   }, [selectedUser]);
 
-  // Fetch initial data when popup opens
+  // Lấy dữ liệu ban đầu khi popup mở
   useEffect(() => {
     if (isOpen) {
       fetchConversations();
@@ -115,7 +144,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Fetch conversations
+  // Lấy danh sách cuộc trò chuyện
   const fetchConversations = async () => {
     try {
       const response = await axios.get(
@@ -129,7 +158,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
     }
   };
 
-  // Fetch unread message count
+  // Lấy số lượng tin nhắn chưa đọc
   const fetchUnreadCount = async () => {
     try {
       const response = await axios.get(
@@ -138,25 +167,24 @@ const ChatPopup = ({ isOpen, onClose }) => {
       setTotalUnreadCount(response.data.count);
     } catch (err) {
       console.error("Error fetching unread count:", err);
-      setTotalUnreadCount(2); // Mock data
     }
   };
 
-  // Fetch messages between users
+  // Lấy tin nhắn giữa các người dùng
   const fetchMessages = async (userId) => {
     try {
       const response = await axios.get(
         `${BACKEND_API_URL}/api/Messages/${userID}/${userId}?pageNumber=1&pageSize=50`
       );
       setMessages(response.data);
-      // Mark messages as read when conversation is opened
+      // Đánh dấu tin nhắn là đã đọc khi mở cuộc trò chuyện
       markMessagesAsRead(userId);
     } catch (err) {
       console.error("Error fetching messages:", err);
     }
   };
 
-  // Mark messages as read
+  // Đánh dấu tin nhắn là đã đọc
   const markMessagesAsRead = async (senderId) => {
     try {
       await axios.put(
@@ -167,7 +195,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
     }
   };
 
-  // Send a message
+  // Gửi tin nhắn
   const sendMessage = async () => {
     if (!selectedUser || !newMessage.trim()) return;
 
@@ -178,17 +206,19 @@ const ChatPopup = ({ isOpen, onClose }) => {
     };
 
     try {
-      // Send message via API
+      // Gửi tin nhắn qua API
       await axios.post(`${BACKEND_API_URL}/api/Messages`, messageData);
-      // Clear input
+      // Xóa input
       setNewMessage("");
+      // Focus lại vào input
+      messageInputRef.current?.focus();
     } catch (err) {
       console.error("Error sending message:", err);
       setNewMessage("");
     }
   };
 
-  // Select a user to chat with
+  // Chọn người dùng để trò chuyện
   const selectUser = (conversation) => {
     const user = {
       userId: conversation.userId || conversation.otherUserId,
@@ -196,250 +226,404 @@ const ChatPopup = ({ isOpen, onClose }) => {
       avatar: conversation.avatar || conversation.otherUserAvatar,
       unreadMessageCount: conversation.unreadCount,
     };
-    console.log("Selected user:", user);
     setSelectedUser(user);
     fetchMessages(user.userId);
+    setShowMobileConversation(true); // Chuyển sang chế độ hiển thị hội thoại trên mobile
   };
 
-  // Filter conversations based on search term
+  // Trở lại danh sách trò chuyện (cho giao diện mobile)
+  const goBackToConversations = () => {
+    setShowMobileConversation(false);
+  };
+
+  // Lọc cuộc trò chuyện dựa trên từ khóa tìm kiếm
   const filteredConversations = conversations.filter((conversation) =>
     (conversation.fullName || conversation.otherUserName || "")
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
 
-  // Scroll to bottom when messages change
+  // Cuộn đến tin nhắn cuối cùng khi tin nhắn thay đổi
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.senderId === userID) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  }, [messages, userID]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  // Format time for display
+  // Format thời gian cho tin nhắn
   const formatMessageTime = (dateString) => {
-    return formatDistanceToNow(new Date(dateString), { addSuffix: false });
+    const messageDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Nếu là hôm nay, chỉ hiển thị giờ
+    if (messageDate.toDateString() === today.toDateString()) {
+      return format(messageDate, "HH:mm");
+    }
+    // Nếu là hôm qua, hiển thị "Yesterday, HH:mm"
+    else if (messageDate.toDateString() === yesterday.toDateString()) {
+      return `Yesterday, ${format(messageDate, "HH:mm")}`;
+    }
+    // Nếu trong tuần này (7 ngày gần đây)
+    else if (
+      today.getTime() - messageDate.getTime() <
+      7 * 24 * 60 * 60 * 1000
+    ) {
+      return format(messageDate, "EEEE, HH:mm");
+    }
+    // Nếu xa hơn, hiển thị ngày tháng năm
+    else {
+      return format(messageDate, "dd/MM/yyyy, HH:mm");
+    }
+  };
+
+  // Format thời gian cho danh sách hội thoại
+  const formatConversationTime = (dateString) => {
+    if (!dateString) return "";
+
+    const messageDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (messageDate.toDateString() === today.toDateString()) {
+      return format(messageDate, "HH:mm");
+    } else if (messageDate.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else if (
+      today.getTime() - messageDate.getTime() <
+      7 * 24 * 60 * 60 * 1000
+    ) {
+      return format(messageDate, "EEE");
+    } else {
+      return format(messageDate, "dd/MM/yyyy");
+    }
+  };
+
+  // Xử lý phím tắt (Enter để gửi tin nhắn)
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="chat-popup-overlay" onClick={onClose}>
+    <div className="ws-chat-popup-overlay" onClick={onClose}>
       <div
-        className="chat-popup-container"
+        className="ws-chat-popup-container"
         ref={chatPopupRef}
         onClick={handlePopupClick}
       >
-        <div className="chat-popup-header">
-          <h3>
-            Messages{" "}
-            {totalUnreadCount > 0 && (
-              <span className="badge badge-danger">{totalUnreadCount}</span>
+        {/* Header */}
+        <div className="ws-chat-header">
+          {/* Mobile back button */}
+          {showMobileConversation && (
+            <button
+              className="ws-chat-back-btn"
+              onClick={goBackToConversations}
+            >
+              <ChevronLeft size={20} />
+            </button>
+          )}
+
+          {/* Header title */}
+          <div className="ws-chat-header-title">
+            {selectedUser && showMobileConversation ? (
+              <div className="ws-chat-user-info">
+                <div className="ws-chat-avatar">
+                  <img
+                    src={
+                      selectedUser.avatar || "https://via.placeholder.com/40"
+                    }
+                    alt={selectedUser.fullName}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://via.placeholder.com/40";
+                    }}
+                  />
+                </div>
+                <div className="ws-chat-user-name">
+                  <h4>{selectedUser.fullName}</h4>
+                  <span
+                    className={`ws-chat-user-status ${
+                      onlineUsers.has(selectedUser.userId)
+                        ? "active"
+                        : "offline"
+                    }`}
+                  >
+                    {onlineUsers.has(selectedUser.userId)
+                      ? "Active now"
+                      : "Offline"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h3>
+                  Messages
+                  {totalUnreadCount > 0 && (
+                    <span className="ws-chat-badge">{totalUnreadCount}</span>
+                  )}
+                </h3>
+              </>
             )}
-          </h3>
-          <button className="close-button" onClick={onClose}>
-            ×
+          </div>
+
+          {/* Close button */}
+          <button className="ws-chat-close-btn" onClick={onClose}>
+            <X size={20} />
           </button>
         </div>
 
-        <div className="chat-widget">
-          <div className="widget-content">
-            <div className="row">
-              <div
-                className="contacts_column col-xl-4 col-lg-5 col-md-12 col-sm-12 chat"
-                id="chat_contacts"
-              >
-                <div className="card contacts_card">
-                  <div className="card-header">
-                    <div className="search-box-one">
-                      <div className="form-group">
-                        <span className="icon flaticon-search-1"></span>
-                        <input
-                          type="search"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder="Search"
-                          required=""
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card-body contacts_body">
-                    {loading ? (
-                      <p className="text-center">Loading conversations...</p>
-                    ) : (
-                      <ul className="contacts">
-                        {filteredConversations.map((conversation) => (
-                          <li
-                            key={
-                              conversation.userId ||
-                              conversation.otherUserId ||
-                              Math.random()
-                            }
-                            className={
-                              selectedUser?.userId ===
-                              (conversation.userId || conversation.otherUserId)
-                                ? "active"
-                                : ""
-                            }
-                            onClick={() => selectUser(conversation)}
-                          >
-                            <a href="#" onClick={(e) => e.preventDefault()}>
-                              <div className="d-flex bd-highlight">
-                                <div className="img_cont">
-                                  <img
-                                    src={
-                                      conversation.avatar ||
-                                      conversation.otherUserAvatar ||
-                                      "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-                                    }
-                                    className="rounded-circle user_img"
-                                    alt={
-                                      conversation.fullName ||
-                                      conversation.otherUserName
-                                    }
-                                  />
-                                </div>
-                                <div className="user_info">
-                                  <span>
-                                    {conversation.fullName ||
-                                      conversation.otherUserName}
-                                  </span>
-                                  <p>
-                                    {conversation.lastMessage
-                                      ? conversation.lastMessage.substr(0, 20) +
-                                        (conversation.lastMessage.length > 20
-                                          ? "..."
-                                          : "")
-                                      : ""}
-                                  </p>
-                                </div>
-                                <span className="info">
-                                  {conversation.lastMessageTime && (
-                                    <small>
-                                      {formatDistanceToNow(
-                                        new Date(conversation.lastMessageTime)
-                                      )}
-                                    </small>
-                                  )}
-                                  {conversation.unreadCount > 0 && (
-                                    <span className="count">
-                                      {conversation.unreadCount}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="col-xl-8 col-lg-7 col-md-12 col-sm-12 chat">
-                {selectedUser ? (
-                  <div className="card message-card">
-                    <div className="card-header msg_head">
-                      <div className="d-flex bd-highlight">
-                        <div className="img_cont">
-                          <img
-                            src={
-                              selectedUser.avatar ||
-                              "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-                            }
-                            alt=""
-                            className="rounded-circle user_img"
-                            onError={(e) => {
-                              console.log(
-                                "Image failed to load:",
-                                e.target.src
-                              );
-                              e.target.onerror = null;
-                              e.target.src =
-                                "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg";
-                            }}
-                          />
-                        </div>
-                        <div className="user_info">
-                          <span>{selectedUser.fullName}</span>
-                          <p>Active</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="card-body msg_card_body">
-                      {messages.map((msg, index) => (
-                        <div
-                          key={msg.personalMessageID || index}
-                          className={`d-flex ${
-                            msg.senderId === userID || msg.senderID === userID
-                              ? "justify-content-end mb-2 reply"
-                              : "justify-content-start mb-2"
-                          }`}
-                        >
-                          <div className="img_cont_msg">
-                            <img
-                              src={
-                                msg.senderId === userID
-                                  ? getUserLoginData().avatar ||
-                                    "https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg"
-                                  : selectedUser.avatar ||
-                                    "https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg"
-                              }
-                              alt=""
-                              className="rounded-circle user_img_msg"
-                            />
-                            <div className="name">
-                              {msg.senderId === userID ||
-                              msg.senderID === userID
-                                ? "You"
-                                : selectedUser.fullName}{" "}
-                              <span className="msg_time">
-                                {formatMessageTime(msg.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="msg_cotainer">{msg.content}</div>
-                        </div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
-
-                    <div className="card-footer">
-                      <div className="form-group mb-0">
-                        <textarea
-                          className="form-control type_msg"
-                          placeholder="Type a message..."
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={(e) =>
-                            e.key === "Enter" && !e.shiftKey && sendMessage()
-                          }
-                        ></textarea>
-                        <button
-                          type="button"
-                          className="theme-btn btn-style-one submit-btn"
-                          onClick={sendMessage}
-                        >
-                          Send Message
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="card message-card">
-                    <div className="card-body msg_card_body">
-                      <div className="d-flex justify-content-center align-items-center h-100">
-                        <h3>Select a conversation to start messaging</h3>
-                      </div>
-                    </div>
-                  </div>
-                )}
+        <div className="ws-chat-body">
+          {/* Conversations list - hidden on mobile when a conversation is selected */}
+          <div
+            className={`ws-chat-conversations ${
+              showMobileConversation ? "ws-mobile-hidden" : ""
+            }`}
+          >
+            {/* Search */}
+            <div className="ws-chat-search">
+              <div className="ws-chat-search-wrapper">
+                <Search size={16} className="ws-chat-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
+
+            {/* Conversations */}
+            <div className="ws-chat-conversation-list">
+              {loading ? (
+                <div className="ws-chat-loading">
+                  <div className="ws-chat-loading-spinner"></div>
+                  <p>Loading conversations...</p>
+                </div>
+              ) : filteredConversations.length === 0 ? (
+                <div className="ws-chat-empty-state">
+                  <MessageCircle size={40} />
+                  <p>No conversations found</p>
+                  {searchTerm && (
+                    <p className="ws-chat-empty-hint">
+                      Try a different search term
+                    </p>
+                  )}
+                </div>
+              ) : (
+                filteredConversations.map((conversation) => (
+                  <div
+                    key={
+                      conversation.userId ||
+                      conversation.otherUserId ||
+                      Math.random()
+                    }
+                    className={`ws-chat-conversation-item ${
+                      selectedUser?.userId ===
+                      (conversation.userId || conversation.otherUserId)
+                        ? "ws-chat-active"
+                        : ""
+                    }`}
+                    onClick={() => selectUser(conversation)}
+                  >
+                    <div className="ws-chat-conversation-avatar">
+                      <img
+                        src={
+                          conversation.avatar ||
+                          conversation.otherUserAvatar ||
+                          "https://via.placeholder.com/40"
+                        }
+                        alt={
+                          conversation.fullName || conversation.otherUserName
+                        }
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/40";
+                        }}
+                      />
+                    </div>
+                    <div className="ws-chat-conversation-content">
+                      <div className="ws-chat-conversation-top">
+                        <h4>
+                          {conversation.fullName || conversation.otherUserName}
+                          <span
+                            className={`ws-chat-user-status-dot ${
+                              onlineUsers.has(
+                                conversation.userId || conversation.otherUserId
+                              )
+                                ? "active"
+                                : "offline"
+                            }`}
+                          ></span>
+                        </h4>
+                        <span className="ws-chat-conversation-time">
+                          {formatConversationTime(conversation.lastMessageTime)}
+                        </span>
+                      </div>
+                      <div className="ws-chat-conversation-bottom">
+                        <p className="ws-chat-conversation-last-msg">
+                          {conversation.lastMessage
+                            ? conversation.lastMessage.length > 35
+                              ? conversation.lastMessage.substring(0, 35) +
+                                "..."
+                              : conversation.lastMessage
+                            : "No messages yet"}
+                        </p>
+                        {conversation.unreadCount > 0 && (
+                          <span className="ws-chat-unread-badge">
+                            {conversation.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Message area - hidden on mobile when no conversation is selected */}
+          <div
+            className={`ws-chat-messages ${
+              !showMobileConversation ? "ws-mobile-hidden" : ""
+            }`}
+          >
+            {selectedUser ? (
+              <>
+                {/* Message list */}
+                <div className="ws-chat-message-list">
+                  {messages.length === 0 ? (
+                    <div className="ws-chat-empty-messages">
+                      <div className="ws-chat-empty-message-icon">
+                        <MessageCircle size={40} />
+                      </div>
+                      <p>No messages yet</p>
+                      <p className="ws-chat-empty-message-hint">
+                        Send a message to start the conversation
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((msg, index) => {
+                      const isSender =
+                        msg.senderId === userID || msg.senderID === userID;
+                      const previousMsg =
+                        index > 0 ? messages[index - 1] : null;
+                      const showAvatar =
+                        !isSender &&
+                        (!previousMsg ||
+                          previousMsg.senderId !== msg.senderId ||
+                          new Date(msg.createdAt) -
+                            new Date(previousMsg.createdAt) >
+                            5 * 60 * 1000);
+
+                      // Kiểm tra xem có nên hiển thị ngày không
+                      const showDate =
+                        index === 0 ||
+                        (previousMsg &&
+                          new Date(msg.createdAt).toDateString() !==
+                            new Date(previousMsg.createdAt).toDateString());
+
+                      return (
+                        <React.Fragment key={msg.personalMessageID || index}>
+                          {showDate && (
+                            <div className="ws-chat-date-divider">
+                              <span>
+                                {format(
+                                  new Date(msg.createdAt),
+                                  "EEEE, MMMM d, yyyy"
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            className={`ws-chat-message ${
+                              isSender
+                                ? "ws-chat-message-sent"
+                                : "ws-chat-message-received"
+                            }`}
+                          >
+                            {!isSender && (
+                              <div className="ws-message-avatar">
+                                {showAvatar ? (
+                                  <img
+                                    src={
+                                      selectedUser.avatar ||
+                                      "https://via.placeholder.com/30"
+                                    }
+                                    alt={selectedUser.fullName}
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src =
+                                        "https://via.placeholder.com/30";
+                                    }}
+                                  />
+                                ) : (
+                                  <div
+                                    style={{ width: "100%", height: "100%" }}
+                                  ></div> // placeholder
+                                )}
+                              </div>
+                            )}
+
+                            <div className="ws-chat-message-content-wrapper">
+                              <div className="ws-chat-message-content">
+                                <p>{msg.content}</p>
+                              </div>
+                              <div className="ws-chat-message-time">
+                                {formatMessageTime(msg.createdAt)}
+                                {isSender && (
+                                  <span className="ws-chat-message-status">
+                                    {msg.isRead ? (
+                                      <CheckCheck size={12} />
+                                    ) : (
+                                      <Check size={12} />
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Message input */}
+                <div className="ws-chat-input">
+                  <div className="ws-chat-input-wrapper">
+                    <textarea
+                      ref={messageInputRef}
+                      placeholder="Type a message..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      rows={1}
+                    ></textarea>
+                    <button
+                      className="ws-chat-send-btn"
+                      disabled={!newMessage.trim()}
+                      onClick={sendMessage}
+                    >
+                      <Send size={20} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="ws-chat-no-selection">
+                <div className="ws-chat-no-selection-icon">
+                  <MessageCircle size={48} />
+                </div>
+                <h3>Your Messages</h3>
+                <p>Select a conversation to start chatting</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
