@@ -26,10 +26,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import { Button } from "@/components/ui/button";
 import EmptySimilarJobs from "./EmptySimilarJobs";
 import ReportJobButton from "./ReportJobButton";
 import ApplicationStatus from "./ApplicationStatus";
+import JobNotificationPopupModal from "../../job-alert/JobNotificationPopup/JobNotificationPopupModal";
 
 export const Index = () => {
   const [loading, setLoading] = useState(false);
@@ -43,6 +45,7 @@ export const Index = () => {
   const [showUnsaveConfirmDialog, setShowUnsaveConfirmDialog] = useState(false); // Thêm state mới cho dialog unsave
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false); // Track if job is saved as favorite
+  const [showJobNotificationModal, setShowJobNotificationModal] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
@@ -499,9 +502,23 @@ export const Index = () => {
                   </ul>
                 </div>
                 <div className="job-detail mt-3 mb-3">
-                  <h4 className="fz30">Description</h4>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <h4 className="fz30">Description</h4>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowJobNotificationModal(true)}
+                      className="ml-3"
+                    >
+                      Gửi tôi việc làm tương tự
+                    </Button>
+                  </div>
                   <div dangerouslySetInnerHTML={{ __html: job.description }} />
                 </div>
+                <JobNotificationPopupModal
+                  isOpen={showJobNotificationModal}
+                  onClose={() => setShowJobNotificationModal(false)}
+                  defaultKeyword={job.title}
+                />
 
                 {/* Application Ends */}
                 {userRole === "Candidate" && (
