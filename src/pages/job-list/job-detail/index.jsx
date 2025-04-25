@@ -509,7 +509,7 @@ export const Index = () => {
                       onClick={() => setShowJobNotificationModal(true)}
                       className="ml-3"
                     >
-                      Gửi tôi việc làm tương tự
+                      Send me similar jobs
                     </Button>
                   </div>
                   <div dangerouslySetInnerHTML={{ __html: job.description }} />
