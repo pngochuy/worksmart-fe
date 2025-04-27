@@ -51,11 +51,11 @@ export const createCV = async (cvData) => {
 };
 
 // Function to edit an existing CV (PUT request)
-export const editCV = async (cvId, updatedData) => {
+export const editCV = async (cvId, userId, updatedData) => {
   try {
     // Sending PUT request to update the CV
     const response = await axios.put(
-      `${BACKEND_API_URL}/api/CV/${cvId}`, // Assuming the endpoint to edit CV uses `cvId`
+      `${BACKEND_API_URL}/api/CV/${cvId}/${userId}`, // Assuming the endpoint to edit CV uses `cvId`
       updatedData
     );
     // Return the response data (assuming it returns the updated CV)
@@ -107,7 +107,9 @@ export const uploadCV = async (uploadData) => {
     };
 
     const response = await axios.post(
-      `${BACKEND_API_URL}/api/CV/upload-parse-cv`, dataToSend);
+      `${BACKEND_API_URL}/api/CV/upload-parse-cv`,
+      dataToSend
+    );
 
     if (response.data && response.data.data) {
       return response.data.data;
