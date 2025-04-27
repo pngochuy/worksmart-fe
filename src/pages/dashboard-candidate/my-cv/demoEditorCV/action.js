@@ -1,76 +1,114 @@
-import { resumeSchema } from "@/lib/validations";
-import { uploadImagesProfile } from "@/services/candidateServices";
-import { editCV, getCVById } from "@/services/cvServices";
+import { editCV } from "@/services/cvServices";
 
 export default async function saveResume(values) {
-  const { id, userId, isFeatured } = values;
-  const resumeValues = resumeSchema.parse(values); // resumeValues is the validated data from resumeSchema
-  // If there is a photo, upload it and get the URL
-  if (resumeValues?.photo && typeof resumeValues.photo !== "string") {
-    try {
-      console.log("resumeValues.photo: ", resumeValues.photo);
-      const uploadResponse = await uploadImagesProfile(resumeValues.photo);
-      resumeValues.photo = uploadResponse.imageUrl; // update the resumeValues.photo with the image URL
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw new Error("Failed to upload photo");
-    }
-  } else {
-    // If the photo is already a URL, no need to upload
-    const fetchedCV = await getCVById(id);
-    resumeValues.photo = fetchedCV.link; // Set default value if photo is empty
+  // Kiểm tra xem values có đủ dữ liệu không
+  if (!values || typeof values !== "object") {
+    console.error("❌ Invalid resume data", values);
+    throw new Error("Invalid resume data");
   }
 
-  // Mapping resumeValues to the required format for the API
-  const mappedResumeValues = {
-    cvid: id, // Map the CV id
-    userID: userId, // Map the userId
-    title: resumeValues.title,
-    description: resumeValues.description,
-    firstName: resumeValues.firstName,
-    lastName: resumeValues.lastName,
-    jobPosition: resumeValues.jobTitle, // Change jobTitle to jobPosition
-    workType: "", // You can set default value or leave it as required
-    summary: resumeValues.summary,
-    address: resumeValues.address,
-    phone: resumeValues.phone,
-    email: resumeValues.email,
-    link: resumeValues.photo,
-    borderstyle: resumeValues.borderStyle, // Change borderStyle to borderstyle
-    colorhex: resumeValues.colorHex, // Change colorHex to colorhex
-    isFeatured: isFeatured, // Default to false
-    // createdAt: new Date().toISOString(), // You may need to use the actual created date
-    updatedAt: new Date().toISOString(), // Use the actual updated date if available
-    experiences: resumeValues.workExperiences.map((exp) => ({
-      jobPosition: exp.position, // Rename position to jobPosition
-      companyName: exp.companyName, // Rename company to companyName
-      address: "", // If not provided, set as empty or add any logic
-      description: exp.description,
-      startedAt: exp.startDate, // Change startDate to startedAt
-      endedAt: exp.endDate, // Change endDate to endedAt
-    })),
-    certifications: [], // You can add certifications if available, otherwise set as empty
-    skills: resumeValues.skills.map((skill) => ({
-      skillName: skill, // Map skills to skillName
-    })),
-    educations: resumeValues.educations.map((edu) => ({
-      major: "", // Set major if available
-      schoolName: edu.school, // Change school to schoolName
-      degree: edu.degree,
-      startedAt: edu.startDate, // Change startDate to startedAt
-      endedAt: edu.endDate, // Change endDate to endedAt
-    })),
-  };
+  const { id, cvid, userId, isFeatured } = values;
+  const cvId = cvid || id;
 
-  // Now call the editCV API to update the CV
+  if (!cvId || !userId) {
+    console.error("❌ Missing required IDs", { cvId, userId });
+    throw new Error("Missing required IDs");
+  }
+
   try {
-    const updatedCV = await editCV(id, mappedResumeValues); // Call the API with the CV ID and updated data
-    console.log("Updated CV successfully: ", updatedCV);
+    console.log("📤 Full form data:", values);
 
-    // Return the updated CV or any additional information from the API response
-    return updatedCV;
+    // Map tất cả các phần dữ liệu từ form sang format server
+    const mappedResumeValues = {
+      CVID: Number(cvId),
+      UserID: Number(userId),
+
+      // General info
+      title: values.title || "My CV",
+      description: values.description || "",
+      colorhex: values.colorHex || "#000000",
+      borderstyle: values.borderStyle || "solid",
+
+      // Personal info
+      firstName: values.firstName || "",
+      lastName: values.lastName || "",
+      jobPosition: values.jobTitle || "", // Chú ý map đúng từ jobTitle sang jobPosition
+      email: values.email || "",
+      phone: values.phone || "",
+      address: values.address || "",
+      link: values.photo || "", // Chú ý map từ photo sang link
+
+      // Summary
+      summary: values.summary || "",
+
+      // Boolean flags
+      isFeatured: Boolean(isFeatured),
+      isHidden: false,
+
+      // Work experiences
+      experiences: Array.isArray(values.workExperiences)
+        ? values.workExperiences.map((exp) => ({
+            jobPosition: exp.position || "",
+            companyName: exp.companyName || "",
+            address: exp.location || "",
+            description: exp.description || "",
+            startedAt: exp.startDate || null,
+            endedAt: exp.endDate || null,
+          }))
+        : [],
+
+      // Educations
+      educations: Array.isArray(values.educations)
+        ? values.educations.map((edu) => ({
+            schoolName: edu.school || "",
+            major: edu.fieldOfStudy || "",
+            degree: edu.degree || "",
+            description: edu.description || "",
+            startedAt: edu.startDate || null,
+            endedAt: edu.endDate || null,
+          }))
+        : [],
+
+      // Skills
+      skills: Array.isArray(values.skills)
+        ? values.skills.filter(Boolean).map((skill) => ({
+            skillName: skill,
+            description: "",
+          }))
+        : [],
+
+      // Certifications (nếu có)
+      certifications: Array.isArray(values.certifications)
+        ? values.certifications.map((cert) => ({
+            certificateName: cert.name || "",
+            description: cert.description || "",
+            createAt: cert.date || new Date().toISOString(),
+          }))
+        : [],
+    };
+
+    // Log dữ liệu đã map để debug
+    console.log(
+      "📤 Mapped data to send:",
+      JSON.stringify(mappedResumeValues, null, 2)
+    );
+
+    // Gọi API với dữ liệu đã được map đúng
+    const result = await editCV(
+      Number(cvId),
+      Number(userId),
+      mappedResumeValues
+    );
+    console.log("📥 Server response:", result);
+
+    // Format lại kết quả để client sử dụng
+    return {
+      ...result,
+      cvid: result.CVID || result.cvid,
+      id: result.CVID || result.cvid,
+    };
   } catch (error) {
-    console.error("Error editing CV:", error);
-    throw new Error("Failed to edit CV");
+    console.error("❌ Error saving resume:", error);
+    throw error;
   }
 }
