@@ -21,6 +21,8 @@ import {
   Sparkle,
   Loader2,
   Search,
+  Crown,
+  Star,
 } from "lucide-react";
 import {
   Select,
@@ -721,6 +723,21 @@ export const Index = () => {
     );
   };
 
+  const getlevel = (job) => {
+    // Kiểm tra nếu job có thuộc tính level
+    if (job.level && ["Basic", "Standard", "Premium"].includes(job.level)) {
+      return job.level;
+    }
+
+    // Nếu dùng thuộc tính level
+    if (job.level && ["Basic", "Standard", "Premium"].includes(job.level)) {
+      return job.level;
+    }
+
+    // Mặc định trả về "Default" nếu không thuộc gói nào
+    return "Default";
+  };
+
   return (
     <>
       {/* Save Job Confirm Dialog */}
@@ -965,216 +982,400 @@ export const Index = () => {
               {/* Company-grouped job listings */}
               {Object.keys(groupedJobs).length > 0 ? (
                 <div className="space-y-8">
-                  {Object.values(groupedJobs).map((company, index) => (
-                    <Card key={index} className="overflow-hidden">
-                      <CardHeader className="bg-gray-50 pb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex-shrink-0">
-                            <img
-                              src={
-                                company.avatar ||
-                                "https://via.placeholder.com/80"
-                              }
-                              alt={company.companyName}
-                              className="w-16 h-16 object-cover rounded-md border border-gray-200"
-                            />
+                  {Object.values(groupedJobs).map((company, index) => {
+                    return (
+                      <Card key={index} className="overflow-hidden">
+                        <CardHeader className="bg-gray-50 pb-4">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                              <img
+                                src={
+                                  company.avatar ||
+                                  "https://via.placeholder.com/80"
+                                }
+                                alt={company.companyName}
+                                className="w-16 h-16 object-cover rounded-md border border-gray-200"
+                              />
+                            </div>
+                            <div>
+                              <CardTitle className="text-xl font-bold">
+                                {company.companyName}
+                              </CardTitle>
+                              <CardDescription className="flex items-center mt-1">
+                                <Building2 className="h-4 w-4 mr-1" />
+                                <span>
+                                  {company.jobs.length} open positions
+                                </span>
+                              </CardDescription>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-xl font-bold">
-                              {company.companyName}
-                            </CardTitle>
-                            <CardDescription className="flex items-center mt-1">
-                              <Building2 className="h-4 w-4 mr-1" />
-                              <span>{company.jobs.length} open positions</span>
-                            </CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-6">
-                        <Accordion type="multiple" className="w-full">
-                          {company.jobs.map((job) => (
-                            <AccordionItem
-                              key={job.jobID}
-                              value={`job-${job.jobID}`}
-                              className={`border border-gray-200 rounded-md mb-4 overflow-hidden transition-colors duration-200 ${
-                                hoveredJob === job.jobID
-                                  ? "border-blue-500"
-                                  : ""
-                              }`}
-                              onMouseEnter={() => setHoveredJob(job.jobID)}
-                              onMouseLeave={() => setHoveredJob(null)}
-                            >
-                              <AccordionTrigger className="px-4 py-3 hover:bg-gray-50 hover:no-underline group">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center w-full text-left">
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <h3
-                                        className={`font-semibold text-lg group-hover:text-blue-600 transition-colors duration-200 ${
-                                          hoveredJob === job.jobID
-                                            ? "text-blue-600"
-                                            : ""
-                                        }`}
-                                      >
-                                        {job.title}
-                                      </h3>
-                                      {job.priority && (
-                                        <div className="flex items-center bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                                          <Sparkle className="h-3 w-3 mr-1" />
-                                          TOP
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                          <Accordion type="multiple" className="w-full">
+                            {company.jobs.map((job) => {
+                              return (
+                                <AccordionItem
+                                  key={job.jobID}
+                                  value={`job-${job.jobID}`}
+                                  className={`
+    border rounded-md mb-4 overflow-hidden transition-all duration-200
+    ${
+      hoveredJob === job.jobID
+        ? getlevel(job) === "Premium"
+          ? "border-purple-500 shadow-md"
+          : getlevel(job) === "Standard"
+          ? "border-blue-500 shadow-sm"
+          : getlevel(job) === "Basic"
+          ? "border-sky-400"
+          : "border-gray-400" // Màu mặc định khi hover
+        : getlevel(job) === "Premium"
+        ? "border-purple-200 border-2"
+        : getlevel(job) === "Standard"
+        ? "border-blue-200"
+        : getlevel(job) === "Basic"
+        ? "border-sky-200"
+        : "border-gray-200" // Màu mặc định
+    }
+    ${
+      getlevel(job) === "Premium" && hoveredJob === job.jobID
+        ? "transform -translate-y-1"
+        : ""
+    }
+  `}
+                                  onMouseEnter={() => setHoveredJob(job.jobID)}
+                                  onMouseLeave={() => setHoveredJob(null)}
+                                >
+                                  <AccordionTrigger
+                                    className={`px-4 py-3 hover:no-underline group
+    ${
+      getlevel(job) === "Premium"
+        ? "hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50"
+        : getlevel(job) === "Standard"
+        ? "hover:bg-blue-50"
+        : getlevel(job) === "Basic"
+        ? "hover:bg-sky-50"
+        : "hover:bg-gray-50" // Màu mặc định khi hover
+    }
+  `}
+                                  >
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center w-full text-left">
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <h3
+                                            className={`
+    font-semibold text-lg transition-all duration-200 text-gray-800
+    ${
+      getlevel(job) === "Premium"
+        ? `group-hover:text-purple-600 ${
+            hoveredJob === job.jobID ? "!text-purple-600" : ""
+          }`
+        : getlevel(job) === "Standard"
+        ? `group-hover:text-blue-600 ${
+            hoveredJob === job.jobID ? "!text-blue-600" : ""
+          }`
+        : getlevel(job) === "Basic"
+        ? `group-hover:text-sky-600 ${
+            hoveredJob === job.jobID ? "!text-sky-600" : ""
+          }`
+        : `group-hover:text-gray-700 ${
+            hoveredJob === job.jobID ? "!text-gray-700" : ""
+          }`
+    }
+  `}
+                                          >
+                                            {job.title}
+                                          </h3>
+
+                                          {job.priority && (
+                                            <div className="flex items-center bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md text-xs font-medium">
+                                              <Sparkle className="h-3 w-3 mr-1" />
+                                              TOP
+                                            </div>
+                                          )}
+
+                                          {/* Package Type Badges */}
+                                          {getlevel(job) === "Basic" && (
+                                            <div className="flex items-center bg-sky-100 text-sky-600 px-2 py-0.5 rounded-md text-xs font-medium border border-sky-200">
+                                              BASIC
+                                            </div>
+                                          )}
+
+                                          {getlevel(job) === "Standard" && (
+                                            <div className="flex items-center bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md text-xs font-medium border border-blue-200">
+                                              <Star className="h-3 w-3 mr-1" />
+                                              STANDARD
+                                            </div>
+                                          )}
+
+                                          {getlevel(job) === "Premium" && (
+                                            <div className="flex items-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-2 py-0.5 rounded-md text-xs font-medium shadow-sm">
+                                              <Crown className="h-3 w-3 mr-1" />
+                                              PREMIUM
+                                            </div>
+                                          )}
                                         </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                          <Badge
+                                            variant="outline"
+                                            className={`rounded flex items-center gap-1 
+                ${
+                  job.level === "Premium"
+                    ? "text-purple-600 bg-purple-50 border-purple-100 shadow-sm"
+                    : job.level === "Standard"
+                    ? "text-blue-600 bg-blue-50 border-blue-100"
+                    : "text-sky-600 bg-sky-50 border-sky-100"
+                }
+              `}
+                                          >
+                                            <BriefcaseBusiness className="h-3 w-3" />
+                                            {job.workType}
+                                          </Badge>
+                                          <Badge
+                                            variant="outline"
+                                            className="rounded flex items-center gap-1 text-green-600 bg-green-50 border-green-100"
+                                          >
+                                            <MapPin className="h-3 w-3" />
+                                            {job.location}
+                                          </Badge>
+                                          <Badge
+                                            variant="outline"
+                                            className="rounded flex items-center gap-1 text-amber-600 bg-amber-50 border-amber-100"
+                                          >
+                                            {formatSalary(job.salary)}
+                                          </Badge>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex flex-col items-end mt-3 md:mt-0 relative">
+                                        <div
+                                          className={`flex items-center text-sm text-gray-500 absolute right-0 transition-all duration-300 min-w-[200px] justify-end ${
+                                            hoveredJob === job.jobID
+                                              ? "opacity-0 transform -translate-y-2"
+                                              : "opacity-100 transform translate-y-0"
+                                          }`}
+                                        >
+                                          <CalendarDays className="h-4 w-4 mr-1" />
+                                          <span>
+                                            Posted {getTimeAgo(job.createdAt)}
+                                          </span>
+                                        </div>
+
+                                        <div
+                                          className={`transition-all duration-300 ${
+                                            hoveredJob === job.jobID
+                                              ? "opacity-100 transform translate-y-0"
+                                              : "opacity-0 invisible"
+                                          }`}
+                                        >
+                                          {/* Apply Now button with different styles based on package type */}
+                                          <Button
+                                            size="sm"
+                                            className={
+                                              getlevel(job) === "Premium"
+                                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
+                                                : getlevel(job) === "Standard"
+                                                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                                : getlevel(job) === "Basic"
+                                                ? "bg-sky-600 hover:bg-sky-700 text-white"
+                                                : "bg-gray-600 hover:bg-gray-700 text-white" // Màu mặc định
+                                            }
+                                            onClick={() =>
+                                              (window.location.href = `/job-list/${job.jobID}`)
+                                            }
+                                          >
+                                            Apply Now
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </AccordionTrigger>
+
+                                  <AccordionContent
+                                    className={`px-4 pb-4 relative
+    ${
+      getlevel(job) === "Premium"
+        ? "bg-gradient-to-r from-white to-purple-50 border-t border-purple-100"
+        : getlevel(job) === "Standard"
+        ? "bg-gradient-to-b from-white to-blue-50 border-t border-blue-100"
+        : getlevel(job) === "Basic"
+        ? "bg-gradient-to-b from-white to-sky-50 border-t border-sky-100"
+        : "bg-white border-t border-gray-100" // Màu mặc định
+    }
+  `}
+                                  >
+                                    {/* Premium watermark */}
+                                    {job.level === "Premium" && (
+                                      <div className="absolute right-4 bottom-4 opacity-10 pointer-events-none">
+                                        <Crown className="h-20 w-20 text-purple-300" />
+                                      </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                      <div className="space-y-2">
+                                        <div className="flex items-center">
+                                          <GraduationCap
+                                            className={`h-4 w-4 mr-2 
+    ${
+      getlevel(job) === "Premium"
+        ? "text-purple-500"
+        : getlevel(job) === "Standard"
+        ? "text-blue-500"
+        : getlevel(job) === "Basic"
+        ? "text-sky-500"
+        : "text-gray-500" // Màu mặc định
+    }`}
+                                          />
+
+                                          <span className="text-sm">
+                                            <strong>Education:</strong>{" "}
+                                            {job.education}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <Clock
+                                            className={`h-4 w-4 mr-2 
+    ${
+      getlevel(job) === "Premium"
+        ? "text-purple-500"
+        : getlevel(job) === "Standard"
+        ? "text-blue-500"
+        : getlevel(job) === "Basic"
+        ? "text-sky-500"
+        : "text-gray-500" // Màu mặc định
+    }`}
+                                          />
+                                          <span className="text-sm">
+                                            <strong>Experience:</strong>{" "}
+                                            {job.exp}+ years
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <div className="flex items-center">
+                                          <Users
+                                            className={`h-4 w-4 mr-2 
+    ${
+      getlevel(job) === "Premium"
+        ? "text-purple-500"
+        : getlevel(job) === "Standard"
+        ? "text-blue-500"
+        : getlevel(job) === "Basic"
+        ? "text-sky-500"
+        : "text-gray-500" // Màu mặc định
+    }`}
+                                          />
+                                          <span className="text-sm">
+                                            <strong>Hiring:</strong>{" "}
+                                            {job.numberOfRecruitment}{" "}
+                                            position(s)
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <Building2
+                                            className={`h-4 w-4 mr-2 
+    ${
+      getlevel(job) === "Premium"
+        ? "text-purple-500"
+        : getlevel(job) === "Standard"
+        ? "text-blue-500"
+        : getlevel(job) === "Basic"
+        ? "text-sky-500"
+        : "text-gray-500" // Màu mặc định
+    }`}
+                                          />
+                                          <span className="text-sm">
+                                            <strong>Level:</strong>{" "}
+                                            {job.level || "Not specified"}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <Calendar
+                                            className={`h-4 w-4 mr-2 
+    ${
+      getlevel(job) === "Premium"
+        ? "text-purple-500"
+        : getlevel(job) === "Standard"
+        ? "text-blue-500"
+        : getlevel(job) === "Basic"
+        ? "text-sky-500"
+        : "text-gray-500" // Màu mặc định
+    }`}
+                                          />
+                                          <span className="text-sm">
+                                            <strong>Deadline:</strong>{" "}
+                                            {new Date(
+                                              job.deadline
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-4 flex justify-end">
+                                      {userRole === "Candidate" && (
+                                        <Button
+                                          variant="outline"
+                                          className={`border hover:bg-blue-100 flex items-center gap-2 ${
+                                            favoriteStatus[job.jobID]
+                                              ? getlevel(job) === "Premium"
+                                                ? "text-purple-600 border-purple-200 bg-purple-50"
+                                                : getlevel(job) === "Standard"
+                                                ? "text-blue-600 border-blue-200 bg-blue-50"
+                                                : getlevel(job) === "Basic"
+                                                ? "text-sky-600 border-sky-200 bg-sky-50"
+                                                : "text-gray-600 border-gray-200 bg-gray-50" // Màu mặc định khi đã lưu
+                                              : "text-gray-500 border-gray-200 hover:text-blue-600"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSaveJobClick(job);
+                                          }}
+                                          disabled={
+                                            savingFavorite === job.jobID
+                                          }
+                                        >
+                                          <Heart
+                                            className={`h-4 w-4 ${
+                                              favoriteStatus[job.jobID]
+                                                ? getlevel(job) === "Premium"
+                                                  ? "text-purple-500 fill-purple-500"
+                                                  : getlevel(job) === "Standard"
+                                                  ? "text-blue-500 fill-blue-500"
+                                                  : getlevel(job) === "Basic"
+                                                  ? "text-sky-500 fill-sky-500"
+                                                  : "text-gray-500 fill-gray-500" // Màu mặc định khi đã lưu
+                                                : "text-gray-500"
+                                            }`}
+                                          />
+                                          <span className="hidden sm:inline">
+                                            {favoriteStatus[job.jobID]
+                                              ? "Saved"
+                                              : "Save"}
+                                          </span>
+                                        </Button>
                                       )}
                                     </div>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                      <Badge
-                                        variant="outline"
-                                        className="rounded flex items-center gap-1 text-blue-600 bg-blue-50 border-blue-100"
-                                      >
-                                        <BriefcaseBusiness className="h-3 w-3" />
-                                        {job.workType}
-                                      </Badge>
-                                      <Badge
-                                        variant="outline"
-                                        className="rounded flex items-center gap-1 text-green-600 bg-green-50 border-green-100"
-                                      >
-                                        <MapPin className="h-3 w-3" />
-                                        {job.location}
-                                      </Badge>
-                                      <Badge
-                                        variant="outline"
-                                        className="rounded flex items-center gap-1 text-amber-600 bg-amber-50 border-amber-100"
-                                      >
-                                        {formatSalary(job.salary)}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-col items-end mt-3 md:mt-0 relative">
-                                    <div
-                                      className={`flex items-center text-sm text-gray-500 absolute right-0 transition-all duration-300 min-w-[200px] justify-end ${
-                                        hoveredJob === job.jobID
-                                          ? "opacity-0 transform -translate-y-2"
-                                          : "opacity-100 transform translate-y-0"
-                                      }`}
-                                    >
-                                      <CalendarDays className="h-4 w-4 mr-1" />
-                                      <span>
-                                        Posted {getTimeAgo(job.createdAt)}
-                                      </span>
-                                    </div>
-
-                                    <div
-                                      className={`transition-all duration-300 ${
-                                        hoveredJob === job.jobID
-                                          ? "opacity-100 transform translate-y-0"
-                                          : "opacity-0 invisible"
-                                      }`}
-                                    >
-                                      <Button
-                                        size="sm"
-                                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                                        onClick={() =>
-                                          (window.location.href = `/job-list/${job.jobID}`)
-                                        }
-                                      >
-                                        Apply Now
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </AccordionTrigger>
-
-                              <AccordionContent className="px-4 pb-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                  <div className="space-y-2">
-                                    <div className="flex items-center">
-                                      <GraduationCap className="h-4 w-4 mr-2 text-gray-500" />
-                                      <span className="text-sm">
-                                        <strong>Education:</strong>{" "}
-                                        {job.education}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                                      <span className="text-sm">
-                                        <strong>Experience:</strong> {job.exp}+
-                                        years
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex items-center">
-                                      <Users className="h-4 w-4 mr-2 text-gray-500" />
-                                      <span className="text-sm">
-                                        <strong>Hiring:</strong>{" "}
-                                        {job.numberOfRecruitment} position(s)
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <Building2 className="h-4 w-4 mr-2 text-gray-500" />
-                                      <span className="text-sm">
-                                        <strong>Level:</strong>{" "}
-                                        {job.level || "Not specified"}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                      <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                                      <span className="text-sm">
-                                        <strong>Deadline:</strong>{" "}
-                                        {new Date(
-                                          job.deadline
-                                        ).toLocaleDateString()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="mt-4 flex justify-end">
-                                  {userRole === "Candidate" && (
-                                    <Button
-                                      variant="outline"
-                                      className={`border hover:bg-blue-100 flex items-center gap-2 ${
-                                        favoriteStatus[job.jobID]
-                                          ? "text-blue-600 border-blue-200 bg-blue-50"
-                                          : "text-gray-500 border-gray-200 hover:text-blue-600"
-                                      }`}
-                                      onClick={(e) => {
-                                        e.stopPropagation(); // Ngăn accordion đóng/mở
-                                        handleSaveJobClick(job);
-                                      }}
-                                      disabled={savingFavorite === job.jobID}
-                                    >
-                                      <Heart
-                                        className={`h-4 w-4 ${
-                                          favoriteStatus[job.jobID]
-                                            ? "text-blue-500 fill-blue-500"
-                                            : "text-gray-500"
-                                        }`}
-                                      />
-                                      <span className="hidden sm:inline">
-                                        {favoriteStatus[job.jobID]
-                                          ? "Saved"
-                                          : "Save"}
-                                      </span>
-                                    </Button>
-                                  )}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      </CardContent>
-                      <CardFooter className="bg-gray-50 flex justify-end align-items-center py-2">
-                        <Button
-                          variant="outline"
-                          className="text-sm"
-                          onClick={() =>
-                            (window.location.href = `/company-list/${company.companyName}`)
-                          }
-                        >
-                          View Company Profile
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
+                                  </AccordionContent>
+                                </AccordionItem>
+                              );
+                            })}
+                          </Accordion>
+                        </CardContent>
+                        <CardFooter className="bg-gray-50 flex justify-end align-items-center py-2">
+                          <Button
+                            variant="outline"
+                            className="text-sm"
+                            onClick={() =>
+                              (window.location.href = `/company-list/${company.companyName}`)
+                            }
+                          >
+                            View Company Profile
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <Card className="py-12">
