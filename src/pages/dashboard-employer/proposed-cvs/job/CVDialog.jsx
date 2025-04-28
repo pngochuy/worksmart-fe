@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { toast } from "react-toastify"; // Đảm bảo import này
+import { toast, ToastContainer } from "react-toastify"; // Đảm bảo import này
 import {
   Mail,
   Phone,
@@ -96,6 +96,8 @@ const CVDialog = ({ open, onOpenChange, candidate, cv, jobId, employerId }) => {
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={5000} />
+
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border border-blue-100 shadow-lg rounded-xl p-6">
           <>
