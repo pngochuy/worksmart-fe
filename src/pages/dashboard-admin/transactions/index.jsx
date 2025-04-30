@@ -79,7 +79,7 @@ export const Index = () => {
 
     return (
       <Badge
-        className={`w-1/2 rounded-md ${statusConfig[status].color} flex items-center gap-1 hover:bg-opacity-80 transition duration-200`}
+        className={`w-2/3 rounded-md ${statusConfig[status].color} flex items-center gap-1 hover:bg-opacity-80 transition duration-200`}
       >
         {statusConfig[status].icon}
         {status}

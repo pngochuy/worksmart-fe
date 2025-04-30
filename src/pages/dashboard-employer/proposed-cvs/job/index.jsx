@@ -62,6 +62,7 @@ import CVDialog from "./CVDialog";
 import { exportCandidatesToExcel } from "@/helpers/excelExport";
 import { AIAnalysisDialog } from "./AIAnalysisDialog";
 import { CandidatePagination } from "./CandidatePagination";
+import { ToastContainer } from "react-toastify";
 
 const CandidateMatchingPage = () => {
   const { jobId } = useParams();
@@ -816,6 +817,7 @@ const CandidateMatchingPage = () => {
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={5000} />
       <div className="container mx-auto py-6 px-4 max-w-7xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">

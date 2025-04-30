@@ -12,31 +12,55 @@ import { getCVById } from "@/services/cvServices";
 export const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [resumeData, setResumeData] = useState({});
-  // resumeToEdit ? mapToResumeValues(resumeToEdit) : {} // => khi tới trang này phải fetch CV từ DB phải truyền qua được
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [showSmResumePreview, setShowSmResumePreview] = useState(false);
-  const { isSaving, hasUnsavedChanges } = useAutoSaveResume(resumeData);
+
+  const { isSaving, hasUnsavedChanges } = useAutoSaveResume(
+    resumeData,
+    setResumeData,
+    !isInitialized
+  );
 
   // Get the cvId from the URL
   const cvId = searchParams.get("cvId");
 
   // Fetch the CV when the cvId changes
   useEffect(() => {
-    if (cvId) {
-      const fetchCV = async () => {
+    async function loadCVData() {
+      setIsLoading(true);
+
+      if (cvId) {
         try {
+          console.log("🔍 Fetching CV with ID:", cvId);
           const fetchedCV = await getCVById(cvId);
-          console.log("fetchedCV: ", fetchedCV);
+
           if (fetchedCV) {
-            setResumeData(mapToResumeValues(fetchedCV)); // Map and set resume data
+            console.log("✅ CV fetched successfully:", fetchedCV);
+            const mappedData = mapToResumeValues(fetchedCV);
+            setResumeData(mappedData);
+            console.log("📋 Mapped resume data:", mappedData);
+          } else {
+            console.warn("⚠️ No CV data returned from server");
+            setResumeData({
+              cvid: cvId,
+              id: cvId,
+              title: "My CV",
+            });
           }
-          // console.log("resumeData: ", resumeData);
         } catch (error) {
-          console.error("Error fetching CV:", error);
+          console.error("❌ Error fetching CV:", error);
         }
-      };
-      fetchCV();
+      } else {
+        console.log("ℹ️ No cvId provided, initializing empty CV");
+      }
+
+      setIsLoading(false);
+      setIsInitialized(true);
     }
-  }, [cvId]); // Run when cvId changes
+
+    loadCVData();
+  }, [cvId]);
 
   useUnloadWarning(hasUnsavedChanges);
 
@@ -45,8 +69,7 @@ export const Index = () => {
   function setStep(key) {
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("step", key);
-    setSearchParams(newSearchParams); // Use setSearchParams to update URL and trigger re-render
-    // window.history.pushState(null, "", `?${newSearchParams.toString()}`); => ko cập nhật đc form thì thay đổi step
+    setSearchParams(newSearchParams);
   }
 
   const FormComponent = steps.find(
@@ -62,6 +85,9 @@ export const Index = () => {
             Follow the steps below to create your CV. Your progress will be
             saved automatically.
           </p>
+          {isLoading && (
+            <div className="text-sm text-blue-600">Loading your CV data...</div>
+          )}
         </header>
         <main className="relative grow">
           <div className="absolute bottom-0 top-0 flex w-full">
@@ -85,19 +111,6 @@ export const Index = () => {
               setResumeData={setResumeData}
               className={cn(showSmResumePreview && "flex")}
             />
-            {/* <div className="hidden w-1/2 md:flex">
-                <pre
-                  className="overflow-x-auto"
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    wordWrap: "break-word",
-                    overflow: "auto",
-                    width: "100%",
-                  }}
-                >
-                  {JSON.stringify(resumeData, null, 2)}
-                </pre>
-              </div> */}
           </div>
         </main>
         <Footer

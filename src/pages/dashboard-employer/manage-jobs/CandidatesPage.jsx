@@ -14,6 +14,7 @@ import { Filter, Search, X } from "lucide-react";
 import XLSX from "xlsx-js-style";
 import { Download, FileText } from "lucide-react";
 import openai from "@/lib/openai";
+import { formatDateTimeNotIncludeTime } from "@/helpers/formatDateTime";
 
 export default function CandidatesPage() {
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
@@ -701,34 +702,26 @@ export default function CandidatesPage() {
     return content.join("\n");
   };
 
-  // Kiểm tra xem có ứng viên nào đang ở trạng thái Pending không
+  // luôn trả về true
   const hasPendingCandidates = (candidates) => {
-    return candidates.some(
-      (candidate) => candidate.applicationStatus?.toLowerCase() === "pending"
-    );
+    return candidates.length > 0; // Chỉ cần có ứng viên là được
   };
 
-  // Lọc ứng viên đủ điều kiện để phân tích (chỉ ở trạng thái Pending)
+  // Lọc ứng viên đủ điều kiện để phân tích
   const getEligibleCandidatesForAnalysis = (candidates) => {
-    return candidates.filter((candidate) => {
-      const status = candidate.applicationStatus?.toLowerCase();
-      return status === "pending"; // Chỉ lấy ứng viên có trạng thái Pending
-    });
+    return candidates; // Trả về tất cả ứng viên không cần lọc theo status
   };
 
   // Hàm xử lý khi click nút Export to Excel
   const handleExportToExcel = async () => {
-    // Kiểm tra xem có ứng viên pending không
-    if (!hasPendingCandidates(candidates)) {
+    // Kiểm tra xem có ứng viên không (bỏ kiểm tra status)
+    if (candidates.length === 0) {
       toast.info(
         <div>
           <p>
-            <strong>No candidates with 'Pending' status found!</strong>
+            <strong>No candidates found!</strong>
           </p>
-          <p>
-            Only candidates with 'Pending' status can be analyzed with this
-            tool.
-          </p>
+          <p>Please add candidates before using this tool.</p>
         </div>,
         {
           autoClose: 5000,
@@ -1236,6 +1229,10 @@ export default function CandidatesPage() {
                           <th>
                             <i className="fas fa-info-circle mr-1"></i> Status
                           </th>
+                          <th>
+                            <i className="fas fa-calendar-alt mr-1"></i> Applied
+                            On
+                          </th>
                           <th className="text-center">
                             <i className="fas fa-cogs mr-1"></i> Actions
                           </th>
@@ -1292,6 +1289,11 @@ export default function CandidatesPage() {
                               <td>
                                 {getStatusBadge(candidate.applicationStatus)}
                               </td>
+                              <td>
+                                {formatDateTimeNotIncludeTime(
+                                  candidate.createdAt
+                                )}
+                              </td>
                               <td className="text-center">
                                 <div className="action-buttons">
                                   {/* View Detail Button */}
@@ -1339,7 +1341,7 @@ export default function CandidatesPage() {
                           ))
                         ) : (
                           <tr className="no-results">
-                            <td colSpan="5">
+                            <td colSpan="6">
                               <div className="no-candidates">
                                 <i className="fas fa-user-slash"></i>
                                 <p>No candidates found</p>
