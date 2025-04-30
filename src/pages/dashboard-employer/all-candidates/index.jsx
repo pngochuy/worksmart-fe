@@ -664,46 +664,6 @@ export const Index = () => {
                                             </ul>
                                           )}
                                         </div>
-                                        <div className="option-box">
-                                          <ul className="option-list">
-                                            <li>
-                                              <button
-                                                data-text="View Application"
-                                                onClick={() => handleViewApplication(candidate.jobInfo.jobID, candidate.applicationID)}
-                                              >
-                                                <span className="la la-eye"></span>
-                                              </button>
-                                            </li>
-                                            {candidate.status !== 'Approved' && (
-                                              <li>
-                                                <button
-                                                  data-text="Approve Application"
-                                                  onClick={() => handleApproveApplication(candidate.jobInfo.jobID, candidate.applicationID)}
-                                                >
-                                                  <span className="la la-check"></span>
-                                                </button>
-                                              </li>
-                                            )}
-                                            {candidate.status !== 'Rejected' && (
-                                              <li>
-                                                <button
-                                                  data-text="Reject Application"
-                                                  onClick={() => handleRejectClick(candidate)}
-                                                >
-                                                  <span className="la la-times-circle"></span>
-                                                </button>
-                                              </li>
-                                            )}
-                                            <li>
-                                              <button
-                                                data-text="Delete Application"
-                                                onClick={() => handleDeleteApplication(candidate.applicationID)}
-                                              >
-                                                <span className="la la-trash"></span>
-                                              </button>
-                                            </li>
-                                          </ul>
-                                        </div>
                                       </div>
                                     </div>
                                   ))

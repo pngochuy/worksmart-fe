@@ -101,43 +101,6 @@ export const Banner = () => {
                 <a href="#">Senior</a>,<a href="#">Engineer</a>,
               </div>
               {/* End Popular Search */}
-              {/*Clients Section*/}
-              <div
-                className="home22-hero-client mt-5 wow fadeInUp"
-                data-wow-delay="600ms"
-              >
-                <ul className="companies-carousel sponsors-carousel-two owl-loaded owl-carousel owl-theme">
-                  <li className="slide-item">
-                    <figure className="image-box">
-                      <a href="#">
-                        <img src={client1Img} alt="" />
-                      </a>
-                    </figure>
-                  </li>
-                  <li className="slide-item">
-                    <figure className="image-box">
-                      <a href="#">
-                        <img src={client2Img} alt="" />
-                      </a>
-                    </figure>
-                  </li>
-                  <li className="slide-item">
-                    <figure className="image-box">
-                      <a href="#">
-                        <img src={client3Img} alt="" />
-                      </a>
-                    </figure>
-                  </li>
-                  <li className="slide-item">
-                    <figure className="image-box">
-                      <a href="#">
-                        <img src={client4Img} alt="" />
-                      </a>
-                    </figure>
-                  </li>
-                </ul>
-              </div>
-              {/* End Clients Section*/}
             </div>
           </div>
 
