@@ -53,15 +53,14 @@ export const updateCandidateProfile = async (profileData) => {
     const token = getAccessToken();
     if (!token) throw new Error("No access token found");
 
-    // const updatedData = {
-    //   ...profileData,
-    //   isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
-    // };
-    console.log("Profile data gửi đi:", profileData);
+    const updatedData = {
+      ...profileData,
+      isPrivated: profileData.isPrivated === "Yes" ? true : false, // Đổi qua kiểu boolean ở API
+    };
 
     const res = await axios.put(
       `${BACKEND_API_URL}/candidates/edit-profile`,
-      profileData,
+      updatedData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -69,7 +68,6 @@ export const updateCandidateProfile = async (profileData) => {
         },
       }
     );
-    console.log("response: ", res);
     if (localStorage.getItem("userLoginData")) {
       const userLoginData = JSON.parse(localStorage.getItem("userLoginData"));
       userLoginData.fullName = profileData?.fullName;
