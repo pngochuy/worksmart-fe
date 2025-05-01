@@ -502,3 +502,14 @@ export const getRemainingJobPriorityLimit = async (userId) => {
     throw error;
   }
 };
+export const getTopCategoryJob = async () => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/getTopCategoryJob`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error getting top category job:", error);
+    throw error;
+  }
+};
