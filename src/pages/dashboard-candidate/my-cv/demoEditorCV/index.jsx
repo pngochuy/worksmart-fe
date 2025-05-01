@@ -15,7 +15,6 @@ export const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showSmResumePreview, setShowSmResumePreview] = useState(false);
-
   const { isSaving, hasUnsavedChanges } = useAutoSaveResume(
     resumeData,
     setResumeData,
@@ -32,14 +31,20 @@ export const Index = () => {
 
       if (cvId) {
         try {
-          console.log("🔍 Fetching CV with ID:", cvId);
+          //console.log("🔍 Fetching CV with ID:", cvId);
           const fetchedCV = await getCVById(cvId);
 
           if (fetchedCV) {
-            console.log("✅ CV fetched successfully:", fetchedCV);
+            //console.log("✅ CV fetched successfully:", fetchedCV);
+
+            // Cache avatar URL để khôi phục khi cần
+            if (fetchedCV.link) {
+              sessionStorage.setItem("cv_avatar_" + cvId, fetchedCV.link);
+            }
+
             const mappedData = mapToResumeValues(fetchedCV);
             setResumeData(mappedData);
-            console.log("📋 Mapped resume data:", mappedData);
+            //console.log("📋 Mapped resume data:", mappedData);
           } else {
             console.warn("⚠️ No CV data returned from server");
             setResumeData({
@@ -63,6 +68,42 @@ export const Index = () => {
   }, [cvId]);
 
   useUnloadWarning(hasUnsavedChanges);
+
+  // Thêm useEffect để theo dõi thay đổi của resumeData.photo
+  // useEffect(() => {
+  //   console.log("📷 resumeData.photo changed:", {
+  //     exists: Boolean(resumeData.photo),
+  //     value: resumeData.photo,
+  //   });
+  // }, [resumeData.photo]);
+
+  // Hoặc có thể log mỗi khi resumeData thay đổi
+  // useEffect(() => {
+  //   if (resumeData && Object.keys(resumeData).length > 0) {
+  //     console.log("Current resumeData:", {
+  //       photoExists: Boolean(resumeData.photo),
+  //       photoPreview:
+  //         resumeData.photo && typeof resumeData.photo === "string"
+  //           ? resumeData.photo.substring(0, 50) + "..."
+  //           : "N/A",
+  //     });
+  //   }
+  // }, [resumeData]);
+
+  // Kiểm tra và khôi phục avatar khi resumeData thay đổi
+  useEffect(() => {
+    if (resumeData && cvId && !resumeData.photo) {
+      // Nếu không có photo, thử khôi phục từ cache
+      const cachedAvatar = sessionStorage.getItem("cv_avatar_" + cvId);
+      if (cachedAvatar) {
+        //  console.log("🔄 Restoring avatar from cache");
+        setResumeData((prev) => ({
+          ...prev,
+          photo: cachedAvatar,
+        }));
+      }
+    }
+  }, [resumeData, cvId]);
 
   const currentStep = searchParams.get("step") || steps[0].key;
 

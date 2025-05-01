@@ -10,9 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { personalInfoSchema } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
+import { uploadImagesProfile } from "@/services/candidateServices";
 
 export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
   const form = useForm({
@@ -28,9 +29,7 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
   });
 
   useEffect(() => {
-    // When resumeData changes, reset the form with the new values
     form.reset({
-      // photo: resumeData?.photo || null,
       firstName: resumeData?.firstName || "",
       lastName: resumeData?.lastName || "",
       jobTitle: resumeData?.jobTitle || "",
@@ -50,6 +49,48 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
   }, [form, resumeData, setResumeData]);
 
   const photoInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+      const uploadResponse = await uploadImagesProfile(file);
+      const imageUrl = uploadResponse.imageUrl;
+
+      if (!imageUrl) {
+        throw new Error("No image URL in response");
+      }
+
+      setResumeData((prevData) => ({
+        ...prevData,
+        photo: imageUrl,
+      }));
+
+      if (resumeData.id || resumeData.cvid) {
+        const cvId = resumeData.id || resumeData.cvid;
+        sessionStorage.setItem("cv_avatar_" + cvId, imageUrl);
+      }
+    } catch (error) {
+      alert("Failed to upload photo: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setResumeData({
+      ...resumeData,
+      photo: "",
+    });
+
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
+  };
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -62,7 +103,6 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
           <FormField
             control={form.control}
             name="photo"
-            // eslint-disable-next-line no-unused-vars
             render={({ field: { onChange, value, ...fieldValues } }) => (
               <FormItem>
                 <FormLabel>Your photo</FormLabel>
@@ -72,10 +112,7 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
                       {...fieldValues}
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        onChange(file);
-                      }}
+                      onChange={handlePhotoUpload}
                       ref={photoInputRef}
                     />
                   </FormControl>
@@ -83,12 +120,8 @@ export const PersonalInfoForm = ({ resumeData, setResumeData }) => {
                     variant="secondary"
                     className="bg-red-700 hover:bg-red-800 text-white"
                     type="button"
-                    onClick={() => {
-                      onChange(null);
-                      if (photoInputRef.current) {
-                        photoInputRef.current.value = "";
-                      }
-                    }}
+                    onClick={handleRemovePhoto}
+                    disabled={!resumeData.photo || isUploading}
                   >
                     Remove
                   </Button>

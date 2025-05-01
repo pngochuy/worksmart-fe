@@ -1,24 +1,38 @@
-import { editCV } from "@/services/cvServices";
-
+import { editCV, getCVById } from "@/services/cvServices";
 export default async function saveResume(values) {
-  // Kiểm tra xem values có đủ dữ liệu không
-  if (!values || typeof values !== "object") {
-    console.error("❌ Invalid resume data", values);
-    throw new Error("Invalid resume data");
-  }
-
-  const { id, cvid, userId, isFeatured } = values;
+  // Lấy các thông tin cần thiết
+  const { id, cvid, userId, photo } = values;
   const cvId = cvid || id;
 
+  // Kiểm tra ID
   if (!cvId || !userId) {
     console.error("❌ Missing required IDs", { cvId, userId });
     throw new Error("Missing required IDs");
   }
 
   try {
-    console.log("📤 Full form data:", values);
+    //console.log("📤 Saving CV with photo:", photo ? "exists" : "not provided");
 
-    // Map tất cả các phần dữ liệu từ form sang format server
+    // Gọi API để lấy dữ liệu hiện tại trước khi cập nhật
+    // Chỉ cần nếu không có photo mới
+    let currentCV = null;
+    if (!photo) {
+      try {
+        // Giả sử có API để lấy CV hiện tại
+        const response = await getCVById(cvId);
+        if (response.ok) {
+          currentCV = await response.json();
+          //console.log("📷 Current CV has link:", currentCV.link);
+        }
+      } catch (error) {
+        console.warn(
+          "⚠️ Couldn't fetch current CV, will proceed anyway:",
+          error
+        );
+      }
+    }
+
+    // Map data từ client format sang server format
     const mappedResumeValues = {
       CVID: Number(cvId),
       UserID: Number(userId),
@@ -32,20 +46,23 @@ export default async function saveResume(values) {
       // Personal info
       firstName: values.firstName || "",
       lastName: values.lastName || "",
-      jobPosition: values.jobTitle || "", // Chú ý map đúng từ jobTitle sang jobPosition
+      jobPosition: values.jobTitle || "",
       email: values.email || "",
       phone: values.phone || "",
       address: values.address || "",
-      link: values.photo || "", // Chú ý map từ photo sang link
 
-      // Summary
+      // QUAN TRỌNG: Chỉ ghi đè link khi có photo mới
+      // Nếu không có photo mới, giữ nguyên link cũ từ DB
+      link: photo || currentCV?.link || "",
+
+      // Các trường khác...
       summary: values.summary || "",
 
       // Boolean flags
-      isFeatured: Boolean(isFeatured),
+      isFeatured: Boolean(values.isFeatured),
       isHidden: false,
 
-      // Work experiences
+      // Map các mảng dữ liệu khác
       experiences: Array.isArray(values.workExperiences)
         ? values.workExperiences.map((exp) => ({
             jobPosition: exp.position || "",
@@ -57,7 +74,7 @@ export default async function saveResume(values) {
           }))
         : [],
 
-      // Educations
+      // Các mảng khác...
       educations: Array.isArray(values.educations)
         ? values.educations.map((edu) => ({
             schoolName: edu.school || "",
@@ -69,7 +86,6 @@ export default async function saveResume(values) {
           }))
         : [],
 
-      // Skills
       skills: Array.isArray(values.skills)
         ? values.skills.filter(Boolean).map((skill) => ({
             skillName: skill,
@@ -77,7 +93,6 @@ export default async function saveResume(values) {
           }))
         : [],
 
-      // Certifications (nếu có)
       certifications: Array.isArray(values.certifications)
         ? values.certifications.map((cert) => ({
             certificateName: cert.name || "",
@@ -87,25 +102,21 @@ export default async function saveResume(values) {
         : [],
     };
 
-    // Log dữ liệu đã map để debug
-    console.log(
-      "📤 Mapped data to send:",
-      JSON.stringify(mappedResumeValues, null, 2)
-    );
+    //console.log("🔄 Final link value being sent:", mappedResumeValues.link);
 
-    // Gọi API với dữ liệu đã được map đúng
+    // Gọi API
     const result = await editCV(
       Number(cvId),
       Number(userId),
       mappedResumeValues
     );
-    console.log("📥 Server response:", result);
 
-    // Format lại kết quả để client sử dụng
+    // Trả về kết quả với photo được giữ nguyên
     return {
       ...result,
       cvid: result.CVID || result.cvid,
       id: result.CVID || result.cvid,
+      photo: result.link || photo || currentCV?.link || "",
     };
   } catch (error) {
     console.error("❌ Error saving resume:", error);
