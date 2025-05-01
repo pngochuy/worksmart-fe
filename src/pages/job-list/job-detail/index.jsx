@@ -48,6 +48,8 @@ export const Index = () => {
   const [showUnsaveConfirmDialog, setShowUnsaveConfirmDialog] = useState(false); // Thêm state mới cho dialog unsave
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false); // Track if job is saved as favorite
+  const [showJobNotificationModal, setShowJobNotificationModal] =
+    useState(false);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);

@@ -107,7 +107,8 @@ export const uploadCV = async (uploadData) => {
     };
 
     const response = await axios.post(
-      `${BACKEND_API_URL}/api/CV/upload-parse-cv`,
+      `${BACKEND_API_URL}/api/CV/upload-cv`,
+      // `${BACKEND_API_URL}/api/CV/upload-parse-cv`, => API nay chua hoat dong
       dataToSend
     );
 
