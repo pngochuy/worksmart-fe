@@ -154,7 +154,7 @@ export const Index = () => {
                 className="font-bold text-blue-600 hover:underline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate("/package-list");
+                  navigate("/candidate/package-list");
                 }}
               >
                 Upgrade your subscription
@@ -174,11 +174,11 @@ export const Index = () => {
               {freePlanSettings.candidateFreePlan.maxCVsPerDay} CVs.
               <br />
               <a
-                href="/package-list"
+                href="/candidate/package-list"
                 className="font-bold text-blue-600 hover:underline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate("/package-list");
+                  navigate("/candidate/package-list");
                 }}
               >
                 Upgrade to a premium plan
