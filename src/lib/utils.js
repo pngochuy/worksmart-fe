@@ -7,19 +7,27 @@ export function cn(...inputs) {
 }
 
 export function fileReplacer(key, value) {
-  return value instanceof File
-    ? {
-        name: value.name,
-        size: value.size,
-        type: value.type,
-        lastModified: value.lastModified,
-      }
-    : value;
+  // Xử lý đặc biệt cho URL ảnh
+  if (key === "photo" || key === "link") {
+    if (
+      typeof value === "string" &&
+      (value.startsWith("http") || value.startsWith("blob:"))
+    ) {
+      // Trả về giá trị để so sánh, không trả về "[File]"
+      return value;
+    }
+  }
+
+  // Xử lý các trường hợp gốc
+  if (value instanceof File) {
+    return "[File]";
+  }
+  return value;
 }
 
 // mapToResumeValues chuyển đổi data từ ResumeServerData thành ResumeValues
 export function mapToResumeValues(data) {
-  console.log("🔄 Mapping server data to form values:", data);
+  //console.log("🔄 Mapping server data to form values:", data);
 
   if (!data)
     return {
@@ -34,8 +42,14 @@ export function mapToResumeValues(data) {
   // Đảm bảo ID luôn có giá trị
   const cvId = data.CVID || data.cvid || 0;
 
+  // Debug to log link field from server
+  // console.log("📷 Server link field when mapping:", {
+  //   exists: Boolean(data.link),
+  //   value: data.link,
+  // });
+
   // Log để debug
-  console.log(`🔍 Mapping CV with ID ${cvId}`);
+  // console.log(`🔍 Mapping CV with ID ${cvId}`);
 
   // Map tất cả các phần từ server data sang form values
   return {
@@ -56,7 +70,7 @@ export function mapToResumeValues(data) {
     email: data.email || "",
     phone: data.phone || "",
     address: data.address || "",
-    photo: data.link || "", // Chú ý map từ link sang photo
+    photo: data.link || "", // Đảm bảo map đúng giữa link và photo
 
     // Summary
     summary: data.summary || "",

@@ -62,41 +62,54 @@ export default function useAutoSaveResume(
           resumeIdRef.current && Object.keys(debouncedResumeData).length > 5;
 
         if (!hasMinimumData) {
-          console.warn("⚠️ Not enough data to save", debouncedResumeData);
+          //console.warn("⚠️ Not enough data to save", debouncedResumeData);
           setIsSaving(false);
           return;
         }
 
-        console.log("⚙️ Resume data structure before save:", {
-          generalInfo: {
-            title: debouncedResumeData.title,
-            description: debouncedResumeData.description,
-            colorHex: debouncedResumeData.colorHex,
-            borderStyle: debouncedResumeData.borderStyle,
-          },
-          personalInfo: {
-            firstName: debouncedResumeData.firstName,
-            lastName: debouncedResumeData.lastName,
-            jobTitle: debouncedResumeData.jobTitle,
-            email: debouncedResumeData.email,
-            phone: debouncedResumeData.phone,
-            address: debouncedResumeData.address,
-            photo: debouncedResumeData.photo ? "present" : "not present",
-          },
-          experiences: debouncedResumeData.workExperiences?.length || 0,
-          educations: debouncedResumeData.educations?.length || 0,
-          skills: debouncedResumeData.skills?.length || 0,
-          summary: debouncedResumeData.summary ? "present" : "not present",
-        });
+        // Log để debug avatar URL
+        // if (debouncedResumeData.photo) {
+        //   console.log("📷 Photo field before saving:", {
+        //     value: debouncedResumeData.photo.substring(0, 100) + "...",
+        //   });
+        // }
 
-        console.log(`🔄 Saving resume with ID: ${resumeIdRef.current}`);
+        //console.log(`🔄 Saving resume with ID: ${resumeIdRef.current}`);
 
-        const updatedResume = await saveResume({
-          ...debouncedResumeData,
-          id: resumeIdRef.current,
-          cvid: resumeIdRef.current,
-          userId: userID,
-        });
+        // Clone dữ liệu
+        const dataToSave = { ...debouncedResumeData };
+
+        // Đảm bảo ID được set
+        dataToSave.id = resumeIdRef.current;
+        dataToSave.cvid = resumeIdRef.current;
+        dataToSave.userId = userID;
+
+        // QUAN TRỌNG: Nếu không có photo trong currentData nhưng có trong lastSavedData
+        // thì khôi phục giá trị đó
+        if (!dataToSave.photo && lastSavedData) {
+          try {
+            const parsedLastSaved = JSON.parse(lastSavedData);
+            if (parsedLastSaved.photo) {
+              //console.log("🔄 Restoring photo from lastSavedData");
+              dataToSave.photo = parsedLastSaved.photo;
+            }
+          } catch (error) {
+            //console.error("Error parsing lastSavedData:", error);
+          }
+        }
+
+        // console.log(
+        //   "📤 Saving with photo:",
+        //   dataToSave.photo ? "exists" : "not provided"
+        // );
+
+        // Tiếp tục save như thường lệ
+        const updatedResume = await saveResume(dataToSave);
+
+        // Đảm bảo photo được giữ lại trong kết quả
+        if (updatedResume.link && !updatedResume.photo) {
+          updatedResume.photo = updatedResume.link;
+        }
 
         // Kiểm tra ID trả về từ server
         const serverReturnedId = updatedResume?.cvid || updatedResume?.CVID;
@@ -105,9 +118,9 @@ export default function useAutoSaveResume(
           serverReturnedId &&
           String(serverReturnedId) !== String(resumeIdRef.current)
         ) {
-          console.log(
-            `🔀 CV clone detected! ID changed: ${resumeIdRef.current} → ${serverReturnedId}`
-          );
+          // console.log(
+          //   `🔀 CV clone detected! ID changed: ${resumeIdRef.current} → ${serverReturnedId}`
+          // );
 
           // Cập nhật ID reference và URL
           resumeIdRef.current = String(serverReturnedId);
@@ -121,6 +134,9 @@ export default function useAutoSaveResume(
           const refreshedCV = await getCVById(serverReturnedId);
 
           if (refreshedCV) {
+            // Log để debug link từ server
+            //console.log("📷 Server returned link:", refreshedCV.link);
+
             const mappedData = mapToResumeValues(refreshedCV);
             setResumeData(mappedData);
             setLastSavedData(JSON.stringify(mappedData, fileReplacer));
@@ -130,7 +146,7 @@ export default function useAutoSaveResume(
           setLastSavedData(JSON.stringify(debouncedResumeData, fileReplacer));
         }
       } catch (error) {
-        console.error("❌ Error saving resume:", error);
+        //console.error("❌ Error saving resume:", error);
         setIsError(true);
       } finally {
         setIsSaving(false);
@@ -142,11 +158,7 @@ export default function useAutoSaveResume(
       JSON.stringify(debouncedResumeData, fileReplacer) !== lastSavedData;
     const hasData = Object.keys(debouncedResumeData).length > 5;
 
-    // Chỉ save khi:
-    // 1. Có thay đổi
-    // 2. Đủ dữ liệu
-    // 3. Không đang trong quá trình save
-    // 4. Không bị skip (nghĩa là đã khởi tạo xong)
+    // Chỉ save khi có đủ điều kiện
     if (hasChanges && hasData && !isSaving && !skipSaving) {
       save();
     }
