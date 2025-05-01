@@ -189,3 +189,6 @@
     height: 40vh;
   }
 }
+.ws-chat-user-status.offline {
+  color: #94a3b8;
+}

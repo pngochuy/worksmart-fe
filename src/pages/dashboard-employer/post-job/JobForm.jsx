@@ -323,7 +323,7 @@ export const JobForm = () => {
                   <form onSubmit={handleSubmit} className="default-form">
                     <div className="row">
                       <div className="form-group col-lg-12 col-md-12">
-                        <label>Job Title</label>
+                        <label>Job Title <span style={{ color: "red" }}>*</span></label>
                         <input
                           type="text"
                           name="title"
@@ -335,7 +335,7 @@ export const JobForm = () => {
                       </div>
 
                       <div className="form-group col-lg-12 col-md-12">
-                        <label>Job Description</label>
+                        <label>Job Description<span style={{ color: "red" }}>*</span></label>
                         <Editor
                           apiKey={API_TYNI_KEY}
                           value={jobData.description}
@@ -372,7 +372,7 @@ export const JobForm = () => {
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Education</label>
+                        <label>Education<span style={{ color: "red" }}>*</span></label>
                         <select
                           name="education"
                           value={jobData.education}
@@ -389,7 +389,7 @@ export const JobForm = () => {
                         </select>
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Number Of Recruitment</label>
+                        <label>Number Of Recruitment<span style={{ color: "red" }}>*</span></label>
                         <input
                           type="number"
                           name="numberOfRecruitment"
@@ -399,7 +399,7 @@ export const JobForm = () => {
                         />
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Experience (years)</label>
+                        <label>Experience (years)<span style={{ color: "red" }}>*</span></label>
                         <input
                           type="number"
                           name="exp"
@@ -411,7 +411,7 @@ export const JobForm = () => {
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Work Type</label>
+                        <label>Work Type<span style={{ color: "red" }}>*</span></label>
                         <select
                           name="workType"
                           value={jobData.workType}
@@ -427,12 +427,12 @@ export const JobForm = () => {
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Categories</label>
+                        <label>Categories<span style={{ color: "red" }}>*</span></label>
                         <CategoryDropdown setSearchParams={setJobData} />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Tags</label>
+                        <label>Tags<span style={{ color: "red" }}>*</span></label>
                         <TagDropdown
                           setSearchParams={setJobData}
                           searchParams={jobData}
@@ -440,12 +440,12 @@ export const JobForm = () => {
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Locations</label>
+                        <label>Locations<span style={{ color: "red" }}>*</span></label>
                         <LocationDropdown setSearchParams={setJobData} />
                       </div>
 
                       <div className="form-group col-lg-6 col-md-12">
-                        <label>Salary Range (VND)</label>
+                        <label>Salary Range (VND)<span style={{ color: "red" }}>*</span></label>
                         <div className="d-flex">
                           <input
                             type="text"
@@ -482,7 +482,7 @@ export const JobForm = () => {
                         ) : null}
                       </div>
                       <div className="form-group col-lg-6 col-md-12">
-                        <label style={{ display: "block" }}>Deadline</label>
+                        <label style={{ display: "block" }}>Deadline<span style={{ color: "red" }}>*</span></label>
                         <input
                           type="date"
                           name="deadline"
