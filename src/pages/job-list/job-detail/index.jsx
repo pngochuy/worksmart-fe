@@ -116,7 +116,23 @@ export const Index = () => {
     const fetchJobDetail = async () => {
       try {
         const data = await fetchJobDetails(jobId);
+        console.log("Job details fetched:", data);
         if (data) {
+          // Check if job deadline has passed
+          if (data.job && data.job.deadline) {
+            const deadlineDate = new Date(data.job.deadline);
+            const currentDate = new Date();
+
+            if (deadlineDate < currentDate) {
+              console.log(
+                "Job deadline has passed. Redirecting to job list..."
+              );
+              // Redirect to job list page
+              window.location.href = "/job-list";
+              return; // Exit early
+            }
+          }
+
           setJob(data.job);
           if (data.similarJobs) {
             setSimilarJobs(data.similarJobs);
