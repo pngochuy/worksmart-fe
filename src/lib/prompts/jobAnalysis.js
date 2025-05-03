@@ -85,7 +85,7 @@ export const generateJobAnalysisPrompt = (jobData) => {
       },
     ],
     temperature: 0.2,
-    model: "gpt-4o-mini",
+    model: "gpt-4o-mini-2024-07-18",
     response_format: { type: "json_object" },
   };
 };

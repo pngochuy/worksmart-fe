@@ -84,11 +84,11 @@ const PackagePurchase = () => {
         //   available: pkg.accessToPremiumCandidates,
         //   icon: <Users size={16} className="text-purple-500 mr-2" />,
         // },
-        {
-          text: "Priority Support",
-          available: pkg.name.includes("Premium"),
-          icon: <Award size={16} className="text-orange-500 mr-2" />,
-        },
+        // {
+        //   text: "Priority Support",
+        //   available: pkg.name.includes("Premium"),
+        //   icon: <Award size={16} className="text-orange-500 mr-2" />,
+        // },
       ],
       popular: pkg.name.includes("Standard"),
       bestValue: pkg.name.includes("Premium"),
@@ -526,7 +526,7 @@ const PackagePurchase = () => {
                             </td>
                           ))}
                         </tr> */}
-                        <tr>
+                        {/* <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                             <Award size={18} className="mr-2 text-orange-500" />
                             Priority Support
@@ -546,7 +546,7 @@ const PackagePurchase = () => {
                               )}
                             </td>
                           ))}
-                        </tr>
+                        </tr> */}
                         <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                             <Clock size={18} className="mr-2 text-blue-500" />

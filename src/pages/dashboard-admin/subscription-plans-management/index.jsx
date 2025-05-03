@@ -554,14 +554,14 @@ export const Index = () => {
                               featured job slots
                             </span>
                           </li>
-                          <li className="flex items-start">
+                          {/* <li className="flex items-start">
                             {pkg.accessToPremiumCandidates ? (
                               <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
                             ) : (
                               <X className="h-5 w-5 text-red-500 mr-2 shrink-0 mt-0.5" />
                             )}
                             <span>Access to premium candidates</span>
-                          </li>
+                          </li> */}
                         </ul>
                       </CardContent>
                       <CardFooter>
@@ -734,22 +734,22 @@ export const Index = () => {
                               Create up to <strong>{pkg.cvLimit}</strong> CVs
                             </span>
                           </li>
-                          <li className="flex items-start">
+                          {/* <li className="flex items-start">
                             {pkg.highlightProfile ? (
                               <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
                             ) : (
                               <X className="h-5 w-5 text-red-500 mr-2 shrink-0 mt-0.5" />
                             )}
                             <span>Highlighted profile in search results</span>
-                          </li>
-                          <li className="flex items-start">
+                          </li> */}
+                          {/* <li className="flex items-start">
                             {pkg.accessToExclusiveJobs ? (
                               <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
                             ) : (
                               <X className="h-5 w-5 text-red-500 mr-2 shrink-0 mt-0.5" />
                             )}
                             <span>Access to exclusive job listings</span>
-                          </li>
+                          </li> */}
                         </ul>
                       </CardContent>
                       <CardFooter>

@@ -12,6 +12,7 @@ import {
   AlertCircle,
   CreditCard,
   Lock,
+  Cpu,
 } from "lucide-react";
 import { getUserLoginData } from "@/helpers/decodeJwt";
 import { createPaymentLink, getPackages } from "@/services/employerServices";
@@ -70,25 +71,25 @@ const PackagePurchase = () => {
           available: true,
           icon: <FileText size={16} className="text-blue-500 mr-2" />,
         },
+        // {
+        //   text: pkg.highlightProfile ? "Highlighted Profile" : "Basic Profile",
+        //   available: pkg.highlightProfile,
+        //   icon: <Star size={16} className="text-yellow-500 mr-2" />,
+        // },
+        // {
+        //   text: "Access to Exclusive Jobs",
+        //   available: pkg.accessToExclusiveJobs,
+        //   icon: <Lock size={16} className="text-green-500 mr-2" />,
+        // },
+        // {
+        //   text: "Priority in Job Applications",
+        //   available: pkg.name.includes("Premium"),
+        //   icon: <TrendingUp size={16} className="text-purple-500 mr-2" />,
+        // },
         {
-          text: pkg.highlightProfile ? "Highlighted Profile" : "Basic Profile",
-          available: pkg.highlightProfile,
-          icon: <Star size={16} className="text-yellow-500 mr-2" />,
-        },
-        {
-          text: "Access to Exclusive Jobs",
-          available: pkg.accessToExclusiveJobs,
-          icon: <Lock size={16} className="text-green-500 mr-2" />,
-        },
-        {
-          text: "Priority in Job Applications",
+          text: "AI CV Assistant",
           available: pkg.name.includes("Premium"),
-          icon: <TrendingUp size={16} className="text-purple-500 mr-2" />,
-        },
-        {
-          text: "Priority Support",
-          available: pkg.name.includes("Premium"),
-          icon: <Award size={16} className="text-orange-500 mr-2" />,
+          icon: <Cpu size={16} className="text-orange-500 mr-2" />,
         },
       ],
       popular: pkg.name.includes("Plus"),
@@ -221,7 +222,7 @@ const PackagePurchase = () => {
           <p className="text-sm opacity-90 mb-3 text-white">{pkg.tagline}</p>
           <div className="flex items-center justify-center">
             <span className="text-3xl font-bold">
-              {pkg.price.toLocaleString('en-US')}
+              {pkg.price.toLocaleString("en-US")}
             </span>
             <span className="ml-1 text-white opacity-80">VND</span>
           </div>
@@ -470,7 +471,7 @@ const PackagePurchase = () => {
                             </td>
                           ))}
                         </tr>
-                        <tr>
+                        {/* <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                             <Star size={18} className="mr-2 text-yellow-500" />
                             Profile Status
@@ -485,8 +486,8 @@ const PackagePurchase = () => {
                                 : "Basic"}
                             </td>
                           ))}
-                        </tr>
-                        <tr>
+                        </tr> */}
+                        {/* <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                             <Lock size={18} className="mr-2 text-green-500" />
                             Exclusive Jobs Access
@@ -506,8 +507,8 @@ const PackagePurchase = () => {
                               )}
                             </td>
                           ))}
-                        </tr>
-                        <tr>
+                        </tr> */}
+                        {/* <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                             <TrendingUp
                               size={18}
@@ -530,18 +531,18 @@ const PackagePurchase = () => {
                               )}
                             </td>
                           ))}
-                        </tr>
+                        </tr> */}
                         <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                            <Award size={18} className="mr-2 text-orange-500" />
-                            Priority Support
+                            <Cpu size={18} className="mr-2 text-orange-500" />
+                            AI CV Assistant
                           </td>
                           {candidatePackages.map((pkg) => (
                             <td
                               key={pkg.id}
                               className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500"
                             >
-                              {pkg.features[4].available ? (
+                              {pkg.features[1].available ? (
                                 <Check
                                   size={20}
                                   className="text-green-500 inline"
@@ -552,6 +553,7 @@ const PackagePurchase = () => {
                             </td>
                           ))}
                         </tr>
+
                         <tr>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                             <Clock size={18} className="mr-2 text-blue-500" />

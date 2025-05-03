@@ -18,7 +18,7 @@ export const createPrompt = (systemPrompt, data, template) => {
       { role: "user", content: userMessage },
     ],
     temperature: 0.3, // Lower temperature for more deterministic responses
-    model: "gpt-4o-mini", // Can be configured as needed
+    model: "gpt-4o-mini-2024-07-18", // Can be configured as needed
   };
 };
 

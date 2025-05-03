@@ -17,7 +17,7 @@ export async function expandSearchTerms(searchTerm) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini-2024-07-18",
       messages: [
         { role: "system", content: systemMessage },
         { role: "user", content: userMessage },

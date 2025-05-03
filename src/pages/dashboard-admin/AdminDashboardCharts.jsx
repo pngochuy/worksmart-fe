@@ -227,9 +227,7 @@ const AdminDashboardCharts = () => {
         <div className="col-xl-6 col-lg-12 mb-4">
           <div className="card h-100">
             <div className="card-header">
-              <h5 className="card-title">
-                User Overview (Tổng quan người dùng)
-              </h5>
+              <h5 className="card-title">User Overview</h5>
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
@@ -248,7 +246,7 @@ const AdminDashboardCharts = () => {
                     stackId="1"
                     stroke="#8884d8"
                     fill="#8884d8"
-                    name="Job Seekers (Người tìm việc)"
+                    name="Job Seekers"
                   />
                   <Area
                     type="monotone"
@@ -256,7 +254,7 @@ const AdminDashboardCharts = () => {
                     stackId="1"
                     stroke="#82ca9d"
                     fill="#82ca9d"
-                    name="Employers (Nhà tuyển dụng)"
+                    name="Employers "
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -268,9 +266,7 @@ const AdminDashboardCharts = () => {
         <div className="col-xl-6 col-lg-12 mb-4">
           <div className="card h-100">
             <div className="card-header">
-              <h5 className="card-title">
-                Job Categories (Phân loại công việc)
-              </h5>
+              <h5 className="card-title">Job Categories</h5>
             </div>
             <div className="card-body">
               {categoryData.length > 0 ? (
@@ -315,7 +311,7 @@ const AdminDashboardCharts = () => {
           <div className="card h-100">
             <div className="card-header">
               <h5 className="card-title">
-                Job Status by Month (Tình trạng công việc theo tháng)
+                Job Status by Month
               </h5>
             </div>
             <div className="card-body">
@@ -351,7 +347,7 @@ const AdminDashboardCharts = () => {
           <div className="card h-100">
             <div className="card-header">
               <h5 className="card-title">
-                Revenue by Subscription (Doanh thu theo gói dịch vụ)
+                Revenue by Subscription
               </h5>
             </div>
             <div className="card-body">
@@ -399,7 +395,7 @@ const AdminDashboardCharts = () => {
           <div className="card h-100">
             <div className="card-header">
               <h5 className="card-title">
-                Geographic Distribution (Phân bố địa lý)
+                Geographic Distribution 
               </h5>
             </div>
             <div className="card-body">
@@ -442,7 +438,7 @@ const AdminDashboardCharts = () => {
           <div className="card h-100">
             <div className="card-header">
               <h5 className="card-title">
-                Daily Engagement (Mức độ tương tác theo ngày)
+                Daily Engagement
               </h5>
             </div>
             <div className="card-body">
@@ -457,7 +453,7 @@ const AdminDashboardCharts = () => {
                     type="monotone"
                     dataKey="applications"
                     stroke="#82ca9d"
-                    name="Applications (Lượt ứng tuyển)"
+                    name="Applications"
                   />
                 </LineChart>
               </ResponsiveContainer>
