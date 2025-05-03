@@ -28,6 +28,21 @@ export const Index = () => {
   const itemsPerPage = 3; // Showing 6 cards per page (2 rows of 3 in desktop view)
 
   useEffect(() => {
+    const isEmployerVerified = async () => {
+      try {
+        const user = getUserLoginData();
+
+        if (user.role === "Employer") {
+          const companyData = await fetchCompanyProfile();
+
+          setVerificationLevel(companyData.verificationLevel);
+          console.log("Verification Level:", companyData.verificationLevel);
+        }
+      } catch (error) {
+        console.error("Error loading verification data:", error);
+      }
+    };
+
     const loadData = async () => {
       try {
         const user = getUserLoginData();
@@ -50,6 +65,8 @@ export const Index = () => {
         setLoading(false);
       }
     };
+
+    isEmployerVerified();
     loadData();
   }, []);
 
