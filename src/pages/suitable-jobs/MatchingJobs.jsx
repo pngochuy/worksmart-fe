@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Building2,
   MapPin,
@@ -71,7 +71,14 @@ export const MatchingJobs = ({
   const totalPages = Math.ceil(jobs.length / itemsPerPage);
   const startIndex = (searchParams.PageIndex - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentJobs = jobs.slice(startIndex, endIndex);
+
+  // Memoize currentJobs để tránh tạo mảng mới mỗi lần render
+  const currentJobs = useMemo(() => {
+    return jobs.slice(startIndex, endIndex);
+  }, [jobs, startIndex, endIndex]);
+
+  // Sử dụng ref để theo dõi trạng thái đã check favorite chưa
+  const [hasCheckedFavorites, setHasCheckedFavorites] = useState(false);
 
   const formatTimeAgo = (date) => {
     const now = new Date();
@@ -86,15 +93,28 @@ export const MatchingJobs = ({
   };
 
   useEffect(() => {
-    if (userID && currentJobs.length > 0) {
+    // Chỉ check favorites khi userID và currentJobs có sẵn VÀ chưa check
+    if (userID && currentJobs.length > 0 && !hasCheckedFavorites) {
       checkFavoriteStatuses();
+      setHasCheckedFavorites(true);
     }
-  }, [userID, currentJobs]);
+  }, [userID, currentJobs, hasCheckedFavorites]);
+
+  // Reset trạng thái đã check khi thay đổi trang
+  useEffect(() => {
+    setHasCheckedFavorites(false);
+  }, [searchParams.PageIndex]);
 
   const checkFavoriteStatuses = async () => {
     if (!userID) return;
 
     try {
+      // Thêm logging để debug
+      console.log(
+        "Checking favorite statuses for jobs:",
+        currentJobs.map((job) => job.jobID)
+      );
+
       const statusPromises = currentJobs.map((job) =>
         isJobFavorited(userID, job.jobID).then((isFavorite) => ({
           jobId: job.jobID,
@@ -109,7 +129,10 @@ export const MatchingJobs = ({
         statusMap[jobId] = isFavorite;
       });
 
-      setFavoriteStatus(statusMap);
+      setFavoriteStatus((prev) => ({
+        ...prev, // Giữ lại trạng thái cũ
+        ...statusMap, // Cập nhật trạng thái mới
+      }));
     } catch (error) {
       console.error("Error checking favorite statuses:", error);
     }
