@@ -8,20 +8,34 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 // import GenerateSummaryButton from "./GenerateSummaryButton";
 import { summarySchema } from "@/lib/validations";
 import GenerateSummaryButton from "./GenerateSummaryButton";
+import { hasActiveSubscription } from "@/services/subscriptionServices";
 
 export const SummaryForm = ({ resumeData, setResumeData }) => {
+  const [isPremiumUser, setIsPremiumUser] = useState(null);
   const form = useForm({
     resolver: zodResolver(summarySchema),
     defaultValues: {
       summary: resumeData?.summary || "",
     },
   });
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      const userActiveSubscription = await hasActiveSubscription();
+      // Check if user has premium access
+      const isPremiumUser =
+        userActiveSubscription?.hasActiveSubscription === true &&
+        userActiveSubscription?.package?.name?.includes("Premium");
+      setIsPremiumUser(isPremiumUser);
+    };
+
+    fetchSubscription();
+  }, []);
 
   useEffect(() => {
     const { unsubscribe } = form.watch(async (values) => {
@@ -56,13 +70,14 @@ export const SummaryForm = ({ resumeData, setResumeData }) => {
                   />
                 </FormControl>
                 <FormMessage />
-                <GenerateSummaryButton
-                  resumeData={resumeData}
-                  onSummaryGenerated={(summary) =>
-                    form.setValue("summary", summary)
-                  }
-                />
-                {/* _GenerateSummaryButton_ */}
+                {isPremiumUser && (
+                  <GenerateSummaryButton
+                    resumeData={resumeData}
+                    onSummaryGenerated={(summary) =>
+                      form.setValue("summary", summary)
+                    }
+                  />
+                )}
               </FormItem>
             )}
           />

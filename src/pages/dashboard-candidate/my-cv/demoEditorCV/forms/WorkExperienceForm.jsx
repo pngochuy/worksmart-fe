@@ -37,9 +37,11 @@ import { useEffect, useState } from "react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { GenerateWorkExperienceButton } from "./GenerateWorkExperienceButton";
 import { toast } from "react-toastify";
+import { hasActiveSubscription } from "@/services/subscriptionServices";
 // import { GenerateWorkExperienceButton } from "./GenerateWorkExperienceButton";
 
 export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
+  const [isPremiumUser, setIsPremiumUser] = useState(null);
   const form = useForm({
     resolver: zodResolver(workExperienceSchema),
     defaultValues: {
@@ -52,6 +54,19 @@ export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
   //     workExperiences: resumeData?.workExperiences || [],
   //   });
   // }, [resumeData, form]);
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      const userActiveSubscription = await hasActiveSubscription();
+      // Check if user has premium access
+      const isPremiumUser =
+        userActiveSubscription?.hasActiveSubscription === true &&
+        userActiveSubscription?.package?.name?.includes("Premium");
+      setIsPremiumUser(isPremiumUser);
+    };
+
+    fetchSubscription();
+  }, []);
 
   useEffect(() => {
     const { unsubscribe } = form.watch(async (values) => {
@@ -116,6 +131,7 @@ export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
                   index={index}
                   form={form}
                   remove={remove}
+                  isPremiumUser={isPremiumUser} // Pass the premium user status to the item
                 />
               ))}
             </SortableContext>
@@ -142,7 +158,7 @@ export const WorkExperienceForm = ({ resumeData, setResumeData }) => {
   );
 };
 
-function WorkExperienceItem({ id, form, index, remove }) {
+function WorkExperienceItem({ id, form, index, remove, isPremiumUser }) {
   const {
     attributes,
     listeners,
@@ -231,14 +247,16 @@ function WorkExperienceItem({ id, form, index, remove }) {
           {...listeners}
         />
       </div>
-      <div className="flex justify-center">
-        {/* Smart fill (AI) button  */}
-        <GenerateWorkExperienceButton
-          onWorkExperienceGenerated={(exp) =>
-            form.setValue(`workExperiences.${index}`, exp)
-          }
-        />
-      </div>
+      {/* Smart fill (AI) button  */}
+      {isPremiumUser && (
+        <div className="flex justify-center">
+          <GenerateWorkExperienceButton
+            onWorkExperienceGenerated={(exp) =>
+              form.setValue(`workExperiences.${index}`, exp)
+            }
+          />
+        </div>
+      )}
       <FormField
         control={form.control}
         name={`workExperiences.${index}.position`}
