@@ -47,6 +47,7 @@ export const getAllJobs = async () => {
     throw error;
   }
 };
+
 // In adminServices.js
 export const approveJob = async (jobId) => {
   try {

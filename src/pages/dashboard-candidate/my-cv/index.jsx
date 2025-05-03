@@ -5,6 +5,7 @@ import { Index as DemoListCVsPage } from "./demoListCVs";
 
 export const index = () => {
   const [remainingCVSlots, setRemainingCVSlots] = useState(0);
+  const [maxCVsPerDay, setMaxCVsPerDay] = useState(0);
   const [error, setError] = useState(null);
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
@@ -13,7 +14,15 @@ export const index = () => {
     const fetchRemainingCVSlots = async () => {
       try {
         const result = await GetRemainingCVCreationLimit(userID);
-        setRemainingCVSlots(result);
+        console.log("Remaining CV slots:", result);
+
+        // Lấy giá trị maxCVsPerDay từ kết quả trả về
+        if (result && result.candidateFreePlan) {
+          setMaxCVsPerDay(result.candidateFreePlan.maxCVsPerDay);
+        }
+
+        // Đặt giá trị còn lại thực tế
+        setRemainingCVSlots(result.remainingLimit);
       } catch (err) {
         console.error("Error fetching remaining CV slots:", err);
         setError("Failed to load remaining CV slots");
@@ -41,8 +50,13 @@ export const index = () => {
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
                   <i className="fas fa-clipboard-list mr-2" style={{ color: '#fff' }}></i>
-                  {remainingCVSlots.remainingLimit} Create CV Slot{remainingCVSlots.remainingLimit !== 1 ? 's' : ''} Left
+                  {remainingCVSlots} Create CV Slot{remainingCVSlots !== 1 ? 's' : ''} Left
                 </span>
+                {maxCVsPerDay > 0 && (
+                  <span className="text-muted ml-2" style={{ fontSize: '0.85rem' }}>
+                    (Tối đa: {maxCVsPerDay} mỗi ngày)
+                  </span>
+                )}
               </div>
               <div className="text">Ready to jump back in?</div>
             </div>

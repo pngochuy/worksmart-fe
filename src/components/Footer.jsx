@@ -47,13 +47,13 @@ export const Footer = () => {
                 </div>
                 <p className="phone-num">
                   <span>Call us </span>
-                  <a href="tel:+84901234567">123 456 7890</a>
+                  <a href="tel:+84901234567">+84 944395357</a>
                 </p>
                 <p className="address">
                   FPT Technology Park, Hoa Hai Ward, Ngu Hanh Son District,
                   <br /> Da Nang City, Viet Nam. <br />
-                  <a href="mailto:support@worksmart.com" className="email">
-                    support@worksmart.com
+                  <a href="mailto:admin@worksmart.com" className="email">
+                    admin@worksmart.com
                   </a>
                 </p>
               </div>
@@ -67,19 +67,19 @@ export const Footer = () => {
                     <div className="widget-content">
                       <ul className="list">
                         <li>
-                          <a href="#">Browse Jobs</a>
+                          <a href="/job-list">Browse Jobs</a>
                         </li>
                         <li>
-                          <a href="#">Browse Categories</a>
+                          <a href="/company-list">Browse Companies</a>
                         </li>
                         <li>
-                          <a href="#">Candidate Dashboard</a>
+                          <a href="/candidate/dashboard">Candidate Dashboard</a>
                         </li>
                         <li>
-                          <a href="#">Job Alerts</a>
+                          <a href="/candidate/job-alerts">Job Alerts</a>
                         </li>
                         <li>
-                          <a href="#">My Favourites</a>
+                          <a href="/candidate/saved-jobs">My Favourites</a>
                         </li>
                       </ul>
                     </div>
@@ -92,16 +92,16 @@ export const Footer = () => {
                     <div className="widget-content">
                       <ul className="list">
                         <li>
-                          <a href="#">Browse Candidates</a>
+                          <a href="/candidate-list">Browse Candidates</a>
                         </li>
                         <li>
-                          <a href="#">Employer Dashboard</a>
+                          <a href="/employer/dashboard">Employer Dashboard</a>
                         </li>
                         <li>
-                          <a href="#">Add Job</a>
+                          <a href="/employer/post-job">Add Job</a>
                         </li>
                         <li>
-                          <a href="#">Job Packages</a>
+                          <a href="/employer/package-list">Job Packages</a>
                         </li>
                       </ul>
                     </div>
@@ -123,7 +123,7 @@ export const Footer = () => {
                           <a href="#">Blog</a>
                         </li>
                         <li>
-                          <a href="#">Contact</a>
+                          <a href="/contact">Contact</a>
                         </li>
                       </ul>
                     </div>

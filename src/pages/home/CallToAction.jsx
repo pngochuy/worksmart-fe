@@ -17,7 +17,7 @@ export const CallToAction = () => {
                 </div>
               </div>
               <div className="d-block">
-                <a href="#" className="theme-btn btn-style-one">
+                <a href="/job-list" className="theme-btn btn-style-one">
                   Apply Now <i className="fal fa-long-arrow-right ms-3"></i>
                 </a>
               </div>
