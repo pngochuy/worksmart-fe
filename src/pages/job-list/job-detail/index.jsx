@@ -123,7 +123,7 @@ export const Index = () => {
             const deadlineDate = new Date(data.job.deadline);
             const currentDate = new Date();
 
-            if (deadlineDate < currentDate) {
+            if (deadlineDate < currentDate && data.job.status !== 3) {
               console.log(
                 "Job deadline has passed. Redirecting to job list..."
               );
