@@ -178,6 +178,9 @@ const ActionCell = ({ row, onStatusChange }) => {
 
       // Use the imported API function
       if (report.job && report.job.jobID) {
+        console.log("row:", row);
+        console.log("row.original:", row.original);
+        console.log("Job ID found in the report object:", report.job.jobID);
         await hideJob(report.job.jobID);
       } else {
         console.warn("Job ID not found in the report object");
