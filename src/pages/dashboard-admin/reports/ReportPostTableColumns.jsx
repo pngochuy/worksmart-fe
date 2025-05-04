@@ -31,6 +31,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { updateReportStatus } from "@/services/adminServices";
 import { formatDate } from "@/helpers/formatDateTime";
+import { hideJob } from "@/services/jobServices";
 
 // Function to create and return the columns configuration
 export const createColumns = (onStatusChange) => {
@@ -174,6 +175,13 @@ const ActionCell = ({ row, onStatusChange }) => {
         status: newStatus,
         reason: actionType === "reject" ? rejectReason : undefined,
       });
+
+      // Use the imported API function
+      if (report.job && report.job.jobID) {
+        await hideJob(report.job.jobID);
+      } else {
+        console.warn("Job ID not found in the report object");
+      }
 
       // Update local state via callback
       onStatusChange(report.reportPostID, { reportStatus: newStatus });
