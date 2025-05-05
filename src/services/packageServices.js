@@ -37,7 +37,7 @@ export const createPackage = async (packageData) => {
 export const updatePackage = async (packageData) => {
   try {
     const response = await axios.put(
-      `${BACKEND_API_URL}/api/Package/update/${packageData.packageID}`,
+      `${BACKEND_API_URL}/api/Package/${packageData.packageID}`,
       packageData
     );
 
