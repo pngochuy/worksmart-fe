@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
-import { Button } from "../../../components/ui/button";
-import apiURLConfig from "../../../configs/apiURLConfig";
 
 const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const [keyword, setKeyword] = useState(defaultKeyword || "");
@@ -56,7 +54,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const userId = userID; // 👉 Cập nhật lại theo user đang đăng nhập
+    const userId = userID; 
 
     const payload = {
       keyword,
@@ -69,10 +67,10 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
       frequency: frequency || null,
       notificationMethod: notificationMethod,
       userId: userId
-    };
-
+    }; 
+    const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
     try {
-      const response = await fetch(`${apiURLConfig.baseURL}/api/JobAlert`, {
+      const response = await fetch(`${BACKEND_API_URL}/api/JobAlert`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
