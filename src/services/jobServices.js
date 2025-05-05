@@ -513,3 +513,15 @@ export const getTopCategoryJob = async () => {
     throw error;
   }
 };
+//GetRandomPremiumJob
+export const getRandomPremiumJob = async () => {
+  try {
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/Job/getRandomPremiumJob`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error getting random premium job:", error);
+    throw error;
+  }
+};
