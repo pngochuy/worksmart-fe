@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Thêm import này
 import { MatchingJobs } from "./MatchingJobs";
+// Thêm import PremiumJobPromotion
+import { PremiumJobPromotion } from "./PremiumJobPromotion";
 import { getCVsByUserId } from "../../services/cvServices";
 import {
   fetchJobRecommendations,
@@ -406,25 +408,8 @@ export const Index = () => {
               {/* Application Tracking - Updated to use real data */}
               <ApplicationTracker />
 
-              {/* Premium Feature Promotion */}
-              <Card className="border-0 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Bell className="h-5 w-5" />
-                    <h3 className="font-semibold">Premium Job Alerts</h3>
-                  </div>
-                  <p className="text-sm mb-4 text-blue-100">
-                    Get notified immediately when high-match jobs are posted.
-                    Stand out with priority application status.
-                  </p>
-                  <Button
-                    variant="secondary"
-                    className="w-full bg-white text-blue-600 hover:bg-blue-50"
-                  >
-                    Upgrade to Premium
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Replace this static card with the dynamic PremiumJobPromotion */}
+              <PremiumJobPromotion />
             </div>
           </div>
         </div>
