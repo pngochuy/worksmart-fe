@@ -112,9 +112,7 @@ export const JobCategories = () => {
                 {category.count !== 1 ? "s" : ""})
               </p>
               <h4>
-                <a href="#" onClick={(e) => e.preventDefault()}>
-                  {category.categoryname}
-                </a>
+                {category.categoryname}
               </h4>
               <p className="text">
                 Explore the latest opportunities

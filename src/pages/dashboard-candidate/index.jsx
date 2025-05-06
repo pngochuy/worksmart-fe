@@ -708,7 +708,7 @@ export const Index = () => {
                             <div className="content">
                               <span className="company-logo">
                                 <img
-                                  src={job.avatar || "https://via.placeholder.com/80"}
+                                  src={job.companyAvatar || "https://via.placeholder.com/80"}
                                   alt={job.companyName}
                                 />
                               </span>
@@ -738,7 +738,7 @@ export const Index = () => {
                                 {job.level && <li className="privacy">{job.level}</li>}
                                 {job.priority && <li className="required">Urgent</li>}
                               </ul>
-                              <button className="bookmark-btn" style={{ right: 70 }}>
+                              {/* <button className="bookmark-btn" style={{ right: 70 }}>
                                 <Button
                                   variant="outline"
                                   className="text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 flex items-center gap-2 cursor-default"
@@ -748,7 +748,7 @@ export const Index = () => {
                                     Save
                                   </span>
                                 </Button>
-                              </button>
+                              </button> */}
                             </div>
                           </div>
                         </div>

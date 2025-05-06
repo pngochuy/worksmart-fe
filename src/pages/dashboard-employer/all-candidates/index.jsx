@@ -610,9 +610,9 @@ export const Index = () => {
                                             <a href="#">{getCandidateInfo(candidate, 'fullName')}</a>
                                           </h4>
                                           <ul className="candidate-info">
-                                            <li className="designation">
+                                            {/* <li className="designation">
                                               {getCandidateInfo(candidate, 'jobPosition', 'Job Position')}
-                                            </li>
+                                            </li> */}
                                             <li>
                                               <span className="icon flaticon-map-locator"></span>{" "}
                                               {getCandidateInfo(candidate, 'address', 'Location not specified')}
@@ -637,7 +637,7 @@ export const Index = () => {
                                             fontSize: '12px',
                                             marginBottom: '10px'
                                           }}>
-                                            <span>
+                                            {/* <span>
                                               <strong>Status:</strong>
                                               <span style={{
                                                 padding: '2px 8px',
@@ -654,7 +654,7 @@ export const Index = () => {
                                               }}>
                                                 {candidate.status}
                                               </span>
-                                            </span>
+                                            </span> */}
                                             <span><strong>Applied:</strong> {formatDate(candidate.createdAt)}</span>
                                           </div>
 
