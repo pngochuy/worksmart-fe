@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllJobs } from "@/services/jobServices";
 
+const hoverStyles = {
+  transition: 'all 0.3s ease',
+};
+
 export const JobSection = () => {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const navigate = useNavigate();
@@ -42,7 +46,20 @@ export const JobSection = () => {
               onClick={() => navigate(`/job-list/${job.jobID}`)}
               style={{ cursor: 'pointer' }}
             >
-              <div className="inner-box">
+              <div
+                className="inner-box"
+                style={{
+                  ...hoverStyles,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
                 <div className="content ps-0">
                   <div className="d-xl-flex align-items-center">
                     <span className="company-logo position-relative">

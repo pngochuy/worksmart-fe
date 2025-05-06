@@ -61,11 +61,11 @@ export const CandidateSidebar = () => {
             <i className="la la-briefcase"></i> Category Tags{" "}
           </NavLink>
         </li>
-        <li className={checkActive("/candidate/job-alerts") ? "active" : ""}>
+        {/* <li className={checkActive("/candidate/job-alerts") ? "active" : ""}>
           <NavLink to="/candidate/job-alerts">
             <i className="la la-bell"></i>Job Alerts
           </NavLink>
-        </li>
+        </li> */}
         <li className={checkActive("/candidate/saved-jobs") ? "active" : ""}>
           <NavLink to="/candidate/saved-jobs">
             <i className="la la-bookmark-o"></i>Saved Jobs

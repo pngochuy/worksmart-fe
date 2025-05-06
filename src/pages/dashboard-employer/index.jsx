@@ -847,7 +847,7 @@ export const Index = () => {
                               <ul className="job-info flex flex-wrap gap-y-2 mb-3">
                                 <li className="flex items-center w-full sm:w-1/2 text-gray-700">
                                   <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
-                                  {job.jobPosition}
+                                  {job.categoryID}
                                 </li>
                                 <li className="flex items-center w-full sm:w-1/2 text-gray-700">
                                   <MapPin className="h-4 w-4 mr-2 text-gray-500" />
