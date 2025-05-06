@@ -409,7 +409,9 @@ const PackagePurchase = () => {
 
               {/* Package cards for medium and large screens */}
               <div className="hidden md:block mb-16">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 px-4">
+                <div
+                  className={`grid grid-cols-1 md:grid-cols-${candidatePackages.length} gap-4 lg:gap-8 px-4`}
+                >
                   {candidatePackages.length > 0 ? (
                     candidatePackages.map(renderPackageCard)
                   ) : (
