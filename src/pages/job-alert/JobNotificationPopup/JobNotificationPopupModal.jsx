@@ -85,7 +85,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       const data = await response.json();
@@ -94,11 +94,11 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
         toast.success(data.message || "Create job alert successfully");
         onClose(); // đóng modal
       } else {
-        toast.error(data.message || "Có lỗi xảy ra khi tạo cảnh báo");
+        toast.error(data.message || "Failed to create job alert");
       }
     } catch (error) {
       console.error("Lỗi khi gọi API:", error);
-      toast.error("Lỗi khi gửi dữ liệu đến server");
+      toast.error("Error when calling API");
     }
   };
 

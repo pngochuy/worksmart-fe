@@ -64,13 +64,13 @@ export const EmployerSidebar = () => {
             <i className="la la-file-invoice"></i> All Candidates
           </NavLink>
         </li>
-        <li
+        {/* <li
           className={checkActive("/employer/shortlisted-cvs") ? "active" : ""}
         >
           <NavLink to="/employer/shortlisted-cvs">
             <i className="la la-bookmark-o"></i>Shortlisted CVs
           </NavLink>
-        </li>
+        </li> */}
         <li
           className={
             checkActive("/employer/subscription-plans") ? "active" : ""
@@ -115,10 +115,13 @@ export const EmployerSidebar = () => {
           </NavLink>
         </li>
         <li>
-          <NavLink to="#" onClick={(e) => {
-            e.preventDefault();
-            logout();
-          }}>
+          <NavLink
+            to="#"
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+            }}
+          >
             <i className="la la-sign-out"></i>Logout
           </NavLink>
         </li>

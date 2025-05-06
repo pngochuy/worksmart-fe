@@ -263,9 +263,9 @@ export const Header = () => {
                         <a href="/suitable-jobs">Suitable Jobs</a>
                       </li>
                     )}
-                    <li>
+                    {/* <li>
                       <a href="#">IT Jobs</a>
-                    </li>
+                    </li> */}
                   </ul>
                 </li>
                 <li
@@ -280,9 +280,9 @@ export const Header = () => {
                     <li>
                       <a href="/company-list">Company List</a>
                     </li>
-                    <li>
+                    {/* <li>
                       <a href="#">Top Company</a>
-                    </li>
+                    </li> */}
                   </ul>
                 </li>
                 {userRole === "Candidate" && (

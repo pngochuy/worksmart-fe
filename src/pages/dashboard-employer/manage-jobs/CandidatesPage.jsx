@@ -709,19 +709,33 @@ export default function CandidatesPage() {
 
   // Lọc ứng viên đủ điều kiện để phân tích
   const getEligibleCandidatesForAnalysis = (candidates) => {
-    return candidates; // Trả về tất cả ứng viên không cần lọc theo status
+    return candidates.filter((candidate) => {
+      const status = (candidate.applicationStatus || "").toLowerCase();
+      return (
+        status === "pending" ||
+        status === "approved" ||
+        status === "interview invited" ||
+        status === "interviewinvited"
+      ); // Handle possible format variations
+    });
   };
 
   // Hàm xử lý khi click nút Export to Excel
   const handleExportToExcel = async () => {
-    // Kiểm tra xem có ứng viên không (bỏ kiểm tra status)
-    if (candidates.length === 0) {
+    // Get eligible candidates first
+    const eligibleCandidates = getEligibleCandidatesForAnalysis(candidates);
+
+    // Check if there are eligible candidates
+    if (eligibleCandidates.length === 0) {
       toast.info(
         <div>
           <p>
-            <strong>No candidates found!</strong>
+            <strong>No eligible candidates found!</strong>
           </p>
-          <p>Please add candidates before using this tool.</p>
+          <p>
+            Only candidates with Pending, Approved, or Interview Invited status
+            can be analyzed.
+          </p>
         </div>,
         {
           autoClose: 5000,
@@ -735,15 +749,6 @@ export default function CandidatesPage() {
     // Tiến hành phân tích và xuất Excel
     try {
       setIsAnalyzing(true);
-
-      // Lấy ứng viên đủ điều kiện để phân tích (chỉ các ứng viên Pending)
-      const eligibleCandidates = getEligibleCandidatesForAnalysis(candidates);
-
-      if (eligibleCandidates.length === 0) {
-        toast.info("No candidates are qualified for analysis.");
-        setIsAnalyzing(false);
-        return;
-      }
 
       // Lấy thông tin chi tiết về job để cung cấp ngữ cảnh cho phân tích
       const jobDetails = await fetchJobDetails(jobId);
