@@ -1064,7 +1064,9 @@ export default function CandidatesPage() {
               </div>
 
               <button
-                className="filter-toggle-btn"
+                className={`filter-toggle-button ${
+                  showFilters ? "active" : ""
+                }`}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter size={18} />
@@ -1079,6 +1081,7 @@ export default function CandidatesPage() {
                     <label>Status:</label>
                     <select
                       className="filter-select"
+                      style={{ flex: 0 }}
                       value={searchParams.status}
                       onChange={(e) =>
                         setSearchParams({

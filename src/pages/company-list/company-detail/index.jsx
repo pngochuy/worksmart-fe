@@ -54,7 +54,7 @@ export const Index = () => {
 
   const handleSendMessage = async () => {
     if (!messageContent.trim()) {
-      alert("Please enter a message");
+      toast.error("Please enter a message");
       return;
     }
 
@@ -83,7 +83,7 @@ export const Index = () => {
       toast.success("Message sent successfully!");
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Failed to send message. Please try again later.");
+      toast.error("Failed to send message. Please try again later.");
     } finally {
       setIsSendingMessage(false);
     }

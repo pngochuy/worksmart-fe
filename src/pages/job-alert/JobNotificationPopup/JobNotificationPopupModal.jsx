@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+import { toast } from "react-toastify";
 
 const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const [keyword, setKeyword] = useState(defaultKeyword || "");
@@ -35,11 +41,15 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
   const handleProvinceChange = async (e) => {
     const selectedCode = e.target.value;
-    const selectedProvince = provinces.find((p) => p.code === parseInt(selectedCode));
+    const selectedProvince = provinces.find(
+      (p) => p.code === parseInt(selectedCode)
+    );
     setCity(selectedProvince.name);
     setDistrict("");
     try {
-      const response = await fetch(`https://provinces.open-api.vn/api/p/${selectedCode}?depth=2`);
+      const response = await fetch(
+        `https://provinces.open-api.vn/api/p/${selectedCode}?depth=2`
+      );
       const data = await response.json();
       setDistricts(data.districts || []);
     } catch (error) {
@@ -54,7 +64,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const userId = userID; 
+    const userId = userID;
 
     const payload = {
       keyword,
@@ -66,29 +76,29 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
       jobType: worktype || null,
       frequency: frequency || null,
       notificationMethod: notificationMethod,
-      userId: userId
-    }; 
+      userId: userId,
+    };
     const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
     try {
       const response = await fetch(`${BACKEND_API_URL}/api/JobAlert`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert(data.message || "Tạo cảnh báo thành công");
+        toast.success(data.message || "Create job alert successfully");
         onClose(); // đóng modal
       } else {
-        alert(data.message || "Có lỗi xảy ra khi tạo cảnh báo");
+        toast.error(data.message || "Có lỗi xảy ra khi tạo cảnh báo");
       }
     } catch (error) {
       console.error("Lỗi khi gọi API:", error);
-      alert("Lỗi khi gửi dữ liệu đến server");
+      toast.error("Lỗi khi gửi dữ liệu đến server");
     }
   };
 
@@ -100,7 +110,10 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="keyword" className="block text-sm font-medium text-gray-900 mb-1">
+            <label
+              htmlFor="keyword"
+              className="block text-sm font-medium text-gray-900 mb-1"
+            >
               Search Keyword <span className="text-red-600">*</span>
             </label>
             <input
@@ -115,7 +128,12 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-900 mb-1">Province/City</label>
+              <label
+                htmlFor="city"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                Province/City
+              </label>
               <select
                 id="city"
                 name="city"
@@ -131,7 +149,12 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               </select>
             </div>
             <div>
-              <label htmlFor="district" className="block text-sm font-medium text-gray-900 mb-1">District</label>
+              <label
+                htmlFor="district"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                District
+              </label>
               <select
                 id="district"
                 name="district"
@@ -148,7 +171,12 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               </select>
             </div>
             <div>
-              <label htmlFor="salary" className="block text-sm font-medium text-gray-900 mb-1">Salary</label>
+              <label
+                htmlFor="salary"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                Salary
+              </label>
               <select
                 id="salary"
                 name="salary"
@@ -164,7 +192,12 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               </select>
             </div>
             <div>
-              <label htmlFor="experience" className="block text-sm font-medium text-gray-900 mb-1">Experience</label>
+              <label
+                htmlFor="experience"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                Experience
+              </label>
               <select
                 id="experience"
                 name="experience"
@@ -182,7 +215,12 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               </select>
             </div>
             <div>
-              <label htmlFor="worktype" className="block text-sm font-medium text-gray-900 mb-1">Work Type</label>
+              <label
+                htmlFor="worktype"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                Work Type
+              </label>
               <select
                 id="worktype"
                 name="worktype"
@@ -194,51 +232,61 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               </select>
             </div>
             <div>
-            <fieldset>
-              <legend className="text-sm font-medium text-gray-900 mb-2">Notification Method</legend>
-              <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-6">
-                <label htmlFor="email" className="inline-flex items-center cursor-pointer text-gray-900 text-sm">
-                  <input
-                    id="email"
-                    name="notification_method"
-                    type="radio"
-                    value="email"
-                    checked={notificationMethod === "email"}
-                    onChange={() => setNotificationMethod("email")}
-                    className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
-                  />
-                  <span className="ml-2">Email</span>
-                </label>
+              <fieldset>
+                <legend className="text-sm font-medium text-gray-900 mb-2">
+                  Notification Method
+                </legend>
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-6">
+                  <label
+                    htmlFor="email"
+                    className="inline-flex items-center cursor-pointer text-gray-900 text-sm"
+                  >
+                    <input
+                      id="email"
+                      name="notification_method"
+                      type="radio"
+                      value="email"
+                      checked={notificationMethod === "email"}
+                      onChange={() => setNotificationMethod("email")}
+                      className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
+                    />
+                    <span className="ml-2">Email</span>
+                  </label>
 
-                <label htmlFor="app" className="inline-flex items-center cursor-pointer text-gray-900 text-sm">
-                  <input
-                    id="app"
-                    name="notification_method"
-                    type="radio"
-                    value="app"
-                    checked={notificationMethod === "app"}
-                    onChange={() => setNotificationMethod("app")}
-                    className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
-                  />
-                  <span className="ml-2">App</span>
-                </label>
+                  <label
+                    htmlFor="app"
+                    className="inline-flex items-center cursor-pointer text-gray-900 text-sm"
+                  >
+                    <input
+                      id="app"
+                      name="notification_method"
+                      type="radio"
+                      value="app"
+                      checked={notificationMethod === "app"}
+                      onChange={() => setNotificationMethod("app")}
+                      className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
+                    />
+                    <span className="ml-2">App</span>
+                  </label>
 
-                <label htmlFor="both" className="inline-flex items-center cursor-pointer text-gray-900 text-sm">
-                  <input
-                    id="both"
-                    name="notification_method"
-                    type="radio"
-                    value="both"
-                    checked={notificationMethod === "both"}
-                    onChange={() => setNotificationMethod("both")}
-                    className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
-                  />
-                  <span className="ml-2">Both</span>
-                </label>
-              </div>
-            </fieldset>
+                  <label
+                    htmlFor="both"
+                    className="inline-flex items-center cursor-pointer text-gray-900 text-sm"
+                  >
+                    <input
+                      id="both"
+                      name="notification_method"
+                      type="radio"
+                      value="both"
+                      checked={notificationMethod === "both"}
+                      onChange={() => setNotificationMethod("both")}
+                      className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
+                    />
+                    <span className="ml-2">Both</span>
+                  </label>
+                </div>
+              </fieldset>
             </div>
-            
           </div>
 
           <div className="flex justify-between mt-6 space-x-4">

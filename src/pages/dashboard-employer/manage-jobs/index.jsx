@@ -5,7 +5,7 @@ import {
   unhideJob,
   toggleJobPriority,
   unPriorityJobs,
-  getRemainingJobPriorityLimit
+  getRemainingJobPriorityLimit,
 } from "../../../services/jobServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -275,7 +275,8 @@ export default function ManageJobsPage() {
       console.log("Job priority types:");
       jobs.forEach((job) => {
         console.log(
-          `Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${job.priority
+          `Job ID: ${job.jobID}, Title: ${job.title}, Priority: ${
+            job.priority
           }, Type: ${typeof job.priority}`
         );
       });
@@ -377,7 +378,8 @@ export default function ManageJobsPage() {
         const priorityValue = searchParams.priority === "true";
         filteredJobs = filteredJobs.filter((job) => {
           console.log(
-            `Job ID ${job.jobID}, title: ${job.title}, priority: ${job.priority
+            `Job ID ${job.jobID}, title: ${job.title}, priority: ${
+              job.priority
             } (${typeof job.priority})`
           );
           return Boolean(job.priority) === priorityValue;
@@ -545,8 +547,8 @@ export default function ManageJobsPage() {
         let reason = isJobExpired(job.deadline)
           ? "expired jobs"
           : job.status === 0
-            ? "pending jobs"
-            : "rejected jobs";
+          ? "pending jobs"
+          : "rejected jobs";
         toast.error(`Cannot change priority for ${reason}.`);
         return;
       }
@@ -646,8 +648,8 @@ export default function ManageJobsPage() {
     return count === 0
       ? "No Candidates"
       : count === 1
-        ? "View 1 Candidate"
-        : `View ${count} Candidates`;
+      ? "View 1 Candidate"
+      : `View ${count} Candidates`;
   };
 
   const getStatusBadge = (status, deadline) => {
@@ -667,7 +669,11 @@ export default function ManageJobsPage() {
         return <span className={badgeClass}>Rejected</span>;
       case 2:
         badgeClass += " hidden";
-        return <span className={badgeClass}>Hidden</span>;
+        return (
+          <span className={badgeClass} style={{ display: "block" }}>
+            Hidden
+          </span>
+        );
       case 3:
         badgeClass += " accepted";
         return <span className={badgeClass}>Active</span>;
@@ -744,8 +750,8 @@ export default function ManageJobsPage() {
                   <i className="fas fa-edit"></i> Edit
                 </button>
                 {isJobExpired(selectedJob.deadline) ||
-                  selectedJob.status === 0 ||
-                  selectedJob.status === 1 ? (
+                selectedJob.status === 0 ||
+                selectedJob.status === 1 ? (
                   <button
                     className="priority-btn disabled"
                     disabled
@@ -753,13 +759,14 @@ export default function ManageJobsPage() {
                       isJobExpired(selectedJob.deadline)
                         ? "Cannot change priority for expired jobs"
                         : selectedJob.status === 0
-                          ? "Cannot change priority for pending jobs"
-                          : "Cannot change priority for rejected jobs"
+                        ? "Cannot change priority for pending jobs"
+                        : "Cannot change priority for rejected jobs"
                     }
                   >
                     <i
-                      className={`fas fa-gem ${selectedJob.priority ? "" : "text-secondary"
-                        }`}
+                      className={`fas fa-gem ${
+                        selectedJob.priority ? "" : "text-secondary"
+                      }`}
                     ></i>
                     Priority
                   </button>
@@ -797,10 +804,11 @@ export default function ManageJobsPage() {
                   </ConfirmDialog>
                 )}
                 <button
-                  className={`view-candidates-btn ${candidateCounts[selectedJob.jobID]
-                    ? "has-candidates"
-                    : "no-candidates"
-                    }`}
+                  className={`view-candidates-btn ${
+                    candidateCounts[selectedJob.jobID]
+                      ? "has-candidates"
+                      : "no-candidates"
+                  }`}
                   onClick={() => {
                     closeDetailModal();
                     handleViewCandidates(selectedJob.jobID);
@@ -831,10 +839,10 @@ export default function ManageJobsPage() {
                   {selectedJob.minSalary && selectedJob.salary
                     ? `${selectedJob.minSalary.toLocaleString()} - ${selectedJob.salary.toLocaleString()}`
                     : selectedJob.salary
-                      ? `${selectedJob.salary.toLocaleString()}`
-                      : selectedJob.minSalary
-                        ? `From ${selectedJob.minSalary.toLocaleString()}`
-                        : "Negotiable"}
+                    ? `${selectedJob.salary.toLocaleString()}`
+                    : selectedJob.minSalary
+                    ? `From ${selectedJob.minSalary.toLocaleString()}`
+                    : "Negotiable"}
                 </div>
               </div>
 
@@ -1021,8 +1029,9 @@ export default function ManageJobsPage() {
 
               <div className="filter-actions">
                 <button
-                  className={`filter-toggle-button ${showFilters ? "active" : ""
-                    }`}
+                  className={`filter-toggle-button ${
+                    showFilters ? "active" : ""
+                  }`}
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   <i className="fas fa-filter"></i>
@@ -1032,14 +1041,14 @@ export default function ManageJobsPage() {
                 {(searchParams.status ||
                   searchParams.location ||
                   searchParams.title) && (
-                    <button
-                      className="clear-all-button"
-                      onClick={handleClearFilters}
-                    >
-                      <i className="fas fa-times"></i>
-                      <span>Clear All</span>
-                    </button>
-                  )}
+                  <button
+                    className="clear-all-button"
+                    onClick={handleClearFilters}
+                  >
+                    <i className="fas fa-times"></i>
+                    <span>Clear All</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1129,8 +1138,8 @@ export default function ManageJobsPage() {
                   {(searchParams.status ||
                     searchParams.location ||
                     searchParams.title) && (
-                      <div className="active-filters-label">Active filters:</div>
-                    )}
+                    <div className="active-filters-label">Active filters:</div>
+                  )}
 
                   {searchParams.title && (
                     <div className="filter-tag">
@@ -1155,14 +1164,14 @@ export default function ManageJobsPage() {
                       {searchParams.status === "0"
                         ? "Pending"
                         : searchParams.status === "1"
-                          ? "Rejected"
-                          : searchParams.status === "2"
-                            ? "Hidden"
-                            : searchParams.status === "3"
-                              ? "Active"
-                              : searchParams.status === "expired"
-                                ? "Expired"
-                                : searchParams.status}
+                        ? "Rejected"
+                        : searchParams.status === "2"
+                        ? "Hidden"
+                        : searchParams.status === "3"
+                        ? "Active"
+                        : searchParams.status === "expired"
+                        ? "Expired"
+                        : searchParams.status}
                       <button
                         onClick={() =>
                           setSearchParams({
@@ -1396,9 +1405,11 @@ export default function ManageJobsPage() {
                           jobs.map((job) => (
                             <tr
                               key={job.jobID}
-                              className={`job-row ${job.status === 2 ? "job-hidden" : ""
-                                } ${isJobExpired(job.deadline) ? "job-expired" : ""
-                                } ${job.priority ? "job-priority" : ""}`}
+                              className={`job-row ${
+                                job.status === 2 ? "job-hidden" : ""
+                              } ${
+                                isJobExpired(job.deadline) ? "job-expired" : ""
+                              } ${job.priority ? "job-priority" : ""}`}
                             >
                               <td
                                 className="clickable-cell"
@@ -1409,10 +1420,11 @@ export default function ManageJobsPage() {
                                     <i className="fas fa-gem text-primary mr-2"></i>
                                   )}
                                   <span
-                                    className={`job-title-text ${isJobExpired(job.deadline)
-                                      ? "text-danger"
-                                      : ""
-                                      }`}
+                                    className={`job-title-text ${
+                                      isJobExpired(job.deadline)
+                                        ? "text-danger"
+                                        : ""
+                                    }`}
                                   >
                                     {job.title}
                                   </span>
@@ -1488,8 +1500,8 @@ export default function ManageJobsPage() {
                                   {/* Bottom row - 2 buttons */}
                                   {/* Priority button */}
                                   {isJobExpired(job.deadline) ||
-                                    job.status === 0 ||
-                                    job.status === 1 ? (
+                                  job.status === 0 ||
+                                  job.status === 1 ? (
                                     <button
                                       className="priority-btn disabled"
                                       disabled
@@ -1497,13 +1509,14 @@ export default function ManageJobsPage() {
                                         isJobExpired(job.deadline)
                                           ? "Cannot change priority for expired jobs"
                                           : job.status === 0
-                                            ? "Cannot change priority for pending jobs"
-                                            : "Cannot change priority for rejected jobs"
+                                          ? "Cannot change priority for pending jobs"
+                                          : "Cannot change priority for rejected jobs"
                                       }
                                     >
                                       <i
-                                        className={`fas fa-gem ${job.priority ? "" : "text-secondary"
-                                          }`}
+                                        className={`fas fa-gem ${
+                                          job.priority ? "" : "text-secondary"
+                                        }`}
                                       ></i>
                                       {job.priority
                                         ? "High Priority"
@@ -1543,8 +1556,8 @@ export default function ManageJobsPage() {
 
                                   {/* Hide/Unhide button */}
                                   {isJobExpired(job.deadline) ||
-                                    job.status === 0 ||
-                                    job.status === 1 ? (
+                                  job.status === 0 ||
+                                  job.status === 1 ? (
                                     // Disabled button for expired, pending, or rejected jobs
                                     <button
                                       className="hide-btn disabled"
@@ -1553,8 +1566,8 @@ export default function ManageJobsPage() {
                                         isJobExpired(job.deadline)
                                           ? "Cannot hide/unhide expired jobs"
                                           : job.status === 0
-                                            ? "Cannot hide/unhide pending jobs"
-                                            : "Cannot hide/unhide rejected jobs"
+                                          ? "Cannot hide/unhide pending jobs"
+                                          : "Cannot hide/unhide rejected jobs"
                                       }
                                     >
                                       <i className="fas fa-eye-slash"></i>{" "}
@@ -1592,16 +1605,20 @@ export default function ManageJobsPage() {
                               </td>
                               <td className="text-center">
                                 <button
-                                  className={`view-candidates-btn ${candidateCounts[job.jobID]
-                                    ? "has-candidates"
-                                    : "no-candidates"
-                                    }`}
+                                  style={{
+                                    textWrap: "auto",
+                                  }}
+                                  className={`view-candidates-btn ${
+                                    candidateCounts[job.jobID]
+                                      ? "has-candidates"
+                                      : "no-candidates"
+                                  }`}
                                   onClick={() =>
                                     handleViewCandidates(job.jobID)
                                   }
                                   disabled={candidateCounts[job.jobID] === 0}
                                 >
-                                  <i className="fas fa-user-check"></i>{" "}
+                                  {/* <i className="fas fa-user-check"></i>{" "} */}
                                   {getCandidateButtonText(job.jobID)}
                                 </button>
                               </td>
