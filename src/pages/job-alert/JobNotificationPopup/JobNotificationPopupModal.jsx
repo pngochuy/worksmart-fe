@@ -85,7 +85,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: payload,
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
