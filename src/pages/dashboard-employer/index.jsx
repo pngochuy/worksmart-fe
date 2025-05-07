@@ -570,69 +570,70 @@ export const Index = () => {
           {/* First Row - Stats Summary */}
           <div className="row">
             <div className="col-12">
-              <div className="stats-container bg-white p-8 rounded-lg d-flex justify-content-between align-items-center position-relative">
+              <div className="stats-container bg-white p-4 p-md-8 rounded-lg position-relative">
+                {/* Change to flex-column on mobile */}
+                <div className="d-flex flex-column flex-md-row gap-4">
 
-                {/* Posted Jobs */}
-                <div className="d-flex align-items-center flex-grow-1 justify-content-start">
-                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
-                    <div className="icon-wrapper mr-3">
-                      <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
-                        <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
+                  {/* Posted Jobs */}
+                  <div className="stat-box w-100">
+                    <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ backgroundColor: "#f8f8f8" }}>
+                      <div className="icon-wrapper me-3">
+                        <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                          <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="fs-2 fw-bold">{jobs?.length || 0}</h3>
+                        <p className="text-muted mb-0">Posted Jobs</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="fs-2 fw-bold">{jobs?.length || 0}</h3>
-                      <p className="text-muted mb-0">Posted Jobs</p>
-                    </div>
                   </div>
-                </div>
 
-                {/* Application */}
-                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
-                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
-                    <div className="icon-wrapper mr-3">
-                      <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
-                        <i className="la la-file-invoice text-red-600 fs-3"></i>
+                  {/* Application */}
+                  <div className="stat-box w-100">
+                    <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ backgroundColor: "#f8f8f8" }}>
+                      <div className="icon-wrapper me-3">
+                        <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                          <i className="la la-file-invoice text-red-600 fs-3"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="fs-2 fw-bold">{applications?.totalApplications || 0}</h3>
+                        <p className="text-muted mb-0">Applications</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="fs-2 fw-bold">{applications?.totalApplications || 0}</h3>
-                      <p className="text-muted mb-0">Applications</p>
-                    </div>
                   </div>
-                </div>
 
-                {/* Notifications */}
-                <div className="d-flex align-items-center flex-grow-1 justify-content-end">
-                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
-                    <div className="icon-wrapper mr-3">
-                      <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
-                        <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                  {/* Notifications */}
+                  <div className="stat-box w-100">
+                    <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ backgroundColor: "#f8f8f8" }}>
+                      <div className="icon-wrapper me-3">
+                        <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                          <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="fs-2 fw-bold">{unreadCount}</h3>
+                        <p className="text-muted mb-0">Notifications</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="fs-2 fw-bold">{unreadCount}</h3>
-                      <p className="text-muted mb-0">Notifications</p>
-                    </div>
                   </div>
+
                 </div>
 
-                {/* Single refresh button positioned absolutely */}
+                {/* Refresh button */}
                 <Button
                   variant="ghost"
                   onClick={handleRefreshRow1}
                   disabled={isRefreshingRow1}
                   className="h-6 w-6 p-1 ml-2"
                   style={{ position: 'absolute', top: '8px', right: '8px' }}
-
                 >
                   <RefreshCcw
-                    className={`h-4 w-4 ${isRefreshingRow1
-                      ? 'animate-spin'
-                      : ''
-                      }`}
+                    className={`h-4 w-4 ${isRefreshingRow1 ? 'animate-spin' : ''}`}
                   />
                 </Button>
+
               </div>
             </div>
           </div>
