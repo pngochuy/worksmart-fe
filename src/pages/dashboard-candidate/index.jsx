@@ -456,53 +456,58 @@ export const Index = () => {
 
           <div className="row">
             <div className="col-12">
-              <div className="stats-container bg-white p-8 rounded-lg d-flex justify-content-between align-items-center position-relative">
-                {/* Applied Jobs */}
-                <div className="d-flex align-items-center flex-grow-1 justify-content-start">
-                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
-                    <div className="icon-wrapper mr-3">
-                      <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
-                        <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
+              <div className="stats-container bg-white p-4 p-md-8 rounded-lg position-relative">
+                {/* Change to flex-column on mobile */}
+                <div className="d-flex flex-column flex-md-row gap-4">
+
+                  {/* Applied Jobs */}
+                  <div className="stat-box w-100">
+                    <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ backgroundColor: "#f8f8f8" }}>
+                      <div className="icon-wrapper me-3">
+                        <div className="bg-blue-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                          <i className="icon flaticon-briefcase text-blue-600 fs-3"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="fs-2 fw-bold">{appliedJobs?.length || 0}</h3>
+                        <p className="text-muted mb-0">Applied Jobs</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="fs-2 fw-bold">{appliedJobs?.length || 0}</h3>
-                      <p className="text-muted mb-0">Applied Jobs</p>
-                    </div>
                   </div>
-                </div>
 
-                {/* Notifications */}
-                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
-                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
-                    <div className="icon-wrapper mr-3">
-                      <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
-                        <i className="la la-file-invoice text-red-600 fs-3"></i>
+                  {/* Job Alerts */}
+                  <div className="stat-box w-100">
+                    <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ backgroundColor: "#f8f8f8" }}>
+                      <div className="icon-wrapper me-3">
+                        <div className="bg-red-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                          <i className="la la-file-invoice text-red-600 fs-3"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="fs-2 fw-bold">{unreadCount}</h3>
+                        <p className="text-muted mb-0">Notifications</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="fs-2 fw-bold">{unreadCount}</h3>
-                      <p className="text-muted mb-0">Notifications</p>
-                    </div>
                   </div>
-                </div>
 
-                {/* Favourite Jobs */}
-                <div className="d-flex align-items-center flex-grow-1 justify-content-end">
-                  <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ width: "280px", backgroundColor: "#f8f8f8" }}>
-                    <div className="icon-wrapper mr-3">
-                      <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
-                        <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                  {/* Favourite Jobs */}
+                  <div className="stat-box w-100">
+                    <div className="stat-inner-box d-flex align-items-center border rounded p-3" style={{ backgroundColor: "#f8f8f8" }}>
+                      <div className="icon-wrapper me-3">
+                        <div className="bg-green-100 p-3 rounded-lg d-flex justify-content-center align-items-center" style={{ width: "60px", height: "60px" }}>
+                          <i className="la la-bookmark-o text-green-600 fs-3"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="fs-2 fw-bold">{favouriteJobs?.length || 0}</h3>
+                        <p className="text-muted mb-0">Favourite Jobs</p>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="fs-2 fw-bold">{favouriteJobs?.length || 0}</h3>
-                      <p className="text-muted mb-0">Favourite Jobs</p>
-                    </div>
                   </div>
+
                 </div>
 
-                {/* Single refresh button positioned absolutely */}
+                {/* Refresh button */}
                 <Button
                   variant="ghost"
                   onClick={() => {
@@ -519,9 +524,9 @@ export const Index = () => {
                       ? 'animate-spin'
                       : ''
                       }`}
-
                   />
                 </Button>
+
               </div>
             </div>
           </div>

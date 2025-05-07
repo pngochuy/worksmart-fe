@@ -7,6 +7,7 @@ import { Tooltip } from "primereact/tooltip";
 import { AdminSidebar } from "./AdminSiderbar";
 import { fetchCompanyProfile } from "@/services/employerServices";
 import { checkActiveSubscription } from "@/services/employerServices";
+import { MobileSidebarTrigger } from './MobileSidebarTrigger';
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -18,6 +19,7 @@ export const Sidebar = () => {
   const [verificationLevel, setVerificationLevel] = useState("");
   const [userDataLogin, setUserDataLogin] = useState(null); // State lưu người dùng đăng nhập
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,10 +59,12 @@ export const Sidebar = () => {
 
   return (
     <>
-      <div
-        className="user-sidebar"
-        style={{ paddingTop: `${isAdmin ? "0px" : "10px"}` }}
-      >
+      <MobileSidebarTrigger
+        isOpen={isMobileSidebarOpen}
+        setIsOpen={setIsMobileSidebarOpen}
+      />
+
+      <div className={`user-sidebar ${isMobileSidebarOpen ? 'mobile-open' : ''}`} style={{ paddingTop: `${isAdmin ? "0px" : "10px"}` }}>
         <div
           className="sidebar-inner"
           style={{ paddingTop: `${isAdmin ? "0px" : "70px"}` }}
@@ -170,7 +174,7 @@ export const Sidebar = () => {
           {/* Candidate Sidebar */}
           {isCandidate && (
             <>
-              <CandidateSidebar />
+              <CandidateSidebar onLinkClick={() => setIsMobileSidebarOpen(false)} />
             </>
           )}
           {/* End Candidate Sidebar */}
@@ -178,7 +182,7 @@ export const Sidebar = () => {
           {/* Employer Sidebar */}
           {isEmployer && (
             <>
-              <EmployerSidebar />
+              <EmployerSidebar onLinkClick={() => setIsMobileSidebarOpen(false)} />
             </>
           )}
           {/* End Employer Sidebar */}
@@ -191,6 +195,14 @@ export const Sidebar = () => {
           {/* End Admin Sidebar */}
         </div>
       </div>
+
+      {/* Backdrop for mobile */}
+      {isMobileSidebarOpen && (
+        <div
+          className="sidebar-backdrop d-md-none"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
     </>
   );
 };
