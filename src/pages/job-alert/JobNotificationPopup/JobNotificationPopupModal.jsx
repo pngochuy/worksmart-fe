@@ -6,9 +6,8 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { toast } from "react-toastify";
-import Select from "react-select";
 import SalaryRangeDropdown from "../../job-list/SalaryRangeDropdown";
-
+import Select from "react-select";
 const customSelectStyles = {
   container: (provided) => ({
     ...provided,
@@ -70,7 +69,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const [districts, setDistricts] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
   const [districtOptions, setDistrictOptions] = useState([]);
-  
+
   useEffect(() => {
     setKeyword(defaultKeyword || "");
   }, [defaultKeyword]);
@@ -90,10 +89,9 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
         console.error("Failed to load province list:", error);
       }
     };
-  
+
     fetchProvinces();
   }, []);
-  
 
   const handleProvinceChange = async (selectedOption) => {
     setCity(selectedOption.label);
@@ -112,7 +110,6 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
       console.error("Error loading districts:", error);
     }
   };
-  
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
@@ -122,8 +119,8 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
     const userId = userID;
 
-    const salaryRange = minSalary && maxSalary ? minSalary + "-" + maxSalary : "";
-
+    const salaryRange =
+      minSalary && maxSalary ? minSalary + "-" + maxSalary : "";
 
     const payload = {
       keyword,
@@ -140,7 +137,6 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
     const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
     try {
       const response = await fetch(`${BACKEND_API_URL}/api/JobAlert`, {
-
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -164,7 +160,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-6 bg-white rounded-xl shadow-lg font-sans">
+      <DialogContent className="max-w-2xl p-6 bg-white rounded-xl shadow-lg font-sans mx-auto">
         <DialogHeader>
           <DialogTitle>Create Job Alert</DialogTitle>
         </DialogHeader>
@@ -177,45 +173,45 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               Search Keyword <span className="text-red-600">*</span>
             </label>
             <input
-  id="keyword"
-  name="keyword"
-  type="text"
-  required
-  value={keyword}
-  onChange={(e) => setKeyword(e.target.value)}
-  placeholder="Search Keyword"
-  className="w-full max-w-xl rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-/>
-
-
+              id="keyword"
+              name="keyword"
+              type="text"
+              required
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="Search Keyword"
+              className="w-full max-w-xl rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-          <div>
-  <label className="block text-sm font-medium text-gray-900 mb-1">
-    Province/City
-  </label>
-  <Select
-    options={cityOptions}
-    styles={customSelectStyles}
-    placeholder="Select a province/city"
-    onChange={handleProvinceChange}
-    isSearchable
-  />
-</div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                Province/City
+              </label>
+              <Select
+                options={cityOptions}
+                styles={customSelectStyles}
+                placeholder="Select a province/city"
+                onChange={handleProvinceChange}
+                isSearchable
+              />
+            </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-900 mb-1">
-    District
-  </label>
-  <Select
-    options={districtOptions}
-    styles={customSelectStyles}
-    placeholder="Select a district"
-    value={districtOptions.find((opt) => opt.value === district) || null}
-    onChange={(option) => setDistrict(option.value)}
-    isSearchable
-  />
-</div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">
+                District
+              </label>
+              <Select
+                options={districtOptions}
+                styles={customSelectStyles}
+                placeholder="Select a district"
+                value={
+                  districtOptions.find((opt) => opt.value === district) || null
+                }
+                onChange={(option) => setDistrict(option.value)}
+                isSearchable
+              />
+            </div>
 
             <div>
               <label
@@ -264,20 +260,27 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               />
             </div>
             <div>
-              <label
-                htmlFor="notificationMethod"
-                className="block text-sm font-medium text-gray-900 mb-1"
-              >
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Notification Method
               </label>
-              <Select
-                options={notificationMethodOptions}
-                styles={customSelectStyles}
-                value={notificationMethod}
-                onChange={setNotificationMethod}
-                placeholder="Select notification method"
-                isSearchable={false}
-              />
+              <div className="flex items-center space-x-6">
+                {notificationMethodOptions.map((option) => (
+                  <div key={option.value} className="flex items-center">
+                    <input
+                      type="radio"
+                      id={option.value}
+                      name="notificationMethod"
+                      value={option.value}
+                      checked={notificationMethod.value === option.value}
+                      onChange={() => setNotificationMethod(option)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={option.value} className="text-sm">
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
