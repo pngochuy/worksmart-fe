@@ -1,8 +1,9 @@
+/* eslint-disable react/prop-types */
 import { NavLink, useLocation } from "react-router-dom";
 import { useNotifications } from "@/layouts/NotificationProvider";
 import { useRef } from "react";
 
-export const CandidateSidebar = ({ onLinkClick }) => {
+export const CandidateSidebar = ({ closeMobileMenu }) => {
   const location = useLocation();
   const { unreadCount } = useNotifications();
   const signalRConnection = useRef(null);
@@ -11,18 +12,8 @@ export const CandidateSidebar = ({ onLinkClick }) => {
     return location.pathname === path;
   };
 
-  const handleLinkClick = () => {
-    // Close sidebar on mobile when clicking a link
-    if (window.innerWidth < 769 && onLinkClick) {
-      onLinkClick();
-    }
-  };
-
   // Logout function
   const logout = () => {
-    // First close the sidebar on mobile
-    handleLinkClick();
-
     // Then handle logout
     if (signalRConnection.current) {
       signalRConnection.current
@@ -42,22 +33,22 @@ export const CandidateSidebar = ({ onLinkClick }) => {
     <>
       <ul className="navigation">
         <li className={checkActive("/candidate/dashboard") ? "active" : ""}>
-          <NavLink to="/candidate/dashboard" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/dashboard">
             <i className="la la-home"></i> Dashboard
           </NavLink>
         </li>
         <li className={checkActive("/candidate/my-profile") ? "active" : ""}>
-          <NavLink to="/candidate/my-profile" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/my-profile">
             <i className="la la-user-tie"></i>My Profile
           </NavLink>
         </li>
         <li className={checkActive("/candidate/my-cv") ? "active" : ""}>
-          <NavLink to="/candidate/my-cv" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/my-cv">
             <i className="la la-file-invoice"></i>My CV
           </NavLink>
         </li>
         <li className={checkActive("/candidate/applied-jobs") ? "active" : ""}>
-          <NavLink to="/candidate/applied-jobs" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/applied-jobs">
             <i className="la la-briefcase"></i> Applied Jobs{" "}
           </NavLink>
         </li>
@@ -66,12 +57,15 @@ export const CandidateSidebar = ({ onLinkClick }) => {
             checkActive("/candidate/category-tag-management") ? "active" : ""
           }
         >
-          <NavLink to="/candidate/category-tag-management" onClick={handleLinkClick}>
+          <NavLink
+            onClick={closeMobileMenu}
+            to="/candidate/category-tag-management"
+          >
             <i className="la la-briefcase"></i> Category Tags{" "}
           </NavLink>
         </li>
         <li className={checkActive("/candidate/saved-jobs") ? "active" : ""}>
-          <NavLink to="/candidate/saved-jobs" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/saved-jobs">
             <i className="la la-bookmark-o"></i>Saved Jobs
           </NavLink>
         </li>
@@ -80,7 +74,7 @@ export const CandidateSidebar = ({ onLinkClick }) => {
             checkActive("/candidate/subscription-plans") ? "active" : ""
           }
         >
-          <NavLink to="/candidate/subscription-plans" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/subscription-plans">
             <i className="la la-box"></i>Subscription Plans
           </NavLink>
         </li>
@@ -89,17 +83,20 @@ export const CandidateSidebar = ({ onLinkClick }) => {
             checkActive("/candidate/transaction-history") ? "active" : ""
           }
         >
-          <NavLink to="/candidate/transaction-history" onClick={handleLinkClick}>
+          <NavLink
+            onClick={closeMobileMenu}
+            to="/candidate/transaction-history"
+          >
             <i className="la la-credit-card"></i>Transaction History
           </NavLink>
         </li>
         <li className={checkActive("/candidate/messages") ? "active" : ""}>
-          <NavLink to="/candidate/messages" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/messages">
             <i className="la la-comment-o"></i>Messages
           </NavLink>
         </li>
         <li className={checkActive("/candidate/notifications") ? "active" : ""}>
-          <NavLink to="/candidate/notifications" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/notifications">
             <i className="la la-bell"></i>Notifications
             {unreadCount > 0 && (
               <span className="notification-badge">{unreadCount}</span>
@@ -109,12 +106,12 @@ export const CandidateSidebar = ({ onLinkClick }) => {
         <li
           className={checkActive("/candidate/change-password") ? "active" : ""}
         >
-          <NavLink to="/candidate/change-password" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/change-password">
             <i className="la la-lock"></i>Change Password
           </NavLink>
         </li>
         <li className={checkActive("/candidate/settings") ? "active" : ""}>
-          <NavLink to="/candidate/settings" onClick={handleLinkClick}>
+          <NavLink onClick={closeMobileMenu} to="/candidate/settings">
             <i className="la la-cog"></i>Settings
           </NavLink>
         </li>
