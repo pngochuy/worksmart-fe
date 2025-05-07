@@ -6,22 +6,71 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { toast } from "react-toastify";
+import Select from "react-select";
 import SalaryRangeDropdown from "../../job-list/SalaryRangeDropdown";
+
+const customSelectStyles = {
+  container: (provided) => ({
+    ...provided,
+    width: "250px",
+  }),
+  control: (provided) => ({
+    ...provided,
+    width: "250px",
+    minWidth: "250px",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    width: "250px",
+    minWidth: "250px",
+  }),
+  option: (provided) => ({
+    ...provided,
+    width: "100%",
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    width: "100%",
+  }),
+};
+
+const experienceOptions = [
+  { value: "No experience", label: "No experience" },
+  { value: "Under 1 year", label: "Under 1 year" },
+  { value: "2 years", label: "2 years" },
+  { value: "3 years", label: "3 years" },
+  { value: "4 years", label: "4 years" },
+  { value: "5 years", label: "5 years" },
+  { value: "Over 5 years", label: "Over 5 years" },
+];
+
+const workTypeOptions = [{ value: "Full-time", label: "Full-time" }];
+
+const notificationMethodOptions = [
+  { value: "email", label: "Email" },
+  { value: "app", label: "App" },
+  { value: "both", label: "Both" },
+];
 
 const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const [keyword, setKeyword] = useState(defaultKeyword || "");
   const [city, setCity] = useState("Ho Chi Minh City");
   const [district, setDistrict] = useState("");
+
   const [minSalary, setMinSalary] = useState("");
   const [maxSalary, setMaxSalary] = useState("");
-  const [experience, setExperience] = useState("2 years");
+  const [experience, setExperience] = useState(experienceOptions[2]); // default 2 years
   const [specialization, setSpecialization] = useState("All specializations");
-  const [worktype, setWorktype] = useState("Full-time");
+  const [worktype, setWorktype] = useState(workTypeOptions[0]);
   const [frequency, setFrequency] = useState("daily");
-  const [notificationMethod, setNotificationMethod] = useState("both");
+  const [notificationMethod, setNotificationMethod] = useState(
+    notificationMethodOptions[2]
+  ); // default both
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
-
+  const [cityOptions, setCityOptions] = useState([]);
+  const [districtOptions, setDistrictOptions] = useState([]);
+  
   useEffect(() => {
     setKeyword(defaultKeyword || "");
   }, [defaultKeyword]);
@@ -32,55 +81,66 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
         const response = await fetch("https://provinces.open-api.vn/api/p/");
         const data = await response.json();
         setProvinces(data);
+        const options = data.map((item) => ({
+          value: item.code,
+          label: item.name,
+        }));
+        setCityOptions(options);
       } catch (error) {
         console.error("Failed to load province list:", error);
       }
     };
+  
     fetchProvinces();
   }, []);
+  
 
-  const handleProvinceChange = async (e) => {
-    const selectedCode = e.target.value;
-    const selectedProvince = provinces.find(
-      (p) => p.code === parseInt(selectedCode)
-    );
-    setCity(selectedProvince.name);
+  const handleProvinceChange = async (selectedOption) => {
+    setCity(selectedOption.label);
     setDistrict("");
     try {
       const response = await fetch(
-        `https://provinces.open-api.vn/api/p/${selectedCode}?depth=2`
+        `https://provinces.open-api.vn/api/p/${selectedOption.value}?depth=2`
       );
       const data = await response.json();
-      setDistricts(data.districts || []);
+      const districtOpts = data.districts.map((d) => ({
+        value: d.name,
+        label: d.name,
+      }));
+      setDistrictOptions(districtOpts);
     } catch (error) {
       console.error("Error loading districts:", error);
     }
   };
+  
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const salaryRange = minSalary && maxSalary ? `${minSalary}-${maxSalary}` : "";
+
+    const userId = userID;
+
+    const salaryRange = minSalary && maxSalary ? minSalary + "-" + maxSalary : "";
+
 
     const payload = {
       keyword,
       province: city,
       district: district,
       salaryRange: salaryRange,
-      experience: experience,
+      experience: experience.value,
       jobPosition: specialization,
-      jobType: worktype || null,
+      jobType: worktype.value || null,
       frequency: frequency || null,
-      notificationMethod: notificationMethod,
-      userId: userID,
+      notificationMethod: notificationMethod.value,
+      userId: userId,
     };
-
     const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
-
     try {
       const response = await fetch(`${BACKEND_API_URL}/api/JobAlert`, {
+
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +152,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
       if (response.ok) {
         toast.success(data.message);
-        onClose();
+        onClose(); // close modal
       } else {
         toast.error(data.message);
       }
@@ -104,11 +164,10 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-6 bg-white rounded-xl shadow-lg font-sans">
+      <DialogContent className="max-w-2xl p-6 bg-white rounded-xl shadow-lg font-sans">
         <DialogHeader>
           <DialogTitle>Create Job Alert</DialogTitle>
         </DialogHeader>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
@@ -118,132 +177,107 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               Search Keyword <span className="text-red-600">*</span>
             </label>
             <input
-              id="keyword"
-              name="keyword"
-              type="text"
-              required
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:text-sm"
-            />
+  id="keyword"
+  name="keyword"
+  type="text"
+  required
+  value={keyword}
+  onChange={(e) => setKeyword(e.target.value)}
+  placeholder="Search Keyword"
+  className="w-full max-w-xl rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+/>
+
+
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-900 mb-1">
-                Province/City
-              </label>
-              <select
-                id="city"
-                name="city"
-                onChange={handleProvinceChange}
-                className="block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:text-sm"
-              >
-                <option value="">Select a province/city</option>
-                {provinces.map((province) => (
-                  <option key={province.code} value={province.code}>
-                    {province.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+  <label className="block text-sm font-medium text-gray-900 mb-1">
+    Province/City
+  </label>
+  <Select
+    options={cityOptions}
+    styles={customSelectStyles}
+    placeholder="Select a province/city"
+    onChange={handleProvinceChange}
+    isSearchable
+  />
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-900 mb-1">
+    District
+  </label>
+  <Select
+    options={districtOptions}
+    styles={customSelectStyles}
+    placeholder="Select a district"
+    value={districtOptions.find((opt) => opt.value === district) || null}
+    onChange={(option) => setDistrict(option.value)}
+    isSearchable
+  />
+</div>
 
             <div>
-              <label htmlFor="district" className="block text-sm font-medium text-gray-900 mb-1">
-                District
-              </label>
-              <select
-                id="district"
-                name="district"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:text-sm"
+              <label
+                htmlFor="salary"
+                className="block text-sm font-medium text-gray-900 mb-1"
               >
-                <option value="">Select a district</option>
-                {districts.map((d) => (
-                  <option key={d.code} value={d.name}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="salary" className="block text-sm font-medium text-gray-900 mb-1">
                 Salary
               </label>
               <SalaryRangeDropdown
-                className="block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:text-sm"
                 setSearchParams={({ MinSalary, MaxSalary }) => {
                   setMinSalary(MinSalary);
                   setMaxSalary(MaxSalary);
                 }}
               />
-
             </div>
-
             <div>
-              <label htmlFor="experience" className="block text-sm font-medium text-gray-900 mb-1">
+              <label
+                htmlFor="experience"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
                 Experience
               </label>
-              <select
-                id="experience"
-                name="experience"
+              <Select
+                options={experienceOptions}
+                styles={customSelectStyles}
                 value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:text-sm"
-              >
-                <option>No experience</option>
-                <option>Under 1 year</option>
-                <option>2 years</option>
-                <option>3 years</option>
-                <option>4 years</option>
-                <option>5 years</option>
-                <option>Over 5 years</option>
-              </select>
+                onChange={setExperience}
+                placeholder="Select experience"
+                isSearchable={false}
+              />
             </div>
-
             <div>
-              <label htmlFor="worktype" className="block text-sm font-medium text-gray-900 mb-1">
+              <label
+                htmlFor="worktype"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
                 Work Type
               </label>
-              <select
-                id="worktype"
-                name="worktype"
+              <Select
+                options={workTypeOptions}
+                styles={customSelectStyles}
                 value={worktype}
-                onChange={(e) => setWorktype(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 sm:text-sm"
-              >
-                <option>Full-time</option>
-              </select>
+                onChange={setWorktype}
+                placeholder="Select work type"
+                isSearchable={false}
+              />
             </div>
-
             <div>
-              <fieldset>
-                <legend className="text-sm font-medium text-gray-900 mb-2">
-                  Notification Method
-                </legend>
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-6">
-                  {["email", "app", "both"].map((method) => (
-                    <label
-                      key={method}
-                      htmlFor={method}
-                      className="inline-flex items-center cursor-pointer text-gray-900 text-sm"
-                    >
-                      <input
-                        id={method}
-                        name="notification_method"
-                        type="radio"
-                        value={method}
-                        checked={notificationMethod === method}
-                        onChange={() => setNotificationMethod(method)}
-                        className="form-radio text-blue-600 border-gray-300 focus:ring-blue-600"
-                      />
-                      <span className="ml-2 capitalize">{method}</span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
+              <label
+                htmlFor="notificationMethod"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                Notification Method
+              </label>
+              <Select
+                options={notificationMethodOptions}
+                styles={customSelectStyles}
+                value={notificationMethod}
+                onChange={setNotificationMethod}
+                placeholder="Select notification method"
+                isSearchable={false}
+              />
             </div>
           </div>
 
