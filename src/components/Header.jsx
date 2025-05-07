@@ -32,6 +32,14 @@ export const Header = () => {
   const [favouriteJobsCount, setFavouriteJobsCount] = useState(0);
   const [newMessageCount, setNewMessageCount] = useState(0);
 
+  // Thêm state và hàm toggle cho menu mobile
+  const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
+
+  const toggleMobileMenu = () => {
+    document.body.classList.toggle("mobile-menu-visible");
+    setIsMobileMenuVisible(!isMobileMenuVisible);
+  };
+
   // Reference to store SignalR connection
   const signalRConnection = useRef(null);
   const audioRef = useRef(new Audio(notificationSound));
@@ -229,6 +237,20 @@ export const Header = () => {
     <>
       {/* Main Header*/}
       <header className="main-header border-bottom-1">
+        {/* Mobile navigation toggler with logo */}
+        <div className="main-header-mobile-wrapper flex items-center justify-between w-full px-4">
+          <div className="mobile-nav-toggler" onClick={toggleMobileMenu}>
+            <i className="fa-solid fa-bars icon"></i>
+          </div>
+          <a href="/" className="mobile-logo">
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: "80px", height: "44px" }}
+            />
+          </a>
+        </div>
+
         {/* Main box */}
         <div className="main-box">
           {/*Nav Outer */}
