@@ -246,7 +246,86 @@ export const getApplicationByUserOwnJob = async (userId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error fetching application by job:", error)
+    console.error("Error fetching application by job:", error);
     throw error;
   }
-}
+};
+
+// New function to get all job alerts
+export const getAllJobAlerts = async () => {
+  try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
+    const response = await axios.get(`${BACKEND_API_URL}/api/JobAlert`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status !== 200) {
+      throw new Error("Failed to fetch all job alerts");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all job alerts:", error);
+    toast.error("Error fetching all job alerts!");
+    return [];
+  }
+};
+
+export const deleteJobAlert = async (alertId) => {
+  const userId = getUserId(); // Retrieve userId from localStorage or context
+  if (!userId) {
+    throw new Error("User ID not found!");
+  }
+
+  const token = getAccessToken(); // Lấy token từ localStorage
+  if (!token) throw new Error("No access token found");
+
+  try {
+    const response = await fetch(
+      `${BACKEND_API_URL}/api/JobAlert/${alertId}/user/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || "Failed to delete alert");
+    }
+  } catch (error) {
+    console.error("Delete job alert failed: ", error);
+    throw error;
+  }
+};
+
+export const getJobAlertsByUserId = async (userId) => {
+  try {
+    const token = getAccessToken(); // Lấy token từ localStorage
+    if (!token) throw new Error("No access token found");
+
+    const response = await axios.get(
+      `${BACKEND_API_URL}/api/JobAlert/user/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status !== 200) {
+      throw new Error("Failed to fetch job alerts");
+    }
+
+    return response.data; // Trả về dữ liệu của API (danh sách Job Alerts)
+  } catch (error) {
+    console.error("Error fetching job alerts for user:", error);
+    toast.error("Error fetching job alerts!");
+    return []; // Trả về một mảng rỗng nếu có lỗi
+  }
+};
