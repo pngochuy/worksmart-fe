@@ -568,7 +568,7 @@ export const Index = () => {
                           </figure>
                           <div className="ms-0 ms-md-3">
                             <h4 className="fz22 mb-0">
-                              <a href="#">{job.title}</a>
+                              <a>{job.title}</a>
                             </h4>
                             <p>
                               by{" "}
