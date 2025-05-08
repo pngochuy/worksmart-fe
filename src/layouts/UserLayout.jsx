@@ -16,7 +16,7 @@ export const UserLayout = () => {
           <Header />
           {/* End Header */}
           {/* Sidebar Backdrop */}
-          <div className="sidebar-backdrop"></div>
+          {/* <div className="sidebar-backdrop"></div> */}
           <Sidebar />
           <Outlet /> {/* Nơi hiển thị các trang dựa trên route */}
           {/* User Footer */}

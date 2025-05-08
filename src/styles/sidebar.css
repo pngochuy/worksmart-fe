@@ -1,0 +1,111 @@
+/* Mobile Sidebar Trigger */
+.mobile-sidebar-trigger {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  background: #1967d2;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .mobile-sidebar-trigger {
+    display: flex;
+  }
+
+  .user-sidebar {
+    position: fixed;
+    left: -365px;
+    bottom: 0;
+    height: calc(100%);
+    width: 365px;
+    padding-top: 80px;
+    background: #ffffff;
+    overflow: auto;
+    transition: all 300ms ease;
+    z-index: 9;
+    border: 1px solid #ecedf2;
+    box-shadow: 0px 6px 15px rgba(64, 79, 104, 0.05);
+  }
+
+  .user-sidebar.mobile-open {
+    left: 0;
+    transform: none;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+  }
+
+  .dashboard-outer {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .user-sidebar {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: calc(100%);
+    width: 365px;
+    padding-top: 80px;
+    background: #ffffff;
+    overflow: auto;
+    transition: all 300ms ease;
+    z-index: 9;
+    border: 1px solid #ecedf2;
+    box-shadow: 0px 6px 15px rgba(64, 79, 104, 0.05);
+  }
+
+  .dashboard-outer {
+    padding-left: 280px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Hide mobile elements on desktop */
+  .mobile-sidebar-trigger,
+  .sidebar-backdrop {
+    display: none;
+  }
+}
+
+/* Scrollbar Styles */
+.sidebar-inner {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1967d2 #f1f1f1;
+}
+
+.sidebar-inner::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-inner::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.sidebar-inner::-webkit-scrollbar-thumb {
+  background: #1967d2;
+  border-radius: 3px;
+}

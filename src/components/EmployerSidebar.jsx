@@ -1,8 +1,9 @@
+/* eslint-disable react/prop-types */
 import { NavLink, useLocation } from "react-router-dom";
 import { useNotifications } from "@/layouts/NotificationProvider";
 import { useRef } from "react";
 
-export const EmployerSidebar = () => {
+export const EmployerSidebar = ({ closeMobileMenu }) => {
   const location = useLocation();
   const { unreadCount } = useNotifications();
   const signalRConnection = useRef(null);
@@ -14,6 +15,9 @@ export const EmployerSidebar = () => {
 
   // Logout function
   const logout = () => {
+    // Close mobile menu first
+    closeMobileMenu();
+
     // Stop SignalR connection before logout
     if (signalRConnection.current) {
       signalRConnection.current
@@ -33,41 +37,41 @@ export const EmployerSidebar = () => {
     <>
       <ul className="navigation">
         <li className={checkActive("/employer/dashboard") ? "active" : ""}>
-          <NavLink to="/employer/dashboard">
+          <NavLink onClick={closeMobileMenu} to="/employer/dashboard">
             <i className="la la-home"></i> Dashboard
           </NavLink>
         </li>
         <li
           className={checkActive("/employer/company-profile") ? "active" : ""}
         >
-          <NavLink to="/employer/company-profile">
+          <NavLink onClick={closeMobileMenu} to="/employer/company-profile">
             <i className="la la-user-tie"></i>Company Profile
           </NavLink>
         </li>
         <li className={checkActive("/employer/post-job") ? "active" : ""}>
-          <NavLink to="/employer/post-job">
+          <NavLink onClick={closeMobileMenu} to="/employer/post-job">
             <i className="la la-paper-plane"></i>Post Job
           </NavLink>
         </li>
         <li className={checkActive("/employer/manage-jobs") ? "active" : ""}>
-          <NavLink to="/employer/manage-jobs">
+          <NavLink onClick={closeMobileMenu} to="/employer/manage-jobs">
             <i className="la la-briefcase"></i> Manage Jobs
           </NavLink>
         </li>
         <li className={checkActive("/employer/proposed-cvs") ? "active" : ""}>
-          <NavLink to="/employer/proposed-cvs">
+          <NavLink onClick={closeMobileMenu} to="/employer/proposed-cvs">
             <i className="la la-thumbs-up"></i> Proposed CVs
           </NavLink>
         </li>
         <li className={checkActive("/employer/all-candidates") ? "active" : ""}>
-          <NavLink to="/employer/all-candidates">
+          <NavLink onClick={closeMobileMenu} to="/employer/all-candidates">
             <i className="la la-file-invoice"></i> All Candidates
           </NavLink>
         </li>
         {/* <li
           className={checkActive("/employer/shortlisted-cvs") ? "active" : ""}
         >
-          <NavLink to="/employer/shortlisted-cvs">
+          <NavLink onClick={closeMobileMenu} to="/employer/shortlisted-cvs">
             <i className="la la-bookmark-o"></i>Shortlisted CVs
           </NavLink>
         </li> */}
@@ -76,7 +80,7 @@ export const EmployerSidebar = () => {
             checkActive("/employer/subscription-plans") ? "active" : ""
           }
         >
-          <NavLink to="/employer/subscription-plans">
+          <NavLink onClick={closeMobileMenu} to="/employer/subscription-plans">
             <i className="la la-box"></i>Subscription Plans
           </NavLink>
         </li>
@@ -85,17 +89,17 @@ export const EmployerSidebar = () => {
             checkActive("/employer/transaction-history") ? "active" : ""
           }
         >
-          <NavLink to="/employer/transaction-history">
+          <NavLink onClick={closeMobileMenu} to="/employer/transaction-history">
             <i className="la la-credit-card"></i>Transaction History
           </NavLink>
         </li>
         <li className={checkActive("/employer/messages") ? "active" : ""}>
-          <NavLink to="/employer/messages">
+          <NavLink onClick={closeMobileMenu} to="/employer/messages">
             <i className="la la-comment-o"></i>Messages
           </NavLink>
         </li>
         <li className={checkActive("/employer/notifications") ? "active" : ""}>
-          <NavLink to="/employer/notifications">
+          <NavLink onClick={closeMobileMenu} to="/employer/notifications">
             <i className="la la-bell"></i>Notifications
             {unreadCount > 0 && (
               <span className="notification-badge">{unreadCount}</span>
@@ -105,12 +109,12 @@ export const EmployerSidebar = () => {
         <li
           className={checkActive("/employer/change-password") ? "active" : ""}
         >
-          <NavLink to="/employer/change-password">
+          <NavLink onClick={closeMobileMenu} to="/employer/change-password">
             <i className="la la-lock"></i>Change Password
           </NavLink>
         </li>
         <li className={checkActive("/employer/settings") ? "active" : ""}>
-          <NavLink to="/employer/settings">
+          <NavLink onClick={closeMobileMenu} to="/employer/settings">
             <i className="la la-cog"></i>Settings
           </NavLink>
         </li>
@@ -126,7 +130,7 @@ export const EmployerSidebar = () => {
           </NavLink>
         </li>
         {/* <li>
-          <NavLink to="index.html">
+          <NavLink onClick={closeMobileMenu} to="index.html">
             <i className="la la-trash"></i>Delete Profile
           </NavLink>
         </li> */}

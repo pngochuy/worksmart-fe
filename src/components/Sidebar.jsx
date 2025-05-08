@@ -50,17 +50,29 @@ export const Sidebar = () => {
   }, []);
 
   const formatExpiryDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
 
+  // Thêm hàm đóng menu mobile
+  const closeMobileMenu = () => {
+    document.body.classList.remove("mobile-menu-visible");
+  };
+
   return (
     <>
+      {/* Thêm sự kiện click cho backdrop */}
+      <div className="sidebar-backdrop" onClick={closeMobileMenu}></div>
+
       <div
-        className="user-sidebar"
+        className={`user-sidebar`}
         style={{ paddingTop: `${isAdmin ? "0px" : "10px"}` }}
       >
+        {/* Thêm nút đóng menu mobile */}
+        <div className="close-btn" onClick={closeMobileMenu}>
+          <i className="fa-solid fa-times-circle icon"></i>
+        </div>
         <div
           className="sidebar-inner"
           style={{ paddingTop: `${isAdmin ? "0px" : "70px"}` }}
@@ -104,30 +116,43 @@ export const Sidebar = () => {
 
           {/* Subscription Info */}
           {userDataLogin?.role !== "Admin" && (
-            <div className="px-3 py-2 text-gray-600" style={{ fontSize: "0.85rem" }}>
+            <div
+              className="px-3 py-2 text-gray-600"
+              style={{ fontSize: "0.85rem" }}
+            >
               <span>Plan: </span>
-              <span className={`font-medium ${subscriptionData?.hasActiveSubscription ? 'text-blue-500' : 'text-blue-500'}`}>
+              <span
+                className={`font-medium ${
+                  subscriptionData?.hasActiveSubscription
+                    ? "text-blue-500"
+                    : "text-blue-500"
+                }`}
+              >
                 {subscriptionData?.hasActiveSubscription
                   ? subscriptionData.package.name.split(" ")[1]
                   : "Free"}
-                {subscriptionData && subscriptionData.hasActiveSubscription && subscriptionData.expireDate && (
-                  <>
-                    <i
-                      className="fa-solid fa-info-circle ml-2 subscription-info"
-                      data-pr-tooltip={`Expires on: ${formatExpiryDate(subscriptionData.expireDate)}`}
-                      style={{ cursor: "pointer" }}
-                      data-pr-position="right"
-                      data-pr-at="right+9 top"
-                    ></i>
-                    <Tooltip
-                      target=".subscription-info"
-                      position="right"
-                      showDelay={0}
-                      hideDelay={0}
-                      style={{ fontSize: '0.7rem' }}
-                    />
-                  </>
-                )}
+                {subscriptionData &&
+                  subscriptionData.hasActiveSubscription &&
+                  subscriptionData.expireDate && (
+                    <>
+                      <i
+                        className="fa-solid fa-info-circle ml-2 subscription-info"
+                        data-pr-tooltip={`Expires on: ${formatExpiryDate(
+                          subscriptionData.expireDate
+                        )}`}
+                        style={{ cursor: "pointer" }}
+                        data-pr-position="right"
+                        data-pr-at="right+9 top"
+                      ></i>
+                      <Tooltip
+                        target=".subscription-info"
+                        position="right"
+                        showDelay={0}
+                        hideDelay={0}
+                        style={{ fontSize: "0.7rem" }}
+                      />
+                    </>
+                  )}
               </span>
             </div>
           )}
@@ -137,7 +162,11 @@ export const Sidebar = () => {
             <>
               <div
                 className="px-3 py-2 text-gray-400"
-                style={{ fontSize: "0.85rem" }}
+                style={{
+                  fontSize: "0.85rem",
+                  paddingLeft: "12px !important",
+                  paddingRight: "12px !important",
+                }}
               >
                 <Tooltip
                   target=".fa-circle-question"
@@ -170,7 +199,7 @@ export const Sidebar = () => {
           {/* Candidate Sidebar */}
           {isCandidate && (
             <>
-              <CandidateSidebar />
+              <CandidateSidebar closeMobileMenu={closeMobileMenu} />
             </>
           )}
           {/* End Candidate Sidebar */}
@@ -178,14 +207,14 @@ export const Sidebar = () => {
           {/* Employer Sidebar */}
           {isEmployer && (
             <>
-              <EmployerSidebar />
+              <EmployerSidebar closeMobileMenu={closeMobileMenu} />
             </>
           )}
           {/* End Employer Sidebar */}
           {/* Admin Sidebar */}
           {isAdmin && (
             <>
-              <AdminSidebar />
+              <AdminSidebar closeMobileMenu={closeMobileMenu} />
             </>
           )}
           {/* End Admin Sidebar */}

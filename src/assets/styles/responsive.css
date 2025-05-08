@@ -658,9 +658,9 @@
     padding-left: 0;
   }
 
-  .user-sidebar {
+  /* .user-sidebar {
     transform: translateX(-100%);
-  }
+  } */
 
   .user-sidebar-active .sidebar-backdrop {
     opacity: 1;
