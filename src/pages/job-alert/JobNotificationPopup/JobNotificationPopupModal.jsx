@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import { toast } from "react-toastify";
-import SalaryRangeDropdown from "../../job-list/SalaryRangeDropdown";
 import Select from "react-select";
 import { vietnamProvinces } from "../../../helpers/getLocationVN";
 
@@ -35,6 +34,18 @@ const customSelectStyles = {
   }),
 };
 
+// Fixed salary range options
+const salaryRangeOptions = [
+  { value: "", label: "Salary Range" },
+  { value: "5000000-10000000", label: "5,000,000 - 10,000,000" },
+  { value: "10000000-15000000", label: "10,000,000 - 15,000,000" },
+  { value: "15000000-20000000", label: "15,000,000 - 20,000,000" },
+  { value: "20000000-30000000", label: "20,000,000 - 30,000,000" },
+  { value: "30000000-50000000", label: "30,000,000 - 50,000,000" },
+  { value: "50000000-70000000", label: "50,000,000 - 70,000,000" },
+  { value: "70000000-100000000", label: "70,000,000 - 100,000,000" },
+];
+
 const experienceOptions = [
   { value: "No experience", label: "No experience" },
   { value: "Under 1 year", label: "Under 1 year" },
@@ -59,8 +70,6 @@ const notificationMethodOptions = [
 
 const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const [selectedOption, setSelectedOption] = useState(null);
-  const [minSalary, setMinSalary] = useState("");
-  const [maxSalary, setMaxSalary] = useState("");
   const [keyword, setKeyword] = useState(defaultKeyword || "");
   const [city, setCity] = useState("");
   const [cityOptions, setCityOptions] = useState([]);
@@ -87,6 +96,10 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
     setCity(selectedOption.value);
   };
 
+  const handleSalaryRangeChange = (selectedOption) => {
+    setSelectedOption(selectedOption);
+  };
+
   const user = JSON.parse(localStorage.getItem("userLoginData"));
   const userID = user?.userID || null;
 
@@ -104,7 +117,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
       return;
     }
 
-    if (!selectedOption) {
+    if (!selectedOption || !selectedOption.value) {
       toast.error("Please select a salary range");
       return;
     }
@@ -126,17 +139,6 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
     const userId = userID;
 
-    const formatSalary = (salary) => {
-      if (!salary) return "";
-      return salary.toLocaleString("en-US"); // Chuyển số thành chuỗi có dấu phẩy
-    };
-
-    const formattedMinSalary = formatSalary(Number(minSalary));
-    const formattedMaxSalary = formatSalary(Number(maxSalary));
-    const salaryRange =
-      formattedMinSalary && formattedMaxSalary
-        ? `${formattedMinSalary} - ${formattedMaxSalary}`
-        : "";
     const payload = {
       keyword,
       province: city,
@@ -219,18 +221,13 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               >
                 Salary
               </label>
-              <SalaryRangeDropdown
-                selectedOption={selectedOption}
-                setSearchParams={({ MinSalary, MaxSalary }) => {
-                  setMinSalary(MinSalary);
-                  setMaxSalary(MaxSalary);
-
-                  // Gán giá trị đúng cho selectedOption
-                  setSelectedOption({
-                    value: `${MinSalary}-${MaxSalary}`, // Lưu giá trị chuỗi MinSalary-MaxSalary
-                    label: `${MinSalary.toLocaleString()} - ${MaxSalary.toLocaleString()}`, // Lưu label cho dropdown
-                  });
-                }}
+              <Select
+                options={salaryRangeOptions}
+                styles={customSelectStyles}
+                placeholder="Select salary range"
+                value={selectedOption}
+                onChange={handleSalaryRangeChange}
+                isSearchable={false}
               />
             </div>
             <div>
