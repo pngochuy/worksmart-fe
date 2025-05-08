@@ -1,168 +1,143 @@
-export const index = () => {
+import React, { useEffect, useState } from "react";
+import {
+  getJobAlertsByUserId,
+  deleteJobAlert,
+} from "@/services/candidateServices";
+import { toast } from "react-toastify";
+
+const JobAlertManager = () => {
+  const [jobAlerts, setJobAlerts] = useState([]);
+
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("userLoginData"));
+    } catch {
+      return null;
+    }
+  })();
+
+  const userID = user?.userID;
+
+  useEffect(() => {
+    if (!userID) return;
+
+    const fetchJobAlerts = async () => {
+      try {
+        const data = await getJobAlertsByUserId(userID);
+        setJobAlerts(data || []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to fetch job alerts.");
+      }
+    };
+
+    fetchJobAlerts();
+  }, [userID]);
+
+  const handleDelete = async (id) => {
+    console.log("Delete function called with ID:", id);
+    if (!window.confirm("Are you sure you want to delete this alert?")) return;
+
+    try {
+      console.log("Deleting job alert with ID:", id);
+      const user = JSON.parse(localStorage.getItem("userLoginData"));
+      const userID = user?.userID;
+
+      console.log("User data from localStorage:", user); // Debug user data
+      if (!userID || !id) {
+        toast.error("Invalid job alert ID or user ID.");
+        console.error("Invalid job user ID or alert ID:", userID, id);
+        return;
+      }
+
+      await deleteJobAlert(id, userID);
+      setJobAlerts((prev) => prev.filter((alert) => alert.id !== id));
+      toast.success("Alert deleted successfully.");
+    } catch (error) {
+      console.error("Error while deleting job alert:", error);
+      toast.error("Failed to delete alert.");
+    }
+  };
+
   return (
-    <>
-      {/* Dashboard */}
-      <section className="user-dashboard">
-        <div className="dashboard-outer">
-          <div className="upper-title-box">
-            <h3>Job Alerts</h3>
-            <div className="text">Ready to jump back in?</div>
-          </div>
+    <section className="user-dashboard">
+      <div className="dashboard-outer">
+        <div className="upper-title-box">
+          <h3>Job Alerts</h3>
+          <div className="text">Ready to jump back in?</div>
+        </div>
 
-          <div className="row">
-            <div className="col-lg-12">
-              {/* Ls widget */}
-              <div className="ls-widget">
-                <div className="tabs-box">
-                  <div className="widget-title">
-                    <h4>My Job Alerts</h4>
+        <div className="row">
+          <div className="col-lg-12">
+            <div className="ls-widget">
+              <div className="tabs-box">
+                <div className="widget-title">
+                  <h4>My Job Alerts</h4>
+                </div>
 
-                    <div className="chosen-outer">
-                      {/*Tabs Box*/}
-                      <select className="chosen-select">
-                        <option>Last 6 Months</option>
-                        <option>Last 12 Months</option>
-                        <option>Last 16 Months</option>
-                        <option>Last 24 Months</option>
-                        <option>Last 5 year</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="widget-content">
-                    <div className="table-outer">
-                      <table className="default-table manage-job-table">
-                        <thead>
+                <div className="widget-content">
+                  <div className="table-outer">
+                    <table className="default-table manage-job-table">
+                      <thead>
+                        <tr>
+                          <th>STT</th>
+                          <th>Keyword</th>
+                          <th>Location</th>
+                          <th>Salary</th>
+                          <th>Experience</th>
+                          <th>Work Type</th> {/* Cột WorkType mới */}
+                          <th>Notification</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {jobAlerts.length > 0 ? (
+                          jobAlerts.map((job, index) => (
+                            <tr key={job.jobAlertId}>
+                              <td>{index + 1}</td>
+                              <td>{job.keyword}</td>
+                              <td>{job.province}</td>
+                              <td>{job.salaryRange || "N/A"}</td>
+                              <td>{job.experience}</td>
+                              <td>{job.jobType || "N/A"}</td>{" "}
+                              {/* Hiển thị thông tin WorkType */}
+                              <td>{job.notificationMethod}</td>
+                              <td>
+                                <div className="option-box">
+                                  <ul className="option-list">
+                                    <li>
+                                      <button
+                                        onClick={() =>
+                                          handleDelete(job.jobAlertId)
+                                        }
+                                        title="Delete"
+                                      >
+                                        <span className="la la-trash"></span>
+                                      </button>
+                                    </li>
+                                  </ul>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
                           <tr>
-                            <th>Title</th>
-                            <th>Criteria</th>
-                            <th>Created</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          <tr>
-                            <td>
-                              <h6>
-                                Senior Full Stack Engineer, Creator Success
-                              </h6>
-                              <span className="info">
-                                <i className="icon flaticon-map-locator"></i>{" "}
-                                London, UK
-                              </span>
-                            </td>
-                            <td>Human Resources, Junior</td>
-                            <td>Nov 12, 2021 </td>
-                            <td>
-                              <div className="option-box">
-                                <ul className="option-list">
-                                  <li>
-                                    <button data-text="View Aplication">
-                                      <span className="la la-eye"></span>
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button data-text="Delete Aplication">
-                                      <span className="la la-trash"></span>
-                                    </button>
-                                  </li>
-                                </ul>
-                              </div>
+                            <td colSpan={8} style={{ textAlign: "center" }}>
+                              No job alerts found.
                             </td>
                           </tr>
-                          <tr>
-                            <td>
-                              <h6>Senior Product Designer</h6>
-                              <span className="info">
-                                <i className="icon flaticon-map-locator"></i>{" "}
-                                London, UK
-                              </span>
-                            </td>
-                            <td>Human Resources, Junior</td>
-                            <td>Nov 12, 2021 </td>
-                            <td>
-                              <div className="option-box">
-                                <ul className="option-list">
-                                  <li>
-                                    <button data-text="View Aplication">
-                                      <span className="la la-eye"></span>
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button data-text="Delete Aplication">
-                                      <span className="la la-trash"></span>
-                                    </button>
-                                  </li>
-                                </ul>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <h6>Sr. Full Stack Engineer</h6>
-                              <span className="info">
-                                <i className="icon flaticon-map-locator"></i>{" "}
-                                London, UK
-                              </span>
-                            </td>
-                            <td>Human Resources, Junior</td>
-                            <td>Nov 12, 2021 </td>
-                            <td>
-                              <div className="option-box">
-                                <ul className="option-list">
-                                  <li>
-                                    <button data-text="View Aplication">
-                                      <span className="la la-eye"></span>
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button data-text="Delete Aplication">
-                                      <span className="la la-trash"></span>
-                                    </button>
-                                  </li>
-                                </ul>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <h6>Product Manager, Studio</h6>
-                              <span className="info">
-                                <i className="icon flaticon-map-locator"></i>{" "}
-                                London, UK
-                              </span>
-                            </td>
-                            <td>Human Resources, Junior</td>
-                            <td>Nov 12, 2021 </td>
-                            <td>
-                              <div className="option-box">
-                                <ul className="option-list">
-                                  <li>
-                                    <button data-text="View Aplication">
-                                      <span className="la la-eye"></span>
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button data-text="Delete Aplication">
-                                      <span className="la la-trash"></span>
-                                    </button>
-                                  </li>
-                                </ul>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-      {/* End Dashboard */}
-    </>
+      </div>
+    </section>
   );
 };
+
+export const index = JobAlertManager;
