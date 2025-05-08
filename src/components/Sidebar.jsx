@@ -70,9 +70,12 @@ export const Sidebar = () => {
         style={{ paddingTop: `${isAdmin ? "0px" : "10px"}` }}
       >
         {/* Thêm nút đóng menu mobile */}
-        <div className="close-btn" onClick={closeMobileMenu}>
-          <i className="fa-solid fa-times-circle icon"></i>
-        </div>
+        {!isAdmin && (
+          <div className="close-btn" onClick={closeMobileMenu}>
+            <i className="fa-solid fa-times-circle icon"></i>
+          </div>
+        )}
+
         <div
           className="sidebar-inner"
           style={{ paddingTop: `${isAdmin ? "0px" : "70px"}` }}
