@@ -318,7 +318,7 @@ export const getJobAlertsByUserId = async (userId) => {
       throw new Error("Failed to fetch job alerts");
     }
 
-    return response.data; // Trả về dữ liệu của API (danh sách Job Alerts)
+    return response.data;
   } catch (error) {
     console.error("Error fetching job alerts for user:", error);
     toast.error("Error fetching job alerts!");

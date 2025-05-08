@@ -8,6 +8,7 @@ import {
 import { toast } from "react-toastify";
 import SalaryRangeDropdown from "../../job-list/SalaryRangeDropdown";
 import Select from "react-select";
+import { vietnamProvinces } from "../../../helpers/getLocationVN";
 const customSelectStyles = {
   container: (provided) => ({
     ...provided,
@@ -53,8 +54,10 @@ const notificationMethodOptions = [
 
 const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const [keyword, setKeyword] = useState(defaultKeyword || "");
-  const [city, setCity] = useState("Ho Chi Minh City");
-  const [district, setDistrict] = useState("");
+  const [city, setCity] = useState("");
+  //const [district, setDistrict] = useState("");
+  const [cityOptions, setCityOptions] = useState([]);
+  const [districtOptions, setDistrictOptions] = useState([]);
 
   const [minSalary, setMinSalary] = useState("");
   const [maxSalary, setMaxSalary] = useState("");
@@ -66,48 +69,35 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
     notificationMethodOptions[2]
   ); // default both
   const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [cityOptions, setCityOptions] = useState([]);
-  const [districtOptions, setDistrictOptions] = useState([]);
+  //const [districts, setDistricts] = useState([]);
 
   useEffect(() => {
     setKeyword(defaultKeyword || "");
   }, [defaultKeyword]);
 
   useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const response = await fetch("https://provinces.open-api.vn/api/p/");
-        const data = await response.json();
-        setProvinces(data);
-        const options = data.map((item) => ({
-          value: item.code,
-          label: item.name,
-        }));
-        setCityOptions(options);
-      } catch (error) {
-        console.error("Failed to load province list:", error);
-      }
-    };
-
-    fetchProvinces();
+    const provinceOptions = vietnamProvinces.map((province) => ({
+      value: province.name,
+      label: province.name,
+    }));
+    setCityOptions(provinceOptions);
   }, []);
 
-  const handleProvinceChange = async (selectedOption) => {
-    setCity(selectedOption.label);
+  const handleProvinceChange = (selectedOption) => {
+    setCity(selectedOption.value);
     setDistrict("");
-    try {
-      const response = await fetch(
-        `https://provinces.open-api.vn/api/p/${selectedOption.value}?depth=2`
-      );
-      const data = await response.json();
-      const districtOpts = data.districts.map((d) => ({
-        value: d.name,
-        label: d.name,
+
+    const selectedProvince = vietnamProvinces.find(
+      (p) => p.name === selectedOption.value
+    );
+    if (selectedProvince && selectedProvince.districts) {
+      const districtOpts = selectedProvince.districts.map((d) => ({
+        value: d,
+        label: d,
       }));
       setDistrictOptions(districtOpts);
-    } catch (error) {
-      console.error("Error loading districts:", error);
+    } else {
+      setDistrictOptions([]);
     }
   };
 
@@ -119,14 +109,23 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
     const userId = userID;
 
+    const formatSalary = (salary) => {
+      if (!salary) return "";
+      return salary.toLocaleString("en-US"); // Chuyển số thành chuỗi có dấu phẩy
+    };
+
+    const formattedMinSalary = formatSalary(minSalary);
+    const formattedMaxSalary = formatSalary(maxSalary);
+
     const salaryRange =
-      minSalary && maxSalary ? minSalary + "-" + maxSalary : "";
+      formattedMinSalary && formattedMaxSalary
+        ? `${formattedMinSalary} - ${formattedMaxSalary}`
+        : "";
 
     const payload = {
       keyword,
       province: city,
-      district: district,
-      salaryRange: salaryRange,
+      salaryRange: salaryRange, // Chuyển giá trị thành chuỗi
       experience: experience.value,
       jobPosition: specialization,
       jobType: worktype.value || null,
@@ -134,6 +133,7 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
       notificationMethod: notificationMethod.value,
       userId: userId,
     };
+
     const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
     try {
       const response = await fetch(`${BACKEND_API_URL}/api/JobAlert`, {
@@ -191,24 +191,9 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               <Select
                 options={cityOptions}
                 styles={customSelectStyles}
-                placeholder="Select a province/city"
+                placeholder="Select a city"
+                value={cityOptions.find((c) => c.value === city)}
                 onChange={handleProvinceChange}
-                isSearchable
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                District
-              </label>
-              <Select
-                options={districtOptions}
-                styles={customSelectStyles}
-                placeholder="Select a district"
-                value={
-                  districtOptions.find((opt) => opt.value === district) || null
-                }
-                onChange={(option) => setDistrict(option.value)}
                 isSearchable
               />
             </div>

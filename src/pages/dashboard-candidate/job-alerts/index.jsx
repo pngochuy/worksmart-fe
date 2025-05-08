@@ -80,30 +80,25 @@ const JobAlertManager = () => {
                     <table className="default-table manage-job-table">
                       <thead>
                         <tr>
+                          <th>STT</th> {/* Cột Số thứ tự */}
                           <th>Keyword</th>
                           <th>Location</th>
                           <th>Salary</th>
                           <th>Experience</th>
                           <th>Notification</th>
-                          <th>Created</th>
                           <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {jobAlerts.length > 0 ? (
-                          jobAlerts.map((job) => (
+                          jobAlerts.map((job, index) => (
                             <tr key={job.id}>
+                              <td>{index + 1}</td> {/* Hiển thị số thứ tự */}
                               <td>{job.keyword}</td>
-                              <td>
-                                {job.province}
-                                {job.district ? ` - ${job.district}` : ""}
-                              </td>
+                              <td>{job.province}</td>
                               <td>{job.salaryRange || "N/A"}</td>
                               <td>{job.experience}</td>
                               <td>{job.notificationMethod}</td>
-                              <td>
-                                {new Date(job.createdDate).toLocaleDateString()}
-                              </td>
                               <td>
                                 <div className="option-box">
                                   <ul className="option-list">
