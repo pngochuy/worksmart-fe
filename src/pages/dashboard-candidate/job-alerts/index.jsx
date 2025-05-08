@@ -35,26 +35,21 @@ const JobAlertManager = () => {
   }, [userID]);
 
   const handleDelete = async (id) => {
+    console.log("Delete function called with ID:", id);
     if (!window.confirm("Are you sure you want to delete this alert?")) return;
 
     try {
-      console.log("Deleting job alert with ID:", id); // Kiểm tra giá trị id
-
-      // Lấy user từ localStorage và kiểm tra
+      console.log("Deleting job alert with ID:", id);
       const user = JSON.parse(localStorage.getItem("userLoginData"));
       const userID = user?.userID;
 
       console.log("User data from localStorage:", user); // Debug user data
-      console.log("User ID:", userID); // Kiểm tra giá trị userID
-
-      // Kiểm tra nếu userID hoặc id không hợp lệ
       if (!userID || !id) {
         toast.error("Invalid job alert ID or user ID.");
-        console.error("Invalid job alert ID or user ID:", userID, id);
+        console.error("Invalid job user ID or alert ID:", userID, id);
         return;
       }
 
-      // Thực hiện xóa nếu hợp lệ
       await deleteJobAlert(id, userID);
       setJobAlerts((prev) => prev.filter((alert) => alert.id !== id));
       toast.success("Alert deleted successfully.");

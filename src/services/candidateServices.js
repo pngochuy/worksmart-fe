@@ -284,18 +284,20 @@ export const deleteJobAlert = async (alertId, userId) => {
     const response = await fetch(
       `${BACKEND_API_URL}/api/JobAlert/${alertId}/user/${userId}`,
       {
+        method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
     );
+
     if (!response.ok) {
-      const errorMessage = await response.text(); // Đọc phản hồi lỗi từ server
+      const errorMessage = await response.text();
       throw new Error(errorMessage || "Failed to delete alert");
     }
   } catch (error) {
     console.error("Delete job alert failed: ", error);
-    throw error; // Ném lỗi ra ngoài để có thể xử lý thêm
+    throw error;
   }
 };
 export const getJobAlertsByUserId = async (userId) => {
