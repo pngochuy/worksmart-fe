@@ -275,16 +275,12 @@ export const getAllJobAlerts = async () => {
   }
 };
 
-export const deleteJobAlert = async (alertId) => {
-  const userId = getUserId(); // Retrieve userId from localStorage or context
-  if (!userId) {
-    throw new Error("User ID not found!");
-  }
-
-  const token = getAccessToken(); // Lấy token từ localStorage
-  if (!token) throw new Error("No access token found");
-
+export const deleteJobAlert = async (alertId, userId) => {
+  const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL;
   try {
+    const token = getAccessToken();
+    if (!token) throw new Error("No access token found");
+
     const response = await fetch(
       `${BACKEND_API_URL}/api/JobAlert/${alertId}/user/${userId}`,
       {
@@ -293,17 +289,15 @@ export const deleteJobAlert = async (alertId) => {
         },
       }
     );
-
     if (!response.ok) {
-      const errorMessage = await response.text();
+      const errorMessage = await response.text(); // Đọc phản hồi lỗi từ server
       throw new Error(errorMessage || "Failed to delete alert");
     }
   } catch (error) {
     console.error("Delete job alert failed: ", error);
-    throw error;
+    throw error; // Ném lỗi ra ngoài để có thể xử lý thêm
   }
 };
-
 export const getJobAlertsByUserId = async (userId) => {
   try {
     const token = getAccessToken(); // Lấy token từ localStorage
