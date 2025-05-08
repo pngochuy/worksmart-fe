@@ -323,8 +323,9 @@ export const index = () => {
                         onClick={handleRefresh}
                       >
                         <RefreshCcw
-                          className={`h-4 w-4 ${loadingJobs ? "animate-spin" : ""
-                            }`}
+                          className={`h-4 w-4 ${
+                            loadingJobs ? "animate-spin" : ""
+                          }`}
                         />
                         <span className="ml-1 hidden sm:inline"></span>
                       </Button>
@@ -406,12 +407,13 @@ export const index = () => {
                                       <li className="required">Urgent</li>
                                     )}
                                     <li
-                                      className={`status ${job.applicationStatus === "Approved"
-                                        ? "bg-green-500"
-                                        : job.applicationStatus === "Rejected"
+                                      className={`status ${
+                                        job.applicationStatus === "Approved"
+                                          ? "bg-green-500"
+                                          : job.applicationStatus === "Rejected"
                                           ? "bg-red-500"
                                           : "bg-amber-500"
-                                        }`}
+                                      }`}
                                     >
                                       {job.applicationStatus}
                                     </li>
@@ -473,8 +475,9 @@ export const index = () => {
                           <nav aria-label="Job applications pagination">
                             <ul className="pagination">
                               <li
-                                className={`page-item ${currentPage === 1 ? "disabled" : ""
-                                  }`}
+                                className={`page-item ${
+                                  currentPage === 1 ? "disabled" : ""
+                                }`}
                               >
                                 <button
                                   className="page-link"
@@ -488,8 +491,9 @@ export const index = () => {
                               {[...Array(totalPages).keys()].map((number) => (
                                 <li
                                   key={number + 1}
-                                  className={`page-item ${currentPage === number + 1 ? "active" : ""
-                                    }`}
+                                  className={`page-item ${
+                                    currentPage === number + 1 ? "active" : ""
+                                  }`}
                                 >
                                   <button
                                     className="page-link"
@@ -501,8 +505,9 @@ export const index = () => {
                               ))}
 
                               <li
-                                className={`page-item ${currentPage === totalPages ? "disabled" : ""
-                                  }`}
+                                className={`page-item ${
+                                  currentPage === totalPages ? "disabled" : ""
+                                }`}
                               >
                                 <button
                                   className="page-link"
@@ -535,7 +540,7 @@ export const index = () => {
           .pagination .page-link {
             color: #2361ff;
             border: 1px solid #dee2e6;
-            padding: 8px 12px;
+            
           }
           
           .pagination .page-item.active .page-link {

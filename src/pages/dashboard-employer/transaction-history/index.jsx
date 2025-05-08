@@ -30,7 +30,7 @@ export const Index = () => {
 
   const handleRefresh = () => {
     fetchTransactions(); // Tải lại dữ liệu giao dịch
-  }
+  };
 
   const fetchTransactions = async () => {
     try {
@@ -71,9 +71,14 @@ export const Index = () => {
     if (searchTerm.trim() === "") {
       setFilteredTransactions(transactions);
     } else {
-      const filtered = transactions.filter(transaction =>
-        String(transaction.content).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(transaction.orderCode).toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = transactions.filter(
+        (transaction) =>
+          String(transaction.content)
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          String(transaction.orderCode)
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
       setFilteredTransactions(filtered);
     }
@@ -113,7 +118,10 @@ export const Index = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = filteredTransactions.slice(indexOfFirstItem, indexOfLastItem);
+  const currentTransactions = filteredTransactions.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -151,7 +159,9 @@ export const Index = () => {
                       disabled={loading}
                       onClick={handleRefresh}
                     >
-                      <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                      <RefreshCcw
+                        className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                      />
                       <span className="ml-1 hidden sm:inline"></span>
                     </Button>
                   )}
@@ -174,7 +184,10 @@ export const Index = () => {
                 <div className="widget-content">
                   {loading ? (
                     <div className="text-center py-4">
-                      <div className="spinner-border text-primary" role="status">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      >
                         <span className="visually-hidden">Loading...</span>
                       </div>
                       <p className="mt-2">Loading transactions...</p>
@@ -206,15 +219,27 @@ export const Index = () => {
                           {currentTransactions.map((transaction, index) => (
                             <tr key={transaction.transactionID}>
                               <td>{indexOfFirstItem + index + 1}</td>
-                              <td className="order-code">#{transaction.orderCode}</td>
-                              <td className="transaction-content">{transaction.content}</td>
-                              <td className="amount">{transaction.price.toLocaleString('en-US')} VND</td>
+                              <td className="order-code">
+                                #{transaction.orderCode}
+                              </td>
+                              <td className="transaction-content">
+                                {transaction.content}
+                              </td>
+                              <td className="amount">
+                                {transaction.price.toLocaleString("en-US")} VND
+                              </td>
                               <td className="status">
-                                <span className={`badge ${getStatusBadgeColor(transaction.status)}`}>
+                                <span
+                                  className={`badge ${getStatusBadgeColor(
+                                    transaction.status
+                                  )}`}
+                                >
                                   {transaction.status}
                                 </span>
                               </td>
-                              <td className="date">{formatDate(transaction.createdAt)}</td>
+                              <td className="date">
+                                {formatDate(transaction.createdAt)}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -225,7 +250,11 @@ export const Index = () => {
                         <div className="pagination-container mt-4 d-flex justify-content-center">
                           <nav aria-label="Transaction pagination">
                             <ul className="pagination">
-                              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                              <li
+                                className={`page-item ${
+                                  currentPage === 1 ? "disabled" : ""
+                                }`}
+                              >
                                 <button
                                   className="page-link"
                                   onClick={goToPreviousPage}
@@ -238,7 +267,9 @@ export const Index = () => {
                               {[...Array(totalPages).keys()].map((number) => (
                                 <li
                                   key={number + 1}
-                                  className={`page-item ${currentPage === number + 1 ? "active" : ""}`}
+                                  className={`page-item ${
+                                    currentPage === number + 1 ? "active" : ""
+                                  }`}
                                 >
                                   <button
                                     className="page-link"
@@ -249,7 +280,11 @@ export const Index = () => {
                                 </li>
                               ))}
 
-                              <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                              <li
+                                className={`page-item ${
+                                  currentPage === totalPages ? "disabled" : ""
+                                }`}
+                              >
                                 <button
                                   className="page-link"
                                   onClick={goToNextPage}
@@ -291,7 +326,6 @@ export const Index = () => {
           .pagination .page-link {
             color: #2361ff;
             border: 1px solid #dee2e6;
-            padding: 8px 12px;
           }
           
           .pagination .page-item.active .page-link {

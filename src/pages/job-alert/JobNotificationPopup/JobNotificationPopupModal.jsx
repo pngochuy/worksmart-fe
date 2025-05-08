@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -37,13 +38,13 @@ const customSelectStyles = {
 // Fixed salary range options
 const salaryRangeOptions = [
   { value: "", label: "Salary Range" },
-  { value: "5000000-10000000", label: "5,000,000 - 10,000,000" },
-  { value: "10000000-15000000", label: "10,000,000 - 15,000,000" },
-  { value: "15000000-20000000", label: "15,000,000 - 20,000,000" },
-  { value: "20000000-30000000", label: "20,000,000 - 30,000,000" },
-  { value: "30000000-50000000", label: "30,000,000 - 50,000,000" },
-  { value: "50000000-70000000", label: "50,000,000 - 70,000,000" },
-  { value: "70000000-100000000", label: "70,000,000 - 100,000,000" },
+  { value: "5,000,000 - 10,000,000", label: "5,000,000 - 10,000,000" },
+  { value: "10,000,000 - 15,000,000", label: "10,000,000 - 15,000,000" },
+  { value: "15,000,000 - 20,000,000", label: "15,000,000 - 20,000,000" },
+  { value: "20,000,000 - 30,000,000", label: "20,000,000 - 30,000,000" },
+  { value: "30,000,000 - 50,000,000", label: "30,000,000 - 50,000,000" },
+  { value: "50,000,000 - 70,000,000", label: "50,000,000 - 70,000,000" },
+  { value: "70,000,000 - 100,000,000", label: "70,000,000 - 100,000,000" },
 ];
 
 const experienceOptions = [
@@ -57,9 +58,9 @@ const experienceOptions = [
 ];
 
 const workTypeOptions = [
-  { value: "Full-time", label: "Full-time" },
+  { value: "Full-Time", label: "Full-Time" },
   { value: "Remote", label: "Remote" },
-  { value: "Part-time", label: "Part-time" },
+  { value: "Part-Time", label: "Part-Time" },
 ];
 
 const notificationMethodOptions = [

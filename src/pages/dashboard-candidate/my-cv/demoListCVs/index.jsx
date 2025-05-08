@@ -383,16 +383,17 @@ export const Index = () => {
             Manage, create and upload candidate CVs for your hiring process
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 sm:mt-0">
           <Button
             onClick={handleCreateCV}
             variant="default"
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <PlusSquare className="size-4" />
-            Create New CV
+            <span className="hidden sm:inline">Create New CV</span>
+            <span className="inline sm:hidden">New CV</span>
           </Button>
-          <div className="uploadButton">
+          <div className="uploadButton w-full sm:w-auto">
             <input
               className="uploadButton-input"
               type="file"
@@ -403,13 +404,17 @@ export const Index = () => {
             />
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full"
               asChild
               style={{ cursor: "pointer" }}
             >
-              <label htmlFor="uploadCV">
+              <label
+                htmlFor="uploadCV"
+                className="w-full text-center cursor-pointer"
+              >
                 <Upload className="size-4" />
-                Upload CV
+                <span className="hidden sm:inline">Upload CV</span>
+                <span className="inline sm:hidden">Upload</span>
               </label>
             </Button>
           </div>
@@ -522,13 +527,19 @@ export const Index = () => {
       >
         <TabsList className="grid grid-cols-3 mb-6 bg-gray-200">
           <TabsTrigger value="all">
-            All CVs ({filteredAllCVs.length})
+            <span className="hidden sm:inline">All CVs</span>
+            <span className="inline sm:hidden">All CVs</span> (
+            {filteredAllCVs.length})
           </TabsTrigger>
           <TabsTrigger value="system">
-            System CVs ({filteredSystemCVs.length})
+            <span className="hidden sm:inline">System CVs</span>
+            <span className="inline sm:hidden">System </span> (
+            {filteredSystemCVs.length})
           </TabsTrigger>
           <TabsTrigger value="uploaded">
-            Uploaded CVs ({filteredUploadedCVs.length})
+            <span className="hidden sm:inline">Uploaded CVs</span>
+            <span className="inline sm:hidden">Upload </span> (
+            {filteredUploadedCVs.length})
           </TabsTrigger>
         </TabsList>
 
@@ -896,14 +907,13 @@ const CVCard = ({
         </CardHeader>
 
         <CardContent className="pb-4 flex-1">
-          <div className="h-48 overflow-hidden bg-gray-100 rounded mb-4">
+          <div className="responsive-iframe-container bg-gray-100 rounded mb-4">
             <iframe
               src={resume.filePath}
               title={`CV Preview ${resume.fileName}`}
-              width="100%"
-              height="100%"
               frameBorder="0"
-              className="cv-preview-frame"
+              className="responsive-iframe"
+              allowFullScreen
             ></iframe>
           </div>
         </CardContent>
@@ -976,6 +986,35 @@ const CVCard = ({
         isDeleting={isDeleting}
         cvName={resume.fileName || "Uploaded CV"}
       />
+
+      {/* Add this CSS at the end of your component */}
+      <style jsx>{`
+        .responsive-iframe-container {
+          position: relative;
+          width: 100%;
+          padding-top: 129.4%; /* Aspect ratio for A4 PDF (1:1.414) */
+          overflow: hidden;
+        }
+
+        .responsive-iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          right: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+
+        /* Adjust height for larger screens */
+        @media (min-width: 768px) {
+          .responsive-iframe-container {
+            padding-top: 56.25%; /* 16:9 aspect ratio for desktop */
+            height: 12rem;
+          }
+        }
+      `}</style>
     </>
   );
 };

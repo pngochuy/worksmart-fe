@@ -409,16 +409,27 @@ const PackagePurchase = () => {
 
               {/* Package cards for medium and large screens */}
               <div className="hidden md:block mb-16">
-                <div
-                  className={`grid grid-cols-1 md:grid-cols-${candidatePackages.length} gap-4 lg:gap-8 px-4`}
-                >
-                  {candidatePackages.length > 0 ? (
-                    candidatePackages.map(renderPackageCard)
-                  ) : (
-                    <p className="col-span-3 text-center text-gray-500 py-8">
-                      No packages available at the moment
-                    </p>
-                  )}
+                <div className="container mx-auto px-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-center d-flex justify-center items-center">
+                    {candidatePackages.length > 0 ? (
+                      candidatePackages.map((pkg) => (
+                        <div
+                          key={pkg.id}
+                          className="w-full"
+                          style={{
+                            maxWidth: "360px",
+                            minWidth: "280px",
+                          }}
+                        >
+                          {renderPackageCard(pkg)}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="col-span-full text-center text-gray-500 py-8">
+                        No packages available at the moment
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 

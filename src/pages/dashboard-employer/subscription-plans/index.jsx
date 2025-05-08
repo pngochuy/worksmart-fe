@@ -378,7 +378,6 @@ export const index = () => {
           .pagination .page-link {
             color: #2361ff;
             border: 1px solid #dee2e6;
-            padding: 8px 12px;
           }
           
           .pagination .page-item.active .page-link {

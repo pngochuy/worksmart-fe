@@ -51,13 +51,28 @@ export const Index = () => {
           const companyData = await fetchCompanyProfile();
           setVerificationLevel(companyData.verificationLevel);
 
-          // Fetch all jobs and then filter for status 3
+          // Fetch all jobs
           const user = JSON.parse(localStorage.getItem("userLoginData"));
           const userID = user?.userID || null;
           const jobs = await fetchJobsByUserId(userID);
-          console.log("jobs in proposed-cv: ", jobs);
+
+          // Filter for status 3 jobs
           const filteredJobs = jobs.filter((job) => job.status === 3);
-          setActiveJobs(filteredJobs);
+
+          // Sort jobs: priority=true first, then by createdAt (newest first)
+          const sortedJobs = filteredJobs.sort((a, b) => {
+            // First sort by priority (true comes before false)
+            if (a.priority !== b.priority) {
+              return a.priority ? -1 : 1;
+            }
+
+            // If priorities are equal, sort by createdAt (newer first)
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+            return dateB - dateA;
+          });
+
+          setActiveJobs(sortedJobs);
         }
         setLoading(false);
       } catch (error) {

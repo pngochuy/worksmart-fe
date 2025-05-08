@@ -117,7 +117,7 @@ export const Sidebar = () => {
           {/* Subscription Info */}
           {userDataLogin?.role !== "Admin" && (
             <div
-              className="px-3 py-2 text-gray-600"
+              className="px-2 py-2 text-gray-600"
               style={{ fontSize: "0.85rem" }}
             >
               <span>Plan: </span>
@@ -161,11 +161,9 @@ export const Sidebar = () => {
           {userDataLogin?.role === "Employer" && (
             <>
               <div
-                className="px-3 py-2 text-gray-400"
+                className="px-2 py-2 text-gray-400"
                 style={{
                   fontSize: "0.85rem",
-                  paddingLeft: "12px !important",
-                  paddingRight: "12px !important",
                 }}
               >
                 <Tooltip
