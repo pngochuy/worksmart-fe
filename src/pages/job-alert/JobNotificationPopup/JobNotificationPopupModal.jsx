@@ -222,13 +222,16 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
               <SalaryRangeDropdown
                 selectedOption={selectedOption}
                 setSearchParams={({ MinSalary, MaxSalary }) => {
-                  setMinSalary(MinSalary);
-                  setMaxSalary(MaxSalary);
+                  // Đặt giá trị mặc định là 0 nếu undefined
+                  const min = MinSalary || 0;
+                  const max = MaxSalary || 0;
 
-                  // Gán giá trị đúng cho selectedOption
+                  setMinSalary(min);
+                  setMaxSalary(max);
+
                   setSelectedOption({
-                    value: `${MinSalary}-${MaxSalary}`, // Lưu giá trị chuỗi MinSalary-MaxSalary
-                    label: `${MinSalary.toLocaleString()} - ${MaxSalary.toLocaleString()}`, // Lưu label cho dropdown
+                    value: `${min}-${max}`,
+                    label: `${min.toLocaleString()} - ${max.toLocaleString()}`,
                   });
                 }}
               />
