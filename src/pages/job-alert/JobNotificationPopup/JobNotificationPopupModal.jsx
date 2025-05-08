@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import SalaryRangeDropdown from "../../job-list/SalaryRangeDropdown";
 import Select from "react-select";
 import { vietnamProvinces } from "../../../helpers/getLocationVN";
+
 const customSelectStyles = {
   container: (provided) => ({
     ...provided,
@@ -44,7 +45,11 @@ const experienceOptions = [
   { value: "Over 5 years", label: "Over 5 years" },
 ];
 
-const workTypeOptions = [{ value: "Full-time", label: "Full-time" }];
+const workTypeOptions = [
+  { value: "Full-time", label: "Full-time" },
+  { value: "Remote", label: "Remote" },
+  { value: "Part-time", label: "Part-time" },
+];
 
 const notificationMethodOptions = [
   { value: "email", label: "Email" },
@@ -53,23 +58,18 @@ const notificationMethodOptions = [
 ];
 
 const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
-  const [keyword, setKeyword] = useState(defaultKeyword || "");
-  const [city, setCity] = useState("");
-  //const [district, setDistrict] = useState("");
-  const [cityOptions, setCityOptions] = useState([]);
-  const [districtOptions, setDistrictOptions] = useState([]);
-
+  const [selectedOption, setSelectedOption] = useState(null);
   const [minSalary, setMinSalary] = useState("");
   const [maxSalary, setMaxSalary] = useState("");
+  const [keyword, setKeyword] = useState(defaultKeyword || "");
+  const [city, setCity] = useState("");
+  const [cityOptions, setCityOptions] = useState([]);
   const [experience, setExperience] = useState(experienceOptions[2]); // default 2 years
-  const [specialization, setSpecialization] = useState("All specializations");
   const [worktype, setWorktype] = useState(workTypeOptions[0]);
   const [frequency, setFrequency] = useState("daily");
   const [notificationMethod, setNotificationMethod] = useState(
     notificationMethodOptions[2]
   ); // default both
-  const [provinces, setProvinces] = useState([]);
-  //const [districts, setDistricts] = useState([]);
 
   useEffect(() => {
     setKeyword(defaultKeyword || "");
@@ -85,20 +85,6 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
 
   const handleProvinceChange = (selectedOption) => {
     setCity(selectedOption.value);
-    setDistrict("");
-
-    const selectedProvince = vietnamProvinces.find(
-      (p) => p.name === selectedOption.value
-    );
-    if (selectedProvince && selectedProvince.districts) {
-      const districtOpts = selectedProvince.districts.map((d) => ({
-        value: d,
-        label: d,
-      }));
-      setDistrictOptions(districtOpts);
-    } else {
-      setDistrictOptions([]);
-    }
   };
 
   const user = JSON.parse(localStorage.getItem("userLoginData"));
@@ -107,6 +93,37 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Kiểm tra tính hợp lệ của các trường
+    if (!keyword) {
+      toast.error("Please enter a keyword.");
+      return;
+    }
+
+    if (!city) {
+      toast.error("Please select a province/city.");
+      return;
+    }
+
+    if (!selectedOption) {
+      toast.error("Please select a salary range");
+      return;
+    }
+
+    if (!experience) {
+      toast.error("Please select your experience level.");
+      return;
+    }
+
+    if (!worktype) {
+      toast.error("Please select the work type.");
+      return;
+    }
+
+    if (!notificationMethod) {
+      toast.error("Please select a notification method.");
+      return;
+    }
+
     const userId = userID;
 
     const formatSalary = (salary) => {
@@ -114,20 +131,17 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
       return salary.toLocaleString("en-US"); // Chuyển số thành chuỗi có dấu phẩy
     };
 
-    const formattedMinSalary = formatSalary(minSalary);
-    const formattedMaxSalary = formatSalary(maxSalary);
-
+    const formattedMinSalary = formatSalary(Number(minSalary));
+    const formattedMaxSalary = formatSalary(Number(maxSalary));
     const salaryRange =
       formattedMinSalary && formattedMaxSalary
         ? `${formattedMinSalary} - ${formattedMaxSalary}`
         : "";
-
     const payload = {
       keyword,
       province: city,
-      salaryRange: salaryRange, // Chuyển giá trị thành chuỗi
+      salaryRange: selectedOption?.value,
       experience: experience.value,
-      jobPosition: specialization,
       jobType: worktype.value || null,
       frequency: frequency || null,
       notificationMethod: notificationMethod.value,
@@ -206,9 +220,16 @@ const JobNotificationPopupModal = ({ isOpen, onClose, defaultKeyword }) => {
                 Salary
               </label>
               <SalaryRangeDropdown
+                selectedOption={selectedOption}
                 setSearchParams={({ MinSalary, MaxSalary }) => {
                   setMinSalary(MinSalary);
                   setMaxSalary(MaxSalary);
+
+                  // Gán giá trị đúng cho selectedOption
+                  setSelectedOption({
+                    value: `${MinSalary}-${MaxSalary}`, // Lưu giá trị chuỗi MinSalary-MaxSalary
+                    label: `${MinSalary.toLocaleString()} - ${MaxSalary.toLocaleString()}`, // Lưu label cho dropdown
+                  });
                 }}
               />
             </div>

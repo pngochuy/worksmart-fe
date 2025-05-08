@@ -80,11 +80,12 @@ const JobAlertManager = () => {
                     <table className="default-table manage-job-table">
                       <thead>
                         <tr>
-                          <th>STT</th> {/* Cột Số thứ tự */}
+                          <th>STT</th>
                           <th>Keyword</th>
                           <th>Location</th>
                           <th>Salary</th>
                           <th>Experience</th>
+                          <th>Work Type</th> {/* Cột WorkType mới */}
                           <th>Notification</th>
                           <th>Action</th>
                         </tr>
@@ -92,19 +93,23 @@ const JobAlertManager = () => {
                       <tbody>
                         {jobAlerts.length > 0 ? (
                           jobAlerts.map((job, index) => (
-                            <tr key={job.id}>
-                              <td>{index + 1}</td> {/* Hiển thị số thứ tự */}
+                            <tr key={job.jobAlertId}>
+                              <td>{index + 1}</td>
                               <td>{job.keyword}</td>
                               <td>{job.province}</td>
                               <td>{job.salaryRange || "N/A"}</td>
                               <td>{job.experience}</td>
+                              <td>{job.jobType || "N/A"}</td>{" "}
+                              {/* Hiển thị thông tin WorkType */}
                               <td>{job.notificationMethod}</td>
                               <td>
                                 <div className="option-box">
                                   <ul className="option-list">
                                     <li>
                                       <button
-                                        onClick={() => handleDelete(job.id)}
+                                        onClick={() =>
+                                          handleDelete(job.jobAlertId)
+                                        }
                                         title="Delete"
                                       >
                                         <span className="la la-trash"></span>
@@ -117,7 +122,7 @@ const JobAlertManager = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={7} style={{ textAlign: "center" }}>
+                            <td colSpan={8} style={{ textAlign: "center" }}>
                               No job alerts found.
                             </td>
                           </tr>
