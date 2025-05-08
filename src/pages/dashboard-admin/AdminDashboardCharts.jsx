@@ -325,17 +325,17 @@ const AdminDashboardCharts = () => {
                   <Bar
                     dataKey="posted"
                     fill="#8884d8"
-                    name="Posted (Đã đăng)"
+                    name="Posted"
                   />
                   <Bar
                     dataKey="filled"
                     fill="#82ca9d"
-                    name="Filled (Đã tuyển)"
+                    name="Filled"
                   />
                   <Bar
                     dataKey="expired"
                     fill="#ffc658"
-                    name="Expired (Hết hạn)"
+                    name="Expired"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -381,7 +381,7 @@ const AdminDashboardCharts = () => {
                     dataKey="total"
                     stroke="#ff7300"
                     strokeWidth={2}
-                    name="Total Revenue (Tổng doanh thu)"
+                    name="Total Revenue"
                   />
                 </LineChart>
               </ResponsiveContainer>
