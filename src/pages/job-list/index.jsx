@@ -8,6 +8,7 @@ import SalaryRangeDropdown from "./SalaryRangeDropdown";
 import TagDropdown from "./TagDropdown";
 import CategoryDropdown from "./CategoryDropdown";
 import EnhancedPagination from "./EnhancedPagination";
+import ExperienceFilter from "./ExperienceFilter"; // Add this import at the top with other imports
 import {
   Building2,
   Users,
@@ -599,8 +600,9 @@ export const Index = () => {
       MaxSalary: null,
       Tags: [],
       MostRecent: null,
+      Exp: 0, // Reset experience to 0 (any)
     });
-    setDisplayTitle(""); // Đảm bảo xóa cả displayTitle
+    setDisplayTitle("");
     setRelatedKeywords([]);
     setOriginalKeyword("");
   };
@@ -618,6 +620,7 @@ export const Index = () => {
     searchParams.Tags,
     searchParams.MinSalary,
     searchParams.MaxSalary,
+    searchParams.Exp, // Add this line to react to experience filter changes
   ]);
 
   // Format salary display
@@ -882,6 +885,10 @@ export const Index = () => {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[220px]">
               <SalaryRangeDropdown setSearchParams={setSearchParams} />
+            </div>
+            {/* Add Experience Filter here */}
+            <div className="flex-1 min-w-[220px]">
+              <ExperienceFilter setSearchParams={setSearchParams} />
             </div>
             <div className="flex-1 min-w-[220px]">
               <CategoryDropdown setSearchParams={setSearchParams} />
