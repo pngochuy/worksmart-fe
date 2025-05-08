@@ -56,23 +56,23 @@ const ModifiedMatchingJobs = () => {
   };
 
   // Function to convert API score to display percentage
-  const convertScoreToPercentage = (score) => {
-    if (score >= 0.93) return 98;
-    if (score >= 0.9) return 95;
-    if (score >= 0.87) return 93;
-    if (score >= 0.83) return 90;
-    if (score >= 0.8) return 87;
-    if (score >= 0.77) return 83;
-    if (score >= 0.74) return 80;
-    if (score >= 0.7) return 77;
-    if (score >= 0.66) return 73;
-    if (score >= 0.62) return 69;
-    if (score >= 0.58) return 65;
-    if (score >= 0.55) return 61;
-    if (score >= 0.52) return 57;
-    if (score >= 0.5) return 55;
-    return 52; // fallback thấp nhất
+ const convertScoreToPercentage = (score) => {
+    if (score < 0.48) return null; // không đủ điều kiện hiển thị
+    if (score >= 0.895) return 98;
+    if (score >= 0.865) return 96;
+    if (score >= 0.835) return 94;
+    if (score >= 0.805) return 91;
+    if (score >= 0.765) return 88;
+    if (score >= 0.725) return 85;
+    if (score >= 0.685) return 82;
+    if (score >= 0.645) return 79;
+    if (score >= 0.605) return 75;
+    if (score >= 0.565) return 71;
+    if (score >= 0.525) return 67;
+    if (score >= 0.495) return 63;
+    return 55; // 0.48–0.495
   };
+
 
   // Define color functions
   const getMatchColor = (percentage) => {
